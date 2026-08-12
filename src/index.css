@@ -1,0 +1,126 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Redefine white backgrounds to a beautiful premium light blue across all pages */
+.bg-white {
+  background-color: #f0f7ff !important;
+}
+.bg-white\/75 {
+  background-color: rgba(240, 247, 255, 0.75) !important;
+}
+.bg-white\/80 {
+  background-color: rgba(240, 247, 255, 0.8) !important;
+}
+.bg-white\/90 {
+  background-color: rgba(240, 247, 255, 0.9) !important;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+}
+
+/* Bento Grid Simulators Overrides for Dark Cohesion */
+.bg-slate-900 .bg-white {
+  background-color: #0b1329 !important; /* Beautiful deep sapphire navy */
+  color: #f8fafc !important;
+  border-color: #1e293b !important;
+}
+
+.bg-slate-900 .bg-slate-50,
+.bg-slate-900 .bg-slate-50\/50,
+.bg-slate-900 .bg-slate-50\/60 {
+  background-color: rgba(11, 19, 41, 0.8) !important;
+  border-color: #1e293b !important;
+}
+
+.bg-slate-900 .bg-slate-100 {
+  background-color: rgba(28, 37, 65, 0.6) !important;
+  border-color: #1e293b !important;
+}
+
+.bg-slate-900 .border-slate-100,
+.bg-slate-900 .border-slate-200,
+.bg-slate-900 .border-slate-200\/60 {
+  border-color: #1e293b !important;
+}
+
+.bg-slate-900 .text-slate-900,
+.bg-slate-900 .text-slate-800 {
+  color: #ffffff !important;
+}
+
+.bg-slate-900 .text-slate-700,
+.bg-slate-900 .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+
+.bg-slate-900 .text-slate-500,
+.bg-slate-900 .text-slate-400 {
+  color: #94a3b8 !important;
+}
+
+.bg-slate-900 input,
+.bg-slate-900 select {
+  background-color: #0b1329 !important;
+  border-color: #1e293b !important;
+  color: #ffffff !important;
+}
+
+.bg-slate-900 .shadow-xs,
+.bg-slate-900 .shadow-sm {
+  box-shadow: 0 4px 16px rgba(11, 19, 41, 0.5) !important;
+}
+
+/* Ensure no text is less than 13px inside the interactive bento card on any slide */
+#interactive-bento-card,
+#interactive-bento-card * {
+  min-font-size: 13px;
+}
+
+#interactive-bento-card .text-xs,
+#interactive-bento-card .text-\[10px\],
+#interactive-bento-card .text-\[11px\],
+#interactive-bento-card .text-\[12px\],
+#interactive-bento-card .text-\[9px\],
+#interactive-bento-card .text-\[8px\],
+#interactive-bento-card .text-xxs,
+#interactive-bento-card .text-xs\/4 {
+  font-size: 13px !important;
+}
+
+/* Explicit style for active-low signal overlines */
+.overline {
+  text-decoration: overline !important;
+  text-decoration-thickness: 1.5px !important;
+}
+
+/* Highly targeted style for the overline on the selected RD element in the pin configuration simulator */
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div#interactive-bento-card:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > div:nth-of-type(1) > div:nth-of-type(2) > button:nth-of-type(18) > span:nth-of-type(1) > span:nth-of-type(1) {
+  text-decoration: overline !important;
+  text-decoration-line: overline !important;
+  text-decoration-thickness: 1.5px !important;
+  display: inline-block !important;
+  line-height: normal !important;
+  overflow: visible !important;
+  padding-top: 2px !important;
+}
+
+

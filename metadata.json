@@ -1,0 +1,8 @@
+{
+  "name": "Remix 8086 Microprocessor and Microcontroller Course",
+  "description": "An interactive, presentation-style educational website for B.Tech students to learn 8086 microprocessor architecture, 8051 architecture",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
