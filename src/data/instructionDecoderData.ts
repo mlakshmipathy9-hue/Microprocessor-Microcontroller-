@@ -3824,29 +3824,75 @@ export function getGeneralExplanation(opcode: string, fallbackDesc?: string): Ge
         ]
       };
     case 'DAA':
-    case 'DAS':
       return {
-        generalSyntax: mnemonic,
-        whatItDoes: `Adjusts the binary addition/subtraction result in AL to produce a valid packed BCD (Binary Coded Decimal) number.`,
-        flagsAffected: 'SF, ZF, AF, PF, CF updated; OF undefined',
+        generalSyntax: 'DAA',
+        whatItDoes: 'Adjusts the 8-bit binary sum in the AL register resulting from an ADD or ADC instruction to yield two valid 4-bit packed BCD digits (0–9 each). If the lower nibble of AL > 9 or AF=1, adds 06H to AL and sets AF=1. If the upper nibble of AL > 9 or CF=1, adds 60H to AL and sets CF=1.',
+        flagsAffected: 'CF, AF, ZF, SF, PF updated; OF undefined',
         flagsBadgeColor: 'amber',
         rules: [
-          'Must be executed immediately after an ADD/ADC (for DAA) or SUB/SBB (for DAS) instruction.',
-          'Operates exclusively on AL register.'
+          'Must be executed immediately after an ADD or ADC instruction performed on packed BCD operands.',
+          'Operates exclusively on the AL accumulator register (implicit destination and source).',
+          'Converts invalid hex sums (e.g. 59H + 35H = 8EH) into valid decimal BCD results (94H).'
+        ]
+      };
+    case 'DAS':
+      return {
+        generalSyntax: 'DAS',
+        whatItDoes: 'Adjusts the 8-bit binary difference in the AL register resulting from a SUB or SBB instruction to yield two valid 4-bit packed BCD digits. If the lower nibble of AL > 9 or AF=1, subtracts 06H from AL and sets AF=1. If the upper nibble of AL > 9 or CF=1, subtracts 60H from AL and sets CF=1.',
+        flagsAffected: 'CF, AF, ZF, SF, PF updated; OF undefined',
+        flagsBadgeColor: 'amber',
+        rules: [
+          'Must be executed immediately after a SUB or SBB instruction performed on packed BCD operands.',
+          'Operates exclusively on the AL accumulator register.',
+          'Corrects binary borrow and nibble overflow during packed BCD subtraction.'
         ]
       };
     case 'AAA':
-    case 'AAS':
-    case 'AAM':
-    case 'AAD':
       return {
-        generalSyntax: mnemonic,
-        whatItDoes: `ASCII Adjust instruction for unpacked BCD / ASCII arithmetic in AL/AX.`,
-        flagsAffected: 'AF, CF updated (others undefined or updated)',
+        generalSyntax: 'AAA',
+        whatItDoes: 'Adjusts the 8-bit sum in AL resulting from adding two unpacked BCD / ASCII digits. If the lower 4 bits of AL > 9 or AF=1, adds 06H to AL, increments AH by 1, sets AF=1 and CF=1, and clears the upper 4 bits of AL (AND AL, 0FH).',
+        flagsAffected: 'AF, CF updated (set to 1 if carry occurs); OF, SF, ZF, PF undefined',
         flagsBadgeColor: 'amber',
         rules: [
-          'Operates on unpacked BCD (one decimal digit per byte in AL).',
-          'AAM/AAD work after/before MUL and DIV on unpacked BCD.'
+          'Used after adding two unpacked BCD digits (00H–09H) or ASCII digits (30H–39H) in AL.',
+          'Propagates decimal carry from AL into AH.',
+          'Leaves AL with a single unpacked BCD digit (0–9) in the lower nibble.'
+        ]
+      };
+    case 'AAS':
+      return {
+        generalSyntax: 'AAS',
+        whatItDoes: 'Adjusts the 8-bit difference in AL resulting from subtracting two unpacked BCD / ASCII digits. If the lower 4 bits of AL > 9 or AF=1, subtracts 06H from AL, decrements AH by 1, sets AF=1 and CF=1, and clears the upper 4 bits of AL (AND AL, 0FH).',
+        flagsAffected: 'AF, CF updated (set to 1 if borrow occurs); OF, SF, ZF, PF undefined',
+        flagsBadgeColor: 'amber',
+        rules: [
+          'Used after subtracting two unpacked BCD or ASCII digits in AL.',
+          'Propagates decimal borrow from AL into AH.',
+          'Clears the upper nibble of AL so AL contains a valid unpacked BCD digit (0–9).'
+        ]
+      };
+    case 'AAM':
+      return {
+        generalSyntax: 'AAM',
+        whatItDoes: 'Converts a binary product (0–81) in AL—resulting from multiplying two single-digit unpacked BCD numbers with MUL—into two unpacked BCD digits in AX. Divides AL by 10 (0AH): stores the tens digit in AH and units digit in AL.',
+        flagsAffected: 'SF, ZF, PF updated based on AL; CF, OF, AF undefined',
+        flagsBadgeColor: 'amber',
+        rules: [
+          'Must be executed immediately after multiplying two unpacked BCD digits using byte MUL.',
+          'AH contains the tens digit quotient, AL contains the units digit remainder.',
+          'Default base operand is 10 (0AH), converting pure binary into decimal unpacked BCD digits.'
+        ]
+      };
+    case 'AAD':
+      return {
+        generalSyntax: 'AAD',
+        whatItDoes: 'Prepares two unpacked BCD digits in AX (AH = tens digit, AL = units digit) for binary division by converting them into a single binary byte in AL. Multiplies AH by 10 (0AH), adds the product to AL, and clears AH to 00H.',
+        flagsAffected: 'SF, ZF, PF updated based on AL; CF, OF, AF undefined',
+        flagsBadgeColor: 'amber',
+        rules: [
+          'Must be executed BEFORE performing a byte DIV instruction on unpacked BCD numbers.',
+          'Converts 2-digit unpacked BCD in AX into pure binary in AL before division.',
+          'Clears AH to 00H so division can proceed smoothly.'
         ]
       };
     case 'SHL':

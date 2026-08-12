@@ -504,7 +504,7 @@ export default function InstructionDecoderSimulator({
   };
 
   // Dedicated Interactive Bit-Shift Visualizer Component
-  const renderVisualBitShiftSimulator = (isDarkTheme: boolean = true) => {
+  const renderVisualBitShiftSimulator = (isDarkTheme: boolean = false) => {
     const currentOp = aluOp;
     const valA = aluValA & 0xFF;
     const count = activeInstruction.category === 'Shift & Rotate'
@@ -618,16 +618,16 @@ export default function InstructionDecoderSimulator({
     const isLeftShift = ['SHL', 'SAL', 'ROL', 'RCL'].includes(currentOp.toUpperCase());
 
     return (
-      <div className={`${isDarkTheme ? 'bg-slate-900 text-white border-indigo-700/60' : 'bg-white text-slate-900 border-indigo-200'} p-4 rounded-xl border shadow-md space-y-4 font-mono text-xs`}>
+      <div className={`${isDarkTheme ? 'bg-slate-900 text-white border-indigo-700/60' : 'bg-gradient-to-br from-indigo-50/60 via-white to-blue-50/60 text-slate-900 border-indigo-200/80 shadow-xs'} p-4 rounded-xl border space-y-4 font-mono text-xs`}>
         {/* Header & Quick Opcode Switcher */}
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-indigo-800/60 pb-3">
+        <div className={`flex flex-wrap items-center justify-between gap-2 border-b ${isDarkTheme ? 'border-indigo-800/60' : 'border-indigo-200'} pb-3`}>
           <div className="flex items-center gap-2">
-            <Binary className="w-5 h-5 text-emerald-400" />
+            <Binary className={`w-5 h-5 ${isDarkTheme ? 'text-emerald-400' : 'text-emerald-600'}`} />
             <div>
-              <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-300">
+              <h4 className={`text-xs font-bold uppercase tracking-wider ${isDarkTheme ? 'text-indigo-300' : 'text-indigo-950'}`}>
                 Interactive Bit-Shift & Rotation Visualizer
               </h4>
-              <span className="text-[10px] text-slate-400 font-sans">
+              <span className={`text-[10px] font-sans ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>
                 Visualize exact bit movements, bit index flow, fill bits & Carry Flag (CF) transitions step-by-step.
               </span>
             </div>
@@ -644,8 +644,8 @@ export default function InstructionDecoderSimulator({
                 }}
                 className={`px-2 py-0.5 rounded text-[10px] font-extrabold transition-all cursor-pointer ${
                   aluOp.toUpperCase() === m
-                    ? 'bg-emerald-500 text-slate-950 shadow-xs scale-105'
-                    : 'bg-indigo-950 text-indigo-300 hover:bg-indigo-900 border border-indigo-800'
+                    ? isDarkTheme ? 'bg-emerald-500 text-slate-950 shadow-xs scale-105' : 'bg-emerald-600 text-white shadow-xs scale-105'
+                    : isDarkTheme ? 'bg-indigo-950 text-indigo-300 hover:bg-indigo-900 border border-indigo-800' : 'bg-indigo-50 text-indigo-900 hover:bg-indigo-100 border border-indigo-200'
                 }`}
               >
                 {m}
@@ -657,10 +657,10 @@ export default function InstructionDecoderSimulator({
         {/* Operands & Shift Controls Bar */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* Operand AL */}
-          <div className="bg-indigo-950/60 p-2.5 rounded-lg border border-indigo-800 space-y-1">
+          <div className={`${isDarkTheme ? 'bg-indigo-950/60 border-indigo-800' : 'bg-white border-indigo-200 shadow-2xs'} p-2.5 rounded-lg border space-y-1`}>
             <div className="flex justify-between items-center text-[11px] font-bold">
-              <span className="text-indigo-200">Operand AL:</span>
-              <span className="text-emerald-400 font-extrabold">{byteHexFormat(aluValA)} ({aluValA & 0xFF})</span>
+              <span className={isDarkTheme ? 'text-indigo-200' : 'text-indigo-950'}>Operand AL:</span>
+              <span className={`${isDarkTheme ? 'text-emerald-400' : 'text-emerald-700'} font-extrabold`}>{byteHexFormat(aluValA)} ({aluValA & 0xFF})</span>
             </div>
             <input
               type="range"
@@ -673,19 +673,19 @@ export default function InstructionDecoderSimulator({
                 setShiftStep(0);
                 setShiftAnimRunning(false);
               }}
-              className="w-full accent-emerald-400 cursor-pointer h-1.5 bg-indigo-900 rounded-lg"
+              className={`w-full accent-emerald-500 cursor-pointer h-1.5 ${isDarkTheme ? 'bg-indigo-900' : 'bg-indigo-100'} rounded-lg`}
             />
-            <div className="text-[10px] text-indigo-300 flex justify-between font-mono">
+            <div className={`text-[10px] flex justify-between font-mono ${isDarkTheme ? 'text-indigo-300' : 'text-indigo-800'}`}>
               <span>Bits: {(aluValA & 0xFF).toString(2).padStart(8, '0')}</span>
               <span>Signed: {((aluValA & 0xFF) > 127 ? (aluValA & 0xFF) - 256 : (aluValA & 0xFF))}</span>
             </div>
           </div>
 
           {/* Shift Count */}
-          <div className="bg-indigo-950/60 p-2.5 rounded-lg border border-indigo-800 space-y-1">
+          <div className={`${isDarkTheme ? 'bg-indigo-950/60 border-indigo-800' : 'bg-white border-indigo-200 shadow-2xs'} p-2.5 rounded-lg border space-y-1`}>
             <div className="flex justify-between items-center text-[11px] font-bold">
-              <span className="text-indigo-200">Shift Count (N):</span>
-              <span className="text-sky-300 font-extrabold">{count} Bit{count > 1 ? 's' : ''}</span>
+              <span className={isDarkTheme ? 'text-indigo-200' : 'text-indigo-950'}>Shift Count (N):</span>
+              <span className={`${isDarkTheme ? 'text-sky-300' : 'text-sky-700'} font-extrabold`}>{count} Bit{count > 1 ? 's' : ''}</span>
             </div>
             <input
               type="range"
@@ -698,18 +698,18 @@ export default function InstructionDecoderSimulator({
                 setShiftStep(0);
                 setShiftAnimRunning(false);
               }}
-              className="w-full accent-sky-400 cursor-pointer h-1.5 bg-indigo-900 rounded-lg"
+              className={`w-full accent-sky-500 cursor-pointer h-1.5 ${isDarkTheme ? 'bg-indigo-900' : 'bg-indigo-100'} rounded-lg`}
             />
-            <div className="text-[10px] text-indigo-300 flex justify-between">
+            <div className={`text-[10px] flex justify-between ${isDarkTheme ? 'text-indigo-300' : 'text-indigo-800'}`}>
               <span>Range: 1 to 8 bits</span>
               <span>Op: {aluOp}</span>
             </div>
           </div>
 
           {/* Initial CF & Stepper Toolbar */}
-          <div className="bg-indigo-950/60 p-2.5 rounded-lg border border-indigo-800 flex flex-col justify-between space-y-1.5">
+          <div className={`${isDarkTheme ? 'bg-indigo-950/60 border-indigo-800' : 'bg-white border-indigo-200 shadow-2xs'} p-2.5 rounded-lg border flex flex-col justify-between space-y-1.5`}>
             <div className="flex items-center justify-between text-[11px] font-bold">
-              <span className="text-indigo-200">Initial CF:</span>
+              <span className={isDarkTheme ? 'text-indigo-200' : 'text-indigo-950'}>Initial CF:</span>
               <button
                 onClick={() => {
                   const nextCF = startCF ? 0 : 1;
@@ -718,7 +718,9 @@ export default function InstructionDecoderSimulator({
                   setShiftStep(0);
                 }}
                 className={`px-2 py-0.5 rounded text-[10px] font-extrabold cursor-pointer border ${
-                  startCF ? 'bg-amber-500 text-slate-950 border-amber-400' : 'bg-slate-800 text-slate-300 border-slate-700'
+                  startCF
+                    ? isDarkTheme ? 'bg-amber-500 text-slate-950 border-amber-400' : 'bg-amber-500 text-white border-amber-600'
+                    : isDarkTheme ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-700 border-slate-300'
                 }`}
               >
                 CF = {startCF}
@@ -732,7 +734,9 @@ export default function InstructionDecoderSimulator({
                   setShiftStep(0);
                   setShiftAnimRunning(false);
                 }}
-                className="px-2 py-1 bg-indigo-900 hover:bg-indigo-800 text-indigo-200 rounded text-[10px] font-bold border border-indigo-700 cursor-pointer"
+                className={`px-2 py-1 rounded text-[10px] font-bold border cursor-pointer ${
+                  isDarkTheme ? 'bg-indigo-900 hover:bg-indigo-800 text-indigo-200 border-indigo-700' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border-indigo-200'
+                }`}
                 title="Reset to Step 0"
               >
                 ⏮ 0
@@ -743,7 +747,9 @@ export default function InstructionDecoderSimulator({
                   setShiftAnimRunning(false);
                 }}
                 disabled={boundedStep <= 0}
-                className="px-2 py-1 bg-indigo-900 hover:bg-indigo-800 disabled:opacity-40 text-indigo-200 rounded text-[10px] font-bold border border-indigo-700 cursor-pointer"
+                className={`px-2 py-1 rounded text-[10px] font-bold border cursor-pointer disabled:opacity-40 ${
+                  isDarkTheme ? 'bg-indigo-900 hover:bg-indigo-800 text-indigo-200 border-indigo-700' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border-indigo-200'
+                }`}
               >
                 ◀ Prev
               </button>
@@ -753,7 +759,9 @@ export default function InstructionDecoderSimulator({
                   setShiftAnimRunning(false);
                 }}
                 disabled={boundedStep >= count}
-                className="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-slate-950 rounded text-[10px] font-extrabold shadow-2xs cursor-pointer"
+                className={`px-2 py-1 rounded text-[10px] font-extrabold shadow-2xs cursor-pointer disabled:opacity-40 ${
+                  isDarkTheme ? 'bg-emerald-600 hover:bg-emerald-500 text-slate-950' : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                }`}
               >
                 ▶ Step {boundedStep < count ? boundedStep + 1 : count}
               </button>
@@ -762,7 +770,7 @@ export default function InstructionDecoderSimulator({
                 className={`px-2 py-1 rounded text-[10px] font-bold border cursor-pointer ${
                   shiftAnimRunning
                     ? 'bg-rose-600 text-white border-rose-500 animate-pulse'
-                    : 'bg-indigo-800 text-indigo-100 hover:bg-indigo-700 border border-indigo-600'
+                    : isDarkTheme ? 'bg-indigo-800 text-indigo-100 hover:bg-indigo-700 border-indigo-600' : 'bg-indigo-100 text-indigo-900 hover:bg-indigo-200 border-indigo-300'
                 }`}
               >
                 {shiftAnimRunning ? '⏸ Pause' : '⏯ Animate'}
@@ -772,69 +780,72 @@ export default function InstructionDecoderSimulator({
         </div>
 
         {/* Direction & Pipeline Banner */}
-        <div className="bg-indigo-950/90 p-2.5 rounded-lg border border-indigo-800/80 flex items-center justify-between text-[11px] font-sans text-indigo-200">
-          <span className="font-bold flex items-center gap-1.5 text-amber-300">
-            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+        <div className={`${isDarkTheme ? 'bg-indigo-950/90 border-indigo-800/80 text-indigo-200' : 'bg-indigo-50/90 border-indigo-200 text-indigo-950'} p-2.5 rounded-lg border flex items-center justify-between text-[11px] font-sans`}>
+          <span className={`font-bold flex items-center gap-1.5 ${isDarkTheme ? 'text-amber-300' : 'text-amber-800'}`}>
+            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
             Shift Direction:
           </span>
-          <span className="font-mono font-extrabold text-white bg-indigo-900 px-2.5 py-0.5 rounded border border-indigo-700">
+          <span className={`font-mono font-extrabold px-2.5 py-0.5 rounded border ${isDarkTheme ? 'text-white bg-indigo-900 border-indigo-700' : 'text-indigo-950 bg-white border-indigo-200'}`}>
             {isLeftShift ? 'LEFT SHIFT / ROTATE (← MSB ← ... ← LSB ←)' : 'RIGHT SHIFT / ROTATE (→ MSB → ... → LSB →)'}
           </span>
-          <span className="text-emerald-400 font-bold font-mono">
+          <span className={`${isDarkTheme ? 'text-emerald-400' : 'text-emerald-700'} font-bold font-mono`}>
             Step {boundedStep} / {count}
           </span>
         </div>
 
         {/* THE VISUAL BIT-FLOW WIRE GRID */}
-        <div className="bg-slate-950 p-4 rounded-xl border border-indigo-800/90 space-y-3 overflow-x-auto">
+        <div className={`${isDarkTheme ? 'bg-slate-950 border-indigo-800/90' : 'bg-white border-indigo-200 shadow-2xs'} p-4 rounded-xl border space-y-3 overflow-x-auto`}>
           <div className="flex items-center justify-center gap-1.5 min-w-[580px] py-2 font-mono">
             {isLeftShift ? (
-              <div className="flex flex-col items-center gap-1 bg-amber-950/80 p-2 rounded-xl border-2 border-amber-500/80 text-center min-w-[70px] shadow-lg">
-                <span className="text-[9px] font-extrabold uppercase text-amber-300 tracking-wider">CARRY FLAG (CF)</span>
+              <div className={`flex flex-col items-center gap-1 ${isDarkTheme ? 'bg-amber-950/80 border-amber-500/80' : 'bg-amber-50 border-amber-300'} p-2 rounded-xl border-2 text-center min-w-[70px] shadow-xs`}>
+                <span className={`text-[9px] font-extrabold uppercase ${isDarkTheme ? 'text-amber-300' : 'text-amber-900'} tracking-wider`}>CARRY FLAG (CF)</span>
                 <div className="w-10 h-10 rounded-lg bg-amber-500 text-slate-950 font-black text-lg flex items-center justify-center shadow-md animate-pulse">
                   {activeStep.cf}
                 </div>
-                <span className="text-[9px] text-amber-300 font-bold">Shifted OUT ←</span>
+                <span className={`text-[9px] ${isDarkTheme ? 'text-amber-300' : 'text-amber-800'} font-bold`}>Shifted OUT ←</span>
               </div>
             ) : (
-              <div className="flex flex-col items-center gap-1 bg-sky-950/80 p-2 rounded-xl border-2 border-sky-500/80 text-center min-w-[70px] shadow-lg">
-                <span className="text-[9px] font-extrabold uppercase text-sky-300 tracking-wider">
+              <div className={`flex flex-col items-center gap-1 ${isDarkTheme ? 'bg-sky-950/80 border-sky-500/80' : 'bg-sky-50 border-sky-300'} p-2 rounded-xl border-2 text-center min-w-[70px] shadow-xs`}>
+                <span className={`text-[9px] font-extrabold uppercase ${isDarkTheme ? 'text-sky-300' : 'text-sky-900'} tracking-wider`}>
                   {aluOp === 'SAR' ? 'SIGN FILL' : 'INJECTED FILL'}
                 </span>
-                <div className="w-10 h-10 rounded-lg bg-sky-400 text-slate-950 font-black text-lg flex items-center justify-center shadow-md">
+                <div className="w-10 h-10 rounded-lg bg-sky-500 text-white font-black text-lg flex items-center justify-center shadow-md">
                   {activeStep.injectedBit}
                 </div>
-                <span className="text-[9px] text-sky-300 font-bold">Injected IN →</span>
+                <span className={`text-[9px] ${isDarkTheme ? 'text-sky-300' : 'text-sky-800'} font-bold`}>Injected IN →</span>
               </div>
             )}
 
-            <div className="text-indigo-400 text-base font-black px-1 animate-bounce">
+            <div className={`${isDarkTheme ? 'text-indigo-400' : 'text-indigo-600'} text-base font-black px-1 animate-bounce`}>
               {isLeftShift ? '⇇' : '⇉'}
             </div>
 
-            <div className="grid grid-cols-8 gap-1.5 bg-indigo-950/80 p-2.5 rounded-xl border border-indigo-800">
+            <div className={`grid grid-cols-8 gap-1.5 ${isDarkTheme ? 'bg-indigo-950/80 border-indigo-800' : 'bg-indigo-50/70 border-indigo-200'} p-2.5 rounded-xl border`}>
               {activeStep.bits.map((bitVal, idx) => {
                 const bitIndex = 7 - idx;
                 const isMsb = bitIndex === 7;
                 const isLsb = bitIndex === 0;
 
-                let highlightBg = bitVal === 1 ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900 text-slate-300';
+                let highlightBg = bitVal === 1
+                  ? (isDarkTheme ? 'bg-emerald-500 text-slate-950' : 'bg-emerald-600 text-white')
+                  : (isDarkTheme ? 'bg-slate-900 text-slate-300' : 'bg-white text-slate-700 border border-indigo-150');
+
                 if (boundedStep > 0) {
-                  if (isLeftShift && isLsb) highlightBg = 'bg-sky-400 text-slate-950 ring-2 ring-sky-300';
-                  if (!isLeftShift && isMsb) highlightBg = 'bg-sky-400 text-slate-950 ring-2 ring-sky-300';
+                  if (isLeftShift && isLsb) highlightBg = 'bg-sky-500 text-white ring-2 ring-sky-300 font-extrabold';
+                  if (!isLeftShift && isMsb) highlightBg = 'bg-sky-500 text-white ring-2 ring-sky-300 font-extrabold';
                 }
 
                 return (
                   <div key={idx} className="flex flex-col items-center gap-1 min-w-[48px]">
-                    <span className={`text-[9px] font-extrabold font-mono ${isMsb ? 'text-amber-400' : isLsb ? 'text-sky-300' : 'text-indigo-300'}`}>
+                    <span className={`text-[9px] font-extrabold font-mono ${isMsb ? 'text-amber-600' : isLsb ? 'text-sky-600' : isDarkTheme ? 'text-indigo-300' : 'text-indigo-900'}`}>
                       b{bitIndex} {isMsb ? '(MSB)' : isLsb ? '(LSB)' : ''}
                     </span>
 
-                    <div className={`w-10 h-10 rounded-lg font-black text-base flex items-center justify-center transition-all duration-300 shadow-sm ${highlightBg}`}>
+                    <div className={`w-10 h-10 rounded-lg font-black text-base flex items-center justify-center transition-all duration-300 shadow-xs ${highlightBg}`}>
                       {bitVal}
                     </div>
 
-                    <span className="text-[11px] text-indigo-400 font-black">
+                    <span className={`text-[11px] ${isDarkTheme ? 'text-indigo-400' : 'text-indigo-600'} font-black`}>
                       {isLeftShift ? '←' : '→'}
                     </span>
                   </div>
@@ -842,40 +853,40 @@ export default function InstructionDecoderSimulator({
               })}
             </div>
 
-            <div className="text-indigo-400 text-base font-black px-1 animate-bounce">
+            <div className={`${isDarkTheme ? 'text-indigo-400' : 'text-indigo-600'} text-base font-black px-1 animate-bounce`}>
               {isLeftShift ? '⇇' : '⇉'}
             </div>
 
             {isLeftShift ? (
-              <div className="flex flex-col items-center gap-1 bg-sky-950/80 p-2 rounded-xl border-2 border-sky-500/80 text-center min-w-[70px] shadow-lg">
-                <span className="text-[9px] font-extrabold uppercase text-sky-300 tracking-wider">INJECTED FILL</span>
-                <div className="w-10 h-10 rounded-lg bg-sky-400 text-slate-950 font-black text-lg flex items-center justify-center shadow-md">
+              <div className={`flex flex-col items-center gap-1 ${isDarkTheme ? 'bg-sky-950/80 border-sky-500/80' : 'bg-sky-50 border-sky-300'} p-2 rounded-xl border-2 text-center min-w-[70px] shadow-xs`}>
+                <span className={`text-[9px] font-extrabold uppercase ${isDarkTheme ? 'text-sky-300' : 'text-sky-900'} tracking-wider`}>INJECTED FILL</span>
+                <div className="w-10 h-10 rounded-lg bg-sky-500 text-white font-black text-lg flex items-center justify-center shadow-md">
                   {activeStep.injectedBit}
                 </div>
-                <span className="text-[9px] text-sky-300 font-bold">← Injected IN</span>
+                <span className={`text-[9px] ${isDarkTheme ? 'text-sky-300' : 'text-sky-800'} font-bold`}>← Injected IN</span>
               </div>
             ) : (
-              <div className="flex flex-col items-center gap-1 bg-amber-950/80 p-2 rounded-xl border-2 border-amber-500/80 text-center min-w-[70px] shadow-lg">
-                <span className="text-[9px] font-extrabold uppercase text-amber-300 tracking-wider">CARRY FLAG (CF)</span>
+              <div className={`flex flex-col items-center gap-1 ${isDarkTheme ? 'bg-amber-950/80 border-amber-500/80' : 'bg-amber-50 border-amber-300'} p-2 rounded-xl border-2 text-center min-w-[70px] shadow-xs`}>
+                <span className={`text-[9px] font-extrabold uppercase ${isDarkTheme ? 'text-amber-300' : 'text-amber-900'} tracking-wider`}>CARRY FLAG (CF)</span>
                 <div className="w-10 h-10 rounded-lg bg-amber-500 text-slate-950 font-black text-lg flex items-center justify-center shadow-md animate-pulse">
                   {activeStep.cf}
                 </div>
-                <span className="text-[9px] text-amber-300 font-bold">← Shifted OUT</span>
+                <span className={`text-[9px] ${isDarkTheme ? 'text-amber-300' : 'text-amber-800'} font-bold`}>← Shifted OUT</span>
               </div>
             )}
           </div>
 
-          <div className="bg-indigo-950/90 p-3 rounded-lg border border-indigo-700/80 space-y-1.5 font-sans">
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-indigo-800 pb-1.5 text-[11px] font-mono">
-              <span className="text-amber-300 font-extrabold flex items-center gap-1">
+          <div className={`${isDarkTheme ? 'bg-indigo-950/90 border-indigo-700/80' : 'bg-indigo-50/80 border-indigo-200'} p-3 rounded-lg border space-y-1.5 font-sans`}>
+            <div className={`flex flex-wrap items-center justify-between gap-2 border-b ${isDarkTheme ? 'border-indigo-800' : 'border-indigo-200'} pb-1.5 text-[11px] font-mono`}>
+              <span className={`${isDarkTheme ? 'text-amber-300' : 'text-amber-800'} font-extrabold flex items-center gap-1`}>
                 💡 Step {boundedStep} Pipeline Explanation:
               </span>
               <div className="flex gap-2">
-                <span className="text-indigo-200">Value: <strong className="text-emerald-400">{activeStep.valHex}</strong> ({activeStep.valDec})</span>
-                <span className="text-indigo-200">CF: <strong className="text-amber-400">{activeStep.cf}</strong></span>
+                <span className={isDarkTheme ? 'text-indigo-200' : 'text-indigo-950'}>Value: <strong className={isDarkTheme ? 'text-emerald-400' : 'text-emerald-700'}>{activeStep.valHex}</strong> ({activeStep.valDec})</span>
+                <span className={isDarkTheme ? 'text-indigo-200' : 'text-indigo-950'}>CF: <strong className={isDarkTheme ? 'text-amber-400' : 'text-amber-700'}>{activeStep.cf}</strong></span>
               </div>
             </div>
-            <p className="text-[11px] text-indigo-100 font-medium leading-relaxed">
+            <p className={`text-[11px] ${isDarkTheme ? 'text-indigo-100' : 'text-slate-700'} font-medium leading-relaxed`}>
               {activeStep.expl}
             </p>
           </div>
@@ -883,7 +894,7 @@ export default function InstructionDecoderSimulator({
 
         {/* Live Status Flags Bar */}
         <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11px]">
-          <span className="text-indigo-300 font-bold">Computed Flags at Step {boundedStep}:</span>
+          <span className={`${isDarkTheme ? 'text-indigo-300' : 'text-indigo-950'} font-bold`}>Computed Flags at Step {boundedStep}:</span>
           <div className="flex gap-1.5 font-mono">
             {[
               { flag: 'CF', val: activeStep.cf },
@@ -892,7 +903,11 @@ export default function InstructionDecoderSimulator({
               { flag: 'OF', val: (aluOp === 'SHL' || aluOp === 'SAL') ? (((valA >> 7) & 1) !== ((activeStep.valDec >> 7) & 1) ? 1 : 0) : 0 },
               { flag: 'PF', val: activeStep.bits.filter(b => b === 1).length % 2 === 0 ? 1 : 0 }
             ].map(f => (
-              <span key={f.flag} className={`px-2 py-0.5 rounded text-[10px] font-bold ${f.val ? 'bg-emerald-500 text-slate-950' : 'bg-indigo-950 text-indigo-400 border border-indigo-800'}`}>
+              <span key={f.flag} className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                f.val
+                  ? isDarkTheme ? 'bg-emerald-500 text-slate-950' : 'bg-emerald-600 text-white'
+                  : isDarkTheme ? 'bg-indigo-950 text-indigo-400 border border-indigo-800' : 'bg-indigo-50 text-indigo-800 border border-indigo-200'
+              }`}>
                 {f.flag}={f.val}
               </span>
             ))}
@@ -1722,30 +1737,30 @@ export default function InstructionDecoderSimulator({
                         {/* Interactive Bitwise & Shift Visualizer */}
                         {(activeInstruction.category === 'Logical' || activeInstruction.category === 'Shift & Rotate' || activeInstruction.category === 'Arithmetic') && (
                           activeInstruction.category === 'Shift & Rotate' ? (
-                            renderVisualBitShiftSimulator(true)
+                            renderVisualBitShiftSimulator(false)
                           ) : (
-                          <div className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white p-3.5 sm:p-4 rounded-xl border border-indigo-700/60 shadow-md space-y-3 font-mono text-xs">
-                            <div className="flex items-center justify-between border-b border-indigo-800/80 pb-2">
-                              <span className="text-xs font-bold uppercase tracking-wider text-indigo-300 flex items-center gap-1.5">
-                                <Binary className="w-4 h-4 text-emerald-400" />
+                          <div className="bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/70 text-slate-900 p-3.5 sm:p-4 rounded-xl border border-indigo-200/80 shadow-xs space-y-3 font-mono text-xs">
+                            <div className="flex items-center justify-between border-b border-indigo-200/80 pb-2">
+                              <span className="text-xs font-bold uppercase tracking-wider text-indigo-950 flex items-center gap-1.5">
+                                <Binary className="w-4 h-4 text-emerald-600" />
                                 Interactive Bitwise Operations Simulator
                               </span>
-                              <span className="text-[10px] bg-indigo-950 text-indigo-200 px-2 py-0.5 rounded border border-indigo-700 font-extrabold uppercase">
+                              <span className="text-[10px] bg-indigo-100 text-indigo-900 px-2 py-0.5 rounded border border-indigo-200 font-extrabold uppercase">
                                 {activeInstruction.category}
                               </span>
                             </div>
 
-                            <p className="text-[11px] font-sans text-indigo-200/90 leading-snug">
+                            <p className="text-[11px] font-sans text-slate-600 leading-snug">
                               Adjust operands below to see live bitwise manipulations, bit shifts/rotations, and resulting status flags:
                             </p>
 
                             {/* Sliders for Operand A and Operand B */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                               {/* Operand A */}
-                              <div className="bg-indigo-900/60 p-2.5 rounded-lg border border-indigo-700/60 space-y-1">
+                              <div className="bg-white p-2.5 rounded-lg border border-indigo-200/80 shadow-2xs space-y-1">
                                 <div className="flex justify-between items-center text-[11px] font-bold">
-                                  <span className="text-indigo-200">Operand A (AL):</span>
-                                  <span className="text-emerald-400 font-extrabold">{byteHexFormat(aluValA)} ({aluValA & 0xFF})</span>
+                                  <span className="text-indigo-950">Operand A (AL):</span>
+                                  <span className="text-emerald-700 font-extrabold">{byteHexFormat(aluValA)} ({aluValA & 0xFF})</span>
                                 </div>
                                 <input
                                   type="range"
@@ -1758,20 +1773,20 @@ export default function InstructionDecoderSimulator({
                                     setRegs(prev => ({ ...prev, AX: (prev.AX & 0xFF00) | (val & 0xFF) }));
                                     setBeforeRegs(prev => ({ ...prev, AX: (prev.AX & 0xFF00) | (val & 0xFF) }));
                                   }}
-                                  className="w-full accent-emerald-400 cursor-pointer h-1.5 bg-indigo-950 rounded-lg"
+                                  className="w-full accent-emerald-500 cursor-pointer h-1.5 bg-indigo-100 rounded-lg"
                                 />
-                                <div className="text-[10px] text-indigo-300/80 flex justify-between font-mono">
+                                <div className="text-[10px] text-indigo-800 flex justify-between font-mono">
                                   <span>Bits: {(aluValA & 0xFF).toString(2).padStart(8, '0')}</span>
                                 </div>
                               </div>
 
                               {/* Operand B / Shift Count */}
-                              <div className="bg-indigo-900/60 p-2.5 rounded-lg border border-indigo-700/60 space-y-1">
+                              <div className="bg-white p-2.5 rounded-lg border border-indigo-200/80 shadow-2xs space-y-1">
                                 <div className="flex justify-between items-center text-[11px] font-bold">
-                                  <span className="text-indigo-200">
+                                  <span className="text-indigo-950">
                                     {activeInstruction.category === 'Shift & Rotate' ? 'Shift/Rotate Count:' : 'Operand B (BL / Imm):'}
                                   </span>
-                                  <span className="text-sky-300 font-extrabold">
+                                  <span className="text-sky-700 font-extrabold">
                                     {activeInstruction.category === 'Shift & Rotate' ? (aluValB & 0x07 || 1) : `${byteHexFormat(aluValB)} (${aluValB & 0xFF})`}
                                   </span>
                                 </div>
@@ -1786,21 +1801,21 @@ export default function InstructionDecoderSimulator({
                                     setRegs(prev => ({ ...prev, BX: (prev.BX & 0xFF00) | (val & 0xFF) }));
                                     setBeforeRegs(prev => ({ ...prev, BX: (prev.BX & 0xFF00) | (val & 0xFF) }));
                                   }}
-                                  className="w-full accent-sky-400 cursor-pointer h-1.5 bg-indigo-950 rounded-lg"
+                                  className="w-full accent-sky-500 cursor-pointer h-1.5 bg-indigo-100 rounded-lg"
                                 />
-                                <div className="text-[10px] text-indigo-300/80 flex justify-between font-mono">
+                                <div className="text-[10px] text-indigo-800 flex justify-between font-mono">
                                   <span>Bits: {(aluValB & 0xFF).toString(2).padStart(8, '0')}</span>
                                 </div>
                               </div>
                             </div>
 
                             {/* Live Bit-by-Bit Operation Breakdown */}
-                            <div className="bg-indigo-950/80 p-3 rounded-lg border border-indigo-800 space-y-1.5 text-center">
+                            <div className="bg-white p-3 rounded-lg border border-indigo-200/80 space-y-1.5 text-center shadow-2xs">
                               <div className="flex justify-between items-center text-[11px]">
-                                <span className="text-indigo-300 font-bold">Operand A Bits:</span>
+                                <span className="text-indigo-950 font-bold">Operand A Bits:</span>
                                 <div className="flex gap-1 font-mono">
                                   {(aluValA & 0xFF).toString(2).padStart(8, '0').split('').map((bit, idx) => (
-                                    <span key={idx} className={`w-5 h-5 flex items-center justify-center rounded text-[11px] font-bold ${bit === '1' ? 'bg-emerald-500 text-slate-950' : 'bg-indigo-900/80 text-indigo-400'}`}>
+                                    <span key={idx} className={`w-5 h-5 flex items-center justify-center rounded text-[11px] font-bold ${bit === '1' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
                                       {bit}
                                     </span>
                                   ))}
@@ -1809,10 +1824,10 @@ export default function InstructionDecoderSimulator({
 
                               {activeInstruction.category !== 'Shift & Rotate' && (
                                 <div className="flex justify-between items-center text-[11px]">
-                                  <span className="text-indigo-300 font-bold">Operand B Bits:</span>
+                                  <span className="text-indigo-950 font-bold">Operand B Bits:</span>
                                   <div className="flex gap-1 font-mono">
                                     {(aluValB & 0xFF).toString(2).padStart(8, '0').split('').map((bit, idx) => (
-                                      <span key={idx} className={`w-5 h-5 flex items-center justify-center rounded text-[11px] font-bold ${bit === '1' ? 'bg-sky-400 text-slate-950' : 'bg-indigo-900/80 text-indigo-400'}`}>
+                                      <span key={idx} className={`w-5 h-5 flex items-center justify-center rounded text-[11px] font-bold ${bit === '1' ? 'bg-sky-500 text-white' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
                                         {bit}
                                       </span>
                                     ))}
@@ -1820,13 +1835,13 @@ export default function InstructionDecoderSimulator({
                                 </div>
                               )}
 
-                              <div className="w-full h-[1px] bg-indigo-800 my-1" />
+                              <div className="w-full h-[1px] bg-indigo-200 my-1" />
 
                               <div className="flex justify-between items-center text-[11px] font-bold">
-                                <span className="text-amber-300">Bitwise Result ({activeInstruction.opcode.split(' ')[0]}):</span>
+                                <span className="text-amber-800">Bitwise Result ({activeInstruction.opcode.split(' ')[0]}):</span>
                                 <div className="flex gap-1 font-mono">
                                   {aluRes.res.toString(2).padStart(8, '0').split('').map((bit, idx) => (
-                                    <span key={idx} className={`w-5 h-5 flex items-center justify-center rounded text-[11px] font-extrabold ${bit === '1' ? 'bg-amber-400 text-slate-950 shadow-2xs' : 'bg-slate-800 text-slate-400'}`}>
+                                    <span key={idx} className={`w-5 h-5 flex items-center justify-center rounded text-[11px] font-extrabold ${bit === '1' ? 'bg-amber-500 text-white shadow-2xs' : 'bg-slate-100 text-slate-400 border border-slate-200'}`}>
                                       {bit}
                                     </span>
                                   ))}
@@ -1836,7 +1851,7 @@ export default function InstructionDecoderSimulator({
 
                             {/* Live Output Flags */}
                             <div className="flex items-center justify-between gap-2 pt-1 text-[11px]">
-                              <span className="text-indigo-300 font-bold">Computed Status Flags:</span>
+                              <span className="text-indigo-950 font-bold">Computed Status Flags:</span>
                               <div className="flex gap-1.5 font-mono">
                                 {[
                                   { flag: 'CF', val: aluRes.cf },
@@ -1845,7 +1860,7 @@ export default function InstructionDecoderSimulator({
                                   { flag: 'OF', val: aluRes.of },
                                   { flag: 'PF', val: aluRes.pf }
                                 ].map(f => (
-                                  <span key={f.flag} className={`px-2 py-0.5 rounded text-[10px] font-bold ${f.val ? 'bg-emerald-500 text-slate-950' : 'bg-indigo-900 text-indigo-400'}`}>
+                                  <span key={f.flag} className={`px-2 py-0.5 rounded text-[10px] font-bold ${f.val ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
                                     {f.flag}={f.val}
                                   </span>
                                 ))}
@@ -1853,6 +1868,95 @@ export default function InstructionDecoderSimulator({
                             </div>
                           </div>
                           )
+                        )}
+
+                        {/* BCD & ASCII Instructions Guide */}
+                        {(activeInstruction.category === 'BCD & ASCII' || categoryTab === 'BCD & ASCII') && (
+                          <div className="bg-gradient-to-br from-purple-50/90 via-slate-50 to-indigo-50/90 text-slate-900 p-4.5 rounded-xl border border-purple-200/80 shadow-xs space-y-4 font-mono">
+                            <div className="flex items-center justify-between border-b border-purple-200/80 pb-2.5">
+                              <span className="text-sm font-bold uppercase tracking-wider text-purple-950 flex items-center gap-2">
+                                <Sparkles className="w-4 h-4 text-purple-600" />
+                                8086 BCD & ASCII Instructions Comprehensive Guide
+                              </span>
+                              <span className="text-xs bg-purple-100 text-purple-900 px-2.5 py-1 rounded border border-purple-300 font-extrabold uppercase">
+                                BCD & ASCII
+                              </span>
+                            </div>
+
+                            <p className="text-xs sm:text-sm font-sans text-slate-700 leading-relaxed">
+                              Since the 8086 ALU operates in binary, BCD adjust instructions automatically correct binary sums, differences, products, and quotients into valid decimal (BCD) digits.
+                            </p>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                              {/* Packed BCD Box */}
+                              <div className="bg-white p-3.5 rounded-lg border border-purple-200 shadow-2xs space-y-3">
+                                <div className="flex justify-between items-center border-b border-purple-100 pb-2">
+                                  <span className="text-purple-950 font-bold uppercase text-xs sm:text-sm">Packed BCD Instructions</span>
+                                  <span className="text-xs bg-purple-100 text-purple-800 px-2 py-0.5 rounded border border-purple-200 font-bold">1 Byte / AL</span>
+                                </div>
+                                
+                                <div className="space-y-2.5 font-sans">
+                                  <div className="bg-purple-50/70 p-2.5 rounded-lg border border-purple-200 space-y-1">
+                                    <div className="flex justify-between font-mono font-bold text-purple-950 text-xs sm:text-sm">
+                                      <span>DAA</span>
+                                      <span className="text-emerald-700 font-bold text-xs">Decimal Adjust Addition</span>
+                                    </div>
+                                    <p className="text-slate-700 text-xs sm:text-sm leading-relaxed">Corrects binary sum in AL to valid 2-digit packed BCD. Adds 06H if AL low nibble &gt; 9 or AF=1; adds 60H if high nibble &gt; 9 or CF=1.</p>
+                                  </div>
+
+                                  <div className="bg-purple-50/70 p-2.5 rounded-lg border border-purple-200 space-y-1">
+                                    <div className="flex justify-between font-mono font-bold text-purple-950 text-xs sm:text-sm">
+                                      <span>DAS</span>
+                                      <span className="text-amber-800 font-bold text-xs">Decimal Adjust Subtraction</span>
+                                    </div>
+                                    <p className="text-slate-700 text-xs sm:text-sm leading-relaxed">Corrects binary difference in AL to valid packed BCD. Subtracts 06H if low nibble &gt; 9 or AF=1; subtracts 60H if high nibble &gt; 9 or CF=1.</p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Unpacked BCD Box */}
+                              <div className="bg-white p-3.5 rounded-lg border border-indigo-200 shadow-2xs space-y-3">
+                                <div className="flex justify-between items-center border-b border-indigo-100 pb-2">
+                                  <span className="text-indigo-950 font-bold uppercase text-xs sm:text-sm">Unpacked BCD Instructions</span>
+                                  <span className="text-xs bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded border border-indigo-200 font-bold">AX / 2 Bytes</span>
+                                </div>
+
+                                <div className="space-y-2.5 font-sans">
+                                  <div className="bg-indigo-50/70 p-2.5 rounded-lg border border-indigo-200 space-y-1">
+                                    <div className="flex justify-between font-mono font-bold text-indigo-950 text-xs sm:text-sm">
+                                      <span>AAA</span>
+                                      <span className="text-sky-800 font-bold text-xs">ASCII Adjust Addition</span>
+                                    </div>
+                                    <p className="text-slate-700 text-xs sm:text-sm leading-relaxed">Used after ADD/ADC on unpacked BCD. Adds 6 to AL, increments AH by 1 if AL low nibble &gt; 9 or AF=1, clears high nibble of AL.</p>
+                                  </div>
+
+                                  <div className="bg-indigo-50/70 p-2.5 rounded-lg border border-indigo-200 space-y-1">
+                                    <div className="flex justify-between font-mono font-bold text-indigo-950 text-xs sm:text-sm">
+                                      <span>AAS</span>
+                                      <span className="text-indigo-800 font-bold text-xs">ASCII Adjust Subtraction</span>
+                                    </div>
+                                    <p className="text-slate-700 text-xs sm:text-sm leading-relaxed">Used after SUB/SBB on unpacked BCD. Subtracts 6 from AL, decrements AH by 1 if borrow needed, clears high nibble of AL.</p>
+                                  </div>
+
+                                  <div className="bg-indigo-50/70 p-2.5 rounded-lg border border-indigo-200 space-y-1">
+                                    <div className="flex justify-between font-mono font-bold text-indigo-950 text-xs sm:text-sm">
+                                      <span>AAM</span>
+                                      <span className="text-emerald-800 font-bold text-xs">ASCII Adjust Multiplication</span>
+                                    </div>
+                                    <p className="text-slate-700 text-xs sm:text-sm leading-relaxed">Used AFTER byte MUL. Converts binary product in AL to unpacked BCD in AX (AH = AL ÷ 10, AL = AL mod 10).</p>
+                                  </div>
+
+                                  <div className="bg-indigo-50/70 p-2.5 rounded-lg border border-indigo-200 space-y-1">
+                                    <div className="flex justify-between font-mono font-bold text-indigo-950 text-xs sm:text-sm">
+                                      <span>AAD</span>
+                                      <span className="text-amber-800 font-bold text-xs">ASCII Adjust Division</span>
+                                    </div>
+                                    <p className="text-slate-700 text-xs sm:text-sm leading-relaxed">Used BEFORE byte DIV. Converts 2 unpacked BCD digits in AX to 1 binary byte in AL (AL = (AH × 10) + AL, AH = 00H).</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         )}
                       </div>
                     )}
@@ -2713,7 +2817,7 @@ POP DX         ; Reads 1234H into DX, SP ← SP + 2 (FFFE)`}
                     </div>
                     <div>
                       <h3 className="text-xs font-black font-mono uppercase tracking-wider text-purple-950">
-                        Packed BCD vs. Unpacked BCD vs. ASCII BCD Interactive Explorer
+                        Packed BCD vs. Unpacked BCD Interactive Explorer
                       </h3>
                       <p className="text-[11px] text-slate-500 font-sans">
                         Visualize how decimal numbers (0–99) are stored in silicon memory and processed by 8086 adjust instructions.
@@ -2789,34 +2893,24 @@ POP DX         ; Reads 1234H into DX, SP ← SP + 2 (FFFE)`}
                 {/* Quick Mental Shortcut / Golden Rule Banner */}
                 <div className="bg-gradient-to-r from-purple-900 via-slate-900 to-indigo-900 text-white p-3.5 rounded-xl border border-purple-800 text-xs font-mono shadow-sm">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-purple-300 block mb-1 flex items-center gap-1.5">
-                    <span className="text-amber-400">💡</span> GOLDEN RULE: How Upper 4 Bits (High Nibble) distinguish the formats
+                    <span className="text-amber-400">💡</span> GOLDEN RULE: How Upper 4 Bits (High Nibble) distinguish Packed vs. Unpacked BCD
                   </span>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-center pt-1">
-                    <div className="bg-purple-50 p-2 rounded-lg border border-purple-200">
-                      <span className="text-[10px] text-purple-700 block font-bold">PACKED BCD</span>
-                      <span className="text-purple-900 font-black text-xs">High Nibble = Tens Digit</span>
-                      <span className="text-[9px] text-slate-600 block mt-0.5">e.g. 59 → <code className="text-purple-800 font-bold">0101 1001</code> (59H)</span>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-center pt-1">
+                    <div className="bg-purple-50/10 p-2.5 rounded-lg border border-purple-400/40">
+                      <span className="text-[10px] text-purple-300 block font-bold uppercase">1. PACKED BCD</span>
+                      <span className="text-white font-black text-xs">High Nibble = Tens Digit</span>
+                      <span className="text-[10px] text-purple-200 block mt-0.5">e.g. 59 → <code className="text-amber-300 font-bold">0101 1001</code> (59H in 1 Byte)</span>
                     </div>
-                    <div className="bg-indigo-50 p-2 rounded-lg border border-indigo-200">
-                      <span className="text-[10px] text-indigo-700 block font-bold">UNPACKED BCD</span>
-                      <span className="text-indigo-900 font-black text-xs">High Nibble = 0000 (0H)</span>
-                      <span className="text-[9px] text-slate-600 block mt-0.5">e.g. 59 → <code className="text-indigo-800 font-bold">00H 09H</code> / <code className="text-indigo-800 font-bold">05H 09H</code></span>
-                    </div>
-                    <div className="bg-emerald-50 p-2 rounded-lg border border-emerald-200">
-                      <span className="text-[10px] text-emerald-700 block font-bold">ASCII BCD</span>
-                      <span className="text-emerald-900 font-black text-xs">High Nibble = 0011 (3H)</span>
-                      <span className="text-[9px] text-slate-600 block mt-0.5">e.g. 59 → <code className="text-emerald-800 font-bold">35H 39H</code> ('5' '9')</span>
-                    </div>
-                    <div className="bg-amber-50 p-2 rounded-lg border border-amber-200">
-                      <span className="text-[10px] text-amber-700 block font-bold">PURE BINARY / HEX</span>
-                      <span className="text-amber-900 font-black text-xs">Base-16 Value</span>
-                      <span className="text-[9px] text-slate-600 block mt-0.5">e.g. 59 → <code className="text-amber-800 font-bold">3BH</code> (0011 1011)</span>
+                    <div className="bg-indigo-50/10 p-2.5 rounded-lg border border-indigo-400/40">
+                      <span className="text-[10px] text-indigo-300 block font-bold uppercase">2. UNPACKED BCD</span>
+                      <span className="text-white font-black text-xs">High Nibble = 0000 (0H)</span>
+                      <span className="text-[10px] text-indigo-200 block mt-0.5">e.g. 59 → <code className="text-amber-300 font-bold">00H 09H</code> / <code className="text-amber-300 font-bold">05H 09H</code> (2 Bytes)</span>
                     </div>
                   </div>
                 </div>
 
-                {/* 4 Format Comparison Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                {/* Format Comparison Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   
                   {/* 1. Packed BCD Card */}
                   <div className="bg-white p-4 rounded-xl border-2 border-purple-200 space-y-3 shadow-xs flex flex-col justify-between">
@@ -2880,123 +2974,6 @@ POP DX         ; Reads 1234H into DX, SP ← SP + 2 (FFFE)`}
                     </div>
                   </div>
 
-                  {/* 3. ASCII BCD Card */}
-                  <div className="bg-white p-4 rounded-xl border-2 border-emerald-200 space-y-3 shadow-xs flex flex-col justify-between">
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs font-black font-mono text-emerald-900 uppercase">3. ASCII BCD</span>
-                        <span className="text-[9px] font-mono font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md">2 Bytes</span>
-                      </div>
-                      <p className="text-[11px] text-slate-500 leading-snug">
-                        ASCII characters <code>'0'</code>–<code>'9'</code>. High nibble is strictly <code>0011</code> (<code>3H</code>).
-                      </p>
-
-                      <div className="bg-emerald-50/80 p-2.5 rounded-lg border border-emerald-200 text-center font-mono space-y-1">
-                        <div className="text-[10px] text-emerald-600 font-bold flex justify-around border-b border-emerald-200 pb-1">
-                          <span>' {Math.floor((bcdVal % 100) / 10)} '</span>
-                          <span>' {bcdVal % 10} '</span>
-                        </div>
-                        <div className="text-[11px] font-extrabold text-emerald-950 flex justify-around pt-1">
-                          <span className="bg-white px-1.5 py-0.5 rounded border border-emerald-300">0011 {Math.floor((bcdVal % 100) / 10).toString(2).padStart(4, '0')}</span>
-                          <span className="bg-white px-1.5 py-0.5 rounded border border-emerald-300">0011 {(bcdVal % 10).toString(2).padStart(4, '0')}</span>
-                        </div>
-                        <div className="text-xs font-black text-emerald-700 pt-1">
-                          AH: 3{Math.floor((bcdVal % 100) / 10)}H | AL: 3{bcdVal % 10}H
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="text-[10px] text-emerald-800 font-mono bg-emerald-50 p-2 rounded-lg border border-emerald-200">
-                      💡 <strong>Convert:</strong> Mask with <code>AND AL, 0FH</code> or <code>SUB AL, 30H</code>.
-                    </div>
-                  </div>
-
-                  {/* 4. Pure Binary Hex Contrast Card */}
-                  <div className="bg-white p-4 rounded-xl border-2 border-amber-200 space-y-3 shadow-xs flex flex-col justify-between">
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-xs font-black font-mono text-amber-900 uppercase">4. Pure Binary</span>
-                        <span className="text-[9px] font-mono font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md">Standard Hex</span>
-                      </div>
-                      <p className="text-[11px] text-slate-500 leading-snug">
-                        Standard positional binary value (base-16). Computes as <code>(High × 16) + Low</code>.
-                      </p>
-
-                      <div className="bg-amber-50/80 p-2.5 rounded-lg border border-amber-200 text-center font-mono space-y-1">
-                        <div className="text-[10px] text-amber-600 font-bold border-b border-amber-200 pb-1">
-                          Binary Bits (8-bit)
-                        </div>
-                        <div className="text-xs font-extrabold text-amber-950 pt-1">
-                          <span className="bg-white px-2 py-0.5 rounded border border-amber-300">{bcdVal.toString(2).padStart(8, '0')}</span>
-                        </div>
-                        <div className="text-sm font-black text-amber-800 pt-1">
-                          Hex Byte: <span className="bg-amber-200 text-amber-950 px-2 py-0.5 rounded border border-amber-300">{bcdVal.toString(16).toUpperCase().padStart(2, '0')}H</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="text-[10px] text-amber-900 font-mono bg-amber-50 p-2 rounded-lg border border-amber-200">
-                      ⚡ Notice: Pure Hex <code>{bcdVal.toString(16).toUpperCase().padStart(2, '0')}H</code> differs from Packed BCD <code>{Math.floor((bcdVal % 100) / 10)}{bcdVal % 10}H</code>!
-                    </div>
-                  </div>
-
-                </div>
-
-                {/* Real-Life Hardware Adjust Step-by-Step Example */}
-                <div className="bg-slate-50 text-slate-900 p-4 rounded-xl space-y-3 font-mono text-xs border border-slate-200">
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2.5">
-                    <div className="flex items-center gap-2">
-                      <Zap className="w-4 h-4 text-amber-600" />
-                      <span className="text-purple-800 font-bold uppercase tracking-wider text-[11px]">
-                        Hardware Execution: {bcdGuideMap[bcdOpcode].title}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between items-center bg-white px-3 py-1.5 rounded-lg border border-slate-200 text-[11px]">
-                    <span className="text-purple-800 font-bold">{bcdGuideMap[bcdOpcode].subtitle}</span>
-                    <span className="bg-purple-100 text-purple-800 border border-purple-300 px-2 py-0.5 rounded font-bold">
-                      Example: {bcdGuideMap[bcdOpcode].example}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-[11px]">
-                    <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
-                      <span className="text-amber-700 font-bold block text-[10px] uppercase">
-                        {bcdGuideMap[bcdOpcode].step1Title}
-                      </span>
-                      <p className="text-slate-800">
-                        {bcdGuideMap[bcdOpcode].step1Code}
-                      </p>
-                      <span className="text-[10px] text-rose-700 block pt-1 font-bold">
-                        {bcdGuideMap[bcdOpcode].step1Note}
-                      </span>
-                    </div>
-
-                    <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
-                      <span className="text-purple-700 font-bold block text-[10px] uppercase">
-                        {bcdGuideMap[bcdOpcode].step2Title}
-                      </span>
-                      <p className="text-slate-800">
-                        {bcdGuideMap[bcdOpcode].step2Code}
-                      </p>
-                      <span className="text-[10px] text-purple-700 block pt-1 font-bold">
-                        {bcdGuideMap[bcdOpcode].step2Note}
-                      </span>
-                    </div>
-
-                    <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
-                      <span className="text-emerald-700 font-bold block text-[10px] uppercase">
-                        {bcdGuideMap[bcdOpcode].step3Title}
-                      </span>
-                      <p className="text-slate-800">
-                        {bcdGuideMap[bcdOpcode].step3Code}
-                      </p>
-                      <span className="text-[10px] text-emerald-700 block pt-1 font-bold">
-                        {bcdGuideMap[bcdOpcode].step3Note}
-                      </span>
-                    </div>
-                  </div>
                 </div>
               </div>
             )}
@@ -3203,7 +3180,7 @@ POP DX         ; Reads 1234H into DX, SP ← SP + 2 (FFFE)`}
 
                   {/* Interactive Input Sliders & Visual Bit-Shift Simulator */}
                   {currentCategory === 'Shift & Rotate' ? (
-                    renderVisualBitShiftSimulator(true)
+                    renderVisualBitShiftSimulator(false)
                   ) : (
                     <>
                   <div className="bg-white p-4 rounded-xl border border-indigo-100 space-y-3 shadow-xs font-mono text-xs">
@@ -3358,7 +3335,7 @@ POP DX         ; Reads 1234H into DX, SP ← SP + 2 (FFFE)`}
                       <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse text-[11px] font-sans">
                           <thead>
-                            <tr className="bg-indigo-950 text-white font-mono text-[10.5px]">
+                            <tr className="bg-indigo-100 text-indigo-950 font-mono text-[10.5px] border-b border-indigo-200/80">
                               <th className="p-2 rounded-tl-lg">Mnemonic</th>
                               <th className="p-2">Full Name</th>
                               <th className="p-2">Shift Direction</th>
