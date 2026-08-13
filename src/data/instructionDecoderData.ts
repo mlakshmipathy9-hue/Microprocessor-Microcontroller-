@@ -2916,6 +2916,10 @@ export function getAddressingModeAnalysis(
   const parts = clean.split(/\s+/);
   const mnemonic = parts[0] ? parts[0].toUpperCase() : 'MOV';
 
+  const isJumpOrBranch = ['JMP', 'CALL', 'JA', 'JAE', 'JB', 'JBE', 'JE', 'JNE', 'JG', 'JGE', 'JL', 'JLE', 'JC', 'JO', 'JS', 'JNP', 'JP', 'LOOP', 'LOOPE', 'LOOPNE', 'JCXZ'].includes(mnemonic);
+  const isSingleOperandUnary = ['INC', 'DEC', 'NOT', 'NEG'].includes(mnemonic);
+  const isSingleOperandMulDiv = ['MUL', 'IMUL', 'DIV', 'IDIV'].includes(mnemonic);
+
   let dst = 'AX';
   let dstType = '16-bit General Register';
   let src = 'BX';
@@ -2927,80 +2931,254 @@ export function getAddressingModeAnalysis(
 
   switch (modeKey) {
     case 'register':
-      sampleOp = `${mnemonic} AX, BX`;
-      dst = 'AX';
-      dstType = '16-bit General Register';
-      src = 'BX';
-      srcType = '16-bit General Register';
-      transferType = 'Register-to-Register';
       formatAddressingName = 'Register Addressing';
-      desc = `Both source (${src}) and destination (${dst}) operands are internal 8086 registers.\n• Advantages: Single machine cycle execution, zero memory bus access.\n• Machine Code: Encoded via ModR/M byte with mod = 11.`;
+      if (isJumpOrBranch) {
+        sampleOp = `${mnemonic} AX`;
+        dst = 'AX';
+        dstType = '16-bit Register Target Pointer';
+        src = '';
+        srcType = 'Implicit Code Segment & Instruction Pointer (CS:IP)';
+        transferType = 'Register Indirect Branching';
+        desc = `Transfers execution control directly to the target address stored in register AX.`;
+      } else if (isSingleOperandUnary) {
+        sampleOp = `${mnemonic} AX`;
+        dst = 'AX';
+        dstType = '16-bit General Register';
+        src = '';
+        srcType = 'Implied Operational Unit';
+        transferType = 'Register Unary Operation';
+        desc = `Executes ${mnemonic} directly on 16-bit register AX.`;
+      } else if (isSingleOperandMulDiv) {
+        sampleOp = `${mnemonic} BL`;
+        dst = 'AL / AX (Implicit Accumulator)';
+        dstType = 'Implicit Accumulator Register';
+        src = 'BL';
+        srcType = '8-bit General Register Divisor/Multiplicand';
+        transferType = 'Register Accumulator Operation';
+        desc = `Executes ${mnemonic} using register BL against implicit accumulator (AL/AX).`;
+      } else if (mnemonic === 'PUSH') {
+        sampleOp = 'PUSH AX';
+        dst = 'SS:SP (Stack Top)';
+        dstType = 'Stack Pointer Memory Location';
+        src = 'AX';
+        srcType = '16-bit Register Source';
+        transferType = 'Register-to-Stack Allocation';
+        desc = `Pushes 16-bit word from register AX onto top of stack (SS:SP).`;
+      } else if (mnemonic === 'POP') {
+        sampleOp = 'POP DX';
+        dst = 'DX';
+        dstType = '16-bit Register Destination';
+        src = 'SS:SP (Stack Top)';
+        srcType = 'Stack Pointer Memory Location';
+        transferType = 'Stack-to-Register Deallocation';
+        desc = `Pops 16-bit word from top of stack (SS:SP) into register DX.`;
+      } else {
+        sampleOp = `${mnemonic} AX, BX`;
+        dst = 'AX';
+        dstType = '16-bit General Register';
+        src = 'BX';
+        srcType = '16-bit General Register';
+        transferType = 'Register-to-Register';
+        desc = `Both source (${src}) and destination (${dst}) operands are internal 8086 registers.\n• Advantages: Single machine cycle execution, zero memory bus access.\n• Machine Code: Encoded via ModR/M byte with mod = 11.`;
+      }
       break;
 
     case 'immediate':
-      sampleOp = `${mnemonic} AX, 1234H`;
-      dst = 'AX';
-      dstType = '16-bit Accumulator Register';
-      src = '1234H';
-      srcType = '16-bit Immediate Constant Data';
-      transferType = 'Immediate-to-Register';
       formatAddressingName = 'Immediate Addressing';
-      desc = `Source operand (${src}) is a fixed constant literal stored directly inside the code segment following the opcode byte.\n• Operand fetch: BIU reads constant directly from instruction stream into EU.\n• Restriction: Destination operand CANNOT be an immediate value.`;
+      if (isJumpOrBranch) {
+        sampleOp = `${mnemonic} 1234H`;
+        dst = '1234H';
+        dstType = '16-bit Immediate Target Offset Address';
+        src = '';
+        srcType = 'Implicit Code Segment & Instruction Pointer (CS:IP)';
+        transferType = 'Immediate Control Flow Branching';
+        desc = `Target offset address (1234H) is specified directly as an immediate constant stored within the instruction stream bytes following the opcode.`;
+      } else if (mnemonic === 'PUSH') {
+        sampleOp = 'PUSH 1234H';
+        dst = 'SS:SP (Stack Top)';
+        dstType = 'Stack Pointer Memory Location';
+        src = '1234H';
+        srcType = '16-bit Immediate Constant Data';
+        transferType = 'Immediate-to-Stack Allocation';
+        desc = `Pushes immediate 16-bit constant 1234H directly onto top of stack (SS:SP).`;
+      } else {
+        sampleOp = `${mnemonic} AX, 1234H`;
+        dst = 'AX';
+        dstType = '16-bit Accumulator Register';
+        src = '1234H';
+        srcType = '16-bit Immediate Constant Data';
+        transferType = 'Immediate-to-Register';
+        desc = `Source operand (${src}) is a fixed constant literal stored directly inside the code segment following the opcode byte.\n• Operand fetch: BIU reads constant directly from instruction stream into EU.\n• Restriction: Destination operand CANNOT be an immediate value.`;
+      }
       break;
 
     case 'direct_memory':
-      sampleOp = `${mnemonic} AX, [2000H]`;
-      dst = 'AX';
-      dstType = '16-bit Accumulator Register';
-      src = '[2000H]';
-      srcType = 'Direct Memory Offset (DS:2000H)';
-      transferType = 'Direct Memory Read/Write';
       formatAddressingName = 'Direct Memory Addressing';
-      desc = `The 16-bit offset displacement (2000H) is directly encoded within the instruction stream bytes.\n• Physical Address = Data Segment (DS) × 16 + Direct Offset (2000H).\n• Example: Reads 2 consecutive memory bytes starting at address DS:2000H.`;
+      if (isJumpOrBranch) {
+        sampleOp = `${mnemonic} [2000H]`;
+        dst = '[2000H]';
+        dstType = 'Direct Memory Target Address Pointer (DS:2000H)';
+        src = '';
+        srcType = 'Implicit Code Segment & Instruction Pointer (CS:IP)';
+        transferType = 'Direct Memory Indirect Branching';
+        desc = `Fetches target branch address directly from memory location DS:2000H and updates CS:IP.`;
+      } else if (isSingleOperandUnary) {
+        sampleOp = `${mnemonic} [2000H]`;
+        dst = '[2000H]';
+        dstType = 'Direct Memory Location (DS:2000H)';
+        src = '';
+        srcType = 'Implied Operational Unit';
+        transferType = 'Direct Memory Unary Operation';
+        desc = `Executes ${mnemonic} on memory location DS:2000H.`;
+      } else if (isSingleOperandMulDiv) {
+        sampleOp = `${mnemonic} [2000H]`;
+        dst = 'AL / AX (Implicit Accumulator)';
+        dstType = 'Implicit Accumulator Register';
+        src = '[2000H]';
+        srcType = 'Direct Memory Location (DS:2000H)';
+        transferType = 'Memory Accumulator Operation';
+        desc = `Executes ${mnemonic} using memory operand at DS:2000H against implicit accumulator (AL/AX).`;
+      } else if (mnemonic === 'PUSH') {
+        sampleOp = 'PUSH [2000H]';
+        dst = 'SS:SP (Stack Top)';
+        dstType = 'Stack Pointer Memory Location';
+        src = '[2000H]';
+        srcType = 'Direct Memory Location (DS:2000H)';
+        transferType = 'Memory-to-Stack Allocation';
+        desc = `Pushes word from direct memory location DS:2000H onto stack.`;
+      } else if (mnemonic === 'POP') {
+        sampleOp = 'POP [2000H]';
+        dst = '[2000H]';
+        dstType = 'Direct Memory Location (DS:2000H)';
+        src = 'SS:SP (Stack Top)';
+        srcType = 'Stack Pointer Memory Location';
+        transferType = 'Stack-to-Memory Deallocation';
+        desc = `Pops 16-bit word from top of stack into direct memory location DS:2000H.`;
+      } else {
+        sampleOp = `${mnemonic} AX, [2000H]`;
+        dst = 'AX';
+        dstType = '16-bit Accumulator Register';
+        src = '[2000H]';
+        srcType = 'Direct Memory Offset (DS:2000H)';
+        transferType = 'Direct Memory Read/Write';
+        desc = `The 16-bit offset displacement (2000H) is directly encoded within the instruction stream bytes.\n• Physical Address = Data Segment (DS) × 16 + Direct Offset (2000H).\n• Example: Reads 2 consecutive memory bytes starting at address DS:2000H.`;
+      }
       break;
 
     case 'register_indirect':
-      sampleOp = `${mnemonic} AX, [BX]`;
-      dst = 'AX';
-      dstType = '16-bit General Register';
-      src = '[BX]';
-      srcType = 'Register Indirect Pointer (DS:BX)';
-      transferType = 'Register Indirect Memory Access';
       formatAddressingName = 'Register Indirect Addressing';
-      desc = `Memory offset address is dynamically stored inside pointer register BX (or BP, SI, DI).\n• Effective Address (EA) = (BX).\n• Physical Address = DS × 16 + (BX).\n• Ideal for traversing pointers, arrays, and buffer structures in memory.`;
+      if (isJumpOrBranch) {
+        sampleOp = `${mnemonic} [BX]`;
+        dst = '[BX]';
+        dstType = 'Register Indirect Target Memory Pointer (DS:BX)';
+        src = '';
+        srcType = 'Implicit CS:IP';
+        transferType = 'Register Indirect Branching';
+        desc = `Fetches target branch address from memory location pointed to by register BX.`;
+      } else if (isSingleOperandUnary) {
+        sampleOp = `${mnemonic} [BX]`;
+        dst = '[BX]';
+        dstType = 'Register Indirect Pointer (DS:BX)';
+        src = '';
+        srcType = 'Implied Operational Unit';
+        transferType = 'Register Indirect Unary Operation';
+        desc = `Executes ${mnemonic} on memory location pointed to by BX.`;
+      } else if (isSingleOperandMulDiv) {
+        sampleOp = `${mnemonic} [BX]`;
+        dst = 'AL / AX (Implicit Accumulator)';
+        dstType = 'Implicit Accumulator Register';
+        src = '[BX]';
+        srcType = 'Register Indirect Pointer (DS:BX)';
+        transferType = 'Register Indirect Operation';
+        desc = `Executes ${mnemonic} using memory operand at DS:BX against implicit accumulator.`;
+      } else if (mnemonic === 'PUSH') {
+        sampleOp = 'PUSH [BX]';
+        dst = 'SS:SP (Stack Top)';
+        dstType = 'Stack Pointer Memory Location';
+        src = '[BX]';
+        srcType = 'Register Indirect Memory Pointer (DS:BX)';
+        transferType = 'Indirect Memory-to-Stack Allocation';
+        desc = `Pushes word from memory at DS:BX onto top of stack.`;
+      } else if (mnemonic === 'POP') {
+        sampleOp = 'POP [BX]';
+        dst = '[BX]';
+        dstType = 'Register Indirect Memory Pointer (DS:BX)';
+        src = 'SS:SP (Stack Top)';
+        srcType = 'Stack Pointer Memory Location';
+        transferType = 'Stack-to-Indirect Memory Deallocation';
+        desc = `Pops word from top of stack into memory at DS:BX.`;
+      } else {
+        sampleOp = `${mnemonic} AX, [BX]`;
+        dst = 'AX';
+        dstType = '16-bit General Register';
+        src = '[BX]';
+        srcType = 'Register Indirect Pointer (DS:BX)';
+        transferType = 'Register Indirect Memory Access';
+        desc = `Memory offset address is dynamically stored inside pointer register BX (or BP, SI, DI).\n• Effective Address (EA) = (BX).\n• Physical Address = DS × 16 + (BX).\n• Ideal for traversing pointers, arrays, and buffer structures in memory.`;
+      }
       break;
 
     case 'based':
-      sampleOp = `${mnemonic} AX, [BX + 0008H]`;
-      dst = 'AX';
-      dstType = '16-bit General Register';
-      src = '[BX + 0008H]';
-      srcType = 'Based Memory Pointer with Displacement';
-      transferType = 'Based Memory Access';
       formatAddressingName = 'Based Addressing';
-      desc = `Effective address is computed by adding a base register (BX or BP) to an 8-bit or 16-bit constant displacement.\n• EA = (BX) + 0008H.\n• Default Segment: DS for BX base, SS for BP base.\n• Frequently used to access record or structure fields.`;
+      if (isSingleOperandUnary) {
+        sampleOp = `${mnemonic} [BX + 0008H]`;
+        dst = '[BX + 0008H]';
+        dstType = 'Based Memory Pointer';
+        src = '';
+        srcType = 'Implied Operational Unit';
+        transferType = 'Based Memory Access';
+        desc = `Executes ${mnemonic} on based memory location [BX + 0008H].`;
+      } else {
+        sampleOp = `${mnemonic} AX, [BX + 0008H]`;
+        dst = 'AX';
+        dstType = '16-bit General Register';
+        src = '[BX + 0008H]';
+        srcType = 'Based Memory Pointer with Displacement';
+        transferType = 'Based Memory Access';
+        desc = `Effective address is computed by adding a base register (BX or BP) to an 8-bit or 16-bit constant displacement.\n• EA = (BX) + 0008H.\n• Default Segment: DS for BX base, SS for BP base.\n• Frequently used to access record or structure fields.`;
+      }
       break;
 
     case 'indexed':
-      sampleOp = `${mnemonic} AX, [SI + 0004H]`;
-      dst = 'AX';
-      dstType = '16-bit General Register';
-      src = '[SI + 0004H]';
-      srcType = 'Indexed Memory Pointer with Displacement';
-      transferType = 'Indexed Memory Access';
       formatAddressingName = 'Indexed Addressing';
-      desc = `Effective address is computed by adding an index register (SI or DI) to a constant displacement.\n• EA = (SI) + 0004H.\n• Default Segment: DS:SI or DS:DI.\n• Used for indexing elements in arrays or string buffers.`;
+      if (isSingleOperandUnary) {
+        sampleOp = `${mnemonic} [SI + 0004H]`;
+        dst = '[SI + 0004H]';
+        dstType = 'Indexed Memory Pointer';
+        src = '';
+        srcType = 'Implied Operational Unit';
+        transferType = 'Indexed Memory Access';
+        desc = `Executes ${mnemonic} on indexed memory location [SI + 0004H].`;
+      } else {
+        sampleOp = `${mnemonic} AX, [SI + 0004H]`;
+        dst = 'AX';
+        dstType = '16-bit General Register';
+        src = '[SI + 0004H]';
+        srcType = 'Indexed Memory Pointer with Displacement';
+        transferType = 'Indexed Memory Access';
+        desc = `Effective address is computed by adding an index register (SI or DI) to a constant displacement.\n• EA = (SI) + 0004H.\n• Default Segment: DS:SI or DS:DI.\n• Used for indexing elements in arrays or string buffers.`;
+      }
       break;
 
     case 'based_indexed':
-      sampleOp = `${mnemonic} AX, [BX + SI + 0002H]`;
-      dst = 'AX';
-      dstType = '16-bit General Register';
-      src = '[BX + SI + 0002H]';
-      srcType = 'Based-Indexed Pointer with Displacement';
-      transferType = 'Based-Indexed Memory Access';
       formatAddressingName = 'Based-Indexed Addressing';
-      desc = `Effective address combines a base register, index register, and displacement.\n• EA = (BX) + (SI) + 0002H.\n• Physical Address = DS × 16 + EA.\n• Perfect for accessing 2D arrays, matrices, and complex multi-dimensional data structures.`;
+      if (isSingleOperandUnary) {
+        sampleOp = `${mnemonic} [BX + SI + 0002H]`;
+        dst = '[BX + SI + 0002H]';
+        dstType = 'Based-Indexed Memory Pointer';
+        src = '';
+        srcType = 'Implied Operational Unit';
+        transferType = 'Based-Indexed Memory Access';
+        desc = `Executes ${mnemonic} on based-indexed memory location [BX + SI + 0002H].`;
+      } else {
+        sampleOp = `${mnemonic} AX, [BX + SI + 0002H]`;
+        dst = 'AX';
+        dstType = '16-bit General Register';
+        src = '[BX + SI + 0002H]';
+        srcType = 'Based-Indexed Pointer with Displacement';
+        transferType = 'Based-Indexed Memory Access';
+        desc = `Effective address combines a base register, index register, and displacement.\n• EA = (BX) + (SI) + 0002H.\n• Physical Address = DS × 16 + EA.\n• Perfect for accessing 2D arrays, matrices, and complex multi-dimensional data structures.`;
+      }
       break;
 
     case 'implied':
@@ -3762,7 +3940,8 @@ export function getGeneralExplanation(opcode: string, fallbackDesc?: string): Ge
         flagsBadgeColor: 'amber',
         rules: [
           'Operates on 8-bit or 16-bit register or memory.',
-          'Overflow Flag (OF) is set if negating 80H (-128) or 8000H (-32768).'
+          'Overflow Flag (OF) is set if negating 80H (-128) or 8000H (-32768).',
+          'Difference vs NOT: NEG performs 2\'s complement negation (0 - x or ~x + 1) and updates all status flags (CF=1 for non-zero). In contrast, NOT performs 1\'s complement bitwise inversion (~x) and leaves all status flags unchanged.'
         ]
       };
     case 'MUL':
@@ -3820,7 +3999,8 @@ export function getGeneralExplanation(opcode: string, fallbackDesc?: string): Ge
         flagsBadgeColor: 'emerald',
         rules: [
           'Operates on 8-bit or 16-bit register or memory location.',
-          'Does NOT affect any status flags (unlike XOR or NEG).'
+          'Does NOT affect any status flags (unlike XOR or NEG).',
+          'Difference vs NEG: NOT performs 1\'s complement bitwise inversion (~x) and leaves all status flags unchanged. In contrast, NEG performs 2\'s complement negation (0 - x or ~x + 1) and updates all status flags (CF=1 for non-zero).'
         ]
       };
     case 'DAA':

@@ -49,6 +49,7 @@ import {
   EceSlide,
   InstructionFormatInfo
 } from '../data/instructionDecoderData';
+import BranchingInstructionsTable from './BranchingInstructionsTable';
 
 interface InstructionDecoderSimulatorProps {
   initialTab?: 'lab' | 'groups' | 'comparison' | 'remember';
@@ -128,7 +129,7 @@ export default function InstructionDecoderSimulator({
   // Interactive ALU Explorer State (Synchronized with AL/AX register)
   const [aluValA, setAluValA] = useState<number>(0x00FF);
   const [aluValB, setAluValB] = useState<number>(0x0001);
-  const [aluOp, setAluOp] = useState<'ADD' | 'SUB' | 'AND' | 'OR' | 'XOR' | 'SHL' | 'SAL' | 'SHR' | 'SAR' | 'ROL' | 'ROR' | 'RCL' | 'RCR'>('SHL');
+  const [aluOp, setAluOp] = useState<'ADD' | 'SUB' | 'AND' | 'OR' | 'XOR' | 'NOT' | 'NEG' | 'SHL' | 'SAL' | 'SHR' | 'SAR' | 'ROL' | 'ROR' | 'RCL' | 'RCR'>('SHL');
   const [shiftStep, setShiftStep] = useState<number>(0);
   const [shiftAnimRunning, setShiftAnimRunning] = useState<boolean>(false);
   const [initialCF, setInitialCF] = useState<number>(0);
@@ -389,6 +390,8 @@ export default function InstructionDecoderSimulator({
     let cf = 0;
     let af = 0;
     let of = 0;
+    let zf = 0;
+    let sf = 0;
 
     if (aluOp === 'ADD') {
       res = (a + b) & 0xFF;
@@ -412,6 +415,20 @@ export default function InstructionDecoderSimulator({
       res = a | b;
     } else if (aluOp === 'XOR') {
       res = a ^ b;
+    } else if (aluOp === 'NOT' || activeInstruction?.opcode.startsWith('NOT')) {
+      res = (~a) & 0xFF;
+      return { res, cf: flags.CF, zf: flags.ZF, sf: flags.SF, of: flags.OF, af: flags.AF, pf: flags.PF };
+    } else if (aluOp === 'NEG' || activeInstruction?.opcode.startsWith('NEG')) {
+      res = (0 - a + 0x100) & 0xFF;
+      cf = a !== 0 ? 1 : 0;
+      af = (a & 0x0F) !== 0 ? 1 : 0;
+      sf = (res & 0x80) ? 1 : 0;
+      zf = res === 0 ? 1 : 0;
+      of = a === 0x80 ? 1 : 0;
+      let ones = 0;
+      for (let i = 0; i < 8; i++) { if ((res >> i) & 1) ones++; }
+      const pfVal = ones % 2 === 0 ? 1 : 0;
+      return { res, cf, zf, sf, of, af, pf: pfVal };
     } else if (aluOp === 'SHL' || aluOp === 'SAL') {
       const count = Math.min(Math.max(b & 0xFF, 1), 8);
       let temp = a;
@@ -492,8 +509,8 @@ export default function InstructionDecoderSimulator({
       cf = curCF;
     }
 
-    const zf = res === 0 ? 1 : 0;
-    const sf = (res & 0x80) ? 1 : 0;
+    zf = res === 0 ? 1 : 0;
+    sf = (res & 0x80) ? 1 : 0;
     let ones = 0;
     for (let i = 0; i < 8; i++) {
       if ((res >> i) & 1) ones++;
@@ -559,43 +576,43 @@ export default function InstructionDecoderSimulator({
         injectedBit = 0;
         nextCF = outBit;
         nextVal = ((curVal << 1) & 0xFF) | injectedBit;
-        expl = `Step ${s}: Bit 7 (${outBit}) shifted left OUT into Carry Flag (CF=${nextCF}). All bits shifted left by 1 position. Bit 0 (LSB) received 0.`;
+        expl = `Step ${s}: Bit 7 (${outBit}) shifted left OUT into Carry Flag (CF=${nextCF}). All bits shifted left by 1 position. Bit 0 (LSB) filled with 0.`;
       } else if (op === 'SHR') {
         outBit = prevBits[7];
         injectedBit = 0;
         nextCF = outBit;
         nextVal = ((curVal >> 1) & 0x7F) | (injectedBit << 7);
-        expl = `Step ${s}: Bit 0 (${outBit}) shifted right OUT into Carry Flag (CF=${nextCF}). All bits shifted right by 1 position. Bit 7 (MSB) received 0.`;
+        expl = `Step ${s}: Bit 0 (${outBit}) shifted right OUT into Carry Flag (CF=${nextCF}). All bits shifted right by 1 position. Bit 7 (MSB) filled with 0.`;
       } else if (op === 'SAR') {
         outBit = prevBits[7];
         injectedBit = prevBits[0];
         nextCF = outBit;
         nextVal = ((curVal >> 1) & 0x7F) | (injectedBit << 7);
-        expl = `Step ${s}: Bit 0 (${outBit}) shifted right OUT into Carry Flag (CF=${nextCF}). Bit 7 (Sign Bit = ${injectedBit}) is preserved to maintain 2's complement sign.`;
+        expl = `Step ${s}: Bit 0 (${outBit}) shifted right OUT into Carry Flag (CF=${nextCF}). Bit 7 (Sign Bit = ${injectedBit}) is PRESERVED and duplicated to maintain 2's complement sign.`;
       } else if (op === 'ROL') {
         outBit = prevBits[0];
         injectedBit = prevBits[0];
         nextCF = outBit;
         nextVal = ((curVal << 1) & 0xFF) | injectedBit;
-        expl = `Step ${s}: Bit 7 (${outBit}) rotated around into Bit 0 (LSB) and was copied into Carry Flag (CF=${nextCF}).`;
+        expl = `Step ${s}: [8-Bit Circular Rotate] Bit 7 (${outBit}) wrapped directly around into Bit 0 (LSB), AND was copied into Carry Flag (CF=${nextCF}). No bits lost!`;
       } else if (op === 'ROR') {
         outBit = prevBits[7];
         injectedBit = prevBits[7];
         nextCF = outBit;
         nextVal = ((curVal >> 1) & 0x7F) | (injectedBit << 7);
-        expl = `Step ${s}: Bit 0 (${outBit}) rotated around into Bit 7 (MSB) and was copied into Carry Flag (CF=${nextCF}).`;
+        expl = `Step ${s}: [8-Bit Circular Rotate] Bit 0 (${outBit}) wrapped directly around into Bit 7 (MSB), AND was copied into Carry Flag (CF=${nextCF}). No bits lost!`;
       } else if (op === 'RCL') {
         outBit = prevBits[0];
         injectedBit = prevCF;
         nextCF = outBit;
         nextVal = ((curVal << 1) & 0xFF) | injectedBit;
-        expl = `Step ${s}: Bit 7 (${outBit}) shifted left into Carry Flag (CF=${nextCF}). Previous Carry Flag (${prevCF}) rotated into Bit 0 (LSB) in a 9-bit ring.`;
+        expl = `Step ${s}: [9-Bit Ring Rotate] Bit 7 (${outBit}) shifted left into Carry Flag (CF=${nextCF}). Previous Carry Flag (${prevCF}) rotated into Bit 0 (LSB) as a 9th bit in the loop.`;
       } else if (op === 'RCR') {
         outBit = prevBits[7];
         injectedBit = prevCF;
         nextCF = outBit;
         nextVal = ((curVal >> 1) & 0x7F) | (injectedBit << 7);
-        expl = `Step ${s}: Bit 0 (${outBit}) shifted right into Carry Flag (CF=${nextCF}). Previous Carry Flag (${prevCF}) rotated into Bit 7 (MSB) in a 9-bit ring.`;
+        expl = `Step ${s}: [9-Bit Ring Rotate] Bit 0 (${outBit}) shifted right into Carry Flag (CF=${nextCF}). Previous Carry Flag (${prevCF}) rotated into Bit 7 (MSB) as a 9th bit in the loop.`;
       }
 
       curVal = nextVal;
@@ -617,45 +634,127 @@ export default function InstructionDecoderSimulator({
     const activeStep = stepDataList[boundedStep] || stepDataList[0];
     const isLeftShift = ['SHL', 'SAL', 'ROL', 'RCL'].includes(currentOp.toUpperCase());
 
+    const isShiftOp = ['SHL', 'SAL', 'SHR', 'SAR'].includes(currentOp.toUpperCase());
+    const isSimpleRotate = ['ROL', 'ROR'].includes(currentOp.toUpperCase());
+    const isCarryRotate = ['RCL', 'RCR'].includes(currentOp.toUpperCase());
+
+    const opFullNames: Record<string, string> = {
+      SHL: 'Shift Logical Left',
+      SAL: 'Shift Arithmetic Left',
+      SHR: 'Shift Logical Right',
+      SAR: 'Shift Arithmetic Right',
+      ROL: 'Rotate Left',
+      ROR: 'Rotate Right',
+      RCL: 'Rotate Through Carry Left',
+      RCR: 'Rotate Through Carry Right',
+    };
+    const fullOpName = opFullNames[currentOp.toUpperCase()] || currentOp.toUpperCase();
+
     return (
-      <div className={`${isDarkTheme ? 'bg-slate-900 text-white border-indigo-700/60' : 'bg-gradient-to-br from-indigo-50/60 via-white to-blue-50/60 text-slate-900 border-indigo-200/80 shadow-xs'} p-4 rounded-xl border space-y-4 font-mono text-xs`}>
-        {/* Header & Quick Opcode Switcher */}
-        <div className={`flex flex-wrap items-center justify-between gap-2 border-b ${isDarkTheme ? 'border-indigo-800/60' : 'border-indigo-200'} pb-3`}>
-          <div className="flex items-center gap-2">
-            <Binary className={`w-5 h-5 ${isDarkTheme ? 'text-emerald-400' : 'text-emerald-600'}`} />
+      <div className={`${isDarkTheme ? 'bg-slate-900 text-white border-indigo-700/60' : 'bg-gradient-to-br from-indigo-50/60 via-white to-blue-50/60 text-slate-900 border-indigo-200/80 shadow-xs'} p-3 sm:p-5 rounded-xl border space-y-4 font-mono text-xs w-full`}>
+        {/* Header & Grouped Opcode Selector */}
+        <div className={`flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b ${isDarkTheme ? 'border-indigo-800/60' : 'border-indigo-200'} pb-3.5`}>
+          <div className="flex items-center gap-2.5">
+            <Binary className={`w-5 h-5 shrink-0 ${isDarkTheme ? 'text-emerald-400' : 'text-emerald-600'}`} />
             <div>
-              <h4 className={`text-xs font-bold uppercase tracking-wider ${isDarkTheme ? 'text-indigo-300' : 'text-indigo-950'}`}>
-                Interactive Bit-Shift & Rotation Visualizer
+              <h4 className={`text-xs sm:text-sm font-bold uppercase tracking-wider ${isDarkTheme ? 'text-indigo-300' : 'text-indigo-950'}`}>
+                8086 {currentOp.toUpperCase()} ({fullOpName}) Simulator
               </h4>
-              <span className={`text-[10px] font-sans ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>
-                Visualize exact bit movements, bit index flow, fill bits & Carry Flag (CF) transitions step-by-step.
+              <span className={`text-[10.5px] font-sans ${isDarkTheme ? 'text-slate-400' : 'text-slate-600'}`}>
+                Step-by-step interactive comparison: observe how bits shift, fill, or circulate through the Carry Flag.
               </span>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-1">
-            {['SHL', 'SHR', 'SAR', 'ROL', 'ROR', 'RCL', 'RCR'].map((m) => (
-              <button
-                key={m}
-                onClick={() => {
-                  setAluOp(m as any);
-                  setShiftStep(0);
-                  setShiftAnimRunning(false);
-                }}
-                className={`px-2 py-0.5 rounded text-[10px] font-extrabold transition-all cursor-pointer ${
-                  aluOp.toUpperCase() === m
-                    ? isDarkTheme ? 'bg-emerald-500 text-slate-950 shadow-xs scale-105' : 'bg-emerald-600 text-white shadow-xs scale-105'
-                    : isDarkTheme ? 'bg-indigo-950 text-indigo-300 hover:bg-indigo-900 border border-indigo-800' : 'bg-indigo-50 text-indigo-900 hover:bg-indigo-100 border border-indigo-200'
-                }`}
-              >
-                {m}
-              </button>
-            ))}
+          {/* Grouped Opcode Buttons */}
+          <div className="flex flex-wrap items-center gap-2 font-sans text-[10.5px]">
+            {/* Shifts Group */}
+            <div className={`flex items-center gap-1 p-1 rounded-lg border ${isDarkTheme ? 'bg-indigo-950/80 border-indigo-800' : 'bg-indigo-50/80 border-indigo-200'}`}>
+              <span className={`px-1.5 font-bold uppercase text-[9px] ${isDarkTheme ? 'text-indigo-300' : 'text-indigo-900'}`}>Shifts:</span>
+              {['SHL', 'SHR', 'SAR'].map((m) => (
+                <button
+                  key={m}
+                  onClick={() => {
+                    setAluOp(m as any);
+                    setShiftStep(0);
+                    setShiftAnimRunning(false);
+                  }}
+                  className={`px-2 py-0.5 rounded text-[10px] font-mono font-extrabold transition-all cursor-pointer ${
+                    aluOp.toUpperCase() === m
+                      ? isDarkTheme ? 'bg-emerald-500 text-slate-950 shadow-xs scale-105' : 'bg-emerald-600 text-white shadow-xs scale-105'
+                      : isDarkTheme ? 'bg-indigo-900/60 text-indigo-200 hover:bg-indigo-800' : 'bg-white text-indigo-900 hover:bg-indigo-100 border border-indigo-200/60'
+                  }`}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+
+            {/* Rotates Group */}
+            <div className={`flex items-center gap-1 p-1 rounded-lg border ${isDarkTheme ? 'bg-purple-950/80 border-purple-800' : 'bg-purple-50/80 border-purple-200'}`}>
+              <span className={`px-1.5 font-bold uppercase text-[9px] ${isDarkTheme ? 'text-purple-300' : 'text-purple-900'}`}>Rotates:</span>
+              {['ROL', 'ROR', 'RCL', 'RCR'].map((m) => (
+                <button
+                  key={m}
+                  onClick={() => {
+                    setAluOp(m as any);
+                    setShiftStep(0);
+                    setShiftAnimRunning(false);
+                  }}
+                  className={`px-2 py-0.5 rounded text-[10px] font-mono font-extrabold transition-all cursor-pointer ${
+                    aluOp.toUpperCase() === m
+                      ? isDarkTheme ? 'bg-purple-500 text-slate-950 shadow-xs scale-105' : 'bg-purple-600 text-white shadow-xs scale-105'
+                      : isDarkTheme ? 'bg-purple-900/60 text-purple-200 hover:bg-purple-800' : 'bg-white text-purple-900 hover:bg-purple-100 border border-purple-200/60'
+                  }`}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
+        {/* Dynamic Concept Explanation Banner: SHIFT vs. ROTATE */}
+        <div className={`p-3 rounded-xl border text-[11px] font-sans space-y-1.5 transition-all ${
+          isShiftOp
+            ? isDarkTheme ? 'bg-sky-950/70 border-sky-800 text-sky-200' : 'bg-sky-50/90 border-sky-200 text-sky-950'
+            : isSimpleRotate
+            ? isDarkTheme ? 'bg-purple-950/70 border-purple-800 text-purple-200' : 'bg-purple-50/90 border-purple-200 text-purple-950'
+            : isDarkTheme ? 'bg-amber-950/70 border-amber-800 text-amber-200' : 'bg-amber-50/90 border-amber-200 text-amber-950'
+        }`}>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="font-extrabold uppercase tracking-wide text-xs flex items-center gap-1.5">
+              {isShiftOp && <span className="px-2 py-0.5 rounded bg-sky-600 text-white text-[10px] font-mono">⚡ LINEAR SHIFT MODE</span>}
+              {isSimpleRotate && <span className="px-2 py-0.5 rounded bg-purple-600 text-white text-[10px] font-mono">🔄 8-BIT CIRCULAR ROTATE</span>}
+              {isCarryRotate && <span className="px-2 py-0.5 rounded bg-amber-600 text-white text-[10px] font-mono">🔂 9-BIT CARRY RING ROTATE</span>}
+              <strong className="font-sans">Key Concept: How Bit Movement Works for {aluOp.toUpperCase()}</strong>
+            </span>
+            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-white/80 border border-current text-slate-800">
+              {isShiftOp ? 'Linear Stream (Bits Discarded)' : isSimpleRotate ? 'Closed Loop (8 Bits Preserved)' : '9-Bit Loop (Includes CF)'}
+            </span>
+          </div>
+
+          <p className="text-[11px] leading-relaxed">
+            {isShiftOp && (
+              <>
+                <strong>Linear Shift:</strong> Bits move in one direction. Bits pushed out of the register end go directly into the <strong>Carry Flag (CF)</strong> and are discarded. Vacant positions created on the other end are filled with <strong>{aluOp.toUpperCase() === 'SAR' ? 'the Sign Bit (MSB)' : 'Zeroes (0)'}</strong>.
+              </>
+            )}
+            {isSimpleRotate && (
+              <>
+                <strong>8-Bit Circular Rotate:</strong> No bits are lost! Bits exiting one end <strong>wrap around directly</strong> to enter the opposite end. Simultaneously, a copy of the wrapped bit is saved into the <strong>Carry Flag (CF)</strong> for status tracking.
+              </>
+            )}
+            {isCarryRotate && (
+              <>
+                <strong>9-Bit Rotate Through Carry:</strong> The <strong>Carry Flag (CF)</strong> participates directly as an actual <strong>9th bit in the circular loop</strong>! The bit leaving the register enters CF, and the previous value of CF enters the opposite end of the register.
+              </>
+            )}
+          </p>
+        </div>
+
         {/* Operands & Shift Controls Bar */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
           {/* Operand AL */}
           <div className={`${isDarkTheme ? 'bg-indigo-950/60 border-indigo-800' : 'bg-white border-indigo-200 shadow-2xs'} p-2.5 rounded-lg border space-y-1`}>
             <div className="flex justify-between items-center text-[11px] font-bold">
@@ -780,12 +879,12 @@ export default function InstructionDecoderSimulator({
         </div>
 
         {/* Direction & Pipeline Banner */}
-        <div className={`${isDarkTheme ? 'bg-indigo-950/90 border-indigo-800/80 text-indigo-200' : 'bg-indigo-50/90 border-indigo-200 text-indigo-950'} p-2.5 rounded-lg border flex items-center justify-between text-[11px] font-sans`}>
+        <div className={`${isDarkTheme ? 'bg-indigo-950/90 border-indigo-800/80 text-indigo-200' : 'bg-indigo-50/90 border-indigo-200 text-indigo-950'} p-2.5 rounded-lg border flex flex-wrap items-center justify-between gap-1.5 text-[11px] font-sans`}>
           <span className={`font-bold flex items-center gap-1.5 ${isDarkTheme ? 'text-amber-300' : 'text-amber-800'}`}>
             <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
             Shift Direction:
           </span>
-          <span className={`font-mono font-extrabold px-2.5 py-0.5 rounded border ${isDarkTheme ? 'text-white bg-indigo-900 border-indigo-700' : 'text-indigo-950 bg-white border-indigo-200'}`}>
+          <span className={`font-mono font-extrabold px-2.5 py-0.5 rounded border text-[10px] sm:text-[11px] ${isDarkTheme ? 'text-white bg-indigo-900 border-indigo-700' : 'text-indigo-950 bg-white border-indigo-200'}`}>
             {isLeftShift ? 'LEFT SHIFT / ROTATE (← MSB ← ... ← LSB ←)' : 'RIGHT SHIFT / ROTATE (→ MSB → ... → LSB →)'}
           </span>
           <span className={`${isDarkTheme ? 'text-emerald-400' : 'text-emerald-700'} font-bold font-mono`}>
@@ -793,34 +892,63 @@ export default function InstructionDecoderSimulator({
           </span>
         </div>
 
+        {/* Mobile scroll hint */}
+        <div className="text-[10px] text-slate-500 sm:hidden flex items-center justify-end gap-1 font-sans font-medium px-1">
+          <span>← Swipe horizontally to view full bit flow →</span>
+        </div>
+
         {/* THE VISUAL BIT-FLOW WIRE GRID */}
-        <div className={`${isDarkTheme ? 'bg-slate-950 border-indigo-800/90' : 'bg-white border-indigo-200 shadow-2xs'} p-4 rounded-xl border space-y-3 overflow-x-auto`}>
-          <div className="flex items-center justify-center gap-1.5 min-w-[580px] py-2 font-mono">
+        <div className={`${isDarkTheme ? 'bg-slate-950 border-indigo-800/90' : 'bg-white border-indigo-200 shadow-2xs'} p-3 sm:p-5 rounded-xl border space-y-3.5 overflow-x-auto max-w-full w-full`}>
+          {/* Circular Loop Graphic Indicator for Rotates */}
+          {!isShiftOp && (
+            <div className={`flex items-center justify-center gap-2 p-2 rounded-lg text-[11px] font-sans font-bold border ${
+              isSimpleRotate
+                ? isDarkTheme ? 'bg-purple-950/80 text-purple-300 border-purple-800' : 'bg-purple-50 text-purple-950 border-purple-200'
+                : isDarkTheme ? 'bg-amber-950/80 text-amber-300 border-amber-800' : 'bg-amber-50 text-amber-950 border-amber-200'
+            }`}>
+              <span className="text-base">
+                {isSimpleRotate ? '🔄' : '🔂'}
+              </span>
+              <span>
+                {isSimpleRotate
+                  ? `8-Bit Closed Loop Active (${aluOp.toUpperCase()}): Bits wrap around directly from ${isLeftShift ? 'b7 (MSB) ➔ b0 (LSB)' : 'b0 (LSB) ➔ b7 (MSB)'}`
+                  : `9-Bit Closed Ring Active (${aluOp.toUpperCase()}): Bits pass THROUGH Carry Flag (${isLeftShift ? 'b7 ➔ CF ➔ b0' : 'b0 ➔ CF ➔ b7'})`}
+              </span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between sm:justify-center gap-1.5 sm:gap-3 w-full max-w-full py-1.5 sm:py-2.5 font-mono min-w-[500px] sm:min-w-0">
             {isLeftShift ? (
-              <div className={`flex flex-col items-center gap-1 ${isDarkTheme ? 'bg-amber-950/80 border-amber-500/80' : 'bg-amber-50 border-amber-300'} p-2 rounded-xl border-2 text-center min-w-[70px] shadow-xs`}>
-                <span className={`text-[9px] font-extrabold uppercase ${isDarkTheme ? 'text-amber-300' : 'text-amber-900'} tracking-wider`}>CARRY FLAG (CF)</span>
-                <div className="w-10 h-10 rounded-lg bg-amber-500 text-slate-950 font-black text-lg flex items-center justify-center shadow-md animate-pulse">
+              <div className={`flex flex-col items-center gap-1 ${isDarkTheme ? 'bg-amber-950/80 border-amber-500/80' : 'bg-amber-50 border-amber-300'} p-2 sm:p-3 rounded-lg sm:rounded-xl border-2 text-center shrink-0 shadow-xs min-w-[62px] sm:min-w-[84px] md:min-w-[96px]`}>
+                <span className={`text-[8px] sm:text-[10px] font-extrabold uppercase ${isDarkTheme ? 'text-amber-300' : 'text-amber-900'} tracking-tight leading-tight`}>
+                  {isShiftOp ? 'CARRY (CF)' : isSimpleRotate ? 'CF COPY' : 'INTO CF'}
+                </span>
+                <div className="w-8 h-8 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-md sm:rounded-lg bg-amber-500 text-slate-950 font-black text-sm sm:text-xl flex items-center justify-center shadow-md animate-pulse">
                   {activeStep.cf}
                 </div>
-                <span className={`text-[9px] ${isDarkTheme ? 'text-amber-300' : 'text-amber-800'} font-bold`}>Shifted OUT ←</span>
+                <span className={`text-[8px] sm:text-[10px] ${isDarkTheme ? 'text-amber-300' : 'text-amber-800'} font-bold whitespace-nowrap`}>
+                  {isShiftOp ? 'OUT ←' : isSimpleRotate ? 'b7 ➔ CF' : 'b7 ➔ CF'}
+                </span>
               </div>
             ) : (
-              <div className={`flex flex-col items-center gap-1 ${isDarkTheme ? 'bg-sky-950/80 border-sky-500/80' : 'bg-sky-50 border-sky-300'} p-2 rounded-xl border-2 text-center min-w-[70px] shadow-xs`}>
-                <span className={`text-[9px] font-extrabold uppercase ${isDarkTheme ? 'text-sky-300' : 'text-sky-900'} tracking-wider`}>
-                  {aluOp === 'SAR' ? 'SIGN FILL' : 'INJECTED FILL'}
+              <div className={`flex flex-col items-center gap-1 ${isDarkTheme ? 'bg-sky-950/80 border-sky-500/80' : 'bg-sky-50 border-sky-300'} p-2 sm:p-3 rounded-lg sm:rounded-xl border-2 text-center shrink-0 shadow-xs min-w-[62px] sm:min-w-[84px] md:min-w-[96px]`}>
+                <span className={`text-[8px] sm:text-[10px] font-extrabold uppercase ${isDarkTheme ? 'text-sky-300' : 'text-sky-900'} tracking-tight leading-tight`}>
+                  {isShiftOp ? (aluOp === 'SAR' ? 'SIGN' : 'ZERO FILL') : isSimpleRotate ? 'WRAPPED BIT' : 'PREV CF'}
                 </span>
-                <div className="w-10 h-10 rounded-lg bg-sky-500 text-white font-black text-lg flex items-center justify-center shadow-md">
+                <div className="w-8 h-8 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-md sm:rounded-lg bg-sky-500 text-white font-black text-sm sm:text-xl flex items-center justify-center shadow-md">
                   {activeStep.injectedBit}
                 </div>
-                <span className={`text-[9px] ${isDarkTheme ? 'text-sky-300' : 'text-sky-800'} font-bold`}>Injected IN →</span>
+                <span className={`text-[8px] sm:text-[10px] ${isDarkTheme ? 'text-sky-300' : 'text-sky-800'} font-bold whitespace-nowrap`}>
+                  {isShiftOp ? 'IN →' : isSimpleRotate ? 'b0 ➔ b7' : 'CF ➔ b7'}
+                </span>
               </div>
             )}
 
-            <div className={`${isDarkTheme ? 'text-indigo-400' : 'text-indigo-600'} text-base font-black px-1 animate-bounce`}>
+            <div className={`${isDarkTheme ? 'text-indigo-400' : 'text-indigo-600'} text-xs sm:text-lg font-black px-0.5 shrink-0 animate-bounce`}>
               {isLeftShift ? '⇇' : '⇉'}
             </div>
 
-            <div className={`grid grid-cols-8 gap-1.5 ${isDarkTheme ? 'bg-indigo-950/80 border-indigo-800' : 'bg-indigo-50/70 border-indigo-200'} p-2.5 rounded-xl border`}>
+            <div className={`grid grid-cols-8 gap-1 sm:gap-2 md:gap-3 ${isDarkTheme ? 'bg-indigo-950/80 border-indigo-800' : 'bg-indigo-50/70 border-indigo-200'} p-1.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl border flex-1 min-w-0`}>
               {activeStep.bits.map((bitVal, idx) => {
                 const bitIndex = 7 - idx;
                 const isMsb = bitIndex === 7;
@@ -831,21 +959,21 @@ export default function InstructionDecoderSimulator({
                   : (isDarkTheme ? 'bg-slate-900 text-slate-300' : 'bg-white text-slate-700 border border-indigo-150');
 
                 if (boundedStep > 0) {
-                  if (isLeftShift && isLsb) highlightBg = 'bg-sky-500 text-white ring-2 ring-sky-300 font-extrabold';
-                  if (!isLeftShift && isMsb) highlightBg = 'bg-sky-500 text-white ring-2 ring-sky-300 font-extrabold';
+                  if (isLeftShift && isLsb) highlightBg = 'bg-sky-500 text-white ring-1 sm:ring-2 ring-sky-300 font-extrabold';
+                  if (!isLeftShift && isMsb) highlightBg = 'bg-sky-500 text-white ring-1 sm:ring-2 ring-sky-300 font-extrabold';
                 }
 
                 return (
-                  <div key={idx} className="flex flex-col items-center gap-1 min-w-[48px]">
-                    <span className={`text-[9px] font-extrabold font-mono ${isMsb ? 'text-amber-600' : isLsb ? 'text-sky-600' : isDarkTheme ? 'text-indigo-300' : 'text-indigo-900'}`}>
+                  <div key={idx} className="flex flex-col items-center gap-0.5 sm:gap-1.5 min-w-0 flex-1">
+                    <span className={`text-[8px] sm:text-[10px] font-extrabold font-mono truncate max-w-full ${isMsb ? 'text-amber-600' : isLsb ? 'text-sky-600' : isDarkTheme ? 'text-indigo-300' : 'text-indigo-900'}`}>
                       b{bitIndex} {isMsb ? '(MSB)' : isLsb ? '(LSB)' : ''}
                     </span>
 
-                    <div className={`w-10 h-10 rounded-lg font-black text-base flex items-center justify-center transition-all duration-300 shadow-xs ${highlightBg}`}>
+                    <div className={`w-7 h-7 sm:w-10 sm:h-10 md:w-11 md:h-11 lg:w-12 lg:h-12 rounded sm:rounded-lg font-black text-xs sm:text-base md:text-lg flex items-center justify-center transition-all duration-300 shadow-xs ${highlightBg}`}>
                       {bitVal}
                     </div>
 
-                    <span className={`text-[11px] ${isDarkTheme ? 'text-indigo-400' : 'text-indigo-600'} font-black`}>
+                    <span className={`text-[9px] sm:text-[11px] ${isDarkTheme ? 'text-indigo-400' : 'text-indigo-600'} font-black`}>
                       {isLeftShift ? '←' : '→'}
                     </span>
                   </div>
@@ -853,25 +981,33 @@ export default function InstructionDecoderSimulator({
               })}
             </div>
 
-            <div className={`${isDarkTheme ? 'text-indigo-400' : 'text-indigo-600'} text-base font-black px-1 animate-bounce`}>
+            <div className={`${isDarkTheme ? 'text-indigo-400' : 'text-indigo-600'} text-xs sm:text-lg font-black px-0.5 shrink-0 animate-bounce`}>
               {isLeftShift ? '⇇' : '⇉'}
             </div>
 
             {isLeftShift ? (
-              <div className={`flex flex-col items-center gap-1 ${isDarkTheme ? 'bg-sky-950/80 border-sky-500/80' : 'bg-sky-50 border-sky-300'} p-2 rounded-xl border-2 text-center min-w-[70px] shadow-xs`}>
-                <span className={`text-[9px] font-extrabold uppercase ${isDarkTheme ? 'text-sky-300' : 'text-sky-900'} tracking-wider`}>INJECTED FILL</span>
-                <div className="w-10 h-10 rounded-lg bg-sky-500 text-white font-black text-lg flex items-center justify-center shadow-md">
+              <div className={`flex flex-col items-center gap-1 ${isDarkTheme ? 'bg-sky-950/80 border-sky-500/80' : 'bg-sky-50 border-sky-300'} p-2 sm:p-3 rounded-lg sm:rounded-xl border-2 text-center shrink-0 shadow-xs min-w-[62px] sm:min-w-[84px] md:min-w-[96px]`}>
+                <span className={`text-[8px] sm:text-[10px] font-extrabold uppercase ${isDarkTheme ? 'text-sky-300' : 'text-sky-900'} tracking-tight leading-tight`}>
+                  {isShiftOp ? 'ZERO FILL' : isSimpleRotate ? 'WRAPPED BIT' : 'PREV CF'}
+                </span>
+                <div className="w-8 h-8 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-md sm:rounded-lg bg-sky-500 text-white font-black text-sm sm:text-xl flex items-center justify-center shadow-md">
                   {activeStep.injectedBit}
                 </div>
-                <span className={`text-[9px] ${isDarkTheme ? 'text-sky-300' : 'text-sky-800'} font-bold`}>← Injected IN</span>
+                <span className={`text-[8px] sm:text-[10px] ${isDarkTheme ? 'text-sky-300' : 'text-sky-800'} font-bold whitespace-nowrap`}>
+                  {isShiftOp ? '← IN' : isSimpleRotate ? 'b7 ➔ b0' : 'CF ➔ b0'}
+                </span>
               </div>
             ) : (
-              <div className={`flex flex-col items-center gap-1 ${isDarkTheme ? 'bg-amber-950/80 border-amber-500/80' : 'bg-amber-50 border-amber-300'} p-2 rounded-xl border-2 text-center min-w-[70px] shadow-xs`}>
-                <span className={`text-[9px] font-extrabold uppercase ${isDarkTheme ? 'text-amber-300' : 'text-amber-900'} tracking-wider`}>CARRY FLAG (CF)</span>
-                <div className="w-10 h-10 rounded-lg bg-amber-500 text-slate-950 font-black text-lg flex items-center justify-center shadow-md animate-pulse">
+              <div className={`flex flex-col items-center gap-1 ${isDarkTheme ? 'bg-amber-950/80 border-amber-500/80' : 'bg-amber-50 border-amber-300'} p-2 sm:p-3 rounded-lg sm:rounded-xl border-2 text-center shrink-0 shadow-xs min-w-[62px] sm:min-w-[84px] md:min-w-[96px]`}>
+                <span className={`text-[8px] sm:text-[10px] font-extrabold uppercase ${isDarkTheme ? 'text-amber-300' : 'text-amber-900'} tracking-tight leading-tight`}>
+                  {isShiftOp ? 'CARRY (CF)' : isSimpleRotate ? 'CF COPY' : 'INTO CF'}
+                </span>
+                <div className="w-8 h-8 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-md sm:rounded-lg bg-amber-500 text-slate-950 font-black text-sm sm:text-xl flex items-center justify-center shadow-md animate-pulse">
                   {activeStep.cf}
                 </div>
-                <span className={`text-[9px] ${isDarkTheme ? 'text-amber-300' : 'text-amber-800'} font-bold`}>← Shifted OUT</span>
+                <span className={`text-[8px] sm:text-[10px] ${isDarkTheme ? 'text-amber-300' : 'text-amber-800'} font-bold whitespace-nowrap`}>
+                  {isShiftOp ? '← OUT' : isSimpleRotate ? 'b0 ➔ CF' : 'b0 ➔ CF'}
+                </span>
               </div>
             )}
           </div>
@@ -911,6 +1047,49 @@ export default function InstructionDecoderSimulator({
                 {f.flag}={f.val}
               </span>
             ))}
+          </div>
+        </div>
+
+        {/* Educational Student Guide: Shift vs Rotate Quick Matrix */}
+        <div className={`p-4 rounded-xl border text-[11px] font-sans space-y-2.5 ${
+          isDarkTheme ? 'bg-slate-950 border-indigo-800/80 text-slate-300' : 'bg-white border-indigo-200 text-slate-700 shadow-2xs'
+        }`}>
+          <div className="flex items-center justify-between border-b border-indigo-100 pb-2">
+            <h5 className="font-extrabold text-xs uppercase tracking-wider text-indigo-950 flex items-center gap-1.5">
+              🎓 Student Cheat Sheet: Why SHIFT and ROTATE are Different
+            </h5>
+            <span className="text-[10px] font-mono bg-indigo-50 text-indigo-900 px-2 py-0.5 rounded font-bold border border-indigo-200">
+              8086 Assembly Essentials
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-[11px]">
+            <div className="p-2.5 rounded-lg border border-sky-200 bg-sky-50/50 space-y-1">
+              <strong className="text-sky-900 font-bold block flex items-center gap-1">
+                ⚡ 1. SHIFTS (SHL / SHR / SAR)
+              </strong>
+              <p className="text-slate-600 leading-snug text-[10.5px]">
+                <strong>Linear Stream:</strong> Shifted-out bits fall off into CF and are <em>lost</em>. Vacant bits are filled with <code>0</code> or the sign bit (SAR). Used for fast binary multiplication and division.
+              </p>
+            </div>
+
+            <div className="p-2.5 rounded-lg border border-purple-200 bg-purple-50/50 space-y-1">
+              <strong className="text-purple-900 font-bold block flex items-center gap-1">
+                🔄 2. SIMPLE ROTATES (ROL / ROR)
+              </strong>
+              <p className="text-slate-600 leading-snug text-[10.5px]">
+                <strong>8-Bit Closed Loop:</strong> No bit data is ever destroyed! Bits exit one end and <em>wrap around directly</em> to enter the other end, while copying into CF.
+              </p>
+            </div>
+
+            <div className="p-2.5 rounded-lg border border-amber-200 bg-amber-50/50 space-y-1">
+              <strong className="text-amber-900 font-bold block flex items-center gap-1">
+                🔂 3. CARRY ROTATES (RCL / RCR)
+              </strong>
+              <p className="text-slate-600 leading-snug text-[10.5px]">
+                <strong>9-Bit Closed Ring:</strong> The Carry Flag (CF) becomes an actual 9th bit in the loop! Essential for performing multi-byte (16-bit / 32-bit) rotations across multiple instructions.
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -974,6 +1153,8 @@ export default function InstructionDecoderSimulator({
     else if (op.startsWith('AND')) setAluOp('AND');
     else if (op.startsWith('OR')) setAluOp('OR');
     else if (op.startsWith('XOR')) setAluOp('XOR');
+    else if (op.startsWith('NOT')) setAluOp('NOT');
+    else if (op.startsWith('NEG')) setAluOp('NEG');
     else if (op.startsWith('SHL') || op.startsWith('ROL')) setAluOp('SHL');
     else if (op.startsWith('SHR') || op.startsWith('ROR')) setAluOp('SHR');
   };
@@ -1484,7 +1665,7 @@ export default function InstructionDecoderSimulator({
                   </p>
                 </div>
                 <div className="flex items-center gap-2 text-[10px] font-mono font-bold text-indigo-700 bg-white px-2.5 py-1 rounded-lg border border-indigo-200/80 shrink-0">
-                  <span>Category: <strong className="text-indigo-900 uppercase font-black">{categoryTab}</strong></span>
+                  <span>Category: <strong className="text-indigo-900 uppercase font-black">{categoryTab}</strong> <span className="text-[9px] text-indigo-600 font-semibold bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-150 ml-1">9 Core 8086 Groups (10 Lab Tabs)</span></span>
                 </div>
               </div>
             )}
@@ -1735,31 +1916,39 @@ export default function InstructionDecoderSimulator({
                         </div>
 
                         {/* Interactive Bitwise & Shift Visualizer */}
-                        {(activeInstruction.category === 'Logical' || activeInstruction.category === 'Shift & Rotate' || activeInstruction.category === 'Arithmetic') && (
-                          activeInstruction.category === 'Shift & Rotate' ? (
-                            renderVisualBitShiftSimulator(false)
-                          ) : (
-                          <div className="bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/70 text-slate-900 p-3.5 sm:p-4 rounded-xl border border-indigo-200/80 shadow-xs space-y-3 font-mono text-xs">
-                            <div className="flex items-center justify-between border-b border-indigo-200/80 pb-2">
-                              <span className="text-xs font-bold uppercase tracking-wider text-indigo-950 flex items-center gap-1.5">
-                                <Binary className="w-4 h-4 text-emerald-600" />
+                        {(activeInstruction.category === 'Logical' || activeInstruction.category === 'Shift & Rotate' || activeInstruction.category === 'Arithmetic') && (() => {
+                          const isNotInst = activeInstruction.opcode.startsWith('NOT') || aluOp === 'NOT';
+                          const isNegInst = activeInstruction.opcode.startsWith('NEG') || aluOp === 'NEG';
+                          const isUnaryInst = isNotInst || isNegInst;
+                          if (activeInstruction.category === 'Shift & Rotate') {
+                            return renderVisualBitShiftSimulator(false);
+                          }
+                          return (
+                          <div className="bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/70 text-slate-900 p-4 sm:p-5 rounded-xl border border-indigo-200/80 shadow-xs space-y-4 font-mono text-xs w-full">
+                            <div className="flex items-center justify-between border-b border-indigo-200/80 pb-2.5">
+                              <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-indigo-950 flex items-center gap-2">
+                                <Binary className="w-4 h-4 text-emerald-600 shrink-0" />
                                 Interactive Bitwise Operations Simulator
                               </span>
-                              <span className="text-[10px] bg-indigo-100 text-indigo-900 px-2 py-0.5 rounded border border-indigo-200 font-extrabold uppercase">
-                                {activeInstruction.category}
+                              <span className="text-[10px] sm:text-[11px] bg-indigo-100 text-indigo-900 px-2.5 py-0.5 rounded border border-indigo-200 font-extrabold uppercase">
+                                {isNotInst ? 'Unary NOT Operation' : isNegInst ? 'Unary NEG Operation' : activeInstruction.category}
                               </span>
                             </div>
 
-                            <p className="text-[11px] font-sans text-slate-600 leading-snug">
-                              Adjust operands below to see live bitwise manipulations, bit shifts/rotations, and resulting status flags:
+                            <p className="text-[11px] sm:text-xs font-sans text-slate-600 leading-snug">
+                              {isNotInst 
+                                ? 'Adjust the single operand below to see live 1\'s complement (bitwise invert) bit manipulations:'
+                                : isNegInst
+                                ? 'Adjust the single operand below to see live 2\'s complement negation (0 - operand) bit manipulations:'
+                                : 'Adjust operands below to see live bitwise manipulations, bit shifts/rotations, and resulting status flags:'}
                             </p>
 
-                            {/* Sliders for Operand A and Operand B */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                            {/* Sliders for Operand A (and Operand B if binary op) */}
+                            <div className={isUnaryInst ? "grid grid-cols-1 gap-3.5 pt-1" : "grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1"}>
                               {/* Operand A */}
-                              <div className="bg-white p-2.5 rounded-lg border border-indigo-200/80 shadow-2xs space-y-1">
-                                <div className="flex justify-between items-center text-[11px] font-bold">
-                                  <span className="text-indigo-950">Operand A (AL):</span>
+                              <div className="bg-white p-3 rounded-xl border border-indigo-200/80 shadow-2xs space-y-1.5">
+                                <div className="flex justify-between items-center text-[11px] sm:text-xs font-bold">
+                                  <span className="text-indigo-950">{isUnaryInst ? 'Single Operand (AL Destination):' : 'Operand A (AL):'}</span>
                                   <span className="text-emerald-700 font-extrabold">{byteHexFormat(aluValA)} ({aluValA & 0xFF})</span>
                                 </div>
                                 <input
@@ -1775,59 +1964,63 @@ export default function InstructionDecoderSimulator({
                                   }}
                                   className="w-full accent-emerald-500 cursor-pointer h-1.5 bg-indigo-100 rounded-lg"
                                 />
-                                <div className="text-[10px] text-indigo-800 flex justify-between font-mono">
+                                <div className="text-[10px] sm:text-[11px] text-indigo-800 flex justify-between font-mono">
                                   <span>Bits: {(aluValA & 0xFF).toString(2).padStart(8, '0')}</span>
+                                  {isNotInst && <span className="text-amber-800 font-bold">1's Complement Mode (Unary)</span>}
+                                  {isNegInst && <span className="text-purple-800 font-bold">2's Complement Mode (Unary Negate)</span>}
                                 </div>
                               </div>
 
-                              {/* Operand B / Shift Count */}
-                              <div className="bg-white p-2.5 rounded-lg border border-indigo-200/80 shadow-2xs space-y-1">
-                                <div className="flex justify-between items-center text-[11px] font-bold">
-                                  <span className="text-indigo-950">
-                                    {activeInstruction.category === 'Shift & Rotate' ? 'Shift/Rotate Count:' : 'Operand B (BL / Imm):'}
-                                  </span>
-                                  <span className="text-sky-700 font-extrabold">
-                                    {activeInstruction.category === 'Shift & Rotate' ? (aluValB & 0x07 || 1) : `${byteHexFormat(aluValB)} (${aluValB & 0xFF})`}
-                                  </span>
+                              {/* Operand B / Immediate (Hidden for Unary Ops) */}
+                              {!isUnaryInst && (
+                                <div className="bg-white p-3 rounded-xl border border-indigo-200/80 shadow-2xs space-y-1.5">
+                                  <div className="flex justify-between items-center text-[11px] sm:text-xs font-bold">
+                                    <span className="text-indigo-950">
+                                      Operand B (BL / Imm):
+                                    </span>
+                                    <span className="text-sky-700 font-extrabold">
+                                      {byteHexFormat(aluValB)} ({aluValB & 0xFF})
+                                    </span>
+                                  </div>
+                                  <input
+                                    type="range"
+                                    min={0}
+                                    max={255}
+                                    value={aluValB & 0xFF}
+                                    onChange={(e) => {
+                                      const val = Number(e.target.value);
+                                      setAluValB(val);
+                                      setRegs(prev => ({ ...prev, BX: (prev.BX & 0xFF00) | (val & 0xFF) }));
+                                      setBeforeRegs(prev => ({ ...prev, BX: (prev.BX & 0xFF00) | (val & 0xFF) }));
+                                    }}
+                                    className="w-full accent-sky-500 cursor-pointer h-1.5 bg-indigo-100 rounded-lg"
+                                  />
+                                  <div className="text-[10px] sm:text-[11px] text-indigo-800 flex justify-between font-mono">
+                                    <span>Bits: {(aluValB & 0xFF).toString(2).padStart(8, '0')}</span>
+                                  </div>
                                 </div>
-                                <input
-                                  type="range"
-                                  min={activeInstruction.category === 'Shift & Rotate' ? 1 : 0}
-                                  max={activeInstruction.category === 'Shift & Rotate' ? 8 : 255}
-                                  value={activeInstruction.category === 'Shift & Rotate' ? (aluValB & 0x07 || 1) : (aluValB & 0xFF)}
-                                  onChange={(e) => {
-                                    const val = Number(e.target.value);
-                                    setAluValB(val);
-                                    setRegs(prev => ({ ...prev, BX: (prev.BX & 0xFF00) | (val & 0xFF) }));
-                                    setBeforeRegs(prev => ({ ...prev, BX: (prev.BX & 0xFF00) | (val & 0xFF) }));
-                                  }}
-                                  className="w-full accent-sky-500 cursor-pointer h-1.5 bg-indigo-100 rounded-lg"
-                                />
-                                <div className="text-[10px] text-indigo-800 flex justify-between font-mono">
-                                  <span>Bits: {(aluValB & 0xFF).toString(2).padStart(8, '0')}</span>
-                                </div>
-                              </div>
+                              )}
                             </div>
 
                             {/* Live Bit-by-Bit Operation Breakdown */}
-                            <div className="bg-white p-3 rounded-lg border border-indigo-200/80 space-y-1.5 text-center shadow-2xs">
-                              <div className="flex justify-between items-center text-[11px]">
-                                <span className="text-indigo-950 font-bold">Operand A Bits:</span>
-                                <div className="flex gap-1 font-mono">
+                            <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-indigo-200/80 space-y-2 text-center shadow-2xs w-full overflow-x-auto">
+                              <div className="flex justify-between items-center text-[11px] sm:text-xs gap-2 min-w-[300px]">
+                                <span className="text-indigo-950 font-bold shrink-0">{isUnaryInst ? 'Input Operand Bits (AL):' : 'Operand A Bits:'}</span>
+                                <div className="flex gap-1 sm:gap-2 font-mono">
                                   {(aluValA & 0xFF).toString(2).padStart(8, '0').split('').map((bit, idx) => (
-                                    <span key={idx} className={`w-5 h-5 flex items-center justify-center rounded text-[11px] font-bold ${bit === '1' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
+                                    <span key={idx} className={`w-6 h-6 sm:w-8 sm:h-8 md:w-9 md:h-9 flex items-center justify-center rounded-md sm:rounded-lg text-xs sm:text-sm font-bold ${bit === '1' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
                                       {bit}
                                     </span>
                                   ))}
                                 </div>
                               </div>
 
-                              {activeInstruction.category !== 'Shift & Rotate' && (
-                                <div className="flex justify-between items-center text-[11px]">
-                                  <span className="text-indigo-950 font-bold">Operand B Bits:</span>
-                                  <div className="flex gap-1 font-mono">
+                              {!isUnaryInst && (
+                                <div className="flex justify-between items-center text-[11px] sm:text-xs gap-2 min-w-[300px]">
+                                  <span className="text-indigo-950 font-bold shrink-0">Operand B Bits:</span>
+                                  <div className="flex gap-1 sm:gap-2 font-mono">
                                     {(aluValB & 0xFF).toString(2).padStart(8, '0').split('').map((bit, idx) => (
-                                      <span key={idx} className={`w-5 h-5 flex items-center justify-center rounded text-[11px] font-bold ${bit === '1' ? 'bg-sky-500 text-white' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
+                                      <span key={idx} className={`w-6 h-6 sm:w-8 sm:h-8 md:w-9 md:h-9 flex items-center justify-center rounded-md sm:rounded-lg text-xs sm:text-sm font-bold ${bit === '1' ? 'bg-sky-500 text-white' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
                                         {bit}
                                       </span>
                                     ))}
@@ -1835,13 +2028,15 @@ export default function InstructionDecoderSimulator({
                                 </div>
                               )}
 
-                              <div className="w-full h-[1px] bg-indigo-200 my-1" />
+                              <div className="w-full h-[1px] bg-indigo-200 my-1.5" />
 
-                              <div className="flex justify-between items-center text-[11px] font-bold">
-                                <span className="text-amber-800">Bitwise Result ({activeInstruction.opcode.split(' ')[0]}):</span>
-                                <div className="flex gap-1 font-mono">
+                              <div className="flex justify-between items-center text-[11px] sm:text-xs font-bold gap-2 min-w-[300px]">
+                                <span className="text-amber-800 shrink-0">
+                                  Bitwise Result ({isNotInst ? 'NOT AL' : isNegInst ? 'NEG AL (2\'s Comp)' : activeInstruction.opcode.split(' ')[0]}):
+                                </span>
+                                <div className="flex gap-1 sm:gap-2 font-mono">
                                   {aluRes.res.toString(2).padStart(8, '0').split('').map((bit, idx) => (
-                                    <span key={idx} className={`w-5 h-5 flex items-center justify-center rounded text-[11px] font-extrabold ${bit === '1' ? 'bg-amber-500 text-white shadow-2xs' : 'bg-slate-100 text-slate-400 border border-slate-200'}`}>
+                                    <span key={idx} className={`w-6 h-6 sm:w-8 sm:h-8 md:w-9 md:h-9 flex items-center justify-center rounded-md sm:rounded-lg text-xs sm:text-sm font-extrabold ${bit === '1' ? 'bg-amber-500 text-white shadow-2xs' : 'bg-slate-100 text-slate-400 border border-slate-200'}`}>
                                       {bit}
                                     </span>
                                   ))}
@@ -1850,25 +2045,32 @@ export default function InstructionDecoderSimulator({
                             </div>
 
                             {/* Live Output Flags */}
-                            <div className="flex items-center justify-between gap-2 pt-1 text-[11px]">
-                              <span className="text-indigo-950 font-bold">Computed Status Flags:</span>
-                              <div className="flex gap-1.5 font-mono">
-                                {[
-                                  { flag: 'CF', val: aluRes.cf },
-                                  { flag: 'ZF', val: aluRes.zf },
-                                  { flag: 'SF', val: aluRes.sf },
-                                  { flag: 'OF', val: aluRes.of },
-                                  { flag: 'PF', val: aluRes.pf }
-                                ].map(f => (
-                                  <span key={f.flag} className={`px-2 py-0.5 rounded text-[10px] font-bold ${f.val ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
-                                    {f.flag}={f.val}
-                                  </span>
-                                ))}
+                            {isNotInst ? (
+                              <div className="bg-amber-50 border border-amber-200/80 p-2.5 rounded-lg text-[11px] text-amber-950 font-sans font-bold flex flex-wrap items-center justify-between gap-2">
+                                <span>Status Flags: None (Flags remain unchanged for NOT instruction in 8086)</span>
+                                <span className="font-mono text-[10px] bg-white px-2 py-0.5 rounded border border-amber-300 text-amber-900 font-extrabold">Flags Unaffected</span>
                               </div>
-                            </div>
+                            ) : (
+                              <div className="flex items-center justify-between gap-2 pt-1 text-[11px]">
+                                <span className="text-indigo-950 font-bold">Computed Status Flags {isNegInst && '(NEG updates flags)'}:</span>
+                                <div className="flex gap-1.5 font-mono">
+                                  {[
+                                    { flag: 'CF', val: aluRes.cf },
+                                    { flag: 'ZF', val: aluRes.zf },
+                                    { flag: 'SF', val: aluRes.sf },
+                                    { flag: 'OF', val: aluRes.of },
+                                    { flag: 'PF', val: aluRes.pf }
+                                  ].map(f => (
+                                    <span key={f.flag} className={`px-2 py-0.5 rounded text-[10px] font-bold ${f.val ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600 border border-slate-200'}`}>
+                                      {f.flag}={f.val}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                           </div>
-                          )
-                        )}
+                          );
+                        })()}
 
                         {/* BCD & ASCII Instructions Guide */}
                         {(activeInstruction.category === 'BCD & ASCII' || categoryTab === 'BCD & ASCII') && (
@@ -2052,31 +2254,43 @@ export default function InstructionDecoderSimulator({
                               <span className="text-slate-600 block text-xs font-sans">Operation to perform</span>
                             </div>
                             <div className="bg-slate-50 p-2 rounded border border-slate-200/80">
-                              <span className="text-amber-700 font-bold block">2. Destination (1st):</span>
+                              <span className="text-amber-700 font-bold block">
+                                {['JMP', 'CALL', 'JA', 'JAE', 'JB', 'JBE', 'JE', 'JNE', 'JG', 'JGE', 'JL', 'JLE', 'JC', 'JO', 'JS', 'JNP', 'JP', 'LOOP', 'LOOPE', 'LOOPNE', 'JCXZ'].includes(displayOpcode.split(' ')[0]) ? '2. Target Operand:' : '2. Destination (1st):'}
+                              </span>
                               <span className="text-slate-900 font-bold">{operandAnalysis.dstOperand}</span>
-                              <span className="text-slate-600 block text-xs font-sans">Receives result / target</span>
+                              <span className="text-slate-600 block text-xs font-sans">
+                                {['JMP', 'CALL', 'JA', 'JAE', 'JB', 'JBE', 'JE', 'JNE', 'JG', 'JGE', 'JL', 'JLE', 'JC', 'JO', 'JS', 'JNP', 'JP', 'LOOP', 'LOOPE', 'LOOPNE', 'JCXZ'].includes(displayOpcode.split(' ')[0]) ? 'Branch target offset/address' : 'Receives result / target'}
+                              </span>
                             </div>
                             <div className="bg-slate-50 p-2 rounded border border-slate-200/80">
-                              <span className="text-sky-700 font-bold block">3. Source (2nd):</span>
+                              <span className="text-sky-700 font-bold block">
+                                {['JMP', 'CALL', 'JA', 'JAE', 'JB', 'JBE', 'JE', 'JNE', 'JG', 'JGE', 'JL', 'JLE', 'JC', 'JO', 'JS', 'JNP', 'JP', 'LOOP', 'LOOPE', 'LOOPNE', 'JCXZ'].includes(displayOpcode.split(' ')[0]) ? '3. Implicit Flags:' : '3. Source (2nd):'}
+                              </span>
                               <span className="text-slate-900 font-bold">{operandAnalysis.srcOperand || 'Implicit / None'}</span>
-                              <span className="text-slate-600 block text-xs font-sans">Read-only input operand</span>
+                              <span className="text-slate-600 block text-xs font-sans">
+                                {['JMP', 'CALL', 'JA', 'JAE', 'JB', 'JBE', 'JE', 'JNE', 'JG', 'JGE', 'JL', 'JLE', 'JC', 'JO', 'JS', 'JNP', 'JP', 'LOOP', 'LOOPE', 'LOOPNE', 'JCXZ'].includes(displayOpcode.split(' ')[0]) ? 'Processor status evaluation' : 'Read-only input operand'}
+                              </span>
                             </div>
                           </div>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-2.5 font-mono">
-                        {/* Destination Operand Box */}
+                        {/* Destination / Target Operand Box */}
                         <div className="bg-white p-3 rounded-lg border border-indigo-100 shadow-2xs space-y-1">
-                          <span className="text-xs font-extrabold text-indigo-700 uppercase tracking-wider block">🎯 Destination (1st Operand)</span>
+                          <span className="text-xs font-extrabold text-indigo-700 uppercase tracking-wider block">
+                            {['JMP', 'CALL', 'JA', 'JAE', 'JB', 'JBE', 'JE', 'JNE', 'JG', 'JGE', 'JL', 'JLE', 'JC', 'JO', 'JS', 'JNP', 'JP', 'LOOP', 'LOOPE', 'LOOPNE', 'JCXZ'].includes(displayOpcode.split(' ')[0]) ? '🎯 Target Operand' : '🎯 Destination (1st Operand)'}
+                          </span>
                           <p className="font-bold text-slate-900 text-xs sm:text-sm truncate">{operandAnalysis.dstOperand}</p>
                           <p className="text-xs text-slate-600 font-sans font-medium leading-snug">{operandAnalysis.dstType}</p>
                         </div>
 
-                        {/* Source Operand Box */}
+                        {/* Source / Implicit Context Box */}
                         <div className="bg-white p-3 rounded-lg border border-sky-100 shadow-2xs space-y-1">
-                          <span className="text-xs font-extrabold text-sky-700 uppercase tracking-wider block">📥 Source (2nd Operand)</span>
-                          <p className="font-bold text-slate-900 text-xs sm:text-sm truncate">{operandAnalysis.srcOperand}</p>
+                          <span className="text-xs font-extrabold text-sky-700 uppercase tracking-wider block">
+                            {['JMP', 'CALL', 'JA', 'JAE', 'JB', 'JBE', 'JE', 'JNE', 'JG', 'JGE', 'JL', 'JLE', 'JC', 'JO', 'JS', 'JNP', 'JP', 'LOOP', 'LOOPE', 'LOOPNE', 'JCXZ'].includes(displayOpcode.split(' ')[0]) ? '📥 Implicit / Flags' : '📥 Source (2nd Operand)'}
+                          </span>
+                          <p className="font-bold text-slate-900 text-xs sm:text-sm truncate">{operandAnalysis.srcOperand || 'Implicit / CS:IP'}</p>
                           <p className="text-xs text-slate-600 font-sans font-medium leading-snug">{operandAnalysis.srcType}</p>
                         </div>
                       </div>
@@ -3151,176 +3365,20 @@ POP DX         ; Reads 1234H into DX, SP ← SP + 2 (FFFE)`}
             {(currentCategory === 'Arithmetic' || currentCategory === 'Logical' || currentCategory === 'Shift & Rotate') && (() => {
               const aluRes = computeAluRes();
               const availableOps = currentCategory === 'Arithmetic'
-                ? (['ADD', 'SUB'] as const)
+                ? (['ADD', 'SUB', 'NEG'] as const)
                 : currentCategory === 'Logical'
-                ? (['AND', 'OR', 'XOR'] as const)
+                ? (['AND', 'OR', 'XOR', 'NOT'] as const)
                 : (['SHL', 'SHR'] as const);
+              const isNotOp = aluOp === 'NOT';
+              const isNegOp = aluOp === 'NEG';
+              const isUnaryOp = isNotOp || isNegOp;
 
-              return (
-                <div className="bg-gradient-to-br from-indigo-50/70 via-white to-sky-50/40 border border-indigo-200 rounded-2xl p-5 space-y-5 shadow-xs">
-                  <div className="flex flex-wrap justify-between items-center gap-3 border-b border-indigo-200/80 pb-3">
-                    <div className="flex items-center gap-2">
-                      <div className="p-2 bg-indigo-600 text-white rounded-xl shadow-xs">
-                        <Cpu className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <h3 className="text-xs font-black font-mono uppercase tracking-wider text-indigo-950">
-                          {currentCategory === 'Arithmetic' && '8086 ALU Arithmetic Execution Interactive Explorer'}
-                          {currentCategory === 'Logical' && '8086 ALU Bitwise & Boolean Logic Interactive Explorer'}
-                          {currentCategory === 'Shift & Rotate' && '8086 ALU Shift & Rotate Bitwise Interactive Explorer'}
-                        </h3>
-                        <p className="text-[11px] text-slate-500 font-sans">
-                          {currentCategory === 'Arithmetic' && "Simulate binary addition/subtraction, two's complement math, and live status flags computation."}
-                          {currentCategory === 'Logical' && 'Simulate bitwise logic operations (AND, OR, XOR) and live status flags computation.'}
-                          {currentCategory === 'Shift & Rotate' && 'Simulate bitwise shift operations (SHL, SHR) and live status flags computation.'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+              if (currentCategory === 'Shift & Rotate') {
+                return (
+                  <div className="space-y-5">
+                    {renderVisualBitShiftSimulator(false)}
 
-                  {/* Interactive Input Sliders & Visual Bit-Shift Simulator */}
-                  {currentCategory === 'Shift & Rotate' ? (
-                    renderVisualBitShiftSimulator(false)
-                  ) : (
-                    <>
-                  <div className="bg-white p-4 rounded-xl border border-indigo-100 space-y-3 shadow-xs font-mono text-xs">
-                    <div className="flex items-center justify-between gap-2 text-[10.5px] font-sans text-indigo-900 bg-indigo-50/80 p-2 rounded-lg border border-indigo-150">
-                      <span className="font-bold flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Live Bi-Directional Sync:
-                      </span>
-                      <span>
-                        Operand A is locked to <strong className="font-mono text-indigo-700 bg-white px-1.5 py-0.5 rounded border border-indigo-200">AL Register</strong> ({byteHexFormat(aluValA)}). Moving either slider updates CPU Registers & ALU Execution in real time.
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Operand A */}
-                      <div className="space-y-1.5 bg-indigo-50/50 p-3 rounded-xl border border-indigo-150">
-                        <div className="flex justify-between items-center text-indigo-950 font-bold">
-                          <span className="flex items-center gap-1.5">
-                            Operand A (AL Register):
-                            <span className="text-[9px] font-mono text-indigo-700 bg-indigo-100/80 px-1.5 py-0.5 rounded border border-indigo-200 uppercase font-extrabold">
-                              AX Low Byte
-                            </span>
-                          </span>
-                          <span className="text-indigo-700 font-extrabold bg-white px-2 py-0.5 rounded border border-indigo-200">
-                            {byteHexFormat(aluValA)} ({aluValA & 0xFF})
-                          </span>
-                        </div>
-                        <input
-                          type="range"
-                          min={0}
-                          max={255}
-                          value={aluValA & 0xFF}
-                          onChange={(e) => {
-                            const val = Number(e.target.value);
-                            setAluValA(val);
-                            setRegs(prev => ({ ...prev, AX: (prev.AX & 0xFF00) | (val & 0xFF) }));
-                            setBeforeRegs(prev => ({ ...prev, AX: (prev.AX & 0xFF00) | (val & 0xFF) }));
-                          }}
-                          className="w-full accent-indigo-600 cursor-pointer"
-                        />
-                        <div className="text-[10px] text-slate-500 font-bold flex justify-between">
-                          <span>Binary: {(aluValA & 0xFF).toString(2).padStart(8, '0')}</span>
-                          <span>Signed: {((aluValA & 0xFF) > 127 ? (aluValA & 0xFF) - 256 : (aluValA & 0xFF))}</span>
-                        </div>
-                      </div>
-
-                      {/* Operand B */}
-                      <div className="space-y-1.5 bg-sky-50/50 p-3 rounded-xl border border-sky-150">
-                        <div className="flex justify-between items-center text-sky-950 font-bold">
-                          <span className="flex items-center gap-1.5">
-                            Operand B (BL / Imm):
-                            <span className="text-[9px] font-mono text-sky-700 bg-sky-100/80 px-1.5 py-0.5 rounded border border-sky-200 uppercase font-extrabold">
-                              {activeInstruction.opcode.includes('BL') ? `BL Register (${byteHexFormat(aluValB)})` : `Immediate ${byteHexFormat(aluValB)}`}
-                            </span>
-                          </span>
-                          <span className="text-sky-700 font-extrabold bg-white px-2 py-0.5 rounded border border-sky-200">
-                            {byteHexFormat(aluValB)} ({aluValB & 0xFF})
-                          </span>
-                        </div>
-                        <input
-                          type="range"
-                          min={0}
-                          max={255}
-                          value={aluValB & 0xFF}
-                          onChange={(e) => {
-                            const val = Number(e.target.value);
-                            setAluValB(val);
-                            setRegs(prev => ({ ...prev, BX: (prev.BX & 0xFF00) | (val & 0xFF) }));
-                            setBeforeRegs(prev => ({ ...prev, BX: (prev.BX & 0xFF00) | (val & 0xFF) }));
-                          }}
-                          className="w-full accent-sky-600 cursor-pointer"
-                        />
-                        <div className="text-[10px] text-slate-500 font-bold flex justify-between">
-                          <span>Binary: {(aluValB & 0xFF).toString(2).padStart(8, '0')}</span>
-                          <span>Signed: {((aluValB & 0xFF) > 127 ? (aluValB & 0xFF) - 256 : (aluValB & 0xFF))}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Live Bitwise Pipeline Display */}
-                  <div className="bg-slate-50 text-slate-900 p-4 rounded-xl space-y-3 font-mono text-xs border border-slate-200">
-                    <span className="text-indigo-800 font-bold uppercase tracking-wider text-[11px] block border-b border-slate-200 pb-2">
-                      ⚡ Hardware Silicon ALU Bit Pipeline Execution
-                    </span>
-
-                    <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1 text-center font-mono">
-                      <div className="flex justify-between items-center text-slate-600 text-[11px]">
-                        <span>Operand A:</span>
-                        <span className="text-indigo-700 font-extrabold">{(aluValA & 0xFF).toString(2).padStart(8, '0')}</span>
-                        <span className="text-slate-800 font-bold">{byteHexFormat(aluValA)}</span>
-                      </div>
-                      <div className="flex justify-between items-center text-slate-600 text-[11px]">
-                        <span>Op ({aluOp}):</span>
-                        <span className="text-amber-700 font-extrabold">{aluOp === 'ADD' ? '+' : aluOp === 'SUB' ? '-' : aluOp === 'AND' ? '&' : aluOp === 'OR' ? '|' : aluOp === 'XOR' ? '^' : aluOp === 'SHL' ? '<< 1' : '>> 1'}</span>
-                        <span className="text-slate-800 font-bold">{(aluValB & 0xFF).toString(2).padStart(8, '0')}</span>
-                      </div>
-                      <div className="w-full h-[1px] bg-slate-200 my-1" />
-                      <div className="flex justify-between items-center text-emerald-800 font-bold text-xs pt-0.5">
-                        <span>ALU Result:</span>
-                        <span className="text-emerald-900 text-sm font-black bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">
-                          {aluRes.res.toString(2).padStart(8, '0')}
-                        </span>
-                        <span className="text-amber-800 font-black">{byteHexFormat(aluRes.res)} ({aluRes.res})</span>
-                      </div>
-                    </div>
-
-                    {/* Compact Evaluated Flags Bar */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-slate-200 text-[11px] font-mono">
-                      <span className="text-slate-500 font-bold uppercase tracking-wider text-[10px]">
-                        Evaluated Output Flags:
-                      </span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {[
-                          { flag: 'CF', val: aluRes.cf },
-                          { flag: 'ZF', val: aluRes.zf },
-                          { flag: 'SF', val: aluRes.sf },
-                          { flag: 'OF', val: aluRes.of },
-                          { flag: 'AF', val: aluRes.af },
-                          { flag: 'PF', val: aluRes.pf }
-                        ].map((item) => (
-                          <span
-                            key={item.flag}
-                            className={`px-2 py-0.5 rounded text-[10px] font-mono transition-all ${
-                              item.val
-                                ? 'bg-indigo-600 text-white font-black shadow-2xs'
-                                : 'bg-slate-200 text-slate-500 font-bold opacity-75'
-                            }`}
-                          >
-                            {item.flag}={item.val}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                    </>
-                  )}
-
-                  {/* SHL vs SAL vs SHR vs SAR Architectural Difference Matrix */}
-                  {currentCategory === 'Shift & Rotate' && (
+                    {/* SHL vs SAL vs SHR vs SAR Architectural Difference Matrix */}
                     <div className="bg-white p-4 rounded-xl border border-indigo-200 space-y-3 shadow-xs">
                       <div className="flex items-center justify-between border-b border-indigo-100 pb-2">
                         <h4 className="text-xs font-bold font-mono text-indigo-950 uppercase tracking-wider flex items-center gap-1.5">
@@ -3383,15 +3441,274 @@ POP DX         ; Reads 1234H into DX, SP ← SP + 2 (FFFE)`}
 
                       <div className="bg-indigo-50/80 p-2.5 rounded-lg border border-indigo-150 text-[11px] text-indigo-950 font-sans space-y-1">
                         <p className="font-bold flex items-center gap-1 text-indigo-900">
-                          💡 Key Takeaways:
+                          <Info className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                          Key Hardware Insight:
                         </p>
-                        <ul className="list-disc list-inside space-y-0.5 text-slate-700 pl-1 text-[10.5px]">
-                          <li><strong>SHL & SAL are identical in 8086 machine code:</strong> Both assemble to the exact same opcode byte because left shifting shifts into higher bits regardless of sign.</li>
-                          <li><strong>SHR vs SAR:</strong> <code>SHR</code> always clears the MSB to 0 (logical right shift for unsigned data), whereas <code>SAR</code> replicates bit 7 (MSB) into itself after shifting right to preserve 2's complement negative sign representation.</li>
+                        <p className="text-slate-700 text-[10.5px]">
+                          In 8086 microarchitecture, <strong>SHL</strong> and <strong>SAL</strong> generate the exact same machine code opcode byte (0xD0/0xD2/0xD3 /4). However, <strong>SHR</strong> (Logical Right) fills vacancy bits with <code>0</code>, whereas <strong>SAR</strong> (Arithmetic Right) duplicates the sign bit (MSB) to correctly preserve negative numbers during two's complement division.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <div className="bg-gradient-to-br from-indigo-50/70 via-white to-sky-50/40 border border-indigo-200 rounded-2xl p-5 space-y-5 shadow-xs">
+                  <div className="flex flex-wrap justify-between items-center gap-3 border-b border-indigo-200/80 pb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 bg-indigo-600 text-white rounded-xl shadow-xs">
+                        <Cpu className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-black font-mono uppercase tracking-wider text-indigo-950">
+                          {currentCategory === 'Arithmetic' && '8086 ALU Arithmetic Execution Interactive Explorer'}
+                          {currentCategory === 'Logical' && '8086 ALU Bitwise & Boolean Logic Interactive Explorer'}
+                        </h3>
+                        <p className="text-[11px] text-slate-500 font-sans">
+                          {currentCategory === 'Arithmetic' && "Simulate binary addition/subtraction, two's complement math, and live status flags computation."}
+                          {currentCategory === 'Logical' && 'Simulate bitwise logic operations (AND, OR, XOR, NOT) and live status flags computation.'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Operation Selector Buttons */}
+                    <div className="flex items-center gap-1.5 font-mono text-xs bg-indigo-100/70 p-1 rounded-xl border border-indigo-200">
+                      <span className="text-[10px] font-bold text-indigo-900 uppercase px-1.5 font-sans">Operation:</span>
+                      {availableOps.map(op => (
+                        <button
+                          key={op}
+                          onClick={() => setAluOp(op as any)}
+                          className={`px-2.5 py-1 rounded-lg font-extrabold text-[11px] transition-all cursor-pointer ${
+                            aluOp === op
+                              ? 'bg-indigo-600 text-white shadow-2xs'
+                              : 'bg-white text-indigo-900 border border-indigo-200 hover:bg-indigo-50'
+                          }`}
+                        >
+                          {op}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Interactive Input Sliders */}
+                  <div className="bg-white p-4 rounded-xl border border-indigo-100 space-y-3 shadow-xs font-mono text-xs">
+                    <div className="flex items-center justify-between gap-2 text-[10.5px] font-sans text-indigo-900 bg-indigo-50/80 p-2 rounded-lg border border-indigo-150">
+                      <span className="font-bold flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Live Bi-Directional Sync:
+                      </span>
+                      <span>
+                        {isNotOp 
+                          ? <span>NOT is a <strong>unary instruction</strong> operating solely on <strong>AL Register</strong> ({byteHexFormat(aluValA)}). Moving the slider inverts all 8 bits (1's complement).</span>
+                          : isNegOp
+                          ? <span>NEG is a <strong>unary instruction</strong> operating solely on <strong>AL Register</strong> ({byteHexFormat(aluValA)}). Moving the slider computes 2's complement negation (0 - AL) and updates status flags.</span>
+                          : <span>Operand A is locked to <strong className="font-mono text-indigo-700 bg-white px-1.5 py-0.5 rounded border border-indigo-200">AL Register</strong> ({byteHexFormat(aluValA)}). Moving either slider updates CPU Registers & ALU Execution in real time.</span>}
+                      </span>
+                    </div>
+
+                    <div className={isUnaryOp ? "grid grid-cols-1 gap-4" : "grid grid-cols-1 md:grid-cols-2 gap-4"}>
+                      {/* Operand A */}
+                      <div className="space-y-1.5 bg-indigo-50/50 p-3 rounded-xl border border-indigo-150">
+                        <div className="flex justify-between items-center text-indigo-950 font-bold">
+                          <span className="flex items-center gap-1.5">
+                            {isUnaryOp ? 'Single Operand (AL Register):' : 'Operand A (AL Register):'}
+                            <span className="text-[9px] font-mono text-indigo-700 bg-indigo-100/80 px-1.5 py-0.5 rounded border border-indigo-200 uppercase font-extrabold">
+                              AX Low Byte
+                            </span>
+                          </span>
+                          <span className="text-indigo-700 font-extrabold bg-white px-2 py-0.5 rounded border border-indigo-200">
+                            {byteHexFormat(aluValA)} ({aluValA & 0xFF})
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min={0}
+                          max={255}
+                          value={aluValA & 0xFF}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            setAluValA(val);
+                            setRegs(prev => ({ ...prev, AX: (prev.AX & 0xFF00) | (val & 0xFF) }));
+                            setBeforeRegs(prev => ({ ...prev, AX: (prev.AX & 0xFF00) | (val & 0xFF) }));
+                          }}
+                          className="w-full accent-indigo-600 cursor-pointer"
+                        />
+                        <div className="text-[10px] text-slate-500 font-bold flex justify-between">
+                          <span>Binary: {(aluValA & 0xFF).toString(2).padStart(8, '0')}</span>
+                          <span>Signed: {((aluValA & 0xFF) > 127 ? (aluValA & 0xFF) - 256 : (aluValA & 0xFF))}</span>
+                        </div>
+                      </div>
+
+                      {/* Operand B (Hidden for Unary Ops) */}
+                      {!isUnaryOp && (
+                        <div className="space-y-1.5 bg-sky-50/50 p-3 rounded-xl border border-sky-150">
+                          <div className="flex justify-between items-center text-sky-950 font-bold">
+                            <span className="flex items-center gap-1.5">
+                              Operand B (BL / Imm):
+                              <span className="text-[9px] font-mono text-sky-700 bg-sky-100/80 px-1.5 py-0.5 rounded border border-sky-200 uppercase font-extrabold">
+                                {activeInstruction.opcode.includes('BL') ? `BL Register (${byteHexFormat(aluValB)})` : `Immediate ${byteHexFormat(aluValB)}`}
+                              </span>
+                            </span>
+                            <span className="text-sky-700 font-extrabold bg-white px-2 py-0.5 rounded border border-sky-200">
+                              {byteHexFormat(aluValB)} ({aluValB & 0xFF})
+                            </span>
+                          </div>
+                          <input
+                            type="range"
+                            min={0}
+                            max={255}
+                            value={aluValB & 0xFF}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              setAluValB(val);
+                              setRegs(prev => ({ ...prev, BX: (prev.BX & 0xFF00) | (val & 0xFF) }));
+                              setBeforeRegs(prev => ({ ...prev, BX: (prev.BX & 0xFF00) | (val & 0xFF) }));
+                            }}
+                            className="w-full accent-sky-600 cursor-pointer"
+                          />
+                          <div className="text-[10px] text-slate-500 font-bold flex justify-between">
+                            <span>Binary: {(aluValB & 0xFF).toString(2).padStart(8, '0')}</span>
+                            <span>Signed: {((aluValB & 0xFF) > 127 ? (aluValB & 0xFF) - 256 : (aluValB & 0xFF))}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Live Bitwise Pipeline Display */}
+                  <div className="bg-slate-50 text-slate-900 p-4 rounded-xl space-y-3 font-mono text-xs border border-slate-200">
+                    <span className="text-indigo-800 font-bold uppercase tracking-wider text-[11px] block border-b border-slate-200 pb-2">
+                      ⚡ Hardware Silicon ALU Bit Pipeline Execution
+                    </span>
+
+                    <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1 text-center font-mono">
+                      <div className="flex justify-between items-center text-slate-600 text-[11px]">
+                        <span>Operand A:</span>
+                        <span className="text-indigo-700 font-extrabold">{(aluValA & 0xFF).toString(2).padStart(8, '0')}</span>
+                        <span className="text-slate-800 font-bold">{byteHexFormat(aluValA)}</span>
+                      </div>
+
+                      {!isUnaryOp ? (
+                        <div className="flex justify-between items-center text-slate-600 text-[11px]">
+                          <span>Op ({aluOp}):</span>
+                          <span className="text-amber-700 font-extrabold">{aluOp === 'ADD' ? '+' : aluOp === 'SUB' ? '-' : aluOp === 'AND' ? '&' : aluOp === 'OR' ? '|' : aluOp === 'XOR' ? '^' : aluOp === 'SHL' ? '<< 1' : '>> 1'}</span>
+                          <span className="text-slate-800 font-bold">{(aluValB & 0xFF).toString(2).padStart(8, '0')}</span>
+                        </div>
+                      ) : isNotOp ? (
+                        <div className="flex justify-between items-center text-slate-600 text-[11px]">
+                          <span>Operation:</span>
+                          <span className="text-amber-700 font-extrabold">NOT (Bitwise Invert / 1's Complement)</span>
+                          <span className="text-slate-800 font-bold">Unary (No 2nd Operand)</span>
+                        </div>
+                      ) : (
+                        <div className="flex justify-between items-center text-slate-600 text-[11px]">
+                          <span>Operation:</span>
+                          <span className="text-purple-700 font-extrabold">NEG (Two's Complement Negation: 0 - AL)</span>
+                          <span className="text-slate-800 font-bold">Unary (No 2nd Operand)</span>
+                        </div>
+                      )}
+
+                      <div className="w-full h-[1px] bg-slate-200 my-1" />
+                      <div className="flex justify-between items-center text-emerald-800 font-bold text-xs pt-0.5">
+                        <span>ALU Result:</span>
+                        <span className="text-emerald-900 text-sm font-black bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">
+                          {aluRes.res.toString(2).padStart(8, '0')}
+                        </span>
+                        <span className="text-amber-800 font-black">{byteHexFormat(aluRes.res)} ({aluRes.res})</span>
+                      </div>
+                    </div>
+
+                    {/* Compact Evaluated Flags Bar */}
+                    {isNotOp ? (
+                      <div className="bg-amber-50 border border-amber-200 p-2.5 rounded-lg text-[11px] text-amber-950 font-sans font-bold flex flex-wrap items-center justify-between gap-2">
+                        <span>Note: In 8086 CPU architecture, the <strong>NOT instruction does NOT modify any flags</strong> (CF, ZF, SF, OF, AF, PF all remain unchanged).</span>
+                        <span className="font-mono text-[10px] bg-white px-2 py-0.5 rounded border border-amber-300 text-amber-900 font-extrabold">Flags Unaffected</span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-2.5 border-t border-slate-200 text-[11px] font-mono">
+                        <span className="text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                          Evaluated Output Flags {isNegOp && '(NEG updates status flags)'}:
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {[
+                            { flag: 'CF', val: aluRes.cf },
+                            { flag: 'ZF', val: aluRes.zf },
+                            { flag: 'SF', val: aluRes.sf },
+                            { flag: 'OF', val: aluRes.of },
+                            { flag: 'AF', val: aluRes.af },
+                            { flag: 'PF', val: aluRes.pf }
+                          ].map((item) => (
+                            <span
+                              key={item.flag}
+                              className={`px-2 py-0.5 rounded text-[10px] font-mono transition-all ${
+                                item.val
+                                  ? 'bg-indigo-600 text-white font-black shadow-2xs'
+                                  : 'bg-slate-200 text-slate-500 font-bold opacity-75'
+                              }`}
+                            >
+                              {item.flag}={item.val}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Dedicated Architectural Comparison Card: NOT vs NEG (Format & Execution Breakdown) */}
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3 font-sans">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="p-1.5 bg-indigo-600 text-white rounded-lg">
+                          <Layers className="w-4 h-4" />
+                        </span>
+                        <div>
+                          <h4 className="text-xs font-extrabold font-mono text-slate-900 uppercase tracking-wider">
+                            Format & Execution Comparison: NOT vs NEG Instructions
+                          </h4>
+                          <p className="text-[10.5px] text-slate-500">
+                            Key microarchitectural differences between bitwise inversion and arithmetic negation in 8086 CPU EU.
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-mono font-extrabold bg-indigo-100 text-indigo-900 px-2 py-0.5 rounded border border-indigo-200">
+                        8086 Unary Operations
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                      {/* NOT Card */}
+                      <div className="bg-white border border-amber-200 rounded-xl p-3 space-y-2 shadow-2xs">
+                        <div className="flex items-center justify-between border-b border-amber-100 pb-1.5">
+                          <span className="font-mono font-black text-amber-900 text-xs">NOT Instruction (Bitwise Invert)</span>
+                          <span className="text-[9px] font-mono font-bold bg-amber-50 text-amber-800 px-1.5 py-0.5 rounded border border-amber-200">1's Complement</span>
+                        </div>
+                        <ul className="text-[11px] text-slate-700 space-y-1.5 font-sans">
+                          <li><strong className="text-slate-900 font-mono">Format:</strong> Unary format <code className="bg-slate-100 px-1 rounded text-indigo-700 font-mono font-bold">NOT destination</code> (e.g., <code className="font-mono text-slate-800">NOT AL</code>, <code className="font-mono text-slate-800">NOT [BX]</code>). Immediate values are illegal.</li>
+                          <li><strong className="text-slate-900 font-mono">Mathematical Logic:</strong> Computes 1's complement (<code className="font-mono text-amber-800 font-bold">Dest ← ~Dest</code>). Inverts every bit (0→1, 1→0) without binary borrows/carries.</li>
+                          <li><strong className="text-slate-900 font-mono">Flags Execution:</strong> <span className="text-amber-900 font-bold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">Flags Unaffected</span>. All status flags (CF, ZF, SF, OF, AF, PF) retain their pre-execution values.</li>
+                        </ul>
+                      </div>
+
+                      {/* NEG Card */}
+                      <div className="bg-white border border-purple-200 rounded-xl p-3 space-y-2 shadow-2xs">
+                        <div className="flex items-center justify-between border-b border-purple-100 pb-1.5">
+                          <span className="font-mono font-black text-purple-900 text-xs">NEG Instruction (Arithmetic Negate)</span>
+                          <span className="text-[9px] font-mono font-bold bg-purple-50 text-purple-800 px-1.5 py-0.5 rounded border border-purple-200">2's Complement</span>
+                        </div>
+                        <ul className="text-[11px] text-slate-700 space-y-1.5 font-sans">
+                          <li><strong className="text-slate-900 font-mono">Format:</strong> Unary format <code className="bg-slate-100 px-1 rounded text-indigo-700 font-mono font-bold">NEG destination</code> (e.g., <code className="font-mono text-slate-800">NEG AL</code>, <code className="font-mono text-slate-800">NEG [BX]</code>). Immediate values are illegal.</li>
+                          <li><strong className="text-slate-900 font-mono">Mathematical Logic:</strong> Computes 2's complement negation (<code className="font-mono text-purple-800 font-bold">Dest ← 0 - Dest</code> or <code className="font-mono text-purple-800 font-bold">~Dest + 1</code>). Reverses algebraic sign.</li>
+                          <li><strong className="text-slate-900 font-mono">Flags Execution:</strong> <span className="text-purple-900 font-bold bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">Updates All Status Flags</span>. CF=1 for any non-zero operand (0 if operand=0); OF=1 if negating boundary 80H/8000H.</li>
                         </ul>
                       </div>
                     </div>
-                  )}
+
+                    <div className="bg-indigo-50/80 p-2.5 rounded-lg border border-indigo-150 text-[11px] text-indigo-950 font-sans flex items-center justify-between gap-2 flex-wrap">
+                      <span><strong>2's Complement Identity:</strong> <code className="font-mono font-bold text-indigo-900">NEG x = (NOT x) + 1</code></span>
+                      <span className="text-[10px] font-mono text-indigo-700 bg-white px-2 py-0.5 rounded border border-indigo-200 font-extrabold">2's Complement = 1's Complement + 1</span>
+                    </div>
+                  </div>
                 </div>
               );
             })()}
@@ -3824,6 +4141,9 @@ POP DX         ; Reads 1234H into DX, SP ← SP + 2 (FFFE)`}
               ))}
             </div>
           </div>
+
+          {/* Master Branching Instructions Table */}
+          <BranchingInstructionsTable />
         </div>
       )}
 
