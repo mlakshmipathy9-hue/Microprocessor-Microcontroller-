@@ -4247,8 +4247,8 @@ export function getGeneralExplanation(opcode: string, fallbackDesc?: string): Ge
           : mnemonic === 'WAIT'
           ? 'Causes CPU to enter wait state until TEST pin is asserted low.'
           : mnemonic === 'LOCK'
-          ? 'Asserts bus lock signal during next instruction.'
-          : 'Passes instruction opcode and memory operand to coprocessor.',
+          ? 'Locks the system bus during the next instruction so another processor cannot use the bus at the same time.'
+          : 'ESC is not usually written as ESC in the source program. It is the 8086 instruction encoding used to communicate with the 8087.',
         flagsAffected: 'None (Flags remain unchanged)',
         flagsBadgeColor: 'emerald',
         rules: [

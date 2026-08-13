@@ -29,7 +29,8 @@ import {
   Repeat,
   SlidersHorizontal,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  GitBranch
 } from 'lucide-react';
 import {
   SimulatorInstruction,
@@ -52,10 +53,11 @@ import {
 import BranchingInstructionsTable from './BranchingInstructionsTable';
 
 interface InstructionDecoderSimulatorProps {
-  initialTab?: 'lab' | 'groups' | 'comparison' | 'remember';
+  initialTab?: 'lab' | 'groups' | 'branching' | 'comparison' | 'remember';
   initialSubTab?: 'instructions' | 'explanation' | 'addressing' | 'registers' | 'explorers';
   hideGroupsTab?: boolean;
   hideLabTab?: boolean;
+  hideBranchingTab?: boolean;
   hideComparisonTab?: boolean;
   hideRememberTab?: boolean;
   hideGuideBanner?: boolean;
@@ -66,11 +68,12 @@ export default function InstructionDecoderSimulator({
   initialSubTab = 'instructions',
   hideGroupsTab = false,
   hideLabTab = false,
+  hideBranchingTab = false,
   hideComparisonTab = false,
   hideRememberTab = false,
   hideGuideBanner = false
 }: InstructionDecoderSimulatorProps = {}) {
-  const [activeMainTab, setActiveMainTab] = useState<'lab' | 'groups' | 'comparison' | 'remember'>(initialTab);
+  const [activeMainTab, setActiveMainTab] = useState<'lab' | 'groups' | 'branching' | 'comparison' | 'remember'>(initialTab);
 
   useEffect(() => {
     if (initialTab) {
@@ -168,9 +171,18 @@ export default function InstructionDecoderSimulator({
   const [stringDf, setStringDf] = useState<number>(0);
   const [stringCx, setStringCx] = useState<number>(5);
   const [stringOp, setStringOp] = useState<'MOVSB' | 'MOVSW' | 'CMPSB' | 'SCASB' | 'STOSB'>('MOVSB');
+  const [stringActiveOp, setStringActiveOp] = useState<'MOVSB' | 'LODSB' | 'STOSB' | 'CMPSB' | 'SCASB' | 'IN' | 'OUT'>('MOVSB');
+  const [stringStepIndex, setStringStepIndex] = useState<number>(0);
+  const [stringAlReg, setStringAlReg] = useState<number>(0x41); // 'A'
 
   // Interactive Data Transfer Bus Explorer State
   const [transferBusMode, setTransferBusMode] = useState<'mov' | 'push' | 'pop' | 'lea' | 'xchg'>('mov');
+
+  // Interactive Branch & Control Flow Explorer State
+  const [branchValA, setBranchValA] = useState<number>(5);
+  const [branchValB, setBranchValB] = useState<number>(5);
+  const [branchJumpCond, setBranchJumpCond] = useState<'JZ' | 'JNZ' | 'JC' | 'JNC' | 'JA' | 'JB' | 'JG' | 'JL' | 'JMP' | 'LOOP'>('JZ');
+  const [branchCx, setBranchCx] = useState<number>(3);
 
   const bcdGuideMap = {
     DAA: {
@@ -1591,6 +1603,19 @@ export default function InstructionDecoderSimulator({
                 Instruction Groups
               </button>
             )}
+            {!hideBranchingTab && (
+              <button
+                onClick={() => setActiveMainTab('branching')}
+                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+                  activeMainTab === 'branching' 
+                    ? 'bg-white text-rose-700 shadow-xs border border-slate-200 font-extrabold' 
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <GitBranch className="w-3.5 h-3.5 text-rose-600" />
+                Branching Table
+              </button>
+            )}
             {!hideComparisonTab && (
               <button
                 onClick={() => setActiveMainTab('comparison')}
@@ -2157,6 +2182,425 @@ export default function InstructionDecoderSimulator({
                                   </div>
                                 </div>
                               </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Machine Control Instructions Guide */}
+                        {(activeInstruction.category === 'Machine Control' || categoryTab === 'Machine Control') && (
+                          <div className="bg-gradient-to-br from-amber-50/90 via-slate-50 to-orange-50/90 text-slate-900 p-5 rounded-xl border border-amber-200/80 shadow-xs space-y-4.5 font-mono">
+                            <div className="flex items-center justify-between border-b border-amber-200/80 pb-3">
+                              <span className="text-base font-bold uppercase tracking-wider text-amber-950 flex items-center gap-2.5">
+                                <Cpu className="w-5 h-5 text-amber-600" />
+                                8086 Machine & Processor Control Instructions Guide
+                              </span>
+                              <span className="text-xs bg-amber-100 text-amber-900 px-3 py-1 rounded border border-amber-300 font-extrabold uppercase tracking-wide">
+                                Machine Control
+                              </span>
+                            </div>
+
+                            <p className="text-sm sm:text-base font-sans text-slate-800 leading-relaxed">
+                              Machine Control instructions govern CPU operational states, manage bus line synchronization for multiprocessor environments, and coordinate execution flow with external hardware coprocessors (such as the 8087 Math Coprocessor).
+                            </p>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1 font-sans">
+                              {/* HLT */}
+                              <div className="bg-white p-3.5 rounded-lg border border-amber-200 shadow-2xs space-y-2">
+                                <div className="flex justify-between items-center border-b border-amber-100 pb-2 font-mono">
+                                  <span className="font-extrabold text-amber-950 text-sm sm:text-base">HLT</span>
+                                  <span className="text-xs bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded border border-amber-200 font-bold uppercase">Halt Processor</span>
+                                </div>
+                                <p className="text-slate-800 text-xs sm:text-sm leading-relaxed">
+                                  Stops instruction fetching and execution. Enters a low-power internal halt state until an enabled hardware interrupt (INTR / NMI) or system RESET occurs.
+                                </p>
+                              </div>
+
+                              {/* LOCK */}
+                              <div className="bg-white p-3.5 rounded-lg border border-amber-200 shadow-2xs space-y-2">
+                                <div className="flex justify-between items-center border-b border-amber-100 pb-2 font-mono">
+                                  <span className="font-extrabold text-amber-950 text-sm sm:text-base">LOCK 🔒</span>
+                                  <span className="text-xs bg-rose-100 text-rose-800 px-2.5 py-0.5 rounded border border-rose-200 font-bold uppercase">Bus Lock Signal</span>
+                                </div>
+                                <p className="text-slate-800 text-xs sm:text-sm leading-relaxed">
+                                  Locks the system bus during the next instruction so another processor cannot use the bus at the same time.
+                                </p>
+                                <div className="bg-amber-50/80 p-2 rounded border border-amber-200/80 font-mono text-xs sm:text-sm text-amber-950">
+                                  <span className="font-bold text-amber-900">Example:</span> <code className="font-bold text-amber-900">LOCK XCHG [SI], AL</code>
+                                </div>
+                                <p className="text-xs sm:text-sm font-semibold text-rose-900 flex items-center gap-1.5 pt-0.5 font-sans">
+                                  <span>👉</span> <strong>LOCK = “Use the bus exclusively for this operation.”</strong>
+                                </p>
+                              </div>
+
+                              {/* NOP */}
+                              <div className="bg-white p-3.5 rounded-lg border border-amber-200 shadow-2xs space-y-2">
+                                <div className="flex justify-between items-center border-b border-amber-100 pb-2 font-mono">
+                                  <span className="font-extrabold text-amber-950 text-sm sm:text-base">NOP</span>
+                                  <span className="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded border border-emerald-200 font-bold uppercase">No Operation</span>
+                                </div>
+                                <p className="text-slate-800 text-xs sm:text-sm leading-relaxed">
+                                  Performs no operation other than advancing the Instruction Pointer (<code className="font-mono text-xs sm:text-sm font-semibold">IP</code>) by 1 byte and consuming 3 CPU clock cycles (<code className="font-mono text-xs sm:text-sm font-semibold">90H</code> opcode). Used for timing delay padding or code patching.
+                                </p>
+                              </div>
+
+                              {/* ESC */}
+                              <div className="bg-white p-3.5 rounded-lg border border-amber-200 shadow-2xs space-y-2">
+                                <div className="flex justify-between items-center border-b border-amber-100 pb-2 font-mono">
+                                  <span className="font-extrabold text-amber-950 text-sm sm:text-base">ESC</span>
+                                  <span className="text-xs bg-sky-100 text-sky-800 px-2.5 py-0.5 rounded border border-sky-200 font-bold uppercase">Coprocessor Escape</span>
+                                </div>
+                                <p className="text-slate-800 text-xs sm:text-sm leading-relaxed">
+                                  ESC is not usually written as ESC in the source program. It is the 8086 instruction encoding used to communicate with the 8087.
+                                </p>
+                                <p className="text-xs sm:text-sm font-semibold text-sky-900 flex items-center gap-1.5 pt-0.5 font-sans">
+                                  <span>👉</span> <strong>8086 + 8087 → ESC is used internally to pass coprocessor operations.</strong>
+                                </p>
+                              </div>
+
+                              {/* WAIT */}
+                              <div className="bg-white p-3.5 rounded-lg border border-amber-200 shadow-2xs space-y-2 md:col-span-2">
+                                <div className="flex justify-between items-center border-b border-amber-100 pb-2 font-mono">
+                                  <span className="font-extrabold text-amber-950 text-sm sm:text-base">WAIT / FWAIT</span>
+                                  <span className="text-xs bg-indigo-100 text-indigo-800 px-2.5 py-0.5 rounded border border-indigo-200 font-bold uppercase">Hardware Pin Sync</span>
+                                </div>
+                                <p className="text-slate-800 text-xs sm:text-sm leading-relaxed">
+                                  Causes the 8086 CPU to enter an idle wait loop checking the hardware <code className="font-mono text-xs sm:text-sm font-bold text-indigo-700">TEST#</code> input pin. Once the external coprocessor finishes its floating-point calculation and drives <code className="font-mono text-xs sm:text-sm font-bold text-indigo-700">TEST#</code> LOW, the CPU resumes normal code execution.
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Hardware & Signal Interaction Banner */}
+                            <div className="bg-amber-100/70 p-3.5 rounded-lg border border-amber-300 text-amber-950 text-xs sm:text-sm font-sans space-y-1.5">
+                              <span className="font-mono font-bold uppercase text-xs sm:text-sm block text-amber-900">
+                                💡 Multiprocessor & Hardware Signal Integration:
+                              </span>
+                              <p className="leading-relaxed">
+                                Unlike standard data manipulation instructions, Machine Control instructions interact directly with 8086 hardware pins (such as <strong className="font-mono">LOCK#</strong>, <strong className="font-mono">TEST#</strong>, and interrupt control flags). They are critical for building reliable multi-master bus systems and floating-point numeric pipelines.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* String & Port Instructions Guide */}
+                        {(activeInstruction.category === 'String & Port' || categoryTab === 'String & Port') && (
+                          <div className="bg-gradient-to-br from-teal-50/90 via-slate-50 to-cyan-50/90 text-slate-900 p-5 rounded-xl border border-teal-200/80 shadow-xs space-y-4.5 font-mono">
+                            <div className="flex items-center justify-between border-b border-teal-200/80 pb-3">
+                              <span className="text-base font-bold uppercase tracking-wider text-teal-950 flex items-center gap-2.5">
+                                <Binary className="w-5 h-5 text-teal-600" />
+                                8086 String Manipulation & Port I/O Instructions Guide
+                              </span>
+                              <span className="text-xs bg-teal-100 text-teal-900 px-3 py-1 rounded border border-teal-300 font-extrabold uppercase tracking-wide">
+                                String & Port
+                              </span>
+                            </div>
+
+                            <p className="text-sm sm:text-base font-sans text-slate-800 leading-relaxed">
+                              String instructions process contiguous memory blocks using index pointers (<code className="font-mono text-xs sm:text-sm font-bold text-teal-900">DS:SI</code> source, <code className="font-mono text-xs sm:text-sm font-bold text-teal-900">ES:DI</code> destination) with automatic index updating. Port instructions perform hardware I/O communication between external peripheral chips and the <code className="font-mono text-xs sm:text-sm font-bold text-teal-900">AL/AX</code> accumulator.
+                            </p>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1 font-sans">
+                              {/* String Operations Box */}
+                              <div className="bg-white p-3.5 rounded-lg border border-teal-200 shadow-2xs space-y-2.5 md:col-span-2">
+                                <div className="flex justify-between items-center border-b border-teal-100 pb-2 font-mono">
+                                  <span className="font-extrabold text-teal-950 text-sm sm:text-base">String Manipulation Instructions</span>
+                                  <span className="text-xs bg-teal-100 text-teal-800 px-2.5 py-0.5 rounded border border-teal-200 font-bold uppercase">DS:SI → ES:DI Pointer Pairs</span>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs sm:text-sm">
+                                  <div className="bg-teal-50/60 p-3 rounded-lg border border-teal-150 space-y-1">
+                                    <div className="flex justify-between font-mono font-bold text-teal-950 text-xs sm:text-sm">
+                                      <span>MOVSB / MOVSW</span>
+                                      <span className="text-teal-700 text-xs">Move String</span>
+                                    </div>
+                                    <p className="text-slate-800 leading-relaxed text-xs sm:text-sm">
+                                      Copies byte/word from <code className="font-mono font-bold">DS:SI</code> to <code className="font-mono font-bold">ES:DI</code>. Auto-adjusts <code className="font-mono">SI</code> and <code className="font-mono">DI</code> by 1 (byte) or 2 (word) based on Direction Flag (<code className="font-mono">DF</code>).
+                                    </p>
+                                  </div>
+
+                                  <div className="bg-teal-50/60 p-3 rounded-lg border border-teal-150 space-y-1">
+                                    <div className="flex justify-between font-mono font-bold text-teal-950 text-xs sm:text-sm">
+                                      <span>CMPSB / CMPSW</span>
+                                      <span className="text-amber-800 text-xs">Compare String</span>
+                                    </div>
+                                    <p className="text-slate-800 leading-relaxed text-xs sm:text-sm">
+                                      Subtracts destination byte/word at <code className="font-mono font-bold">ES:DI</code> from source at <code className="font-mono font-bold">DS:SI</code> without altering memory, updating <code className="font-mono">ZF</code>, <code className="font-mono">CF</code>, and <code className="font-mono">SF</code> flags.
+                                    </p>
+                                  </div>
+
+                                  <div className="bg-teal-50/60 p-3 rounded-lg border border-teal-150 space-y-1">
+                                    <div className="flex justify-between font-mono font-bold text-teal-950 text-xs sm:text-sm">
+                                      <span>SCASB / SCASW</span>
+                                      <span className="text-indigo-800 text-xs">Scan String</span>
+                                    </div>
+                                    <p className="text-slate-800 leading-relaxed text-xs sm:text-sm">
+                                      Compares <code className="font-mono font-bold">AL/AX</code> with memory byte/word at <code className="font-mono font-bold">ES:DI</code> to search for matching target characters/values, updating status flags.
+                                    </p>
+                                  </div>
+
+                                  <div className="bg-teal-50/60 p-3 rounded-lg border border-teal-150 space-y-1">
+                                    <div className="flex justify-between font-mono font-bold text-teal-950 text-xs sm:text-sm">
+                                      <span>LODSB / STOSB</span>
+                                      <span className="text-emerald-800 text-xs">Load / Store String</span>
+                                    </div>
+                                    <p className="text-slate-800 leading-relaxed text-xs sm:text-sm">
+                                      <code className="font-mono font-bold">LODSB</code> loads byte from <code className="font-mono font-bold">DS:SI</code> into <code className="font-mono font-bold">AL</code>. <code className="font-mono font-bold">STOSB</code> stores byte from <code className="font-mono font-bold">AL</code> into <code className="font-mono font-bold">ES:DI</code> memory.
+                                    </p>
+                                  </div>
+
+                                  <div className="bg-teal-50/60 p-3 rounded-lg border border-teal-150 space-y-1 md:col-span-2">
+                                    <div className="flex justify-between font-mono font-bold text-teal-950 text-xs sm:text-sm">
+                                      <span>REP / REPE / REPNE Prefixes</span>
+                                      <span className="text-rose-800 text-xs">Repeat Loop Prefix</span>
+                                    </div>
+                                    <p className="text-slate-800 leading-relaxed text-xs sm:text-sm">
+                                      Repeats string execution hardware loop <code className="font-mono font-bold">CX</code> times (e.g. <code className="font-mono font-bold">REP MOVSB</code>). <code className="font-mono font-bold">REPE</code> repeats while <code className="font-mono">ZF=1</code>; <code className="font-mono font-bold">REPNE</code> repeats while <code className="font-mono">ZF=0</code>.
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Port I/O Operations Box */}
+                              <div className="bg-white p-3.5 rounded-lg border border-cyan-200 shadow-2xs space-y-2.5 md:col-span-2">
+                                <div className="flex justify-between items-center border-b border-cyan-100 pb-2 font-mono">
+                                  <span className="font-extrabold text-cyan-950 text-sm sm:text-base">Port Input / Output (I/O) Instructions</span>
+                                  <span className="text-xs bg-cyan-100 text-cyan-800 px-2.5 py-0.5 rounded border border-cyan-200 font-bold uppercase">AL/AX Accumulator Hardware Ports</span>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs sm:text-sm">
+                                  <div className="bg-cyan-50/60 p-3 rounded-lg border border-cyan-150 space-y-1">
+                                    <div className="flex justify-between font-mono font-bold text-cyan-950 text-xs sm:text-sm">
+                                      <span>IN AL, Port8 / IN AX, DX</span>
+                                      <span className="text-cyan-800 text-xs">Input From Hardware Port</span>
+                                    </div>
+                                    <p className="text-slate-800 leading-relaxed text-xs sm:text-sm">
+                                      Transfers data from physical peripheral I/O port into <code className="font-mono font-bold">AL</code> (8-bit) or <code className="font-mono font-bold">AX</code> (16-bit). Uses direct 8-bit port address (<code className="font-mono">00H-FFH</code>) or 16-bit indirect address in <code className="font-mono font-bold">DX</code> (<code className="font-mono">0000H-FFFFH</code>).
+                                    </p>
+                                  </div>
+
+                                  <div className="bg-cyan-50/60 p-3 rounded-lg border border-cyan-150 space-y-1">
+                                    <div className="flex justify-between font-mono font-bold text-cyan-950 text-xs sm:text-sm">
+                                      <span>OUT Port8, AL / OUT DX, AX</span>
+                                      <span className="text-indigo-800 text-xs">Output To Hardware Port</span>
+                                    </div>
+                                    <p className="text-slate-800 leading-relaxed text-xs sm:text-sm">
+                                      Outputs data byte from <code className="font-mono font-bold">AL</code> or word from <code className="font-mono font-bold">AX</code> to physical hardware port address.
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Comparative Matrix: Key Differences Between String & Port Instructions */}
+                              <div className="bg-white p-3.5 rounded-lg border border-teal-200 shadow-2xs space-y-3 md:col-span-2">
+                                <div className="flex justify-between items-center border-b border-teal-100 pb-2 font-mono">
+                                  <span className="font-extrabold text-teal-950 text-sm sm:text-base flex items-center gap-2">
+                                    <Sparkles className="w-4 h-4 text-teal-600" />
+                                    Comparative Breakdown: Differences Between String & Port Instructions
+                                  </span>
+                                  <span className="text-xs bg-teal-100 text-teal-900 px-2.5 py-0.5 rounded border border-teal-200 font-bold uppercase">
+                                    Comparison Matrix
+                                  </span>
+                                </div>
+
+                                {/* Table 1: String Instructions Comparison */}
+                                <div className="overflow-x-auto">
+                                  <table className="w-full text-left border-collapse font-mono text-xs">
+                                    <thead>
+                                      <tr className="bg-teal-50/80 text-teal-950 border-b border-teal-200">
+                                        <th className="p-2 font-bold">Instruction</th>
+                                        <th className="p-2 font-bold">Source</th>
+                                        <th className="p-2 font-bold">Destination</th>
+                                        <th className="p-2 font-bold">Updates Flags?</th>
+                                        <th className="p-2 font-bold">Primary Function & Memory Effect</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-200 text-slate-800 font-sans">
+                                      <tr className="hover:bg-slate-50/80">
+                                        <td className="p-2 font-mono font-bold text-teal-900">MOVSB / MOVSW</td>
+                                        <td className="p-2 font-mono text-xs">DS:SI</td>
+                                        <td className="p-2 font-mono text-xs">ES:DI</td>
+                                        <td className="p-2 text-rose-700 font-bold font-mono">No</td>
+                                        <td className="p-2">Copies block from source RAM to destination RAM without modifying registers or flags.</td>
+                                      </tr>
+                                      <tr className="hover:bg-slate-50/80">
+                                        <td className="p-2 font-mono font-bold text-teal-900">LODSB / LODSW</td>
+                                        <td className="p-2 font-mono text-xs">DS:SI</td>
+                                        <td className="p-2 font-mono text-xs">AL / AX</td>
+                                        <td className="p-2 text-rose-700 font-bold font-mono">No</td>
+                                        <td className="p-2">Loads element from memory into Accumulator <code className="font-mono">AL/AX</code> for CPU processing.</td>
+                                      </tr>
+                                      <tr className="hover:bg-slate-50/80">
+                                        <td className="p-2 font-mono font-bold text-teal-900">STOSB / STOSW</td>
+                                        <td className="p-2 font-mono text-xs">AL / AX</td>
+                                        <td className="p-2 font-mono text-xs">ES:DI</td>
+                                        <td className="p-2 text-rose-700 font-bold font-mono">No</td>
+                                        <td className="p-2">Stores byte/word from <code className="font-mono">AL/AX</code> into RAM. Used to initialize/fill memory arrays.</td>
+                                      </tr>
+                                      <tr className="hover:bg-slate-50/80">
+                                        <td className="p-2 font-mono font-bold text-teal-900">CMPSB / CMPSW</td>
+                                        <td className="p-2 font-mono text-xs">DS:SI</td>
+                                        <td className="p-2 font-mono text-xs">ES:DI</td>
+                                        <td className="p-2 text-emerald-700 font-bold font-mono">Yes (ZF, CF, SF)</td>
+                                        <td className="p-2">Compares 2 string buffers (<code className="font-mono">DS:SI - ES:DI</code>). Memory is <strong>unmodified</strong>; updates flags.</td>
+                                      </tr>
+                                      <tr className="hover:bg-slate-50/80">
+                                        <td className="p-2 font-mono font-bold text-teal-900">SCASB / SCASW</td>
+                                        <td className="p-2 font-mono text-xs">AL / AX</td>
+                                        <td className="p-2 font-mono text-xs">ES:DI</td>
+                                        <td className="p-2 text-emerald-700 font-bold font-mono">Yes (ZF, CF, SF)</td>
+                                        <td className="p-2">Scans string buffer for matching char in <code className="font-mono">AL/AX</code>. Memory is <strong>unmodified</strong>; updates flags.</td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                </div>
+
+                                {/* Table 2: String vs Port I/O Differences */}
+                                <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-2 text-xs font-sans">
+                                  <span className="font-mono font-bold uppercase text-slate-900 text-xs block border-b border-slate-200 pb-1">
+                                    ⚔️ String Operations vs Port I/O Instructions Key Differences:
+                                  </span>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                                    <div className="bg-white p-2.5 rounded border border-slate-200 space-y-1">
+                                      <span className="font-mono font-bold text-teal-900 block">1. Target Address Space</span>
+                                      <p className="text-slate-700 leading-relaxed">
+                                        <strong>String Ops:</strong> Operate on 1 MB Memory Address Space using segment:offset pairs (<code className="font-mono">DS:SI</code>, <code className="font-mono">ES:DI</code>).<br />
+                                        <strong>Port I/O:</strong> Operate on separate 64 KB Peripheral I/O Address Space (<code className="font-mono">0000H - FFFFH</code>).
+                                      </p>
+                                    </div>
+                                    <div className="bg-white p-2.5 rounded border border-slate-200 space-y-1">
+                                      <span className="font-mono font-bold text-teal-900 block">2. Hardware Bus Signals</span>
+                                      <p className="text-slate-700 leading-relaxed">
+                                        <strong>String Ops:</strong> Drive <code className="font-mono text-teal-800">M/IO# = 1</code> (Memory Cycle) with <code className="font-mono">MEMR# / MEMW#</code>.<br />
+                                        <strong>Port I/O:</strong> Drive <code className="font-mono text-rose-800">M/IO# = 0</code> (I/O Cycle) with <code className="font-mono">IOR# / IOW#</code> strobes.
+                                      </p>
+                                    </div>
+                                    <div className="bg-white p-2.5 rounded border border-slate-200 space-y-1">
+                                      <span className="font-mono font-bold text-teal-900 block">3. Pointer & Index Behavior</span>
+                                      <p className="text-slate-700 leading-relaxed">
+                                        <strong>String Ops:</strong> Automatically increment or decrement <code className="font-mono">SI</code> & <code className="font-mono">DI</code> registers based on Direction Flag (<code className="font-mono">DF</code>).<br />
+                                        <strong>Port I/O:</strong> Port address in <code className="font-mono">DX</code> or immediate byte does <strong>NOT</strong> auto-increment.
+                                      </p>
+                                    </div>
+                                    <div className="bg-white p-2.5 rounded border border-slate-200 space-y-1">
+                                      <span className="font-mono font-bold text-teal-900 block">4. Repeat Prefixes (`REP`)</span>
+                                      <p className="text-slate-700 leading-relaxed">
+                                        <strong>String Ops:</strong> Native hardware loop repeat prefixes (<code className="font-mono">REP, REPE, REPNE</code>) using <code className="font-mono">CX</code>.<br />
+                                        <strong>Port I/O:</strong> 8086 basic <code className="font-mono">IN / OUT</code> instructions do not support hardware repeat prefixes.
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* String & Port Rules Banner */}
+                            <div className="bg-teal-100/70 p-3.5 rounded-lg border border-teal-300 text-teal-950 text-xs sm:text-sm font-sans space-y-1.5">
+                              <span className="font-mono font-bold uppercase text-xs sm:text-sm block text-teal-900">
+                                💡 Key String & Port Hardware Constraints:
+                              </span>
+                              <p className="leading-relaxed text-xs sm:text-sm">
+                                1. Source strings must use <strong className="font-mono">DS:SI</strong> (segment override allowed); Destination strings <strong>MUST ALWAYS</strong> use <strong className="font-mono">ES:DI</strong> (no segment override permitted).<br />
+                                2. <strong className="font-mono">DF = 0</strong> auto-increments pointers (<code className="font-mono">+1/+2</code>); <strong className="font-mono">DF = 1</strong> auto-decrements pointers (<code className="font-mono">-1/-2</code>).<br />
+                                3. All 8086 port I/O transactions must pass strictly through accumulator registers (<strong className="font-mono">AL</strong> or <strong className="font-mono">AX</strong>).
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Branch Instructions Guide */}
+                        {(activeInstruction.category === 'Branch' || categoryTab === 'Branch') && (
+                          <div className="bg-gradient-to-br from-indigo-50/90 via-slate-50 to-blue-50/90 text-slate-900 p-4.5 rounded-xl border border-indigo-200/80 shadow-xs space-y-4 font-mono">
+                            <div className="flex items-center justify-between border-b border-indigo-200/80 pb-2.5">
+                              <span className="text-sm font-bold uppercase tracking-wider text-indigo-950 flex items-center gap-2">
+                                <Sparkles className="w-4 h-4 text-indigo-600" />
+                                8086 Branch & Control Transfer Instructions Guide
+                              </span>
+                              <span className="text-xs bg-indigo-100 text-indigo-900 px-2.5 py-1 rounded border border-indigo-300 font-extrabold uppercase">
+                                Branch & Control
+                              </span>
+                            </div>
+
+                            <p className="text-xs sm:text-base text-slate-800 leading-relaxed font-sans">
+                              Branch instructions alter the sequential program execution flow by modifying the Instruction Pointer (<code className="font-mono font-bold bg-slate-100 px-1 rounded">IP</code>) and optionally the Code Segment (<code className="font-mono font-bold bg-slate-100 px-1 rounded">CS</code>). They are divided into <strong>Unconditional Transfers</strong> (JMP, CALL, RET) and <strong>Conditional Transfers</strong> (JZ, JNZ, JA, JB, JG, JL) based on 8086 status flags.
+                            </p>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 font-sans">
+                              {/* Card 1: JMP */}
+                              <div className="bg-white p-3.5 rounded-lg border border-indigo-200 shadow-2xs space-y-2">
+                                <div className="flex justify-between items-center border-b border-indigo-100 pb-2 font-mono">
+                                  <span className="font-extrabold text-indigo-950 text-sm sm:text-base">JMP Target</span>
+                                  <span className="text-xs bg-indigo-100 text-indigo-800 px-2.5 py-0.5 rounded border border-indigo-200 font-bold uppercase">Unconditional Jump</span>
+                                </div>
+                                <p className="text-slate-800 text-xs sm:text-sm leading-relaxed">
+                                  Unconditionally loads <code className="font-mono font-bold">IP</code> (and <code className="font-mono font-bold">CS</code> if Far jump) with target address without inspecting flags.
+                                </p>
+                                <div className="bg-indigo-50/80 p-2 rounded border border-indigo-200/80 font-mono text-xs sm:text-sm text-indigo-950">
+                                  <span className="font-bold text-indigo-900">Example:</span> <code className="font-bold text-indigo-900">JMP 0150H</code>
+                                </div>
+                                <p className="text-xs sm:text-sm font-semibold text-indigo-900 flex items-center gap-1.5 pt-0.5 font-sans">
+                                  <span>👉</span> <strong>JMP = “Directly change IP without checking flags.”</strong>
+                                </p>
+                              </div>
+
+                              {/* Card 2: JZ / JNZ */}
+                              <div className="bg-white p-3.5 rounded-lg border border-emerald-200 shadow-2xs space-y-2">
+                                <div className="flex justify-between items-center border-b border-emerald-100 pb-2 font-mono">
+                                  <span className="font-extrabold text-emerald-950 text-sm sm:text-base">JZ / JNZ Target</span>
+                                  <span className="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded border border-emerald-200 font-bold uppercase">Zero Flag Branch</span>
+                                </div>
+                                <p className="text-slate-800 text-xs sm:text-sm leading-relaxed">
+                                  <code className="font-mono font-bold">JZ / JE</code> jumps if <code className="font-mono font-bold">ZF = 1</code> (result zero or equal). <code className="font-mono font-bold">JNZ / JNE</code> jumps if <code className="font-mono font-bold">ZF = 0</code>.
+                                </p>
+                                <div className="bg-emerald-50/80 p-2 rounded border border-emerald-200/80 font-mono text-xs sm:text-sm text-emerald-950">
+                                  <span className="font-bold text-emerald-900">Example:</span> <code className="font-bold text-emerald-900">CMP AX, BX</code> → <code className="font-bold text-emerald-900">JE EQUAL_LABEL</code>
+                                </div>
+                                <p className="text-xs sm:text-sm font-semibold text-emerald-900 flex items-center gap-1.5 pt-0.5 font-sans">
+                                  <span>👉</span> <strong>JZ = “Branch if compare or ALU operation resulted in zero.”</strong>
+                                </p>
+                              </div>
+
+                              {/* Card 3: CALL & RET */}
+                              <div className="bg-white p-3.5 rounded-lg border border-blue-200 shadow-2xs space-y-2">
+                                <div className="flex justify-between items-center border-b border-blue-100 pb-2 font-mono">
+                                  <span className="font-extrabold text-blue-950 text-sm sm:text-base">CALL & RET</span>
+                                  <span className="text-xs bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded border border-blue-200 font-bold uppercase">Procedure Call</span>
+                                </div>
+                                <p className="text-slate-800 text-xs sm:text-sm leading-relaxed">
+                                  <code className="font-mono font-bold">CALL</code> pushes return address onto stack (<code className="font-mono font-bold">SS:SP</code>) and jumps to subroutine. <code className="font-mono font-bold">RET</code> pops offset back into <code className="font-mono font-bold">IP</code> to return.
+                                </p>
+                                <div className="bg-blue-50/80 p-2 rounded border border-blue-200/80 font-mono text-xs sm:text-sm text-blue-950">
+                                  <span className="font-bold text-blue-900">Example:</span> <code className="font-bold text-blue-900">CALL MY_PROC</code> ... <code className="font-bold text-blue-900">RET</code>
+                                </div>
+                                <p className="text-xs sm:text-sm font-semibold text-blue-900 flex items-center gap-1.5 pt-0.5 font-sans">
+                                  <span>👉</span> <strong>CALL/RET = “Save return address on stack, jump to function, then return.”</strong>
+                                </p>
+                              </div>
+
+                              {/* Card 4: LOOP Target */}
+                              <div className="bg-white p-3.5 rounded-lg border border-purple-200 shadow-2xs space-y-2">
+                                <div className="flex justify-between items-center border-b border-purple-100 pb-2 font-mono">
+                                  <span className="font-extrabold text-purple-950 text-sm sm:text-base">LOOP Target</span>
+                                  <span className="text-xs bg-purple-100 text-purple-800 px-2.5 py-0.5 rounded border border-purple-200 font-bold uppercase">Hardware Loop</span>
+                                </div>
+                                <p className="text-slate-800 text-xs sm:text-sm leading-relaxed">
+                                  Automatically decrements <code className="font-mono font-bold">CX ← CX - 1</code> and branches to target label if <code className="font-mono font-bold">CX ≠ 0</code>. Does not affect status flags.
+                                </p>
+                                <div className="bg-purple-50/80 p-2 rounded border border-purple-200/80 font-mono text-xs sm:text-sm text-purple-950">
+                                  <span className="font-bold text-purple-900">Example:</span> <code className="font-bold text-purple-900">MOV CX, 5</code> → <code className="font-bold text-purple-900">LOOP_LABEL</code>
+                                </div>
+                                <p className="text-xs sm:text-sm font-semibold text-purple-900 flex items-center gap-1.5 pt-0.5 font-sans">
+                                  <span>👉</span> <strong>LOOP = “Decrement CX and jump back if CX hasn't reached zero.”</strong>
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Branch Flags Rules Banner */}
+                            <div className="bg-indigo-100/70 p-3.5 rounded-lg border border-indigo-300 text-indigo-950 text-xs sm:text-sm font-sans space-y-1.5">
+                              <span className="font-mono font-bold uppercase text-xs sm:text-sm block text-indigo-900">
+                                💡 Key Branching & Jump Rules:
+                              </span>
+                              <p className="leading-relaxed text-xs sm:text-sm">
+                                1. <strong>Unsigned Comparisons:</strong> Use <strong className="font-mono">JA</strong> (Above, CF=0 & ZF=0), <strong className="font-mono">JAE</strong> (CF=0), <strong className="font-mono">JB</strong> (Below, CF=1), <strong className="font-mono">JBE</strong> (CF=1 or ZF=1).<br />
+                                2. <strong>Signed Comparisons:</strong> Use <strong className="font-mono">JG</strong> (Greater), <strong className="font-mono">JGE</strong> (Greater/Equal), <strong className="font-mono">JL</strong> (Less), <strong className="font-mono">JLE</strong> (Less/Equal) based on SF and OF flags.<br />
+                                3. All 8086 conditional jumps are <strong>Short Jumps</strong> with a relative displacement of -128 to +127 bytes.
+                              </p>
                             </div>
                           </div>
                         )}
@@ -3192,8 +3636,418 @@ POP DX         ; Reads 1234H into DX, SP ← SP + 2 (FFFE)`}
               </div>
             )}
 
-            {/* 2. CONTROL & FLAG EXPLORER */}
-            {(currentCategory === 'Control' || currentCategory === 'Flag') && (
+            {/* 2A. DEDICATED BRANCH & LOOP EXPLORER */}
+            {(currentCategory === 'Branch' || currentCategory === 'Loop') && (() => {
+              const a = branchValA & 0xFFFF;
+              const b = branchValB & 0xFFFF;
+              const diff = (a - b + 0x10000) & 0xFFFF;
+              const zf = a === b ? 1 : 0;
+              const cf = a < b ? 1 : 0;
+              const sf = (diff & 0x8000) !== 0 ? 1 : 0;
+              const sa = (a >> 15) & 1;
+              const sb = (b >> 15) & 1;
+              const sr = (diff >> 15) & 1;
+              const of = (sa !== sb && sa !== sr) ? 1 : 0;
+
+              const branchSyntaxMap: Record<string, {
+                syntax: string;
+                alternateSyntax?: string;
+                opcode: string;
+                format: string;
+                action: string;
+                condition: string;
+              }> = {
+                JZ: {
+                  syntax: 'JZ target_label',
+                  alternateSyntax: 'JE target_label',
+                  opcode: '74h cb',
+                  format: 'JZ rel8 (Short Relative Jump)',
+                  action: 'IP ← IP + sign_extended(rel8) if ZF = 1',
+                  condition: 'Zero Flag ZF = 1 (Jump if Equal / Jump if Zero)',
+                },
+                JNZ: {
+                  syntax: 'JNZ target_label',
+                  alternateSyntax: 'JNE target_label',
+                  opcode: '75h cb',
+                  format: 'JNZ rel8 (Short Relative Jump)',
+                  action: 'IP ← IP + sign_extended(rel8) if ZF = 0',
+                  condition: 'Zero Flag ZF = 0 (Jump if Not Equal / Jump if Not Zero)',
+                },
+                JC: {
+                  syntax: 'JC target_label',
+                  alternateSyntax: 'JB target_label / JNAE target_label',
+                  opcode: '72h cb',
+                  format: 'JC rel8 (Short Relative Jump)',
+                  action: 'IP ← IP + sign_extended(rel8) if CF = 1',
+                  condition: 'Carry Flag CF = 1 (Jump if Carry / Jump if Below - Unsigned)',
+                },
+                JNC: {
+                  syntax: 'JNC target_label',
+                  alternateSyntax: 'JAE target_label / JNB target_label',
+                  opcode: '73h cb',
+                  format: 'JNC rel8 (Short Relative Jump)',
+                  action: 'IP ← IP + sign_extended(rel8) if CF = 0',
+                  condition: 'Carry Flag CF = 0 (Jump if No Carry / Jump if Above or Equal)',
+                },
+                JA: {
+                  syntax: 'JA target_label',
+                  alternateSyntax: 'JNBE target_label',
+                  opcode: '77h cb',
+                  format: 'JA rel8 (Short Relative Jump)',
+                  action: 'IP ← IP + sign_extended(rel8) if CF = 0 and ZF = 0',
+                  condition: 'CF = 0 & ZF = 0 (Jump if Above - Unsigned)',
+                },
+                JG: {
+                  syntax: 'JG target_label',
+                  alternateSyntax: 'JNLE target_label',
+                  opcode: '7Fh cb',
+                  format: 'JG rel8 (Short Relative Jump)',
+                  action: 'IP ← IP + sign_extended(rel8) if ZF = 0 and SF = OF',
+                  condition: 'ZF = 0 & SF = OF (Jump if Greater - Signed)',
+                },
+                JL: {
+                  syntax: 'JL target_label',
+                  alternateSyntax: 'JNGE target_label',
+                  opcode: '7Ch cb',
+                  format: 'JL rel8 (Short Relative Jump)',
+                  action: 'IP ← IP + sign_extended(rel8) if SF ≠ OF',
+                  condition: 'SF ≠ OF (Jump if Less - Signed)',
+                },
+                JMP: {
+                  syntax: 'JMP target_label',
+                  alternateSyntax: 'JMP short label / JMP near ptr label',
+                  opcode: 'EBh cb / E9h cw',
+                  format: 'JMP rel8 / rel16 (Unconditional Jump)',
+                  action: 'IP ← IP + sign_extended(displacement)',
+                  condition: 'Unconditional (Always Jumps regardless of flags)',
+                },
+                LOOP: {
+                  syntax: 'LOOP target_label',
+                  alternateSyntax: 'LOOP label',
+                  opcode: 'E2h cb',
+                  format: 'LOOP rel8 (Hardware Count-Controlled Loop)',
+                  action: 'CX ← CX - 1; if CX ≠ 0 then IP ← IP + sign_extended(rel8)',
+                  condition: 'Register CX ≠ 0 (Decrements CX first, jumps if CX > 0)',
+                },
+              };
+
+              const curBranchInfo = branchSyntaxMap[branchJumpCond] || branchSyntaxMap['JZ'];
+
+              let isTaken = false;
+              let reason = '';
+
+              switch (branchJumpCond) {
+                case 'JZ':
+                  isTaken = zf === 1;
+                  reason = zf === 1
+                    ? `AX (0x${a.toString(16).toUpperCase()}) equals BX (0x${b.toString(16).toUpperCase()}) → Zero Flag ZF = 1. Jump condition is satisfied!`
+                    : `AX (0x${a.toString(16).toUpperCase()}) ≠ BX (0x${b.toString(16).toUpperCase()}) → Zero Flag ZF = 0. JZ requires ZF = 1. Jump NOT taken.`;
+                  break;
+                case 'JNZ':
+                  isTaken = zf === 0;
+                  reason = zf === 0
+                    ? `AX (0x${a.toString(16).toUpperCase()}) ≠ BX (0x${b.toString(16).toUpperCase()}) → Zero Flag ZF = 0. Jump condition is satisfied!`
+                    : `AX (0x${a.toString(16).toUpperCase()}) = BX (0x${b.toString(16).toUpperCase()}) → Zero Flag ZF = 1. JNZ requires ZF = 0. Jump NOT taken.`;
+                  break;
+                case 'JC':
+                case 'JB':
+                  isTaken = cf === 1;
+                  reason = cf === 1
+                    ? `AX (0x${a.toString(16).toUpperCase()}) < BX (0x${b.toString(16).toUpperCase()}) (Unsigned) → Carry Flag CF = 1. Jump condition is satisfied!`
+                    : `AX (0x${a.toString(16).toUpperCase()}) ≥ BX (0x${b.toString(16).toUpperCase()}) (Unsigned) → Carry Flag CF = 0. Jump NOT taken.`;
+                  break;
+                case 'JNC':
+                  isTaken = cf === 0;
+                  reason = cf === 0
+                    ? `AX (0x${a.toString(16).toUpperCase()}) ≥ BX (0x${b.toString(16).toUpperCase()}) → Carry Flag CF = 0. Jump condition is satisfied!`
+                    : `AX (0x${a.toString(16).toUpperCase()}) < BX (0x${b.toString(16).toUpperCase()}) → Carry Flag CF = 1. JNC requires CF = 0. Jump NOT taken.`;
+                  break;
+                case 'JA':
+                  isTaken = cf === 0 && zf === 0;
+                  reason = (cf === 0 && zf === 0)
+                    ? `AX (0x${a.toString(16).toUpperCase()}) > BX (0x${b.toString(16).toUpperCase()}) (Unsigned Above) → CF = 0 & ZF = 0. Jump condition is satisfied!`
+                    : `AX (0x${a.toString(16).toUpperCase()}) is not strictly above BX → CF=${cf}, ZF=${zf}. Jump NOT taken.`;
+                  break;
+                case 'JG':
+                  isTaken = zf === 0 && sf === of;
+                  reason = (zf === 0 && sf === of)
+                    ? `Signed AX (${a}) > Signed BX (${b}) → ZF = 0 & SF = OF. Jump condition is satisfied!`
+                    : `Signed AX (${a}) ≤ Signed BX (${b}). Jump NOT taken.`;
+                  break;
+                case 'JL':
+                  isTaken = sf !== of;
+                  reason = (sf !== of)
+                    ? `Signed AX (${a}) < Signed BX (${b}) → SF (${sf}) ≠ OF (${of}). Jump condition is satisfied!`
+                    : `Signed AX (${a}) ≥ Signed BX (${b}) → SF (${sf}) = OF (${of}). Jump NOT taken.`;
+                  break;
+                case 'JMP':
+                  isTaken = true;
+                  reason = 'Unconditional jump directly reloads IP with the target label offset without inspecting status flags.';
+                  break;
+                case 'LOOP':
+                  isTaken = branchCx > 0;
+                  reason = branchCx > 0
+                    ? `Hardware loop counter CX = ${branchCx} (> 0). LOOP condition is satisfied! (Will decrement CX and jump)`
+                    : `Hardware loop counter CX = 0. Loop condition fails! Execution falls through.`;
+                  break;
+              }
+
+              return (
+                <div className="bg-gradient-to-br from-indigo-50/80 via-white to-blue-50/50 border border-indigo-200 rounded-2xl p-5 space-y-5 shadow-xs">
+                  <div className="flex flex-wrap justify-between items-center gap-3 border-b border-indigo-200 pb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 bg-indigo-600 text-white rounded-xl shadow-xs">
+                        <GitBranch className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-black font-mono uppercase tracking-wider text-indigo-950">
+                          8086 Interactive Branching & Program Flow Simulator
+                        </h3>
+                        <p className="text-[11px] text-slate-500 font-sans">
+                          Test register comparison, status flags generation, conditional jump evaluation, and hardware loop execution.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] font-mono text-slate-400 font-bold uppercase">Presets:</span>
+                      <button
+                        onClick={() => { setBranchValA(5); setBranchValB(5); setBranchJumpCond('JZ'); }}
+                        className="px-2.5 py-1 text-xs rounded-lg font-bold bg-white text-indigo-900 border border-indigo-200 hover:bg-indigo-100 cursor-pointer transition-all shadow-2xs font-mono"
+                      >
+                        AX = BX (Equal)
+                      </button>
+                      <button
+                        onClick={() => { setBranchValA(9); setBranchValB(3); setBranchJumpCond('JA'); }}
+                        className="px-2.5 py-1 text-xs rounded-lg font-bold bg-white text-indigo-900 border border-indigo-200 hover:bg-indigo-100 cursor-pointer transition-all shadow-2xs font-mono"
+                      >
+                        AX &gt; BX (Above)
+                      </button>
+                      <button
+                        onClick={() => { setBranchValA(2); setBranchValB(8); setBranchJumpCond('JB'); }}
+                        className="px-2.5 py-1 text-xs rounded-lg font-bold bg-white text-indigo-900 border border-indigo-200 hover:bg-indigo-100 cursor-pointer transition-all shadow-2xs font-mono"
+                      >
+                        AX &lt; BX (Below)
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Step 1: Register Inputs & CMP Execution */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono">
+                    {/* Register AX */}
+                    <div className="bg-white p-3.5 rounded-xl border border-indigo-200 space-y-2 shadow-2xs">
+                      <div className="flex justify-between items-center text-xs font-bold text-indigo-950">
+                        <span>Register AX (Value 1)</span>
+                        <span className="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded text-[10px]">0x{a.toString(16).toUpperCase().padStart(4, '0')}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          value={branchValA}
+                          onChange={(e) => setBranchValA(Number(e.target.value))}
+                          className="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-900 text-center focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Register BX */}
+                    <div className="bg-white p-3.5 rounded-xl border border-indigo-200 space-y-2 shadow-2xs">
+                      <div className="flex justify-between items-center text-xs font-bold text-indigo-950">
+                        <span>Register BX (Value 2)</span>
+                        <span className="text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded text-[10px]">0x{b.toString(16).toUpperCase().padStart(4, '0')}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          value={branchValB}
+                          onChange={(e) => setBranchValB(Number(e.target.value))}
+                          className="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-sm font-bold text-slate-900 text-center focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Evaluated Flags Banner */}
+                    <div className="bg-white p-3.5 rounded-xl border border-indigo-200 space-y-1.5 shadow-2xs flex flex-col justify-between">
+                      <div className="text-xs font-bold text-indigo-950 flex justify-between items-center">
+                        <span>CMP AX, BX Flags:</span>
+                        <span className="text-[10px] text-slate-400">AX - BX</span>
+                      </div>
+                      <div className="grid grid-cols-4 gap-1 text-center text-xs font-bold font-mono">
+                        <div className={`p-1 rounded border ${zf ? 'bg-emerald-100 text-emerald-900 border-emerald-300' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
+                          <span className="text-[9px] block text-slate-400">ZF</span>{zf}
+                        </div>
+                        <div className={`p-1 rounded border ${cf ? 'bg-amber-100 text-amber-900 border-amber-300' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
+                          <span className="text-[9px] block text-slate-400">CF</span>{cf}
+                        </div>
+                        <div className={`p-1 rounded border ${sf ? 'bg-rose-100 text-rose-900 border-rose-300' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
+                          <span className="text-[9px] block text-slate-400">SF</span>{sf}
+                        </div>
+                        <div className={`p-1 rounded border ${of ? 'bg-purple-100 text-purple-900 border-purple-300' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
+                          <span className="text-[9px] block text-slate-400">OF</span>{of}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Step 2: Jump Instruction Selector */}
+                  <div className="space-y-2">
+                    <span className="text-xs font-bold text-indigo-950 uppercase tracking-wider font-mono block">
+                      Select Branch / Jump Instruction to Test:
+                    </span>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 font-mono">
+                      {[
+                        { inst: 'JZ', label: 'JZ / JE (Zero)', req: 'ZF = 1' },
+                        { inst: 'JNZ', label: 'JNZ / JNE (Not Zero)', req: 'ZF = 0' },
+                        { inst: 'JC', label: 'JC / JB (Carry)', req: 'CF = 1' },
+                        { inst: 'JNC', label: 'JNC / JAE (No Carry)', req: 'CF = 0' },
+                        { inst: 'JA', label: 'JA (Above)', req: 'CF=0 & ZF=0' },
+                        { inst: 'JG', label: 'JG (Greater)', req: 'Signed >' },
+                        { inst: 'JL', label: 'JL (Less)', req: 'Signed <' },
+                        { inst: 'JMP', label: 'JMP (Always)', req: 'Unconditional' },
+                        { inst: 'LOOP', label: 'LOOP (CX)', req: 'CX ≠ 0' },
+                      ].map((j) => (
+                        <button
+                          key={j.inst}
+                          onClick={() => setBranchJumpCond(j.inst as any)}
+                          className={`p-2 rounded-xl border text-xs text-left transition-all cursor-pointer flex flex-col justify-between ${
+                            branchJumpCond === j.inst
+                              ? 'bg-indigo-600 text-white border-indigo-700 shadow-sm font-bold scale-[1.02]'
+                              : 'bg-white text-slate-800 border-slate-200 hover:bg-indigo-50 font-semibold'
+                          }`}
+                        >
+                          <span className="font-bold">{j.label}</span>
+                          <span className={`text-[10px] ${branchJumpCond === j.inst ? 'text-indigo-200' : 'text-slate-400'}`}>{j.req}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Dynamic Instruction Syntax & Format Banner */}
+                  <div className="bg-slate-900 text-slate-100 p-3.5 rounded-xl border border-slate-800 font-mono text-xs space-y-2">
+                    <div className="flex justify-between items-center border-b border-slate-800 pb-1.5 flex-wrap gap-2">
+                      <span className="text-[11px] font-extrabold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <Code2 className="w-3.5 h-3.5 text-indigo-400" />
+                        Simulated 8086 Instruction Syntax & Format:
+                      </span>
+                      <span className="text-[10px] bg-indigo-900/80 text-indigo-200 px-2 py-0.5 rounded border border-indigo-700 font-bold">
+                        {curBranchInfo.format}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                      {/* Selected Branch Instruction Syntax */}
+                      <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700 space-y-1">
+                        <span className="text-[10px] text-slate-400 block font-bold uppercase">1. Branch / Loop Instruction Syntax:</span>
+                        <div className="text-sm font-black text-amber-300">
+                          <code>{curBranchInfo.syntax}</code>
+                          {curBranchInfo.alternateSyntax && (
+                            <span className="text-xs text-slate-400 font-normal block pt-0.5">
+                              Alt: <code className="text-amber-200">{curBranchInfo.alternateSyntax}</code>
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-sans pt-1">
+                          <strong>Opcode:</strong> <code className="text-indigo-300 font-mono">{curBranchInfo.opcode}</code> | <strong>Action:</strong> <code className="text-amber-200 font-mono">{curBranchInfo.action}</code>
+                        </div>
+                      </div>
+
+                      {/* Preceding Compare Instruction Syntax */}
+                      <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700 space-y-1">
+                        <span className="text-[10px] text-slate-400 block font-bold uppercase">2. Preceding Comparison Instruction:</span>
+                        <div className="text-sm font-black text-emerald-300">
+                          <code>CMP AX, BX</code>
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-sans pt-1">
+                          <strong>Syntax:</strong> <code className="text-emerald-200 font-mono">CMP destination, source</code> | <strong>Opcode:</strong> <code className="text-indigo-300 font-mono">38H / 39H / 3BH</code><br />
+                          Computes <code className="text-emerald-300 font-mono">AX - BX</code> to update status flags (ZF, CF, SF, OF) without altering operands.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* If LOOP is selected, show Hardware CX Stepper */}
+                  {branchJumpCond === 'LOOP' && (
+                    <div className="bg-purple-50 p-3.5 rounded-xl border border-purple-200 flex flex-wrap justify-between items-center gap-3 font-mono">
+                      <div className="space-y-0.5">
+                        <span className="text-xs font-bold text-purple-950 block">Hardware Loop Counter (Register CX):</span>
+                        <span className="text-xs text-purple-800 font-sans">
+                          Current CX = <strong className="font-mono text-sm text-purple-950">{branchCx}</strong>
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setBranchCx(prev => Math.max(0, prev - 1))}
+                          className="px-3 py-1.5 bg-purple-600 text-white rounded-lg font-bold text-xs hover:bg-purple-700 transition-all cursor-pointer shadow-2xs"
+                        >
+                          Step LOOP (CX ← CX - 1)
+                        </button>
+                        <button
+                          onClick={() => setBranchCx(3)}
+                          className="px-3 py-1.5 bg-white text-purple-900 border border-purple-300 rounded-lg font-bold text-xs hover:bg-purple-100 transition-all cursor-pointer"
+                        >
+                          Reset CX = 3
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Step 3: Big Dynamic Result Banner */}
+                  <div className={`p-4 rounded-xl border font-mono space-y-2 shadow-xs transition-all ${
+                    isTaken
+                      ? 'bg-emerald-500/10 border-emerald-400 text-emerald-950'
+                      : 'bg-rose-500/10 border-rose-400 text-rose-950'
+                  }`}>
+                    <div className="flex justify-between items-center border-b border-current/20 pb-2">
+                      <span className="text-sm font-black uppercase tracking-wider flex items-center gap-2">
+                        {isTaken ? '✅ JUMP TAKEN (BRANCH EXECUTED)' : '❌ JUMP NOT TAKEN (FALLTHROUGH)'}
+                      </span>
+                      <span className="text-xs font-bold px-2.5 py-0.5 rounded border border-current">
+                        {isTaken ? 'IP ← 0150H (TARGET_LABEL)' : 'IP ← 0102H (Next Instruction)'}
+                      </span>
+                    </div>
+
+                    <p className="text-xs sm:text-sm font-sans font-medium leading-relaxed">
+                      {reason}
+                    </p>
+                  </div>
+
+                  {/* Step 4: Disassembly Flow Highlights */}
+                  <div className="bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-xs space-y-2 border border-slate-800">
+                    <span className="text-slate-400 text-[10px] uppercase tracking-wider font-bold block border-b border-slate-800 pb-1">
+                      8086 Assembly Program Execution Visualizer:
+                    </span>
+                    <div className="space-y-1">
+                      <div className="p-1.5 rounded bg-slate-800/60 text-slate-300 flex justify-between">
+                        <span>0100H: CMP AX, BX</span>
+                        <span className="text-slate-500">; AX={a}, BX={b}</span>
+                      </div>
+                      <div className={`p-1.5 rounded flex justify-between font-bold ${
+                        isTaken ? 'bg-emerald-900/80 text-emerald-200 border border-emerald-500/50' : 'bg-rose-900/80 text-rose-200 border border-rose-500/50'
+                      }`}>
+                        <span>0102H: {branchJumpCond} TARGET_LABEL</span>
+                        <span>{isTaken ? '➜ TAKEN → Jump to 0150H' : '➜ NOT TAKEN → Fall through'}</span>
+                      </div>
+                      <div className={`p-1.5 rounded flex justify-between ${
+                        !isTaken ? 'bg-amber-900/60 text-amber-200 font-bold border border-amber-500/40' : 'text-slate-600 line-through opacity-50'
+                      }`}>
+                        <span>0104H: MOV CX, 0001H</span>
+                        <span>{!isTaken ? '➜ Executed next' : '; Skipped due to jump'}</span>
+                      </div>
+                      <div className="text-slate-600 px-1.5 py-0.5">...</div>
+                      <div className={`p-1.5 rounded flex justify-between ${
+                        isTaken ? 'bg-emerald-900/80 text-emerald-200 font-bold border border-emerald-500/50' : 'text-slate-600'
+                      }`}>
+                        <span>0150H: TARGET_LABEL: NOP</span>
+                        <span>{isTaken ? '➜ Branch Target Reached' : '; Not jumped to'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* 2B. CONTROL & FLAG EXPLORER */}
+            {(currentCategory === 'Control' || currentCategory === 'Flag' || currentCategory === 'Machine Control' || currentCategory === 'Flag Manipulation') && (
               <div className="bg-gradient-to-br from-amber-50/70 via-white to-orange-50/40 border border-amber-200 rounded-2xl p-5 space-y-5 shadow-xs">
                 <div className="flex flex-wrap justify-between items-center gap-3 border-b border-amber-200/80 pb-3">
                   <div className="flex items-center gap-2">
@@ -3794,178 +4648,452 @@ POP DX         ; Reads 1234H into DX, SP ← SP + 2 (FFFE)`}
               </div>
             )}
 
-            {/* 5. I/O PORT EXPLORER */}
-            {currentCategory === 'I/O' && (
-              <div className="bg-gradient-to-br from-rose-50/70 via-white to-orange-50/40 border border-rose-200 rounded-2xl p-5 space-y-5 shadow-xs">
-                <div className="flex flex-wrap justify-between items-center gap-3 border-b border-rose-200/80 pb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="p-2 bg-rose-600 text-white rounded-xl shadow-xs">
-                      <Radio className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h3 className="text-xs font-black font-mono uppercase tracking-wider text-rose-950">
-                        8086 Peripheral I/O Port Bus Interfacing Explorer
-                      </h3>
-                      <p className="text-[11px] text-slate-500 font-sans">
-                        Simulate I/O port address decoding (8-bit Fixed Port 00H-FFH vs 16-bit DX Variable Port) and peripheral hardware transfers.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+            {/* 5. STRING OPERATIONS & PORT I/O EXPLORER */}
+            {(currentCategory === 'String & Port' || currentCategory === 'String' || currentCategory === 'I/O') && (() => {
+              const sourceBuffer = ['H', 'E', 'L', 'L', 'O', '!', '8', '6'];
 
-                {/* Interactive Controls */}
-                <div className="bg-white p-4 rounded-xl border border-rose-100 space-y-3 shadow-xs font-mono text-xs">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2 bg-rose-50/50 p-3 rounded-xl border border-rose-200">
-                      <div className="flex justify-between items-center">
-                        <span className="font-bold text-rose-950">Port Address:</span>
-                        <span className="bg-white px-2 py-0.5 rounded border border-rose-300 font-extrabold text-rose-900">
-                          0x{ioPort.toString(16).toUpperCase().padStart(2, '0')}H
-                        </span>
+              const isIoOp = stringActiveOp === 'IN' || stringActiveOp === 'OUT';
+
+              const stringSyntaxMap: Record<string, {
+                syntax: string;
+                alternateSyntax?: string;
+                opcode: string;
+                format: string;
+                operands: string;
+                action: string;
+                flagsAffected: string;
+              }> = {
+                MOVSB: {
+                  syntax: 'MOVSB',
+                  alternateSyntax: 'REP MOVSB / MOVSW / REP MOVSW',
+                  opcode: 'A4h (MOVSB) / A5h (MOVSW)',
+                  format: 'MOVSB (Move String Byte)',
+                  operands: 'Implicit: Source DS:SI, Destination ES:DI',
+                  action: 'ES:[DI] ← DS:[SI]; SI ← SI ± 1/2; DI ← DI ± 1/2',
+                  flagsAffected: 'None (Flags unaffected)',
+                },
+                LODSB: {
+                  syntax: 'LODSB',
+                  alternateSyntax: 'LODSW',
+                  opcode: 'ACh (LODSB) / ADh (LODSW)',
+                  format: 'LODSB (Load String Byte into AL)',
+                  operands: 'Implicit: Source DS:SI, Destination AL (or AX)',
+                  action: 'AL ← DS:[SI]; SI ← SI ± 1/2',
+                  flagsAffected: 'None (Flags unaffected)',
+                },
+                STOSB: {
+                  syntax: 'STOSB',
+                  alternateSyntax: 'REP STOSB / STOSW / REP STOSW',
+                  opcode: 'AAh (STOSB) / ABh (STOSW)',
+                  format: 'STOSB (Store AL into String Byte)',
+                  operands: 'Implicit: Source AL (or AX), Destination ES:DI',
+                  action: 'ES:[DI] ← AL; DI ← DI ± 1/2',
+                  flagsAffected: 'None (Flags unaffected)',
+                },
+                CMPSB: {
+                  syntax: 'CMPSB',
+                  alternateSyntax: 'REPE CMPSB / REPNE CMPSB / CMPSW',
+                  opcode: 'A6h (CMPSB) / A7h (CMPSW)',
+                  format: 'CMPSB (Compare String Bytes)',
+                  operands: 'Implicit: Operand1 DS:SI, Operand2 ES:DI',
+                  action: 'Temp ← DS:[SI] - ES:[DI]; SI ← SI ± 1/2; DI ← DI ± 1/2',
+                  flagsAffected: 'ZF, CF, SF, OF, AF, PF (Updates flags based on difference)',
+                },
+                SCASB: {
+                  syntax: 'SCASB',
+                  alternateSyntax: 'REPE SCASB / REPNE SCASB / SCASW',
+                  opcode: 'AEh (SCASB) / AFh (SCASW)',
+                  format: 'SCASB (Scan String Byte for AL)',
+                  operands: 'Implicit: Target AL, String ES:DI',
+                  action: 'Temp ← AL - ES:[DI]; DI ← DI ± 1/2',
+                  flagsAffected: 'ZF, CF, SF, OF, AF, PF (Updates flags based on match)',
+                },
+                IN: {
+                  syntax: 'IN AL, port8',
+                  alternateSyntax: 'IN AX, DX / IN AL, DX / IN AX, port8',
+                  opcode: 'E4h ib (Direct Port) / ECh (Indirect DX Port)',
+                  format: 'IN accumulator, port',
+                  operands: 'Destination: AL (or AX); Source: Immediate Port (00H-FFH) or Register DX (0000H-FFFFH)',
+                  action: 'AL ← Port[port8] or AL ← Port[DX]',
+                  flagsAffected: 'None (Flags unaffected)',
+                },
+                OUT: {
+                  syntax: 'OUT port8, AL',
+                  alternateSyntax: 'OUT DX, AX / OUT DX, AL / OUT port8, AX',
+                  opcode: 'E6h ib (Direct Port) / EEh (Indirect DX Port)',
+                  format: 'OUT port, accumulator',
+                  operands: 'Destination: Immediate Port (00H-FFH) or Register DX; Source: AL (or AX)',
+                  action: 'Port[port8] ← AL or Port[DX] ← AL',
+                  flagsAffected: 'None (Flags unaffected)',
+                },
+              };
+
+              const curStringInfo = stringSyntaxMap[stringActiveOp] || stringSyntaxMap['MOVSB'];
+              
+              // Calculate pointer values based on stringStepIndex and stringDf
+              const step = stringStepIndex;
+              const siAddr = stringDf === 0 ? 0x0100 + step : 0x0100 - step;
+              const diAddr = stringDf === 0 ? 0x0200 + step : 0x0200 - step;
+              const remainingCx = Math.max(0, stringCx - step);
+
+              const curSourceByte = sourceBuffer[step % sourceBuffer.length] || '0';
+              const curSourceHex = curSourceByte.charCodeAt(0).toString(16).toUpperCase();
+
+              return (
+                <div className="bg-gradient-to-br from-teal-50/80 via-white to-cyan-50/50 border border-teal-200 rounded-2xl p-5 space-y-5 shadow-xs">
+                  <div className="flex flex-wrap justify-between items-center gap-3 border-b border-teal-200 pb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="p-2 bg-teal-600 text-white rounded-xl shadow-xs">
+                        <Repeat className="w-4 h-4" />
                       </div>
-                      <input
-                        type="range"
-                        min={0}
-                        max={255}
-                        value={ioPort & 0xFF}
-                        onChange={(e) => setIoPort(Number(e.target.value))}
-                        className="w-full accent-rose-600 cursor-pointer"
-                      />
-                    </div>
-
-                    <div className="space-y-2 bg-orange-50/50 p-3 rounded-xl border border-orange-200">
-                      <div className="flex justify-between items-center">
-                        <span className="font-bold text-orange-950">Data Byte Transferred:</span>
-                        <span className="bg-white px-2 py-0.5 rounded border border-orange-300 font-extrabold text-orange-900">
-                          0x{ioDataByte.toString(16).toUpperCase().padStart(2, '0')}H ({ioDataByte & 0xFF})
-                        </span>
+                      <div>
+                        <h3 className="text-xs font-black font-mono uppercase tracking-wider text-teal-950">
+                          8086 Interactive String Manipulation & Port I/O Simulator
+                        </h3>
+                        <p className="text-[11px] text-slate-500 font-sans">
+                          Simulate string block operations with DS:SI & ES:DI auto-indexing pointers alongside hardware peripheral I/O port bus transfers.
+                        </p>
                       </div>
-                      <input
-                        type="range"
-                        min={0}
-                        max={255}
-                        value={ioDataByte & 0xFF}
-                        onChange={(e) => setIoDataByte(Number(e.target.value))}
-                        className="w-full accent-orange-600 cursor-pointer"
-                      />
                     </div>
-                  </div>
-                </div>
 
-                {/* Hardware Bus Line Status */}
-                <div className="bg-slate-50 text-slate-900 p-4 rounded-xl space-y-2 font-mono text-xs border border-slate-200">
-                  <span className="text-rose-700 font-bold uppercase tracking-wider text-[11px] block border-b border-slate-200 pb-2">
-                    ⚡ Hardware Bus Signal Analyzer Output
-                  </span>
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-center pt-1">
-                    <div className="bg-white p-2 rounded border border-slate-200">
-                      <span className="text-[9px] text-slate-500 block uppercase font-bold">M/IO# Signal</span>
-                      <span className="text-rose-700 font-black text-xs">0 (LOW = I/O Mode)</span>
-                    </div>
-                    <div className="bg-white p-2 rounded border border-slate-200">
-                      <span className="text-[9px] text-slate-500 block uppercase font-bold">Strobe Line</span>
-                      <span className="text-amber-700 font-black text-xs">{ioDir === 'IN' ? 'RD# Active Low' : 'WR# Active Low'}</span>
-                    </div>
-                    <div className="bg-white p-2 rounded border border-slate-200">
-                      <span className="text-[9px] text-slate-500 block uppercase font-bold">Address Bus A0–A7</span>
-                      <span className="text-emerald-700 font-black text-xs">0x{ioPort.toString(16).toUpperCase().padStart(2, '0')}H</span>
-                    </div>
-                    <div className="bg-white p-2 rounded border border-slate-200">
-                      <span className="text-[9px] text-slate-500 block uppercase font-bold">Data Bus D0–D7</span>
-                      <span className="text-sky-700 font-black text-xs">0x{ioDataByte.toString(16).toUpperCase().padStart(2, '0')}H</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* 6. STRING OPERATIONS EXPLORER */}
-            {(currentCategory === 'String & Port' || currentCategory === 'String') && (
-              <div className="bg-gradient-to-br from-sky-50/70 via-white to-blue-50/40 border border-sky-200 rounded-2xl p-5 space-y-5 shadow-xs">
-                <div className="flex flex-wrap justify-between items-center gap-3 border-b border-sky-200/80 pb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="p-2 bg-sky-600 text-white rounded-xl shadow-xs">
-                      <Repeat className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h3 className="text-xs font-black font-mono uppercase tracking-wider text-sky-950">
-                        8086 Hardware String Auto-Indexing & Pointer Explorer
-                      </h3>
-                      <p className="text-[11px] text-slate-500 font-sans">
-                        Simulate block memory string transfers using DS:SI (Source) and ES:DI (Destination) with Direction Flag (DF) step.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Direction Flag DF Switch */}
-                  <div className="flex items-center gap-2 font-mono text-xs">
-                    <span className="text-[10px] text-slate-400 uppercase font-bold">Direction Flag (DF):</span>
-                    <button
-                      onClick={() => setStringDf(stringDf === 0 ? 1 : 0)}
-                      className={`px-3 py-1 rounded-lg font-black transition-all cursor-pointer ${
-                        stringDf === 0
-                          ? 'bg-emerald-600 text-white shadow-xs'
-                          : 'bg-rose-600 text-white shadow-xs'
-                      }`}
-                    >
-                      {stringDf === 0 ? 'CLD (DF=0 Auto-Increment +1/+2)' : 'STD (DF=1 Auto-Decrement -1/-2)'}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Interactive Controls */}
-                <div className="bg-white p-4 rounded-xl border border-sky-100 space-y-3 shadow-xs font-mono text-xs">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2 bg-sky-50/50 p-3 rounded-xl border border-sky-200">
-                      <div className="flex justify-between items-center">
-                        <span className="font-bold text-sky-950">Hardware Repeat Count (CX):</span>
-                        <span className="bg-white px-2 py-0.5 rounded border border-sky-300 font-extrabold text-sky-900">
-                          CX = {stringCx}
-                        </span>
+                    {!isIoOp && (
+                      <div className="flex items-center gap-2 font-mono text-xs">
+                        <span className="text-[10px] text-slate-400 uppercase font-bold">Direction Flag (DF):</span>
+                        <button
+                          onClick={() => setStringDf(stringDf === 0 ? 1 : 0)}
+                          className={`px-3 py-1 rounded-lg font-extrabold transition-all cursor-pointer ${
+                            stringDf === 0
+                              ? 'bg-emerald-600 text-white shadow-2xs'
+                              : 'bg-rose-600 text-white shadow-2xs'
+                          }`}
+                        >
+                          {stringDf === 0 ? 'CLD (DF=0 Auto-Inc +1)' : 'STD (DF=1 Auto-Dec -1)'}
+                        </button>
                       </div>
-                      <input
-                        type="range"
-                        min={1}
-                        max={10}
-                        value={stringCx}
-                        onChange={(e) => setStringCx(Number(e.target.value))}
-                        className="w-full accent-sky-600 cursor-pointer"
-                      />
-                    </div>
+                    )}
+                  </div>
 
-                    <div className="space-y-2 bg-blue-50/50 p-3 rounded-xl border border-blue-200">
-                      <span className="font-bold text-blue-950 block text-[11px]">String Operation: {stringOp}</span>
+                  {/* Operation Selector Tabs */}
+                  <div className="space-y-2 font-mono">
+                    <span className="text-xs font-bold text-teal-950 uppercase tracking-wider block">
+                      Select String or Port Instruction to Simulate:
+                    </span>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+                      {[
+                        { op: 'MOVSB', name: 'MOVSB', desc: 'DS:SI ➔ ES:DI' },
+                        { op: 'LODSB', name: 'LODSB', desc: 'DS:SI ➔ AL' },
+                        { op: 'STOSB', name: 'STOSB', desc: 'AL ➔ ES:DI' },
+                        { op: 'CMPSB', name: 'CMPSB', desc: 'DS:SI vs ES:DI' },
+                        { op: 'SCASB', name: 'SCASB', desc: 'AL vs ES:DI' },
+                        { op: 'IN', name: 'IN AL, Port', desc: 'Port ➔ AL' },
+                        { op: 'OUT', name: 'OUT Port, AL', desc: 'AL ➔ Port' },
+                      ].map((o) => (
+                        <button
+                          key={o.op}
+                          onClick={() => {
+                            setStringActiveOp(o.op as any);
+                            setStringStepIndex(0);
+                          }}
+                          className={`p-2 rounded-xl border text-xs text-left transition-all cursor-pointer flex flex-col justify-between ${
+                            stringActiveOp === o.op
+                              ? 'bg-teal-600 text-white border-teal-700 font-bold shadow-sm scale-[1.02]'
+                              : 'bg-white text-slate-800 border-slate-200 hover:bg-teal-50 font-semibold'
+                          }`}
+                        >
+                          <span className="font-bold">{o.name}</span>
+                          <span className={`text-[9.5px] ${stringActiveOp === o.op ? 'text-teal-200' : 'text-slate-400'}`}>{o.desc}</span>
+                        </button>
+                      ))}
                     </div>
                   </div>
-                </div>
 
-                {/* Pointer Progression Map */}
-                <div className="bg-slate-50 text-slate-900 p-4 rounded-xl space-y-3 font-mono text-xs border border-slate-200">
-                  <span className="text-sky-700 font-bold uppercase tracking-wider text-[11px] block border-b border-slate-200 pb-2">
-                    ⚡ Real-Time Hardware Pointer Auto-Step Stream
-                  </span>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-center">
-                    <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
-                      <span className="text-[10px] text-sky-700 block uppercase font-bold">Source Segment Pointer (DS:SI)</span>
-                      <span className="text-sm text-slate-900 font-extrabold">DS:[0100H]</span>
-                      <span className="text-[10px] text-emerald-700 block pt-1 font-mono font-bold">
-                        {stringDf === 0 ? `Step: 0100H ➔ 0101H ➔ ... ➔ 010${stringCx}H` : `Step: 0100H ➔ 00FFH ➔ ...`}
+                  {/* Dynamic String & Port Instruction Syntax & Format Banner */}
+                  <div className="bg-slate-900 text-slate-100 p-3.5 rounded-xl border border-slate-800 font-mono text-xs space-y-2">
+                    <div className="flex justify-between items-center border-b border-slate-800 pb-1.5 flex-wrap gap-2">
+                      <span className="text-[11px] font-extrabold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <Code2 className="w-3.5 h-3.5 text-teal-400" />
+                        Simulated 8086 Instruction Syntax & Format:
+                      </span>
+                      <span className="text-[10px] bg-teal-900/80 text-teal-200 px-2 py-0.5 rounded border border-teal-700 font-bold">
+                        {curStringInfo.format}
                       </span>
                     </div>
 
-                    <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
-                      <span className="text-[10px] text-sky-700 block uppercase font-bold">Destination Segment Pointer (ES:DI)</span>
-                      <span className="text-sm text-slate-900 font-extrabold">ES:[0200H]</span>
-                      <span className="text-[10px] text-emerald-700 block pt-1 font-mono font-bold">
-                        {stringDf === 0 ? `Step: 0200H ➔ 0201H ➔ ... ➔ 020${stringCx}H` : `Step: 0200H ➔ 01FFH ➔ ...`}
-                      </span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                      {/* Assembly Syntax & Opcodes */}
+                      <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700 space-y-1">
+                        <span className="text-[10px] text-slate-400 block font-bold uppercase">Assembly Syntax & Variants:</span>
+                        <div className="text-sm font-black text-amber-300">
+                          <code>{curStringInfo.syntax}</code>
+                          {curStringInfo.alternateSyntax && (
+                            <span className="text-xs text-slate-400 font-normal block pt-0.5">
+                              Variants / Prefixes: <code className="text-amber-200">{curStringInfo.alternateSyntax}</code>
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[10px] text-slate-400 font-sans pt-1">
+                          <strong>Opcode Encoding:</strong> <code className="text-teal-300 font-mono">{curStringInfo.opcode}</code>
+                        </div>
+                      </div>
+
+                      {/* Operands & Action */}
+                      <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700 space-y-1">
+                        <span className="text-[10px] text-slate-400 block font-bold uppercase">Operands & CPU Execution:</span>
+                        <div className="text-xs text-slate-300 font-sans leading-snug">
+                          <strong>Operands:</strong> {curStringInfo.operands}<br />
+                          <strong>Action:</strong> <code className="text-emerald-300 font-mono">{curStringInfo.action}</code><br />
+                          <strong>Flags:</strong> {curStringInfo.flagsAffected}
+                        </div>
+                      </div>
                     </div>
                   </div>
+
+                  {/* Main Interactive Work Area */}
+                  {!isIoOp ? (
+                    /* STRING BLOCK OPERATIONS INTERFACE */
+                    <div className="space-y-4 font-mono">
+                      {/* String Controls & Parameters Bar */}
+                      <div className="bg-white p-4 rounded-xl border border-teal-150 space-y-3 shadow-xs">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                          {/* CX Stepper */}
+                          <div className="space-y-1.5 bg-teal-50/60 p-3 rounded-xl border border-teal-200">
+                            <div className="flex justify-between items-center">
+                              <span className="font-bold text-teal-950">Repeat Count (CX):</span>
+                              <span className="bg-teal-600 text-white px-2 py-0.5 rounded font-black text-xs">
+                                CX = {stringCx}
+                              </span>
+                            </div>
+                            <input
+                              type="range"
+                              min={1}
+                              max={8}
+                              value={stringCx}
+                              onChange={(e) => {
+                                setStringCx(Number(e.target.value));
+                                setStringStepIndex(0);
+                              }}
+                              className="w-full accent-teal-600 cursor-pointer"
+                            />
+                          </div>
+
+                          {/* Accumulator AL Register (for LODSB, STOSB, SCASB) */}
+                          <div className="space-y-1.5 bg-cyan-50/60 p-3 rounded-xl border border-cyan-200">
+                            <div className="flex justify-between items-center">
+                              <span className="font-bold text-cyan-950">Accumulator AL:</span>
+                              <span className="bg-white px-2 py-0.5 rounded border border-cyan-300 font-extrabold text-cyan-900">
+                                AL = '{String.fromCharCode(stringAlReg)}' (0x{stringAlReg.toString(16).toUpperCase()})
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="text"
+                                maxLength={1}
+                                value={String.fromCharCode(stringAlReg)}
+                                onChange={(e) => setStringAlReg(e.target.value ? e.target.value.charCodeAt(0) : 0x41)}
+                                className="w-16 p-1 text-center bg-white border border-cyan-300 rounded font-bold text-cyan-950 uppercase"
+                              />
+                              <span className="text-[10px] text-slate-500">ASCII Char</span>
+                            </div>
+                          </div>
+
+                          {/* Step / Run Controls */}
+                          <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col justify-between">
+                            <span className="font-bold text-slate-900 text-xs">Interactive Stepper:</span>
+                            <div className="flex items-center gap-2 pt-1">
+                              <button
+                                onClick={() => setStringStepIndex(prev => Math.min(stringCx, prev + 1))}
+                                disabled={stringStepIndex >= stringCx}
+                                className="flex-1 py-1.5 bg-teal-600 text-white rounded-lg font-bold text-xs hover:bg-teal-700 disabled:opacity-50 transition-all cursor-pointer shadow-2xs"
+                              >
+                                Step REP (+1)
+                              </button>
+                              <button
+                                onClick={() => setStringStepIndex(0)}
+                                className="px-3 py-1.5 bg-white text-slate-700 border border-slate-300 rounded-lg font-bold text-xs hover:bg-slate-100 transition-all cursor-pointer"
+                              >
+                                Reset
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Live String Memory Buffers Graphic */}
+                      <div className="bg-slate-900 text-slate-100 p-4 rounded-xl border border-slate-800 space-y-4">
+                        <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+                          <span className="text-xs font-bold text-teal-400 uppercase tracking-wider">
+                            Memory String Buffer Visualizer (DS:SI ➔ ES:DI)
+                          </span>
+                          <span className="text-[10px] text-slate-400">
+                            Current Step: {stringStepIndex} / {stringCx} (Remaining CX = {remainingCx})
+                          </span>
+                        </div>
+
+                        {/* Source RAM Buffer (DS:SI) */}
+                        <div className="space-y-1.5">
+                          <div className="flex justify-between items-center text-[11px] font-bold">
+                            <span className="text-sky-300">Source Memory Buffer [DS:0100H]:</span>
+                            <span className="text-sky-400">SI = 0x{siAddr.toString(16).toUpperCase().padStart(4, '0')}H</span>
+                          </div>
+                          <div className="grid grid-cols-8 gap-2 text-center text-xs font-bold">
+                            {sourceBuffer.slice(0, 8).map((ch, idx) => {
+                              const cellAddr = stringDf === 0 ? 0x0100 + idx : 0x0100 - idx;
+                              const isCurrent = idx === stringStepIndex;
+                              const isProcessed = idx < stringStepIndex;
+                              return (
+                                <div
+                                  key={`src-${idx}`}
+                                  className={`p-2 rounded-lg border flex flex-col justify-between transition-all ${
+                                    isCurrent
+                                      ? 'bg-sky-500/20 border-sky-400 text-sky-200 scale-105 shadow-md ring-2 ring-sky-400'
+                                      : isProcessed
+                                      ? 'bg-teal-900/40 border-teal-700/60 text-teal-300'
+                                      : 'bg-slate-800/80 border-slate-700 text-slate-400'
+                                  }`}
+                                >
+                                  <span className="text-[9px] text-slate-500">0x{cellAddr.toString(16).toUpperCase()}</span>
+                                  <span className="text-sm font-black py-0.5">{ch}</span>
+                                  {isCurrent && <span className="text-[9px] bg-sky-400 text-slate-950 font-black rounded">SI 📌</span>}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Destination RAM Buffer (ES:DI) */}
+                        <div className="space-y-1.5">
+                          <div className="flex justify-between items-center text-[11px] font-bold">
+                            <span className="text-emerald-300">Destination Memory Buffer [ES:0200H]:</span>
+                            <span className="text-emerald-400">DI = 0x{diAddr.toString(16).toUpperCase().padStart(4, '0')}H</span>
+                          </div>
+                          <div className="grid grid-cols-8 gap-2 text-center text-xs font-bold">
+                            {sourceBuffer.slice(0, 8).map((ch, idx) => {
+                              const cellAddr = stringDf === 0 ? 0x0200 + idx : 0x0200 - idx;
+                              const isCurrent = idx === stringStepIndex;
+                              const isProcessed = idx < stringStepIndex;
+                              const displayVal = (stringActiveOp === 'MOVSB' || stringActiveOp === 'STOSB')
+                                ? (isProcessed ? (stringActiveOp === 'STOSB' ? String.fromCharCode(stringAlReg) : sourceBuffer[idx]) : '_')
+                                : '_';
+
+                              return (
+                                <div
+                                  key={`dst-${idx}`}
+                                  className={`p-2 rounded-lg border flex flex-col justify-between transition-all ${
+                                    isCurrent
+                                      ? 'bg-emerald-500/20 border-emerald-400 text-emerald-200 scale-105 shadow-md ring-2 ring-emerald-400'
+                                      : isProcessed
+                                      ? 'bg-emerald-900/40 border-emerald-700/60 text-emerald-300'
+                                      : 'bg-slate-800/80 border-slate-700 text-slate-400'
+                                  }`}
+                                >
+                                  <span className="text-[9px] text-slate-500">0x{cellAddr.toString(16).toUpperCase()}</span>
+                                  <span className="text-sm font-black py-0.5">{displayVal}</span>
+                                  {isCurrent && <span className="text-[9px] bg-emerald-400 text-slate-950 font-black rounded">DI 📌</span>}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Step Execution Result Line */}
+                      <div className="bg-teal-500/10 border border-teal-300 p-3.5 rounded-xl text-teal-950 text-xs font-mono space-y-1">
+                        <span className="font-bold text-teal-900 block uppercase">
+                          ⚡ Step {stringStepIndex} Action Summary:
+                        </span>
+                        <p className="font-sans leading-relaxed text-xs sm:text-sm">
+                          {stringActiveOp === 'MOVSB' && `Copied byte '${curSourceByte}' (0x${curSourceHex}) from DS:[0x${(0x0100 + stringStepIndex).toString(16).toUpperCase()}] to ES:[0x${(0x0200 + stringStepIndex).toString(16).toUpperCase()}]. ${stringDf === 0 ? 'SI & DI auto-incremented (+1)' : 'SI & DI auto-decremented (-1)'}.`}
+                          {stringActiveOp === 'LODSB' && `Loaded byte '${curSourceByte}' (0x${curSourceHex}) from DS:[0x${(0x0100 + stringStepIndex).toString(16).toUpperCase()}] into Accumulator AL.`}
+                          {stringActiveOp === 'STOSB' && `Stored byte '${String.fromCharCode(stringAlReg)}' (0x${stringAlReg.toString(16).toUpperCase()}) from AL into ES:[0x${(0x0200 + stringStepIndex).toString(16).toUpperCase()}].`}
+                          {stringActiveOp === 'CMPSB' && `Compared DS:[0x${(0x0100 + stringStepIndex).toString(16).toUpperCase()}] ('${curSourceByte}') with ES:[0x${(0x0200 + stringStepIndex).toString(16).toUpperCase()}] ('_'). Updated Zero Flag (ZF).`}
+                          {stringActiveOp === 'SCASB' && `Scanned ES:[0x${(0x0200 + stringStepIndex).toString(16).toUpperCase()}] for AL ('${String.fromCharCode(stringAlReg)}'). Updated Zero Flag (ZF).`}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    /* HARDWARE I/O PORT INTERFACE */
+                    <div className="space-y-4 font-mono">
+                      {/* Port Address & Data Controls */}
+                      <div className="bg-white p-4 rounded-xl border border-rose-150 space-y-3 shadow-xs">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                          <div className="space-y-2 bg-rose-50/60 p-3 rounded-xl border border-rose-200">
+                            <div className="flex justify-between items-center">
+                              <span className="font-bold text-rose-950">Peripheral I/O Port Address:</span>
+                              <span className="bg-rose-600 text-white px-2.5 py-0.5 rounded font-black text-xs">
+                                Port 0x{ioPort.toString(16).toUpperCase().padStart(2, '0')}H ({ioPort})
+                              </span>
+                            </div>
+                            <input
+                              type="range"
+                              min={0}
+                              max={255}
+                              value={ioPort & 0xFF}
+                              onChange={(e) => setIoPort(Number(e.target.value))}
+                              className="w-full accent-rose-600 cursor-pointer"
+                            />
+                          </div>
+
+                          <div className="space-y-2 bg-amber-50/60 p-3 rounded-xl border border-amber-200">
+                            <div className="flex justify-between items-center">
+                              <span className="font-bold text-amber-950">Transferred Data Byte:</span>
+                              <span className="bg-white px-2 py-0.5 rounded border border-amber-300 font-extrabold text-amber-900">
+                                0x{ioDataByte.toString(16).toUpperCase().padStart(2, '0')}H ('{String.fromCharCode(ioDataByte)}')
+                              </span>
+                            </div>
+                            <input
+                              type="range"
+                              min={0}
+                              max={255}
+                              value={ioDataByte & 0xFF}
+                              onChange={(e) => setIoDataByte(Number(e.target.value))}
+                              className="w-full accent-amber-600 cursor-pointer"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Hardware Bus Line Analyzer */}
+                      <div className="bg-slate-900 text-slate-100 p-4 rounded-xl border border-slate-800 space-y-3">
+                        <span className="text-xs font-bold text-rose-400 uppercase tracking-wider block border-b border-slate-800 pb-2">
+                          ⚡ 8086 Hardware Peripheral Bus Strobe Analyzer:
+                        </span>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-center text-xs font-bold">
+                          <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700">
+                            <span className="text-[9px] text-slate-400 block uppercase">M/IO# Pin Signal</span>
+                            <span className="text-rose-400 font-black text-sm">0 (LOW = I/O)</span>
+                          </div>
+                          <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700">
+                            <span className="text-[9px] text-slate-400 block uppercase">Control Strobe</span>
+                            <span className="text-amber-400 font-black text-sm">{stringActiveOp === 'IN' ? 'RD# Active Low' : 'WR# Active Low'}</span>
+                          </div>
+                          <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700">
+                            <span className="text-[9px] text-slate-400 block uppercase">Address Bus (A0–A7)</span>
+                            <span className="text-emerald-400 font-black text-sm">0x{ioPort.toString(16).toUpperCase().padStart(2, '0')}H</span>
+                          </div>
+                          <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700">
+                            <span className="text-[9px] text-slate-400 block uppercase">Data Bus (D0–D7)</span>
+                            <span className="text-sky-400 font-black text-sm">0x{ioDataByte.toString(16).toUpperCase().padStart(2, '0')}H</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* I/O Result Summary */}
+                      <div className="bg-rose-500/10 border border-rose-300 p-3.5 rounded-xl text-rose-950 text-xs font-mono space-y-1">
+                        <span className="font-bold text-rose-900 block uppercase">
+                          ⚡ Peripheral Hardware Bus Action:
+                        </span>
+                        <p className="font-sans leading-relaxed text-xs sm:text-sm">
+                          {stringActiveOp === 'IN'
+                            ? `Executed IN AL, 0x${ioPort.toString(16).toUpperCase()}H: Read byte 0x${ioDataByte.toString(16).toUpperCase()}H from hardware peripheral chip at Port 0x${ioPort.toString(16).toUpperCase()}H directly into Accumulator register AL.`
+                            : `Executed OUT 0x${ioPort.toString(16).toUpperCase()}H, AL: Transferred byte 0x${ioDataByte.toString(16).toUpperCase()}H from Accumulator register AL out to peripheral hardware chip at Port 0x${ioPort.toString(16).toUpperCase()}H.`}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Live Logs Terminal & Math Explanation Section */}
             <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 space-y-4 shadow-xs">
@@ -4141,8 +5269,12 @@ POP DX         ; Reads 1234H into DX, SP ← SP + 2 (FFFE)`}
               ))}
             </div>
           </div>
+        </div>
+      )}
 
-          {/* Master Branching Instructions Table */}
+      {/* TAB 3: BRANCHING INSTRUCTIONS MASTER SUMMARY TABLE */}
+      {activeMainTab === 'branching' && (
+        <div className="space-y-4">
           <BranchingInstructionsTable />
         </div>
       )}

@@ -355,9 +355,11 @@ END START`,
 interface DirectiveSandboxSimulatorProps {
   initialLabId?: string;
   hideExp1a?: boolean;
+  hideNearFar?: boolean;
+  allowedTabs?: Array<'directives' | 'styles' | 'models' | 'nearfar' | 'sandbox' | 'multiprecision'>;
 }
 
-export default function DirectiveSandboxSimulator({ initialLabId, hideExp1a }: DirectiveSandboxSimulatorProps = {}) {
+export default function DirectiveSandboxSimulator({ initialLabId, hideExp1a, hideNearFar, allowedTabs }: DirectiveSandboxSimulatorProps = {}) {
   const [activeTab, setActiveTab] = useState<'directives' | 'styles' | 'models' | 'nearfar' | 'sandbox' | 'multiprecision'>('directives');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedDirectiveId, setSelectedDirectiveId] = useState<string>('DB');
@@ -387,30 +389,46 @@ export default function DirectiveSandboxSimulator({ initialLabId, hideExp1a }: D
   };
 
   useEffect(() => {
+    if (allowedTabs && allowedTabs.length > 0 && !allowedTabs.includes(activeTab)) {
+      setActiveTab(allowedTabs[0]);
+    }
+  }, [allowedTabs, activeTab]);
+
+  useEffect(() => {
     if (hideExp1a && activeTab === 'multiprecision') {
       setActiveTab('directives');
     }
   }, [hideExp1a, activeTab]);
 
   useEffect(() => {
+    if (hideNearFar && activeTab === 'nearfar') {
+      setActiveTab('directives');
+    }
+  }, [hideNearFar, activeTab]);
+
+  useEffect(() => {
     if (initialLabId) {
-      if ((initialLabId === 'multiprecision' || initialLabId === 'exp1a' || initialLabId === 'm20-s1') && !hideExp1a) {
+      if ((initialLabId === 'multiprecision' || initialLabId === 'exp1a' || initialLabId === 'm20-s1') && !hideExp1a && (!allowedTabs || allowedTabs.includes('multiprecision'))) {
         setActiveTab('multiprecision');
-      } else if (initialLabId === 'stacklab' || initialLabId === 'stack') {
+      } else if ((initialLabId === 'nearfar' || initialLabId === 'procs' || initialLabId === 'stacklab' || initialLabId === 'm11-s2c') && !hideNearFar && (!allowedTabs || allowedTabs.includes('nearfar'))) {
         setActiveTab('nearfar');
-        setNearFarSubMode('stacklab');
-      } else if (initialLabId === 'nearfar' || initialLabId === 'procs') {
-        setActiveTab('nearfar');
-        setNearFarSubMode('procs');
+      } else if ((initialLabId === 'models' || initialLabId === 'm11-s2b') && (!allowedTabs || allowedTabs.includes('models'))) {
+        setActiveTab('models');
+      } else if ((initialLabId === 'styles' || initialLabId === 'm11-s2') && (!allowedTabs || allowedTabs.includes('styles'))) {
+        setActiveTab('styles');
+      } else if ((initialLabId === 'directives' || initialLabId === 'm11-s1') && (!allowedTabs || allowedTabs.includes('directives'))) {
+        setActiveTab('directives');
       } else if (['directives', 'styles', 'models', 'sandbox', 'nearfar', 'multiprecision'].includes(initialLabId)) {
         if (initialLabId === 'multiprecision' && hideExp1a) {
           setActiveTab('directives');
-        } else {
+        } else if (initialLabId === 'nearfar' && hideNearFar) {
+          setActiveTab('directives');
+        } else if (!allowedTabs || allowedTabs.includes(initialLabId as any)) {
           setActiveTab(initialLabId as any);
         }
       }
     }
-  }, [initialLabId, hideExp1a]);
+  }, [initialLabId, hideExp1a, hideNearFar, allowedTabs]);
 
   interface MpStepInfo {
     stepNum: number;
@@ -596,121 +614,9 @@ export default function DirectiveSandboxSimulator({ initialLabId, hideExp1a }: D
     return () => clearInterval(timer);
   }, [mpAutoPlay, mpBitWidth, mpOp, mpOpAHex, mpOpBHex]);
 
-  // NEAR / FAR Calls & Stack Operations Simulator State
-  const [nearFarSubMode, setNearFarSubMode] = useState<'procs' | 'stacklab'>('procs');
+  // NEAR / FAR Calls Simulator State
   const [nearFarType, setNearFarType] = useState<'near' | 'far'>('near');
   const [callStep, setCallStep] = useState<'idle' | 'pushed' | 'returned'>('idle');
-
-  // Interactive Stack Register Lab State (PUSH & POP)
-  const [labPushReg, setLabPushReg] = useState<string>('AX');
-  const [labPushCustomVal, setLabPushCustomVal] = useState<string>('1234');
-  const [labPopReg, setLabPopReg] = useState<string>('DX');
-  const [labStackLog, setLabStackLog] = useState<string>('Ready to test 8086 PUSH and POP stack operations.');
-
-  interface LabStackSlot {
-    addr: number;
-    val: number;
-    pushedFrom: string;
-  }
-
-  const [labRegs, setLabRegs] = useState<Record<string, number>>({
-    AX: 0x1234,
-    BX: 0x5678,
-    CX: 0x9ABC,
-    DX: 0x0000,
-    SI: 0x0010,
-    DI: 0x0020,
-    BP: 0x0000,
-    SP: 0x00FC
-  });
-
-  const [labStackSlots, setLabStackSlots] = useState<LabStackSlot[]>([
-    { addr: 0x00FE, val: 0x1234, pushedFrom: 'AX (1234H)' },
-    { addr: 0x00FC, val: 0x5678, pushedFrom: 'BX (5678H)' }
-  ]);
-
-  const handleLabPush = (regKey: string) => {
-    let pushValue = 0x1234;
-    let label = '';
-    if (regKey === 'CUSTOM') {
-      pushValue = parseInt(labPushCustomVal, 16) || 0x1234;
-      label = `Custom (${byteHexFormat((pushValue >> 8) & 0xFF)}${byteHexFormat(pushValue & 0xFF)})`;
-    } else {
-      pushValue = labRegs[regKey] ?? 0x1234;
-      label = `${regKey} (${hexFormat(pushValue)})`;
-    }
-
-    const currentSP = labRegs.SP ?? 0x00FC;
-    const newSP = currentSP - 2;
-
-    const newSlot: LabStackSlot = {
-      addr: newSP,
-      val: pushValue,
-      pushedFrom: label
-    };
-
-    setLabStackSlots(prev => [...prev, newSlot]);
-    setLabRegs(prev => ({ ...prev, SP: newSP }));
-
-    const highByte = (pushValue >> 8) & 0xFF;
-    const lowByte = pushValue & 0xFF;
-
-    setLabStackLog(
-      `⚡ [PUSH OPERATION EXECUTED]:\n` +
-      `1. Micro-step 1: Decrement Stack Pointer SP by 2 (SP ← ${hexFormat(currentSP)} - 2 = ${hexFormat(newSP)}).\n` +
-      `2. Micro-step 2: Store 16-bit word ${hexFormat(pushValue)} into Stack RAM at SS:${hexFormat(newSP)}.\n` +
-      `3. Little-Endian Byte Storage: High byte (${byteHexFormat(highByte)}) stored at SS:${hexFormat(newSP + 1)}, Low byte (${byteHexFormat(lowByte)}) stored at SS:${hexFormat(newSP)}.\n` +
-      `4. Top of Stack (TOS) updated to SS:${hexFormat(newSP)}. Base of Stack remains at SS:0100H.`
-    );
-  };
-
-  const handleLabPop = (targetReg: string) => {
-    const currentSP = labRegs.SP ?? 0x00FC;
-
-    if (labStackSlots.length === 0 || currentSP >= 0x0100) {
-      setLabStackLog(
-        `⚠️ [STACK UNDERFLOW WARNING]:\n` +
-        `Stack Pointer (SP = ${hexFormat(currentSP)}) is at or above the Base of Stack (SS:0100H).\n` +
-        `Cannot POP from an empty stack!`
-      );
-      return;
-    }
-
-    const poppedSlot = labStackSlots[labStackSlots.length - 1];
-    const newSlots = labStackSlots.slice(0, -1);
-    const newSP = currentSP + 2;
-
-    setLabStackSlots(newSlots);
-    setLabRegs(prev => ({
-      ...prev,
-      [targetReg]: poppedSlot.val,
-      SP: newSP
-    }));
-
-    setLabStackLog(
-      `✅ [POP OPERATION EXECUTED]:\n` +
-      `1. Micro-step 1: Read 16-bit word ${hexFormat(poppedSlot.val)} from Top of Stack SS:${hexFormat(poppedSlot.addr)} into register ${targetReg}.\n` +
-      `2. Micro-step 2: Increment Stack Pointer SP by 2 (SP ← ${hexFormat(currentSP)} + 2 = ${hexFormat(newSP)}).\n` +
-      `3. Top of Stack (TOS) restored UP toward Base of Stack (SS:0100H).\n` +
-      `4. Register ${targetReg} updated to ${hexFormat(poppedSlot.val)}.`
-    );
-  };
-
-  const handleResetLabStack = () => {
-    setLabStackSlots([]);
-    setLabRegs(prev => ({ ...prev, SP: 0x0100 }));
-    setLabStackLog(`Stack reset to Base of Stack (SS:0100H). Stack Pointer SP = 0100H.`);
-  };
-
-  const handleLoadSampleLabStack = () => {
-    setLabStackSlots([
-      { addr: 0x00FE, val: 0x1234, pushedFrom: 'AX (1234H)' },
-      { addr: 0x00FC, val: 0x5678, pushedFrom: 'BX (5678H)' },
-      { addr: 0x00FA, val: 0x9ABC, pushedFrom: 'CX (9ABCH)' }
-    ]);
-    setLabRegs(prev => ({ ...prev, SP: 0x00FA }));
-    setLabStackLog(`Sample stack frame loaded. 3 words pushed. Top of Stack TOS = SS:00FAH (SP = 00FAH), Base of Stack = SS:0100H.`);
-  };
 
   // Memory Sandbox state
   const [var1Val, setVar1Val] = useState<string>('7A');
@@ -751,55 +657,63 @@ export default function DirectiveSandboxSimulator({ initialLabId, hideExp1a }: D
           </div>
 
           <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 shadow-inner">
-            <button
-              id="btn-tab-directives"
-              onClick={() => setActiveTab('directives')}
-              className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                activeTab === 'directives'
-                  ? 'bg-white text-indigo-700 shadow-sm border border-slate-200'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <BookOpen className="w-4 h-4 text-indigo-600" />
-              Assembler Directives
-            </button>
-            <button
-              id="btn-tab-styles"
-              onClick={() => setActiveTab('styles')}
-              className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                activeTab === 'styles'
-                  ? 'bg-white text-indigo-700 shadow-sm border border-slate-200'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Code2 className="w-4 h-4 text-indigo-600" />
-              Programming Styles
-            </button>
-            <button
-              id="btn-tab-models"
-              onClick={() => setActiveTab('models')}
-              className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                activeTab === 'models'
-                  ? 'bg-white text-indigo-700 shadow-sm border border-slate-200'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Layers className="w-4 h-4 text-indigo-600" />
-              Memory Models (.MODEL)
-            </button>
-            <button
-              id="btn-tab-nearfar"
-              onClick={() => setActiveTab('nearfar')}
-              className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                activeTab === 'nearfar'
-                  ? 'bg-white text-indigo-700 shadow-sm border border-slate-200'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <PhoneCall className="w-4 h-4 text-indigo-600" />
-              NEAR & FAR Calls
-            </button>
-            {!hideExp1a && (
+            {(!allowedTabs || allowedTabs.includes('directives')) && (
+              <button
+                id="btn-tab-directives"
+                onClick={() => setActiveTab('directives')}
+                className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                  activeTab === 'directives'
+                    ? 'bg-white text-indigo-700 shadow-sm border border-slate-200'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <BookOpen className="w-4 h-4 text-indigo-600" />
+                Assembler Directives
+              </button>
+            )}
+            {(!allowedTabs || allowedTabs.includes('styles')) && (
+              <button
+                id="btn-tab-styles"
+                onClick={() => setActiveTab('styles')}
+                className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                  activeTab === 'styles'
+                    ? 'bg-white text-indigo-700 shadow-sm border border-slate-200'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Code2 className="w-4 h-4 text-indigo-600" />
+                Programming Styles
+              </button>
+            )}
+            {(!allowedTabs || allowedTabs.includes('models')) && (
+              <button
+                id="btn-tab-models"
+                onClick={() => setActiveTab('models')}
+                className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                  activeTab === 'models'
+                    ? 'bg-white text-indigo-700 shadow-sm border border-slate-200'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Layers className="w-4 h-4 text-indigo-600" />
+                Memory Models (.MODEL)
+              </button>
+            )}
+            {!hideNearFar && (!allowedTabs || allowedTabs.includes('nearfar')) && (
+              <button
+                id="btn-tab-nearfar"
+                onClick={() => setActiveTab('nearfar')}
+                className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                  activeTab === 'nearfar'
+                    ? 'bg-white text-indigo-700 shadow-sm border border-slate-200'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <PhoneCall className="w-4 h-4 text-indigo-600" />
+                NEAR & FAR Calls
+              </button>
+            )}
+            {!hideExp1a && (!allowedTabs || allowedTabs.includes('multiprecision')) && (
               <button
                 id="btn-tab-multiprecision"
                 onClick={() => setActiveTab('multiprecision')}
@@ -813,18 +727,20 @@ export default function DirectiveSandboxSimulator({ initialLabId, hideExp1a }: D
                 Exp 1A: Multi-Precision
               </button>
             )}
-            <button
-              id="btn-tab-sandbox"
-              onClick={() => setActiveTab('sandbox')}
-              className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                activeTab === 'sandbox'
-                  ? 'bg-white text-indigo-700 shadow-sm border border-slate-200'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <Database className="w-4 h-4 text-indigo-600" />
-              Memory Layout Sandbox
-            </button>
+            {(!allowedTabs || allowedTabs.includes('sandbox')) && (
+              <button
+                id="btn-tab-sandbox"
+                onClick={() => setActiveTab('sandbox')}
+                className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                  activeTab === 'sandbox'
+                    ? 'bg-white text-indigo-700 shadow-sm border border-slate-200'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Database className="w-4 h-4 text-indigo-600" />
+                Memory Layout Sandbox
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -893,28 +809,28 @@ export default function DirectiveSandboxSimulator({ initialLabId, hideExp1a }: D
               </div>
 
               {/* Right Directive Inspector Box */}
-              <div className="lg:col-span-6 bg-slate-900 text-slate-100 border border-slate-800 rounded-3xl p-5 sm:p-6 space-y-5 shadow-xl">
-                <div className="flex justify-between items-start border-b border-slate-800 pb-4">
+              <div className="lg:col-span-6 bg-slate-50 text-slate-900 border border-slate-200 rounded-3xl p-5 sm:p-6 space-y-5 shadow-sm">
+                <div className="flex justify-between items-start border-b border-slate-200 pb-4">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[10px] font-mono font-extrabold uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 px-2 py-0.5 rounded-md">
+                      <span className="text-[10px] font-mono font-extrabold uppercase bg-indigo-100 text-indigo-800 border border-indigo-200 px-2 py-0.5 rounded-md">
                         {selectedDirective.category}
                       </span>
-                      <span className="text-[10px] font-mono font-extrabold uppercase bg-slate-800 text-slate-300 px-2 py-0.5 rounded-md">
+                      <span className="text-[10px] font-mono font-extrabold uppercase bg-slate-200 text-slate-700 px-2 py-0.5 rounded-md">
                         {selectedDirective.styleAffiliation}
                       </span>
                     </div>
-                    <h3 className="text-lg font-mono font-black text-white tracking-tight">
+                    <h3 className="text-lg font-mono font-black text-slate-900 tracking-tight">
                       {selectedDirective.name}
                     </h3>
-                    <p className="text-xs font-mono text-indigo-300 mt-0.5">
+                    <p className="text-xs font-mono text-indigo-700 font-semibold mt-0.5">
                       {selectedDirective.fullForm}
                     </p>
                   </div>
 
                   <div className="text-right">
-                    <span className="text-[9px] font-mono uppercase text-slate-400 block font-bold">Compile Size</span>
-                    <span className="text-xs font-mono font-bold text-emerald-400">
+                    <span className="text-[9px] font-mono uppercase text-slate-500 block font-bold">Compile Size</span>
+                    <span className="text-xs font-mono font-bold text-emerald-700">
                       {selectedDirective.bytesAllocated}
                     </span>
                   </div>
@@ -922,10 +838,10 @@ export default function DirectiveSandboxSimulator({ initialLabId, hideExp1a }: D
 
                 {/* Description */}
                 <div className="space-y-1.5">
-                  <span className="text-[10px] font-mono uppercase font-bold text-slate-400 block tracking-wider">
+                  <span className="text-[10px] font-mono uppercase font-bold text-slate-500 block tracking-wider">
                     Purpose & Compile-Time Behavior
                   </span>
-                  <p className="text-xs leading-relaxed text-slate-300 font-sans">
+                  <p className="text-xs leading-relaxed text-slate-700 font-sans">
                     {selectedDirective.desc}
                   </p>
                 </div>
@@ -933,25 +849,25 @@ export default function DirectiveSandboxSimulator({ initialLabId, hideExp1a }: D
                 {/* Assembly Example Block */}
                 <div className="space-y-1.5">
                   <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-mono uppercase font-bold text-slate-400 tracking-wider">
+                    <span className="text-[10px] font-mono uppercase font-bold text-slate-500 tracking-wider">
                       8086 Assembly Syntax Example
                     </span>
                     <button
                       onClick={() => handleCopyCode(selectedDirective.example)}
-                      className="text-[10px] font-mono text-indigo-400 hover:text-indigo-300 flex items-center gap-1 cursor-pointer"
+                      className="text-[10px] font-mono text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer font-bold"
                     >
-                      {copiedCode ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                      {copiedCode ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
                       {copiedCode ? 'Copied!' : 'Copy Code'}
                     </button>
                   </div>
-                  <div className="bg-slate-950 border border-slate-800 rounded-2xl p-3.5 font-mono text-xs text-emerald-300 overflow-x-auto shadow-inner">
+                  <div className="bg-white border border-slate-200 rounded-2xl p-3.5 font-mono text-xs text-indigo-950 font-semibold overflow-x-auto shadow-2xs">
                     <pre>{selectedDirective.example}</pre>
                   </div>
                 </div>
 
                 {/* Important distinction note */}
-                <div className="bg-indigo-950/40 border border-indigo-800/50 rounded-2xl p-3 flex items-start gap-2 text-indigo-200 text-xs">
-                  <Info className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+                <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-3 flex items-start gap-2 text-indigo-900 text-xs">
+                  <Info className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
                   <p className="leading-snug text-[11px]">
                     <strong>Note:</strong> Assembler directives are processed by the assembler software (MASM/TASM) at compile-time and do NOT generate executable machine opcodes in the CPU.
                   </p>
@@ -1006,22 +922,22 @@ export default function DirectiveSandboxSimulator({ initialLabId, hideExp1a }: D
             {/* Selected Style Deep-Dive Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               {/* Left Code Editor View */}
-              <div className="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-3xl p-5 text-slate-100 shadow-xl space-y-3">
-                <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+              <div className="lg:col-span-7 bg-white border border-slate-200 rounded-3xl p-5 text-slate-900 shadow-sm space-y-3">
+                <div className="flex justify-between items-center border-b border-slate-200 pb-3">
                   <div className="flex items-center gap-2">
-                    <FileCode className="w-4 h-4 text-indigo-400" />
-                    <span className="text-xs font-mono font-bold text-indigo-300">{selectedStyle.formatName}</span>
+                    <FileCode className="w-4 h-4 text-indigo-600" />
+                    <span className="text-xs font-mono font-bold text-indigo-900">{selectedStyle.formatName}</span>
                   </div>
                   <button
                     onClick={() => handleCopyCode(selectedStyle.code)}
-                    className="text-xs font-mono text-indigo-400 hover:text-indigo-300 flex items-center gap-1 cursor-pointer bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700"
+                    className="text-xs font-mono text-indigo-700 hover:text-indigo-900 flex items-center gap-1 cursor-pointer bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-200 font-bold"
                   >
-                    {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-indigo-700" />}
                     {copiedCode ? 'Copied Code' : 'Copy Program'}
                   </button>
                 </div>
 
-                <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 font-mono text-xs text-emerald-300 overflow-x-auto shadow-inner max-h-[420px]">
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 font-mono text-xs text-indigo-950 font-semibold overflow-x-auto shadow-inner max-h-[420px]">
                   <pre className="whitespace-pre">{selectedStyle.code}</pre>
                 </div>
               </div>
@@ -1385,29 +1301,29 @@ END MAIN`
                   </div>
 
                   {/* Right: Assembly Boilerplate Code Preview (5 Cols) */}
-                  <div className="lg:col-span-5 bg-slate-900 text-slate-100 rounded-2xl p-4 border border-slate-800 font-mono text-xs flex flex-col justify-between">
+                  <div className="lg:col-span-5 bg-white text-slate-900 rounded-2xl p-4 border border-slate-200 font-mono text-xs flex flex-col justify-between shadow-2xs">
                     <div>
-                      <div className="flex justify-between items-center pb-2 mb-2 border-b border-slate-800">
-                        <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
-                          <Code2 className="w-3.5 h-3.5" />
+                      <div className="flex justify-between items-center pb-2 mb-2 border-b border-slate-200">
+                        <span className="text-[10px] font-bold text-indigo-800 uppercase tracking-wider flex items-center gap-1.5">
+                          <Code2 className="w-3.5 h-3.5 text-indigo-600" />
                           Boilerplate Code Structure
                         </span>
                         <button
                           onClick={() => handleCopyCode(currentModel.boilerplate)}
-                          className="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-[10px] flex items-center gap-1 transition-all cursor-pointer"
+                          className="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 rounded text-[10px] flex items-center gap-1 transition-all cursor-pointer font-bold border border-indigo-200"
                         >
-                          {copiedCode ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                          {copiedCode ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3 text-indigo-700" />}
                           {copiedCode ? 'Copied' : 'Copy'}
                         </button>
                       </div>
 
-                      <pre className="text-[11px] leading-relaxed text-indigo-300 bg-slate-950 p-3 rounded-xl overflow-x-auto border border-slate-800">
+                      <pre className="text-[11px] leading-relaxed text-indigo-950 bg-slate-50 p-3 rounded-xl overflow-x-auto border border-slate-200 font-semibold">
                         {currentModel.boilerplate}
                       </pre>
                     </div>
 
                     <p className="text-[9.5px] text-slate-500 italic mt-3">
-                      Note: The <code className="text-indigo-400">.MODEL</code> directive must always precede segment blocks (.DATA, .CODE, .STACK) in simplified assembly syntax.
+                      Note: The <code className="text-indigo-700 font-bold">.MODEL</code> directive must always precede segment blocks (.DATA, .CODE, .STACK) in simplified assembly syntax.
                     </p>
                   </div>
 
@@ -1507,48 +1423,21 @@ END MAIN`
             exit={{ opacity: 0, y: -8 }}
             className="space-y-6"
           >
-            {/* Header Banner & Sub-Mode Switcher */}
+            {/* Header Banner */}
             <div className="bg-gradient-to-r from-indigo-50 via-sky-50 to-slate-50 border border-indigo-200/80 rounded-2xl p-4 sm:p-5 text-slate-900 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-2xs">
               <div>
                 <h3 className="text-base font-extrabold text-indigo-950 font-mono uppercase tracking-wider flex items-center gap-2">
                   <PhoneCall className="w-5 h-5 text-indigo-600" />
-                  8086 Stack Architecture & Subroutine Calls
+                  8086 Subroutine Calls & Stack Memory (NEAR & FAR Calls)
                 </h3>
                 <p className="text-xs text-indigo-950 mt-1 max-w-3xl leading-relaxed">
-                  Interactive simulator for 8086 LIFO (Last-In First-Out) stack memory. Choose between <strong className="text-emerald-700 font-bold">Procedure Call Stack Frames (CALL & RET)</strong> or the <strong className="text-indigo-700 font-bold">Interactive PUSH & POP Register Laboratory</strong>.
+                  Interactive simulator for 8086 procedure call stack frames. Compare intra-segment (<strong className="text-emerald-700 font-bold">NEAR CALL</strong>) and inter-segment (<strong className="text-indigo-700 font-bold">FAR CALL</strong>) stack frames, CS:IP register changes, and return mechanics (<strong className="text-purple-700 font-bold">RETN vs RETF</strong>).
                 </p>
-              </div>
-
-              {/* Sub-Mode Tabs */}
-              <div className="flex bg-white/90 p-1 rounded-xl border border-indigo-200/80 shadow-2xs shrink-0 font-mono text-xs font-bold">
-                <button
-                  onClick={() => setNearFarSubMode('procs')}
-                  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                    nearFarSubMode === 'procs'
-                      ? 'bg-indigo-600 text-white shadow-2xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  <PhoneCall className="w-3.5 h-3.5" />
-                  <span>1. Procedure Calls (CALL/RET)</span>
-                </button>
-                <button
-                  onClick={() => setNearFarSubMode('stacklab')}
-                  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
-                    nearFarSubMode === 'stacklab'
-                      ? 'bg-indigo-600 text-white shadow-2xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  <Layers className="w-3.5 h-3.5" />
-                  <span>2. PUSH & POP Register Lab</span>
-                </button>
               </div>
             </div>
 
-            {/* SUB-MODE 1: PROCEDURE CALLS (NEAR / FAR CALL & RET) */}
-            {nearFarSubMode === 'procs' && (
-              <div className="space-y-6">
+            {/* PROCEDURE CALLS (NEAR / FAR CALL & RET) */}
+            <div className="space-y-6">
                 {/* Mode Selector Header Bar */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white border border-slate-200 rounded-2xl p-3.5 shadow-2xs">
                   <div className="flex items-center gap-2">
@@ -1691,24 +1580,24 @@ END MAIN`
                       </div>
 
                       {/* Live Hardware Operation Step Console */}
-                      <div className="mt-4 p-3 bg-slate-900 text-emerald-300 border border-slate-800 rounded-xl font-mono text-xs space-y-1 shadow-xs">
-                        <div className="flex justify-between items-center text-slate-400 border-b border-slate-800 pb-1 mb-1 text-[10px]">
-                          <span className="font-bold uppercase text-emerald-400 flex items-center gap-1.5">
-                            <Terminal className="w-3.5 h-3.5 text-emerald-400" />
+                      <div className="mt-4 p-3 bg-slate-50 text-slate-900 border border-slate-200 rounded-xl font-mono text-xs space-y-1 shadow-2xs">
+                        <div className="flex justify-between items-center text-slate-500 border-b border-slate-200 pb-1 mb-1 text-[10px]">
+                          <span className="font-bold uppercase text-emerald-700 flex items-center gap-1.5">
+                            <Terminal className="w-3.5 h-3.5 text-emerald-600" />
                             Hardware Step Monitor
                           </span>
-                          <span>SS:SP = SS:{callStep === 'pushed' ? (nearFarType === 'near' ? 'FFFCH' : 'FFF8H') : 'FFFEH'}</span>
+                          <span className="font-bold text-slate-700">SS:SP = SS:{callStep === 'pushed' ? (nearFarType === 'near' ? 'FFFCH' : 'FFF8H') : 'FFFEH'}</span>
                         </div>
                         {callStep === 'idle' && (
-                          <p className="text-slate-300 leading-relaxed text-[11px]">
-                            💡 Ready to Call. Click <strong className="text-indigo-400">1. Execute CALL Instruction</strong> to observe return address pushed onto stack RAM.
+                          <p className="text-slate-700 leading-relaxed text-[11px]">
+                            💡 Ready to Call. Click <strong className="text-indigo-700">1. Execute CALL Instruction</strong> to observe return address pushed onto stack RAM.
                           </p>
                         )}
                         {callStep === 'pushed' && (
-                          <div className="leading-relaxed text-[11px] space-y-1">
+                          <div className="leading-relaxed text-[11px] space-y-1 text-slate-800">
                             {nearFarType === 'near' ? (
                               <>
-                                <p>⚡ <strong>NEAR CALL Execution Micro-Steps:</strong></p>
+                                <p>⚡ <strong className="text-emerald-800">NEAR CALL Execution Micro-Steps:</strong></p>
                                 <p>1. Decrements SP by 2 (SP ← FFFEH - 2 = FFFCH).</p>
                                 <p>2. Stores 16-bit Return Offset IP (0102H) at SS:[FFFCH].</p>
                                 <p>3. High byte (01H) stored at SS:FFFDH, Low byte (02H) at SS:FFFCH.</p>
@@ -1716,7 +1605,7 @@ END MAIN`
                               </>
                             ) : (
                               <>
-                                <p>⚡ <strong>FAR CALL Execution Micro-Steps:</strong></p>
+                                <p>⚡ <strong className="text-amber-800">FAR CALL Execution Micro-Steps:</strong></p>
                                 <p>1. Decrements SP by 2 (SP ← FFFEH - 2 = FFFCH), pushes Code Segment CS (1000H) to SS:[FFFCH].</p>
                                 <p>2. Decrements SP by 2 (SP ← FFFCH - 2 = FFF8H), pushes Return Offset IP (0105H) to SS:[FFF8H].</p>
                                 <p>3. Total 4 bytes pushed. CS loaded with 2000H, IP loaded with 0050H.</p>
@@ -1725,7 +1614,7 @@ END MAIN`
                           </div>
                         )}
                         {callStep === 'returned' && (
-                          <div className="leading-relaxed text-[11px] space-y-1 text-emerald-300">
+                          <div className="leading-relaxed text-[11px] space-y-1 text-emerald-800">
                             <p>✅ <strong>{nearFarType === 'near' ? 'RETN (Near Return)' : 'RETF (Far Return)'} Execution Micro-Steps:</strong></p>
                             {nearFarType === 'near' ? (
                               <>
@@ -1886,13 +1775,13 @@ END MAIN`
                 </div>
 
                 {/* Assembly Source Code Directives Comparison Panel */}
-                <div className="bg-slate-900 text-slate-100 rounded-2xl p-4 border border-slate-800 font-mono text-xs shadow-2xs">
-                  <div className="flex justify-between items-center pb-2 mb-3 border-b border-slate-800">
-                    <span className="text-xs font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-2">
-                      <Code2 className="w-4 h-4" />
+                <div className="bg-white text-slate-900 rounded-2xl p-4 border border-slate-200 font-mono text-xs shadow-2xs">
+                  <div className="flex justify-between items-center pb-2 mb-3 border-b border-slate-200">
+                    <span className="text-xs font-bold text-indigo-900 uppercase tracking-wider flex items-center gap-2">
+                      <Code2 className="w-4 h-4 text-indigo-600" />
                       MASM / TASM Procedure Directive Source Code Comparison
                     </span>
-                    <span className="text-[10px] text-slate-400">
+                    <span className="text-[10px] text-slate-500 font-semibold">
                       {nearFarType === 'near' ? 'PROC NEAR Syntax (2-Byte RETN)' : 'PROC FAR Syntax (4-Byte RETF)'}
                     </span>
                   </div>
@@ -1900,12 +1789,12 @@ END MAIN`
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-[11px]">
                     {/* NEAR Call Code */}
                     <div className={`p-3 rounded-xl border transition-all ${
-                      nearFarType === 'near' ? 'bg-slate-950 border-emerald-500/80 ring-1 ring-emerald-500/50' : 'bg-slate-950/60 border-slate-800 opacity-60'
+                      nearFarType === 'near' ? 'bg-emerald-50 border-emerald-400 ring-1 ring-emerald-300' : 'bg-slate-50 border-slate-200 opacity-60'
                     }`}>
-                      <span className="text-[10px] font-bold text-emerald-400 uppercase block mb-1.5">
+                      <span className="text-[10px] font-bold text-emerald-800 uppercase block mb-1.5">
                         1. NEAR Procedure Syntax (.MODEL SMALL Default)
                       </span>
-                      <pre className="text-emerald-300 leading-relaxed overflow-x-auto">
+                      <pre className="text-emerald-950 font-bold leading-relaxed overflow-x-auto">
 {`.CODE
   CALL NEAR PTR SUB_ROUTINE ; Calls subroutine in SAME segment
   ...
@@ -1919,12 +1808,12 @@ SUB_ROUTINE ENDP`}
 
                     {/* FAR Call Code */}
                     <div className={`p-3 rounded-xl border transition-all ${
-                      nearFarType === 'far' ? 'bg-slate-950 border-amber-500/80 ring-1 ring-amber-500/50' : 'bg-slate-950/60 border-slate-800 opacity-60'
+                      nearFarType === 'far' ? 'bg-amber-50 border-amber-400 ring-1 ring-amber-300' : 'bg-slate-50 border-slate-200 opacity-60'
                     }`}>
-                      <span className="text-[10px] font-bold text-amber-400 uppercase block mb-1.5">
+                      <span className="text-[10px] font-bold text-amber-800 uppercase block mb-1.5">
                         2. FAR Procedure Syntax (.MODEL MEDIUM / LARGE)
                       </span>
-                      <pre className="text-amber-300 leading-relaxed overflow-x-auto">
+                      <pre className="text-amber-950 font-bold leading-relaxed overflow-x-auto">
 {`.CODE
   CALL FAR PTR EXT_SUBROUTINE ; Calls subroutine in DIFFERENT segment
   ...
@@ -1956,327 +1845,55 @@ EXT_SUBROUTINE ENDP`}
                       </thead>
                       <tbody className="divide-y divide-slate-200 text-[11px] text-slate-800">
                         <tr>
+                          <td className="p-2.5 font-bold text-slate-900">Procedure Directive Syntax</td>
+                          <td className="p-2.5 font-mono text-emerald-800 font-bold">SUB_NAME PROC NEAR</td>
+                          <td className="p-2.5 font-mono text-amber-800 font-bold">SUB_NAME PROC FAR</td>
+                        </tr>
+                        <tr>
+                          <td className="p-2.5 font-bold text-slate-900">Target Address Size</td>
+                          <td className="p-2.5 font-bold">16-bit Offset (IP)</td>
+                          <td className="p-2.5 font-bold">32-bit Pointer (CS : IP)</td>
+                        </tr>
+                        <tr>
                           <td className="p-2.5 font-bold text-slate-900">Target Location</td>
                           <td className="p-2.5 text-emerald-800 font-semibold">Same Code Segment (Within 64KB)</td>
                           <td className="p-2.5 text-amber-800 font-semibold">Different Code Segment (&gt;64KB)</td>
                         </tr>
                         <tr>
                           <td className="p-2.5 font-bold text-slate-900">Stack Bytes Pushed</td>
-                          <td className="p-2.5 font-bold">2 Bytes (IP Offset)</td>
-                          <td className="p-2.5 font-bold">4 Bytes (CS Segment + IP Offset)</td>
+                          <td className="p-2.5 font-bold">2 Bytes (Saved IP Offset)</td>
+                          <td className="p-2.5 font-bold">4 Bytes (Saved CS + Saved IP)</td>
                         </tr>
                         <tr>
                           <td className="p-2.5 font-bold text-slate-900">Code Segment (CS)</td>
-                          <td className="p-2.5">Unchanged</td>
-                          <td className="p-2.5">Loaded with new segment address</td>
+                          <td className="p-2.5">Unchanged (Intra-Segment)</td>
+                          <td className="p-2.5">Updated with new Segment (Inter-Segment)</td>
+                        </tr>
+                        <tr>
+                          <td className="p-2.5 font-bold text-slate-900">Call Operator Coercion</td>
+                          <td className="p-2.5 font-mono">CALL NEAR PTR Subroutine</td>
+                          <td className="p-2.5 font-mono">CALL FAR PTR Subroutine</td>
                         </tr>
                         <tr>
                           <td className="p-2.5 font-bold text-slate-900">Return Instruction</td>
-                          <td className="p-2.5 font-bold text-emerald-800">RETN (Pops 2 bytes)</td>
-                          <td className="p-2.5 font-bold text-amber-800">RETF (Pops 4 bytes)</td>
+                          <td className="p-2.5 font-bold text-emerald-800">RETN (Pops 2 bytes: IP)</td>
+                          <td className="p-2.5 font-bold text-amber-800">RETF (Pops 4 bytes: IP then CS)</td>
                         </tr>
                         <tr>
                           <td className="p-2.5 font-bold text-slate-900">Default in Memory Models</td>
                           <td className="p-2.5">TINY, SMALL, COMPACT</td>
                           <td className="p-2.5">MEDIUM, LARGE, HUGE</td>
                         </tr>
+                        <tr>
+                          <td className="p-2.5 font-bold text-slate-900">Execution Speed & Overhead</td>
+                          <td className="p-2.5 text-emerald-800 font-semibold">Faster execution, 2-byte stack frame</td>
+                          <td className="p-2.5 text-amber-800 font-semibold">Additional clock cycles, 4-byte stack frame</td>
+                        </tr>
                       </tbody>
                     </table>
                   </div>
                 </div>
               </div>
-            )}
-
-            {/* SUB-MODE 2: INTERACTIVE PUSH & POP REGISTER LABORATORY */}
-            {nearFarSubMode === 'stacklab' && (
-              <div className="bg-gradient-to-br from-indigo-50/90 via-sky-50/70 to-slate-50 border-2 border-indigo-200 rounded-2xl p-5 space-y-5 shadow-sm relative overflow-hidden text-slate-900 font-sans">
-                
-                {/* Header Control Bar */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-indigo-200/80 pb-3.5">
-                  <div className="flex items-center gap-2.5">
-                    <div className="p-2 bg-indigo-100 border border-indigo-300 rounded-xl text-indigo-700">
-                      <Layers className="w-5 h-5 text-indigo-700" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-extrabold uppercase tracking-wider font-mono text-indigo-950 flex items-center gap-2">
-                        Interactive 8086 PUSH & POP Stack Laboratory
-                      </h3>
-                      <p className="text-[11px] text-indigo-900 mt-0.5">
-                        Test general <strong className="text-emerald-700">PUSH</strong> and <strong className="text-amber-700">POP</strong> hardware operations with 16-bit registers and observe live Stack Pointer (SP) updates in SS segment memory.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-[10px] font-mono font-bold bg-indigo-100 text-indigo-900 px-2.5 py-1 rounded-lg border border-indigo-300">
-                      SS:SP = SS:{hexFormat(labRegs.SP ?? 0x0100)}
-                    </span>
-                    <button
-                      onClick={handleLoadSampleLabStack}
-                      className="px-2.5 py-1 bg-white hover:bg-slate-100 text-indigo-900 text-[10px] font-mono font-bold rounded-lg border border-indigo-200 transition-all cursor-pointer shadow-2xs"
-                    >
-                      Pre-fill Sample Stack
-                    </button>
-                    <button
-                      onClick={handleResetLabStack}
-                      className="px-2.5 py-1 bg-white hover:bg-slate-100 text-rose-700 text-[10px] font-mono font-bold rounded-lg border border-rose-200 transition-all cursor-pointer shadow-2xs"
-                    >
-                      Reset Stack
-                    </button>
-                  </div>
-                </div>
-
-                {/* Grid: PUSH/POP Consoles (Left) vs Visual Stack Memory Column (Right) */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-                  
-                  {/* Left Column: Interactive Controls & Hardware Log (7 Cols) */}
-                  <div className="lg:col-span-7 space-y-4">
-                    
-                    {/* Control Panel Cards Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      
-                      {/* PUSH Operation Box */}
-                      <div className="bg-white border border-indigo-200 rounded-xl p-3.5 space-y-3 shadow-2xs">
-                        <div className="flex justify-between items-center border-b border-indigo-100 pb-2">
-                          <span className="text-xs font-mono font-bold text-indigo-900 uppercase flex items-center gap-1.5">
-                            <ArrowDown className="w-4 h-4 text-emerald-600" />
-                            PUSH Operation
-                          </span>
-                          <span className="text-[9px] font-mono text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-bold">
-                            SP = SP - 2
-                          </span>
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-mono text-slate-600 block font-semibold">Select Source Operand:</label>
-                          <div className="flex gap-2">
-                            <select
-                              value={labPushReg}
-                              onChange={(e) => setLabPushReg(e.target.value)}
-                              className="bg-slate-50 border border-slate-300 text-slate-900 font-mono text-xs rounded-lg px-2.5 py-1.5 flex-1 focus:outline-none focus:border-indigo-500 font-semibold cursor-pointer"
-                            >
-                              {['AX', 'BX', 'CX', 'DX', 'SI', 'DI', 'BP', 'CUSTOM'].map(r => (
-                                <option key={r} value={r}>
-                                  {r === 'CUSTOM' ? 'Custom Hex Value' : `${r} (${hexFormat(labRegs[r] ?? 0)})`}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          {labPushReg === 'CUSTOM' && (
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className="text-[10px] font-mono text-slate-600 font-semibold">Hex Value:</span>
-                              <input
-                                type="text"
-                                maxLength={4}
-                                value={labPushCustomVal}
-                                onChange={(e) => setLabPushCustomVal(e.target.value)}
-                                className="bg-slate-50 border border-indigo-300 text-emerald-700 font-mono text-xs rounded-lg px-2 py-1 w-24 text-center focus:outline-none font-bold"
-                              />
-                            </div>
-                          )}
-
-                          <button
-                            onClick={() => handleLabPush(labPushReg)}
-                            className="w-full mt-2 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-mono font-bold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                          >
-                            <ArrowDown className="w-4 h-4" />
-                            Execute PUSH {labPushReg === 'CUSTOM' ? labPushCustomVal + 'H' : labPushReg}
-                          </button>
-                        </div>
-
-                        <p className="text-[9.5px] text-slate-600 font-mono leading-relaxed pt-1 border-t border-slate-100">
-                          ⚡ Decrements SP by 2, then stores 16-bit word at SS:[SP]. Top of Stack moves DOWN.
-                        </p>
-                      </div>
-
-                      {/* POP Operation Box */}
-                      <div className="bg-white border border-amber-200 rounded-xl p-3.5 space-y-3 shadow-2xs">
-                        <div className="flex justify-between items-center border-b border-amber-100 pb-2">
-                          <span className="text-xs font-mono font-bold text-amber-900 uppercase flex items-center gap-1.5">
-                            <ArrowUp className="w-4 h-4 text-amber-600" />
-                            POP Operation
-                          </span>
-                          <span className="text-[9px] font-mono text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 font-bold">
-                            SP = SP + 2
-                          </span>
-                        </div>
-
-                        <div className="space-y-2">
-                          <label className="text-[10px] font-mono text-slate-600 block font-semibold">Select Destination Register:</label>
-                          <select
-                            value={labPopReg}
-                            onChange={(e) => setLabPopReg(e.target.value)}
-                            className="bg-slate-50 border border-slate-300 text-slate-900 font-mono text-xs rounded-lg px-2.5 py-1.5 w-full focus:outline-none focus:border-amber-500 font-semibold cursor-pointer"
-                          >
-                            {['AX', 'BX', 'CX', 'DX', 'SI', 'DI', 'BP'].map(r => (
-                              <option key={r} value={r}>
-                                {r} (Current: {hexFormat(labRegs[r] ?? 0)})
-                              </option>
-                            ))}
-                          </select>
-
-                          <button
-                            onClick={() => handleLabPop(labPopReg)}
-                            disabled={labStackSlots.length === 0 || (labRegs.SP ?? 0x0100) >= 0x0100}
-                            className="w-full mt-2 py-2 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed text-slate-950 font-mono font-bold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                          >
-                            <ArrowUp className="w-4 h-4" />
-                            Execute POP {labPopReg}
-                          </button>
-                        </div>
-
-                        <p className="text-[9.5px] text-slate-600 font-mono leading-relaxed pt-1 border-t border-slate-100">
-                          ✅ Reads 16-bit word from SS:[SP] into destination, then increments SP by 2. Top of Stack moves UP.
-                        </p>
-                      </div>
-
-                    </div>
-
-                    {/* Live Hardware Operation Step Console */}
-                    <div className="bg-slate-900 text-emerald-300 border border-slate-800 rounded-xl p-3 font-mono text-[11px] space-y-1.5 shadow-xs">
-                      <div className="flex justify-between items-center text-slate-300 border-b border-slate-800 pb-1.5">
-                        <span className="text-[10px] font-bold uppercase text-emerald-400 flex items-center gap-1.5">
-                          <Terminal className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-                          Stack Hardware Step Monitor
-                        </span>
-                        <span className="text-[9px] text-slate-400 font-bold">SS:SP = SS:{hexFormat(labRegs.SP ?? 0x0100)}</span>
-                      </div>
-                      <pre className="text-emerald-300 leading-relaxed whitespace-pre-wrap font-mono text-[10.5px]">
-                        {labStackLog}
-                      </pre>
-                    </div>
-
-                  </div>
-
-                  {/* Right Column: Physical Visual Stack RAM Architecture (5 Cols) */}
-                  <div className="lg:col-span-5 bg-white border border-indigo-200 rounded-xl p-4 font-mono text-xs space-y-3 shadow-2xs">
-                    
-                    <div className="flex justify-between items-center border-b border-slate-200 pb-2">
-                      <span className="text-xs font-bold text-indigo-950 uppercase tracking-wider flex items-center gap-1.5">
-                        <Database className="w-4 h-4 text-emerald-600" />
-                        Stack RAM Frame (SS Segment)
-                      </span>
-                      <span className="text-[9.5px] text-amber-900 font-bold bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
-                        Grows Downward
-                      </span>
-                    </div>
-
-                    {/* Stack Memory Slots Container */}
-                    <div className="space-y-2 relative pt-1 pb-1">
-                      
-                      {/* BASE OF STACK CARD (Highest Memory Location SS:0100H) */}
-                      <div className="bg-emerald-50 border-2 border-emerald-400 rounded-xl p-2.5 flex items-center justify-between shadow-2xs relative">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
-                          <div>
-                            <span className="text-[10px] font-bold text-emerald-800 uppercase block leading-none">
-                              BASE OF STACK (BOS)
-                            </span>
-                            <span className="text-xs font-bold text-emerald-950 font-mono mt-0.5 block">
-                              SS:0100H (Initial Stack Boundary)
-                            </span>
-                          </div>
-                        </div>
-                        <span className="text-[9px] text-emerald-800 font-bold bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">
-                          Max Address
-                        </span>
-                      </div>
-
-                      {/* Arrow indicating downward growth */}
-                      <div className="flex justify-center items-center py-1">
-                        <div className="flex items-center gap-1 text-[9px] text-indigo-800 font-bold bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-200">
-                          <ArrowDown className="w-3 h-3 text-emerald-600 animate-bounce" />
-                          <span>PUSH moves SP DOWN to Lower Addresses</span>
-                        </div>
-                      </div>
-
-                      {/* Allocated Stack Memory Slots (Rendered top-to-bottom from 00FE down to SP) */}
-                      {labStackSlots.length === 0 ? (
-                        <div className="p-4 bg-slate-50 border border-dashed border-slate-300 rounded-xl text-center text-slate-500 italic text-[11px]">
-                          Stack is currently empty at Base of Stack (SP = 0100H). Execute PUSH above to allocate stack frames.
-                        </div>
-                      ) : (
-                        [...labStackSlots].reverse().map((slot, index) => {
-                          const isTop = index === 0; // Reversed list means top item is TOS!
-                          const highByte = (slot.val >> 8) & 0xFF;
-                          const lowByte = slot.val & 0xFF;
-
-                          return (
-                            <motion.div
-                              key={slot.addr}
-                              initial={{ opacity: 0, y: -10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              className={`p-2.5 rounded-xl border transition-all relative ${
-                                isTop
-                                  ? 'bg-indigo-50 border-2 border-indigo-500 shadow-2xs text-indigo-950'
-                                  : 'bg-slate-50 border-slate-250 text-slate-800'
-                              }`}
-                            >
-                              {/* Top of Stack TOS Badge if this is SP */}
-                              {isTop && (
-                                <div className="absolute -top-3 right-3 bg-indigo-600 text-white font-bold text-[9px] px-2 py-0.5 rounded-full uppercase tracking-wider shadow-xs flex items-center gap-1 font-mono">
-                                  <ArrowDown className="w-3 h-3 fill-current" />
-                                  TOP OF STACK (TOS = SS:{hexFormat(slot.addr)})
-                                </div>
-                              )}
-
-                              <div className="flex justify-between items-center text-xs border-b border-indigo-200/60 pb-1.5 mb-1.5">
-                                <span className="font-bold text-indigo-900">
-                                  SS:{hexFormat(slot.addr)}
-                                </span>
-                                <span className="font-extrabold text-emerald-700 text-sm">
-                                  {hexFormat(slot.val)}
-                                </span>
-                              </div>
-
-                              {/* Little-Endian Byte Memory Representation */}
-                              <div className="grid grid-cols-2 gap-2 text-[9.5px]">
-                                <div className="bg-white p-1.5 rounded border border-indigo-150 text-center">
-                                  <span className="text-slate-500 block font-medium">High Byte (SP+1)</span>
-                                  <span className="font-bold text-indigo-900">{byteHexFormat(highByte)}</span>
-                                </div>
-                                <div className="bg-white p-1.5 rounded border border-indigo-150 text-center">
-                                  <span className="text-slate-500 block font-medium">Low Byte (SP)</span>
-                                  <span className="font-bold text-emerald-700">{byteHexFormat(lowByte)}</span>
-                                </div>
-                              </div>
-
-                              <div className="mt-1.5 text-[9px] text-slate-600 flex justify-between items-center font-mono">
-                                <span>Pushed From: <strong className="text-indigo-900">{slot.pushedFrom}</strong></span>
-                                <span className="text-slate-500">16-bit Word</span>
-                              </div>
-                            </motion.div>
-                          );
-                        })
-                      )}
-
-                      {/* Unallocated Free Stack Memory Space Indicator */}
-                      <div className="p-2 bg-slate-100/80 border border-slate-200 rounded-xl text-center text-slate-500 text-[10px]">
-                        <span>[ Unallocated Free Stack Memory below SP ]</span>
-                      </div>
-
-                    </div>
-
-                    {/* Memory Architecture Quick Summary */}
-                    <div className="p-2.5 bg-indigo-50/70 rounded-xl border border-indigo-150 text-[10px] text-slate-700 space-y-1">
-                      <div className="font-bold text-indigo-900 flex items-center gap-1">
-                        <Info className="w-3.5 h-3.5 text-indigo-600" />
-                        <span>Key Stack Rules in 8086:</span>
-                      </div>
-                      <ul className="list-disc list-inside text-slate-700 space-y-0.5 text-[9.5px]">
-                        <li><strong className="text-emerald-700">PUSH AX:</strong> SP ← SP - 2, writes 16-bit AX word.</li>
-                        <li><strong className="text-amber-700">POP DX:</strong> Reads 16-bit word into DX, SP ← SP + 2.</li>
-                        <li><strong className="text-indigo-900">Alignment:</strong> 8086 stack always operates in 16-bit Words.</li>
-                      </ul>
-                    </div>
-
-                  </div>
-
-                </div>
-
-              </div>
-            )}
-
           </motion.div>
         )}
 
@@ -2752,7 +2369,7 @@ END MAIN`;
                   >
                     {mpAutoPlay ? (
                       <>
-                        <span className="w-2 h-2 rounded-full bg-slate-950 animate-ping" />
+                        <span className="w-2 h-2 rounded-full bg-amber-900 animate-ping" />
                         Pause Stepper
                       </>
                     ) : (

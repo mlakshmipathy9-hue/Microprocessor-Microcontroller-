@@ -23,22 +23,31 @@ export const BRANCHING_INSTRUCTIONS_DATA: BranchInstructionItem[] = [
     notes: 'Does not affect any status flags.'
   },
   {
-    mnemonic: 'CALL proc',
-    aliases: 'Call Subroutine',
+    mnemonic: 'CALL near_proc',
+    aliases: 'Intra-Segment NEAR Call',
     category: 'Unconditional',
     flagFormula: 'None',
-    description: 'Pushes return address (IP, and CS for Far call) onto stack and transfers control to procedure.',
+    description: 'Intra-segment subroutine call within current 64KB Code Segment (CS). CPU decrements SP by 2 and pushes 16-bit Return IP onto stack RAM; CS remains unchanged.',
     example: 'CALL DELAY_10MS',
-    notes: 'Decrements SP by 2 (or 4). Pairs with RET.'
+    notes: 'SP ← SP - 2, SS:[SP] ← IP, IP ← target offset. Pairs with 2-byte RET / RETN (C3H).'
   },
   {
-    mnemonic: 'RET [pop_bytes]',
-    aliases: 'Return from Subroutine',
+    mnemonic: 'CALL far_proc',
+    aliases: 'Inter-Segment FAR Call',
     category: 'Unconditional',
     flagFormula: 'None',
-    description: 'Pops return address off stack into IP (and CS for Far return) to resume execution after CALL.',
-    example: 'RET 04H',
-    notes: 'Optional operand adds constant to SP to pop parameters.'
+    description: 'Inter-segment subroutine call to a different Code Segment. CPU decrements SP by 4, pushes 16-bit CS then 16-bit Return IP onto stack RAM, and reloads CS with target base.',
+    example: 'CALL FAR PTR SYSTEM_OS',
+    notes: 'SP ← SP - 4, SS:[SP+2] ← CS, SS:[SP] ← IP, CS:IP ← target CS:IP. Pairs with 4-byte RETF (CBH).'
+  },
+  {
+    mnemonic: 'RET / RETF [pop_bytes]',
+    aliases: 'Return from Subroutine (NEAR / FAR)',
+    category: 'Unconditional',
+    flagFormula: 'None',
+    description: 'Pops return offset off stack into IP (and CS for Far return RETF) to resume caller execution. Optional pop_bytes operand adds constant to SP to pop parameters.',
+    example: 'RET 04H / RETF',
+    notes: 'NEAR RET pops 2 bytes into IP (SP ← SP + 2). FAR RETF pops 4 bytes into IP and CS (SP ← SP + 4).'
   },
   {
     mnemonic: 'INT type / IRET',
@@ -290,6 +299,61 @@ export default function BranchingInstructionsTable({
           <span className="text-[11px] font-mono font-bold bg-rose-50 text-rose-800 border border-rose-200 px-2.5 py-1 rounded-lg">
             {filteredData.length} / {BRANCHING_INSTRUCTIONS_DATA.length} Instructions
           </span>
+        </div>
+      </div>
+
+      {/* Grouping Methodology & Classification Clarification Card */}
+      <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2.5 font-sans">
+        <div className="flex items-center gap-2 text-xs font-bold font-mono text-slate-900 uppercase tracking-wide">
+          <HelpCircle className="w-4 h-4 text-rose-600" />
+          <span>How standard 8086 branching instructions are grouped:</span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2 text-[11px]">
+          <div className="bg-white border border-slate-200 p-2.5 rounded-lg space-y-1">
+            <span className="font-mono font-bold text-slate-800 block text-[11.5px] border-b border-slate-100 pb-1">
+              1. Unconditional
+            </span>
+            <p className="text-slate-600 leading-snug">
+              <strong>Flag Check:</strong> None.<br />
+              <strong>Logic:</strong> Always jumps or pushes/pops procedure addresses (<code className="font-mono font-bold text-slate-800">CS:IP</code>) directly without testing status flags.
+            </p>
+          </div>
+          <div className="bg-sky-50/60 border border-sky-200 p-2.5 rounded-lg space-y-1">
+            <span className="font-mono font-bold text-sky-900 block text-[11.5px] border-b border-sky-100 pb-1">
+              2. Unsigned Jumps
+            </span>
+            <p className="text-sky-800 leading-snug">
+              <strong>Flag Check:</strong> <code className="font-mono font-bold text-sky-900">CF</code> &amp; <code className="font-mono font-bold text-sky-900">ZF</code>.<br />
+              <strong>Logic:</strong> Used for unsigned numbers (0 to 65535). Tests <code className="font-mono font-bold text-sky-900">CF=1</code> (borrow / below) and <code className="font-mono font-bold text-sky-900">ZF</code> (equal).
+            </p>
+          </div>
+          <div className="bg-purple-50/60 border border-purple-200 p-2.5 rounded-lg space-y-1">
+            <span className="font-mono font-bold text-purple-900 block text-[11.5px] border-b border-purple-100 pb-1">
+              3. Signed Jumps
+            </span>
+            <p className="text-purple-800 leading-snug">
+              <strong>Flag Check:</strong> <code className="font-mono font-bold text-purple-900">SF, OF, ZF</code>.<br />
+              <strong>Logic:</strong> Used for 2's complement numbers (-32768 to +32767). Evaluates sign (<code className="font-mono font-bold text-purple-900">SF ≠ OF</code> for less-than).
+            </p>
+          </div>
+          <div className="bg-amber-50/60 border border-amber-200 p-2.5 rounded-lg space-y-1">
+            <span className="font-mono font-bold text-amber-900 block text-[11.5px] border-b border-amber-100 pb-1">
+              4. Single Flag
+            </span>
+            <p className="text-amber-800 leading-snug">
+              <strong>Flag Check:</strong> 1 specific flag.<br />
+              <strong>Logic:</strong> Directly checks if <code className="font-mono font-bold text-amber-900">ZF, SF, OF</code>, or <code className="font-mono font-bold text-amber-900">PF</code> is set (1) or cleared (0) after ALU execution.
+            </p>
+          </div>
+          <div className="bg-emerald-50/60 border border-emerald-200 p-2.5 rounded-lg space-y-1">
+            <span className="font-mono font-bold text-emerald-900 block text-[11.5px] border-b border-emerald-100 pb-1">
+              5. Loop &amp; CX
+            </span>
+            <p className="text-emerald-800 leading-snug">
+              <strong>Flag Check:</strong> <code className="font-mono font-bold text-emerald-900">CX</code> count.<br />
+              <strong>Logic:</strong> Hardware-accelerated loops that decrement <code className="font-mono font-bold text-emerald-900">CX</code> register automatically without altering flags.
+            </p>
+          </div>
         </div>
       </div>
 

@@ -106,6 +106,13 @@
   font-size: 13px !important;
 }
 
+/* Prevent touch-and-hold callout / long press magnification callouts */
+#interactive-bento-card,
+#interactive-bento-card * {
+  -webkit-touch-callout: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
 /* Explicit style for active-low signal overlines */
 .overline {
   text-decoration: overline !important;

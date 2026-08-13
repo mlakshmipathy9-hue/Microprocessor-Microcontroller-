@@ -215,9 +215,6 @@ export default function SlidePresenter({
   // Magnifier States
   const [magnifier, setMagnifier] = useState<{ x: number; y: number; active: boolean }>({ x: 0, y: 0, active: false });
   const [magnifierModeEnabled, setMagnifierModeEnabled] = useState(false);
-  const longPressTimeoutRef = useRef<any>(null);
-  const isMovingRef = useRef(false);
-  const startPosRef = useRef({ x: 0, y: 0 });
   const bentoCardRef = useRef<HTMLDivElement>(null);
 
   const lensSize = 180;
@@ -227,10 +224,6 @@ export default function SlidePresenter({
   useEffect(() => {
     setMagnifier({ x: 0, y: 0, active: false });
     setMagnifierModeEnabled(false);
-    if (longPressTimeoutRef.current) {
-      clearTimeout(longPressTimeoutRef.current);
-      longPressTimeoutRef.current = null;
-    }
   }, [slide.id]);
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -244,23 +237,14 @@ export default function SlidePresenter({
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    startPosRef.current = { x, y };
-    isMovingRef.current = false;
-
-    if (longPressTimeoutRef.current) clearTimeout(longPressTimeoutRef.current);
-
-    longPressTimeoutRef.current = setTimeout(() => {
-      if (!isMovingRef.current) {
-        setMagnifier({ x, y, active: true });
-        if (navigator.vibrate) {
-          try {
-            navigator.vibrate(40);
-          } catch (err) {
-            // Safe fallback
-          }
-        }
-      }
-    }, 450); // 450ms long hold
+    // Only update position if magnifier mode was explicitly toggled ON via button
+    if (magnifierModeEnabled) {
+      setMagnifier({
+        x: Math.max(0, Math.min(rect.width, x)),
+        y: Math.max(0, Math.min(rect.height, y)),
+        active: true
+      });
+    }
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -273,19 +257,7 @@ export default function SlidePresenter({
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    const dx = x - startPosRef.current.x;
-    const dy = y - startPosRef.current.y;
-    if (Math.sqrt(dx * dx + dy * dy) > 12) {
-      isMovingRef.current = true;
-      if (!magnifier.active) {
-        if (longPressTimeoutRef.current) {
-          clearTimeout(longPressTimeoutRef.current);
-          longPressTimeoutRef.current = null;
-        }
-      }
-    }
-
-    if (magnifier.active || magnifierModeEnabled) {
+    if (magnifierModeEnabled) {
       setMagnifier({
         x: Math.max(0, Math.min(rect.width, x)),
         y: Math.max(0, Math.min(rect.height, y)),
@@ -295,10 +267,6 @@ export default function SlidePresenter({
   };
 
   const handlePointerUpOrLeave = () => {
-    if (longPressTimeoutRef.current) {
-      clearTimeout(longPressTimeoutRef.current);
-      longPressTimeoutRef.current = null;
-    }
     if (!magnifierModeEnabled) {
       setMagnifier(prev => ({ ...prev, active: false }));
     }
@@ -423,9 +391,34 @@ export default function SlidePresenter({
       case 'instruction-builder':
         component = <InstructionBuilderSimulator />;
         break;
-      case 'directive-sandbox':
-        component = <DirectiveSandboxSimulator initialLabId={slide.id === 'm20-s1' ? 'multiprecision' : activeLabId} hideExp1a={slide.moduleId === 'm11'} />;
+      case 'directive-sandbox': {
+        let initialTab = activeLabId;
+        let allowedTabs: Array<'directives' | 'styles' | 'models' | 'nearfar' | 'sandbox' | 'multiprecision'> | undefined = undefined;
+
+        if (slide.id === 'm11-s1') initialTab = 'directives';
+        else if (slide.id === 'm11-s2') {
+          initialTab = 'styles';
+          allowedTabs = ['directives', 'styles'];
+        }
+        else if (slide.id === 'm11-s2b') {
+          initialTab = 'models';
+          allowedTabs = ['models', 'sandbox'];
+        }
+        else if (slide.id === 'm11-s2c') {
+          initialTab = 'nearfar';
+          allowedTabs = ['nearfar'];
+        }
+        else if (slide.id === 'm20-s1') initialTab = 'multiprecision';
+
+        component = (
+          <DirectiveSandboxSimulator
+            initialLabId={initialTab}
+            hideExp1a={slide.moduleId === 'm11'}
+            allowedTabs={allowedTabs}
+          />
+        );
         break;
+      }
       case 'assembler-playground':
         component = <AssemblerPlaygroundSimulator />;
         break;

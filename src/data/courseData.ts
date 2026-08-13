@@ -1089,7 +1089,8 @@ export const courseData: Module[] = [
           '1. **Data Copy / Transfer**: `MOV Destination, Source` | `XCHG Destination, Source` | `XLAT` | `LEA Destination, Source` | `LDS/LES Destination, Source` | `PUSH Source` | `POP Destination`',
           '2. **Arithmetic**: `ADD Destination, Source` | `ADC Destination, Source` | `SUB Destination, Source` | `SBB Destination, Source` | `MUL Source` | `IMUL Source` | `DIV Source` | `IDIV Source` | `INC Destination` | `DEC Destination` | `CMP Destination, Source` | `AAA` | `AAS` | `AAM` | `AAD` | `DAA` | `DAS` | `CBW` | `CWD`',
           '3. **Logical**: `AND Destination, Source` | `OR Destination, Source` | `NOT Destination` | `NEG Destination` | `XOR Destination, Source` | `TEST Destination, Source`',
-          '4. **Branch Instructions (See Full Summary Table Below)**: `JMP`, `CALL`, `RET`, `INT/IRET`, Unsigned Jumps (`JA`/`JNBE`, `JAE`/`JNB`/`JNC`, `JB`/`JNAE`/`JC`, `JBE`/`JNA`), Signed Jumps (`JG`/`JNLE`, `JGE`/`JNL`, `JL`/`JNGE`, `JLE`/`JNG`), Single Flag (`JE`/`JZ`, `JNE`/`JNZ`, `JS`/`JNS`, `JO`/`JNO`, `JP`/`JPE`, `JNP`/`JPO`), & Loop (`LOOP`, `LOOPE`, `LOOPNE`, `JCXZ`).',
+          '4. **Branch Instructions (See Full Summary Table Below)**: `JMP`, `CALL` (NEAR & FAR), `RET` (`RETN` & `RETF`), `INT/IRET`, Unsigned Jumps (`JA`/`JNBE`, `JAE`/`JNB`/`JNC`, `JB`/`JNAE`/`JC`, `JBE`/`JNA`), Signed Jumps (`JG`/`JNLE`, `JGE`/`JNL`, `JL`/`JNGE`, `JLE`/`JNG`), Single Flag (`JE`/`JZ`, `JNE`/`JNZ`, `JS`/`JNS`, `JO`/`JNO`, `JP`/`JPE`, `JNP`/`JPO`), & Loop (`LOOP`, `LOOPE`, `LOOPNE`, `JCXZ`).',
+          'Subroutine Transfer Opcodes — NEAR CALL vs FAR CALL Mechanics: 1) NEAR CALL (Intra-Segment Transfer): Target opcode resides within the current 64KB Code Segment (CS). CPU pushes ONLY the 16-bit Return Offset (IP) onto stack RAM (SP ← SP - 2); CS is unchanged. Paired with 2-byte return opcode RET / RETN (C3H). 2) FAR CALL (Inter-Segment Transfer): Target opcode resides in a different 64KB Code Segment (CS). CPU pushes BOTH 16-bit CS and 16-bit IP onto stack RAM (SP ← SP - 4); CS is reloaded with new target segment base. Paired with 4-byte return opcode RETF (CBH).',
           '5. **Loop**: `LOOP Target` | `LOOPE Target` | `LOOPNE Target` | `JCXZ Target`',
           '6. **Machine Control**: `HLT` | `LOCK` | `NOP` | `ESC External Opcode, Source` | `WAIT`',
           '7. **Flag Manipulation**: `STC` | `CLC` | `CMC` | `STD` | `CLD` | `STI` | `CLI` | `LAHF` | `SAHF`',
@@ -1189,7 +1190,7 @@ export const courseData: Module[] = [
         points: [
           '8086 Program Formats: 8086 assembly source code can be written in three distinct programming styles: 1) Standard Segment-Ends Style, 2) Simplified Dot-Model Style, and 3) Tiny .COM Program Style.',
           '1. Standard Segment Style (EXE): Explicitly frames memory sections using logical "SEGMENT" and "ENDS" boundary identifiers. Requires the compile-time "ASSUME" directive to validate register bounds and manual runtime DS register loading via: MOV AX, DATA_SEG followed by MOV DS, AX.',
-          '2. Simplified Dot-Model Style (EXE): Replaces verbose wrappers with modern shortcuts (.MODEL, .STACK, .DATA, .CODE). Automatically pre-configures segment mappings based on model sizes (e.g., .MODEL SMALL maps 64KB for code, 64KB for data).',
+          '2. Simplified Dot-Model Style (EXE): Replaces verbose wrappers with modern shortcuts (.MODEL, .STACK, .DATA, .CODE). Automatically pre-configures segment mappings based on the chosen memory model size directive.',
           '3. Tiny .COM Style (Single Segment): Utilizes ".MODEL TINY" to merge the code, data, and stack into a single unified 64KB physical memory segment. The OS automatically sets CS = DS = SS = ES upon loading.'
         ],
         interactiveType: 'directive-sandbox'
@@ -1200,30 +1201,30 @@ export const courseData: Module[] = [
         moduleTitle: 'Module 11: Assembler Directives',
         moduleId: 'm11',
         points: [
-          'The .MODEL Directive: Defines the memory organization and allocation limits for code and data segments in simplified dot-model programs (Syntax: .MODEL <Size>).',
+          'The .MODEL Directive: Specifies memory layout, segment counts, and address space limits for code and data segments in simplified dot-model programs (Syntax: .MODEL <Size>).',
           '1. TINY Model: Code + Data + Stack all share ONE unified 64KB segment. Generates lightweight DOS .COM executables where CS = DS = SS = ES.',
-          '2. SMALL Model: One 64KB Code Segment + One 64KB Data Segment (max 128KB total). Uses NEAR pointers by default. Perfect for standard 8086 assembly routines.',
-          '3. MEDIUM Model: Code spans MULTIPLE segments (>64KB using FAR calls), while Data is restricted to ONE 64KB segment.',
-          '4. COMPACT Model: Code is limited to ONE 64KB segment (NEAR calls), while Data spans MULTIPLE segments (>64KB using FAR pointers).',
-          '5. LARGE Model: Both Code and Data span MULTIPLE 64KB segments (FAR calls & FAR pointers). Individual arrays are capped at 64KB.',
-          '6. HUGE Model: Multiple Code and Data segments, AND single data structures/arrays CAN exceed 64KB by performing segment arithmetic.',
-          'Explore our Interactive Memory Models & Directive Sandbox on the right to compare segment structures and layout parameters!'
+          '2. SMALL Model: One dedicated 64KB Code Segment + One dedicated 64KB Data Segment (128KB total program limit). Standard default for 8086 programs.',
+          '3. MEDIUM Model: Code spans MULTIPLE segments (>64KB total code), while Data is restricted to ONE single 64KB segment.',
+          '4. COMPACT Model: Code is restricted to ONE single 64KB segment, while Data spans MULTIPLE segments (>64KB total data).',
+          '5. LARGE Model: Both Code and Data span MULTIPLE 64KB segments. Individual data arrays are capped at 64KB each.',
+          '6. HUGE Model: Multiple Code and Data segments, AND single data structures or arrays CAN exceed 64KB by performing segment arithmetic.',
+          'Interactive Simulator: Use the "Memory Models" tab in our Directive Sandbox on the right to compare visual memory model layouts and segment structures!'
         ],
         interactiveType: 'directive-sandbox'
       },
       {
         id: 'm11-s2c',
-        title: 'NEAR and FAR Code Calls (PROC & PTR Directives) 📞',
+        title: 'Comparison of NEAR & FAR Subroutine Calls (PROC & PTR Directives) 📞',
         moduleTitle: 'Module 11: Assembler Directives',
         moduleId: 'm11',
         points: [
-          'What are NEAR and FAR Calls?: In 8086 segmented architecture, procedure calls are categorized based on whether the destination subroutine is in the SAME code segment (NEAR) or a DIFFERENT code segment (FAR).',
-          '1. NEAR Call (Intra-segment Call): Called when the procedure resides within the current 64KB Code Segment. The CS register remains unchanged. The CPU pushes ONLY the 16-bit Instruction Pointer (IP) onto the stack (2 bytes).',
-          '2. FAR Call (Inter-segment Call): Called when the procedure resides in a DIFFERENT code segment. The CPU pushes BOTH the 16-bit CS register AND the 16-bit IP register onto the stack (4 bytes total: CS first, then IP).',
-          'Procedure Directives (PROC NEAR / PROC FAR): Tell the assembler (MASM/TASM) whether to generate an intra-segment or inter-segment call, and whether the procedure ending RET should assemble into a 2-byte NEAR return (RETN) or 4-byte FAR return (RETF).',
-          'PTR Directive Overrides: "CALL NEAR PTR MyLabel" forces a 16-bit offset call, while "CALL FAR PTR MyLabel" forces a 32-bit CS:IP inter-segment call.',
-          'Memory Model Defaults: In .MODEL SMALL, subroutines default to NEAR. In .MODEL MEDIUM, LARGE, and HUGE, subroutines default to FAR because code spans multiple 64KB code segments.',
-          'Interactive Simulator: Use the "NEAR & FAR Calls" tab in our Directive Sandbox on the right to simulate stack frame pushes and CS:IP register changes!'
+          'Subroutine Scope & Boundary: PROC NEAR defines an intra-segment subroutine within the current 64KB Code Segment. PROC FAR defines an inter-segment subroutine located in a separate 64KB Code Segment.',
+          'Stack Frame Push Comparison: A NEAR call pushes 2 bytes (16-bit IP offset) onto stack RAM. A FAR call pushes 4 bytes (16-bit CS segment address first, followed by 16-bit IP offset).',
+          'Target Address Structure: NEAR calls require only a 16-bit offset destination (IP). FAR calls require a full 32-bit pointer destination (CS:IP segment:offset).',
+          'Return Execution (RETN vs RETF): NEAR RET pops 2 bytes back into IP and increments SP by 2. FAR RET pops 4 bytes back into IP and CS and increments SP by 4.',
+          'Type Coercion Operator (PTR): "CALL NEAR PTR Label" forces a 16-bit intra-segment jump opcode; "CALL FAR PTR Label" forces a 32-bit inter-segment jump opcode.',
+          'Memory Model Defaults: Subroutines default to NEAR under .MODEL TINY, SMALL, and COMPACT. Subroutines default to FAR under .MODEL MEDIUM, LARGE, and HUGE.',
+          'Performance & Memory Trade-offs: NEAR calls execute faster and consume half the stack overhead (2 vs 4 bytes), whereas FAR calls allow modular code organization across multiple 64KB code segments.'
         ],
         interactiveType: 'directive-sandbox'
       },

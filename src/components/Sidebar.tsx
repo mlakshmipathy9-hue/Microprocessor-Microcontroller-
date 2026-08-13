@@ -95,7 +95,7 @@ export default function Sidebar({
             'dev-pipeline': ["pipeline", "program development steps", "steps", "editor", "linker", "assembler", "debugging", "flowchart"],
             'addressing-modes': ["addressing modes", "addressing", "immediate", "register", "index", "base", "offset", "effective address"],
             'instruction-decoder': ["instructions", "instruction set", "decoder", "add", "sub", "and", "or", "alu", "data transfer"],
-            'directive-sandbox': ["assembler directives", "directives", "db", "dw", "segment", "assume", "org", "end", "stack", "push", "pop", "call", "ret", "proc", "near", "far"],
+            'directive-sandbox': ["assembler directives", "directives", "db", "dw", "segment", "assume", "org", "end", "stack", "call", "ret", "proc", "near", "far"],
             'assembler-playground': ["write programs", "assembler", "playground", "debugger", "registers", "memory", "simulation"],
             quiz: ["quiz", "assessment", "mcq", "gate", "exam", "question"]
           };
