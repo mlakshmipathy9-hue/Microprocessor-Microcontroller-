@@ -45,25 +45,25 @@ export default function Interrupt8259Simulator() {
   };
 
   return (
-    <div className="bg-slate-900 text-slate-100 p-4 md:p-5 rounded-2xl border border-slate-800 shadow-xl space-y-4 text-xs font-sans">
+    <div className="bg-white text-slate-800 p-4 md:p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4 text-xs font-sans">
       {/* Top Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
         <div className="flex items-center gap-2">
-          <div className="p-2 bg-indigo-600/20 rounded-xl border border-indigo-500/30 text-indigo-400">
+          <div className="p-2 bg-indigo-50 rounded-xl border border-indigo-200 text-indigo-600">
             <Zap className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="font-bold text-sm text-white">Intel 8259 Programmable Interrupt Controller (PIC)</h3>
-            <p className="text-[11px] text-slate-400">IRR, ISR, IMR Register Vectors &amp; Priority Resolver</p>
+            <h3 className="font-bold text-sm text-slate-900">Intel 8259 Programmable Interrupt Controller (PIC)</h3>
+            <p className="text-[11px] text-slate-500">IRR, ISR, IMR Register Vectors &amp; Priority Resolver</p>
           </div>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex bg-slate-800/80 p-1 rounded-xl border border-slate-700/60 gap-1">
+        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 gap-1">
           <button
             onClick={() => setActiveTab('pic')}
             className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-              activeTab === 'pic' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+              activeTab === 'pic' ? 'bg-white text-indigo-700 shadow-xs font-bold border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             PIC Registers &amp; Vectors
@@ -71,7 +71,7 @@ export default function Interrupt8259Simulator() {
           <button
             onClick={() => setActiveTab('icw')}
             className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-              activeTab === 'icw' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+              activeTab === 'icw' ? 'bg-white text-indigo-700 shadow-xs font-bold border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             ICW &amp; OCW Commands
@@ -83,8 +83,8 @@ export default function Interrupt8259Simulator() {
       {activeTab === 'pic' && (
         <div className="space-y-3">
           {/* IR0 to IR7 Pin Toggles */}
-          <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2">
-            <span className="font-bold text-indigo-300 text-xs uppercase tracking-wider block">
+          <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2">
+            <span className="font-bold text-indigo-950 text-xs uppercase tracking-wider block">
               1. Hardware Interrupt Request Pins (IR0 to IR7) - Click to Assert Request
             </span>
             <div className="grid grid-cols-8 gap-1.5 font-mono text-center">
@@ -100,12 +100,12 @@ export default function Interrupt8259Simulator() {
                     onClick={() => setIrrBits(irrBits ^ (1 << i))}
                     className={`p-2 rounded-lg border flex flex-col items-center justify-between cursor-pointer transition-all ${
                       isSelected
-                        ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-extrabold shadow-lg scale-105'
+                        ? 'bg-emerald-600 text-white border-emerald-600 font-extrabold shadow-sm scale-105'
                         : isRequested
-                        ? 'bg-amber-500/30 border-amber-500 text-amber-200'
+                        ? 'bg-amber-100 border-amber-300 text-amber-900 font-bold'
                         : isInService
-                        ? 'bg-indigo-900/60 border-indigo-500 text-indigo-200'
-                        : 'bg-slate-900 border-slate-800 text-slate-500'
+                        ? 'bg-indigo-100 border-indigo-300 text-indigo-900 font-bold'
+                        : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-100'
                     }`}
                   >
                     <span className="text-[10px] font-bold">IR{i}</span>
@@ -121,43 +121,43 @@ export default function Interrupt8259Simulator() {
           {/* Internal Registers View */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {/* IRR */}
-            <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
-              <span className="text-amber-400 font-bold text-[10px] uppercase tracking-wider block">IRR (Request Register)</span>
-              <p className="text-[10px] text-slate-400">Holds incoming pending requests.</p>
-              <div className="font-mono text-xs text-white font-bold bg-slate-900 p-1.5 rounded text-center">
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1">
+              <span className="text-amber-800 font-bold text-[10px] uppercase tracking-wider block">IRR (Request Register)</span>
+              <p className="text-[10px] text-slate-500">Holds incoming pending requests.</p>
+              <div className="font-mono text-xs text-slate-900 font-bold bg-white border border-slate-200 p-1.5 rounded text-center shadow-2xs">
                 0x{irrBits.toString(16).toUpperCase().padStart(2, '0')} (B: {irrBits.toString(2).padStart(8, '0')})
               </div>
             </div>
 
             {/* IMR */}
-            <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
-              <span className="text-rose-400 font-bold text-[10px] uppercase tracking-wider block">IMR (Mask Register)</span>
-              <p className="text-[10px] text-slate-400">1 = Masked/Disabled bit.</p>
-              <div className="font-mono text-xs text-white font-bold bg-slate-900 p-1.5 rounded text-center">
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1">
+              <span className="text-rose-800 font-bold text-[10px] uppercase tracking-wider block">IMR (Mask Register)</span>
+              <p className="text-[10px] text-slate-500">1 = Masked/Disabled bit.</p>
+              <div className="font-mono text-xs text-slate-900 font-bold bg-white border border-slate-200 p-1.5 rounded text-center shadow-2xs">
                 0x{imrBits.toString(16).toUpperCase().padStart(2, '0')} (B: {imrBits.toString(2).padStart(8, '0')})
               </div>
             </div>
 
             {/* ISR */}
-            <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1">
-              <span className="text-indigo-400 font-bold text-[10px] uppercase tracking-wider block">ISR (In-Service Register)</span>
-              <p className="text-[10px] text-slate-400">Holds currently executing ISRs.</p>
-              <div className="font-mono text-xs text-white font-bold bg-slate-900 p-1.5 rounded text-center">
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1">
+              <span className="text-indigo-900 font-bold text-[10px] uppercase tracking-wider block">ISR (In-Service Register)</span>
+              <p className="text-[10px] text-slate-500">Holds currently executing ISRs.</p>
+              <div className="font-mono text-xs text-slate-900 font-bold bg-white border border-slate-200 p-1.5 rounded text-center shadow-2xs">
                 0x{isrBits.toString(16).toUpperCase().padStart(2, '0')} (B: {isrBits.toString(2).padStart(8, '0')})
               </div>
             </div>
           </div>
 
           {/* Active Vector Resolution */}
-          <div className="bg-slate-950 p-3.5 rounded-xl border border-indigo-800/60 flex flex-wrap items-center justify-between gap-3">
+          <div className="bg-slate-50 p-3.5 rounded-xl border border-indigo-200 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
             <div>
-              <span className="text-[10px] text-indigo-300 font-bold uppercase tracking-wider block">Priority Resolver Output</span>
+              <span className="text-[10px] text-indigo-950 font-bold uppercase tracking-wider block">Priority Resolver Output</span>
               {activeIrq !== -1 ? (
-                <div className="text-slate-200 font-mono text-xs mt-0.5">
-                  Winning Request: <strong className="text-emerald-400">IR{activeIrq}</strong> | INT Vector Type: <strong className="text-indigo-300">0x{activeVector.toString(16).toUpperCase().padStart(2, '0')}H</strong> | IVT Target Addr: <strong className="text-white">{ivtHex}</strong>
+                <div className="text-slate-700 font-mono text-xs mt-0.5">
+                  Winning Request: <strong className="text-emerald-700 font-bold">IR{activeIrq}</strong> | INT Vector Type: <strong className="text-indigo-700 font-bold">0x{activeVector.toString(16).toUpperCase().padStart(2, '0')}H</strong> | IVT Target Addr: <strong className="text-slate-900 font-bold">{ivtHex}</strong>
                 </div>
               ) : (
-                <div className="text-slate-400 text-xs mt-0.5">No unmasked interrupt request currently pending.</div>
+                <div className="text-slate-500 text-xs mt-0.5">No unmasked interrupt request currently pending.</div>
               )}
             </div>
 
@@ -165,14 +165,14 @@ export default function Interrupt8259Simulator() {
               <button
                 onClick={handleAcknowledgeInterrupt}
                 disabled={activeIrq === -1}
-                className="bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-800 text-white px-3 py-1.5 rounded-lg font-bold text-xs cursor-pointer transition-all"
+                className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 disabled:text-slate-400 text-white px-3.5 py-1.5 rounded-lg font-bold text-xs cursor-pointer transition-all shadow-xs"
               >
                 Acknowledge (INTA Pulse)
               </button>
               <button
                 onClick={handleSendEOI}
                 disabled={isrBits === 0}
-                className="bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 text-white px-3 py-1.5 rounded-lg font-bold text-xs cursor-pointer transition-all"
+                className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400 text-white px-3.5 py-1.5 rounded-lg font-bold text-xs cursor-pointer transition-all shadow-xs"
               >
                 Send EOI Command
               </button>
@@ -183,22 +183,22 @@ export default function Interrupt8259Simulator() {
 
       {/* TAB 2: ICW & OCW Commands */}
       {activeTab === 'icw' && (
-        <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-3">
-          <div className="font-bold text-indigo-300 text-xs uppercase tracking-wider border-b border-slate-800 pb-1">
+        <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
+          <div className="font-bold text-indigo-950 text-xs uppercase tracking-wider border-b border-slate-200 pb-1">
             8259 Command Words Configuration
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="bg-slate-900 p-3 rounded-lg border border-slate-800 space-y-1.5">
-              <strong className="text-amber-400 text-xs block">ICW1 &amp; ICW2 (Initialization Words)</strong>
-              <p className="text-[11px] text-slate-300">
+            <div className="bg-white p-3.5 rounded-lg border border-slate-200 space-y-1.5 shadow-2xs">
+              <strong className="text-amber-800 text-xs block font-bold">ICW1 &amp; ICW2 (Initialization Words)</strong>
+              <p className="text-[11px] text-slate-600 leading-relaxed">
                 ICW1 selects single or cascaded mode and trigger mode (Edge vs Level). ICW2 defines base interrupt vector offset (e.g. 08H mapped to IR0–IR7).
               </p>
             </div>
 
-            <div className="bg-slate-900 p-3 rounded-lg border border-slate-800 space-y-1.5">
-              <strong className="text-emerald-400 text-xs block">OCW1 &amp; OCW2 (Operation Words)</strong>
-              <p className="text-[11px] text-slate-300">
+            <div className="bg-white p-3.5 rounded-lg border border-slate-200 space-y-1.5 shadow-2xs">
+              <strong className="text-emerald-800 text-xs block font-bold">OCW1 &amp; OCW2 (Operation Words)</strong>
+              <p className="text-[11px] text-slate-600 leading-relaxed">
                 OCW1 updates IMR mask bits on-the-fly. OCW2 issues End of Interrupt (EOI) or rotates priority among IR lines.
               </p>
             </div>

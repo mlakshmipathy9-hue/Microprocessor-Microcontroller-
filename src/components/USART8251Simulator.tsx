@@ -44,25 +44,25 @@ export default function USART8251Simulator() {
   const charBits = Array.from({ length: charLength }, (_, i) => (charCode >> i) & 1);
 
   return (
-    <div className="bg-slate-900 text-slate-100 p-4 md:p-5 rounded-2xl border border-slate-800 shadow-xl space-y-4 text-xs font-sans">
+    <div className="bg-white text-slate-800 p-4 md:p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4 text-xs font-sans">
       {/* Top Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
         <div className="flex items-center gap-2">
-          <div className="p-2 bg-indigo-600/20 rounded-xl border border-indigo-500/30 text-indigo-400">
+          <div className="p-2 bg-indigo-50 rounded-xl border border-indigo-200 text-indigo-600">
             <Activity className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="font-bold text-sm text-white">Intel 8251 USART Serial Communication</h3>
-            <p className="text-[11px] text-slate-400">Asynchronous Serial Framing, Mode Words &amp; RS-232 MAX232 Level Shifting</p>
+            <h3 className="font-bold text-sm text-slate-900">Intel 8251 Universal Synchronous/Asynchronous Receiver Transmitter (USART)</h3>
+            <p className="text-[11px] text-slate-500">Mode Word Configuration &amp; Serial Asynchronous Frame Bit Stream</p>
           </div>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex bg-slate-800/80 p-1 rounded-xl border border-slate-700/60 gap-1">
+        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 gap-1">
           <button
             onClick={() => setActiveTab('mode')}
             className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-              activeTab === 'mode' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+              activeTab === 'mode' ? 'bg-white text-indigo-700 shadow-xs font-bold border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             Mode Instruction Register
@@ -70,7 +70,7 @@ export default function USART8251Simulator() {
           <button
             onClick={() => setActiveTab('frame')}
             className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-              activeTab === 'frame' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+              activeTab === 'frame' ? 'bg-white text-indigo-700 shadow-xs font-bold border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             Serial Bit Frame &amp; RS-232
@@ -83,15 +83,15 @@ export default function USART8251Simulator() {
         <div className="space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* Baud & Length */}
-            <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-3">
+            <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
               <div>
-                <label className="text-[10px] text-slate-400 block mb-1 font-bold uppercase tracking-wider">Baud Rate Factor Clock Multiplier</label>
+                <label className="text-[10px] text-slate-500 block mb-1 font-bold uppercase tracking-wider">Baud Rate Factor Clock Multiplier</label>
                 <div className="grid grid-cols-3 gap-1.5 font-semibold">
                   {[1, 16, 64].map((f) => (
                     <button
                       key={f}
                       onClick={() => setBaudFactor(f)}
-                      className={`py-1 rounded border ${baudFactor === f ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400'}`}
+                      className={`py-1.5 rounded border cursor-pointer transition-all ${baudFactor === f ? 'bg-indigo-600 border-indigo-600 text-white shadow-2xs font-bold' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'}`}
                     >
                       x{f} Clock
                     </button>
@@ -100,13 +100,13 @@ export default function USART8251Simulator() {
               </div>
 
               <div>
-                <label className="text-[10px] text-slate-400 block mb-1 font-bold uppercase tracking-wider">Character Length (Bits per Frame)</label>
+                <label className="text-[10px] text-slate-500 block mb-1 font-bold uppercase tracking-wider">Character Length (Bits per Frame)</label>
                 <div className="grid grid-cols-4 gap-1.5 font-semibold">
                   {[5, 6, 7, 8].map((len) => (
                     <button
                       key={len}
                       onClick={() => setCharLength(len)}
-                      className={`py-1 rounded border ${charLength === len ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400'}`}
+                      className={`py-1.5 rounded border cursor-pointer transition-all ${charLength === len ? 'bg-indigo-600 border-indigo-600 text-white shadow-2xs font-bold' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'}`}
                     >
                       {len} Bits
                     </button>
@@ -116,20 +116,20 @@ export default function USART8251Simulator() {
             </div>
 
             {/* Parity & Stop Bits */}
-            <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-3">
+            <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
               <div>
-                <label className="text-[10px] text-slate-400 block mb-1 font-bold uppercase tracking-wider">Parity Configuration</label>
+                <label className="text-[10px] text-slate-500 block mb-1 font-bold uppercase tracking-wider">Parity Configuration</label>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setParityEnable(!parityEnable)}
-                    className={`flex-1 py-1 rounded font-semibold border ${parityEnable ? 'bg-emerald-950/60 border-emerald-500 text-emerald-300' : 'bg-slate-900 border-slate-800 text-slate-400'}`}
+                    className={`flex-1 py-1.5 rounded-lg font-semibold border cursor-pointer transition-all ${parityEnable ? 'bg-emerald-50 border-emerald-300 text-emerald-900 font-bold' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'}`}
                   >
                     {parityEnable ? 'Parity ENABLED' : 'Parity Disabled'}
                   </button>
                   {parityEnable && (
                     <button
                       onClick={() => setParityType(parityType === 'even' ? 'odd' : 'even')}
-                      className="px-3 py-1 rounded bg-indigo-600 text-white font-bold border border-indigo-400"
+                      className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white font-bold border border-indigo-600 shadow-2xs cursor-pointer"
                     >
                       {parityType.toUpperCase()}
                     </button>
@@ -138,13 +138,13 @@ export default function USART8251Simulator() {
               </div>
 
               <div>
-                <label className="text-[10px] text-slate-400 block mb-1 font-bold uppercase tracking-wider">Stop Bit Count</label>
+                <label className="text-[10px] text-slate-500 block mb-1 font-bold uppercase tracking-wider">Stop Bit Count</label>
                 <div className="grid grid-cols-3 gap-1.5 font-semibold">
                   {[1, 1.5, 2].map((s) => (
                     <button
                       key={s}
                       onClick={() => setStopBits(s)}
-                      className={`py-1 rounded border ${stopBits === s ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400'}`}
+                      className={`py-1.5 rounded border cursor-pointer transition-all ${stopBits === s ? 'bg-indigo-600 border-indigo-600 text-white shadow-2xs font-bold' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'}`}
                     >
                       {s} Stop Bit{s > 1 ? 's' : ''}
                     </button>
@@ -155,14 +155,14 @@ export default function USART8251Simulator() {
           </div>
 
           {/* Mode Word Hex Output */}
-          <div className="bg-slate-950 p-3 rounded-xl border border-indigo-800/60 flex flex-wrap items-center justify-between gap-3">
+          <div className="bg-slate-50 p-3 rounded-xl border border-indigo-200 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
             <div>
-              <span className="text-[10px] text-indigo-300 uppercase font-bold tracking-wider block">Calculated 8251 Mode Instruction Word</span>
-              <div className="font-mono text-xs text-slate-300 mt-0.5">
-                Binary: <strong className="text-white">{modeByte.toString(2).padStart(8, '0')}</strong>
+              <span className="text-[10px] text-indigo-950 uppercase font-bold tracking-wider block">Calculated 8251 Mode Instruction Word</span>
+              <div className="font-mono text-xs text-slate-700 mt-0.5">
+                Binary: <strong className="text-slate-900 font-bold">{modeByte.toString(2).padStart(8, '0')}</strong>
               </div>
             </div>
-            <div className="bg-indigo-600 text-white px-4 py-1.5 rounded-lg font-mono font-extrabold text-sm border border-indigo-400 shadow-md">
+            <div className="bg-indigo-600 text-white px-4 py-1.5 rounded-lg font-mono font-extrabold text-sm border border-indigo-600 shadow-xs">
               Mode Control Byte: {modeHex}
             </div>
           </div>
@@ -172,49 +172,49 @@ export default function USART8251Simulator() {
       {/* TAB 2: Serial Bit Frame & RS-232 */}
       {activeTab === 'frame' && (
         <div className="space-y-3">
-          <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-3">
+          <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="font-bold text-indigo-300 text-xs uppercase tracking-wider">Asynchronous Character Framing Visualizer</span>
+              <span className="font-bold text-indigo-950 text-xs uppercase tracking-wider">Asynchronous Character Framing Visualizer</span>
               <div className="flex items-center gap-2">
-                <span className="text-slate-400 text-[10px]">Enter Character:</span>
+                <span className="text-slate-600 text-[10px] font-bold">Enter Character:</span>
                 <input
                   type="text"
                   maxLength={1}
                   value={txChar}
                   onChange={(e) => setTxChar(e.target.value.toUpperCase())}
-                  className="bg-slate-900 border border-slate-700 text-indigo-300 font-mono text-center font-bold text-sm w-12 py-1 rounded"
+                  className="bg-white border border-slate-300 text-indigo-900 font-mono text-center font-bold text-sm w-12 py-1 rounded-lg shadow-2xs focus:border-indigo-500 focus:outline-hidden"
                 />
               </div>
             </div>
 
             {/* Serial Frame Stream */}
-            <div className="flex items-center gap-1.5 overflow-x-auto p-2 bg-slate-900 rounded-xl border border-slate-800 font-mono">
+            <div className="flex items-center gap-1.5 overflow-x-auto p-3 bg-white rounded-xl border border-slate-200 font-mono shadow-2xs">
               {/* Start Bit */}
-              <div className="px-2.5 py-2 bg-rose-500/20 border border-rose-500/40 text-rose-300 rounded text-center shrink-0">
-                <div className="text-[9px] text-slate-400">START</div>
+              <div className="px-3 py-2 bg-rose-50 border border-rose-200 text-rose-800 rounded-lg text-center shrink-0">
+                <div className="text-[9px] text-rose-500 font-bold uppercase">START</div>
                 <div className="font-bold text-xs">0</div>
               </div>
 
               {/* Data Bits */}
               {charBits.map((b, idx) => (
-                <div key={idx} className="px-2.5 py-2 bg-indigo-500/20 border border-indigo-500/40 text-indigo-200 rounded text-center shrink-0">
-                  <div className="text-[9px] text-slate-400">D{idx}</div>
+                <div key={idx} className="px-3 py-2 bg-indigo-50 border border-indigo-200 text-indigo-800 rounded-lg text-center shrink-0">
+                  <div className="text-[9px] text-indigo-500 font-bold uppercase">D{idx}</div>
                   <div className="font-bold text-xs">{b}</div>
                 </div>
               ))}
 
               {/* Stop Bit */}
-              <div className="px-2.5 py-2 bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 rounded text-center shrink-0">
-                <div className="text-[9px] text-slate-400">STOP</div>
+              <div className="px-3 py-2 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-center shrink-0">
+                <div className="text-[9px] text-emerald-500 font-bold uppercase">STOP</div>
                 <div className="font-bold text-xs">1</div>
               </div>
             </div>
 
             {/* MAX232 Level Shifting Info */}
-            <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800 flex items-center justify-between text-[11px] font-sans">
-              <div className="text-slate-300">
-                <strong className="text-amber-300">MAX232 Voltage Shifting: </strong>
-                TTL 0V / +5V is converted to RS-232 bipolar levels (<strong>-12V</strong> for Mark 1, <strong>+12V</strong> for Space 0).
+            <div className="bg-white p-3 rounded-lg border border-slate-200 flex items-center justify-between text-[11px] font-sans shadow-2xs">
+              <div className="text-slate-700 leading-relaxed">
+                <strong className="text-amber-800 font-bold">MAX232 Voltage Shifting: </strong>
+                TTL 0V / +5V is converted to RS-232 bipolar levels (<strong className="text-slate-900">-12V</strong> for Mark 1, <strong className="text-slate-900">+12V</strong> for Space 0).
               </div>
             </div>
           </div>

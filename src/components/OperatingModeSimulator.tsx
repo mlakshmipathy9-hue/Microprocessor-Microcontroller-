@@ -262,10 +262,10 @@ export default function OperatingModeSimulator() {
                 <div className="relative border border-slate-200 rounded-xl bg-white p-5 space-y-4 shadow-2xs">
                   {/* CPU block visual */}
                   <div className="flex items-center justify-between">
-                    <div className="bg-zinc-900 text-white p-3 rounded-lg border-2 border-zinc-950 font-mono font-bold text-[13px] text-center w-32 shadow-md">
-                      <Cpu className="w-5 h-5 mx-auto mb-1 text-zinc-400" />
+                    <div className="bg-slate-100 text-slate-900 p-3 rounded-lg border-2 border-slate-300 font-mono font-bold text-[13px] text-center w-32 shadow-2xs">
+                      <Cpu className="w-5 h-5 mx-auto mb-1 text-slate-700" />
                       i8086 CPU
-                      <span className="block text-[13px] text-zinc-500 font-normal mt-0.5">MN/MX = {activeMode === 'minimum' ? '+5V' : 'GND'}</span>
+                      <span className="block text-[13px] text-slate-600 font-medium mt-0.5">MN/MX = {activeMode === 'minimum' ? '+5V' : 'GND'}</span>
                     </div>
 
                     <div className="flex-1 flex flex-col items-center justify-center px-4 relative">

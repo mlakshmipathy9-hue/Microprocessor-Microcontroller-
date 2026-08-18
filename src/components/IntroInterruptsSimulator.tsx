@@ -347,11 +347,8 @@ export default function IntroInterruptsSimulator() {
                   <div className="space-y-6">
                     <div className="space-y-2">
                       <span className="text-[10px] font-mono font-bold bg-indigo-50 border border-indigo-100 text-indigo-700 px-2.5 py-1 rounded-full uppercase tracking-widest inline-block">
-                        Topic 1 • Introduction to Interrupts
+                        Topic 1 • Concept Overview
                       </span>
-                      <h1 className="font-display text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight leading-none pt-1">
-                        1. Introduction to 8086 Interrupts
-                      </h1>
                       <p className="text-slate-600 text-base md:text-[17px] font-medium leading-relaxed max-w-2xl">
                         "How the 8086 temporarily stops its current work to respond to an important event."
                       </p>

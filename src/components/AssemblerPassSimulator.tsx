@@ -261,15 +261,8 @@ export default function AssemblerPassSimulator() {
   return (
     <div id="assembler-pass-simulator" className="bg-white border border-slate-200 rounded-3xl p-5 md:p-6 text-slate-800 shadow-sm flex flex-col justify-between h-full">
       <div>
-        {/* Title */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 mb-4 gap-2">
-          <div>
-            <h2 className="text-lg md:text-xl font-bold font-display text-indigo-600 flex items-center gap-2">
-              <Layers className="w-5 h-5 text-indigo-600" />
-              One-Pass vs Two-Pass Interactive Laboratory
-            </h2>
-            <p className="text-slate-500 text-[13px] mt-0.5">Step through and compare how assemblers resolve Forward References</p>
-          </div>
+        {/* Controls Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-end border-b border-slate-100 pb-3 mb-4 gap-2">
           <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 self-start sm:self-auto">
             <button
               onClick={() => { setMode('twopass'); resetAll(); }}

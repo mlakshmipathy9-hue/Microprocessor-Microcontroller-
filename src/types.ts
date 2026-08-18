@@ -10,7 +10,7 @@ export interface Slide {
     headers: string[];
     rows: string[][];
   };
-  interactiveType?: 'evolution' | 'pins' | 'architecture' | 'flags' | 'memory-calc' | 'intro-interrupts' | 'interrupts' | 'timing' | 'modes' | 'min-mode-hardware' | 'quiz' | 'dev-pipeline' | 'addressing-modes' | 'instruction-decoder' | 'directive-sandbox' | 'assembler-playground' | 'assembler-passes' | 'assembler-outputs' | 'pipelining' | 'instruction-builder' | 'memory-interfacing' | 'ppi-8255' | 'peripheral-interfacing' | 'analog-interfacing' | 'interrupt-8259' | 'usart-8251' | 'dma-8237';
+  interactiveType?: 'evolution' | 'pins' | 'architecture' | 'flags' | 'memory-calc' | 'intro-interrupts' | 'interrupts' | 'timing' | 'modes' | 'min-mode-hardware' | 'quiz' | 'dev-pipeline' | 'addressing-modes' | 'instruction-decoder' | 'directive-sandbox' | 'assembler-playground' | 'assembler-passes' | 'assembler-outputs' | 'pipelining' | 'instruction-builder' | 'memory-interfacing' | 'ppi-8255' | 'peripheral-interfacing' | 'analog-interfacing' | 'interrupt-8259' | 'usart-8251' | 'dma-8237' | 'mcu-8051' | 'sfr-memory' | 'mcu-pins' | 'mcu-instructions' | 'mcu-alp' | 'mcu-timers-serial' | 'mcu-interrupts-lcd' | 'mcu-adc-dac' | 'mcu-stepper-wave' | 'processor-comparison';
   quizQuestions?: QuizQuestion[];
   diagramLabel?: string;
 }

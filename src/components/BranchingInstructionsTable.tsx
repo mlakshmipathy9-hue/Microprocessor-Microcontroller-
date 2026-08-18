@@ -281,20 +281,7 @@ export default function BranchingInstructionsTable({
   return (
     <div className="bg-white border border-slate-200 rounded-2xl p-4 md:p-5 space-y-4 shadow-xs font-sans text-slate-900">
       {/* Header Banner */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
-        <div className="flex items-center gap-2.5">
-          <div className="p-2 bg-rose-600 text-white rounded-xl shadow-xs">
-            <GitBranch className="w-5 h-5" />
-          </div>
-          <div>
-            <h3 className="font-mono font-extrabold text-sm md:text-base text-slate-900 uppercase tracking-wider flex items-center gap-2">
-              8086 Branching Instructions Master Summary Table
-            </h3>
-            <p className="text-xs text-slate-500">
-              Complete reference of Unconditional, Conditional, Flag-Based, and Loop Control Branching Opcodes.
-            </p>
-          </div>
-        </div>
+      <div className="flex flex-wrap items-center justify-end gap-3 border-b border-slate-200 pb-3">
         <div className="flex items-center gap-2">
           <span className="text-[11px] font-mono font-bold bg-rose-50 text-rose-800 border border-rose-200 px-2.5 py-1 rounded-lg">
             {filteredData.length} / {BRANCHING_INSTRUCTIONS_DATA.length} Instructions

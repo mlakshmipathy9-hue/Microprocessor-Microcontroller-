@@ -353,15 +353,8 @@ export default function AssemblerOutputsSimulator() {
   return (
     <div id="assembler-outputs-simulator" className="bg-white border border-slate-200 rounded-3xl p-5 md:p-6 text-slate-800 shadow-sm flex flex-col justify-between h-full min-h-[600px]">
       <div>
-        {/* Header Title */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 mb-4 gap-2">
-          <div>
-            <h2 className="text-lg md:text-xl font-bold font-display text-indigo-600 flex items-center gap-2">
-              <FileCode2 className="w-5 h-5 text-indigo-600" />
-              Inside Assembler Outputs: .OBJ, .LST vs .EXE
-            </h2>
-            <p className="text-slate-500 text-[13px] mt-0.5">Explore the human-readable Listing, machine-ready Object, and Executable files</p>
-          </div>
+        {/* Header Tabs */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-end border-b border-slate-100 pb-3 mb-4 gap-2">
           <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 self-start sm:self-auto shrink-0">
             <button
               onClick={() => { setActiveTab('lst'); }}
@@ -405,26 +398,26 @@ export default function AssemblerOutputsSimulator() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
               {/* LST code listing */}
               <div className="lg:col-span-8 flex flex-col justify-between space-y-3">
-                <div className="bg-slate-900 rounded-2xl p-4 shadow-inner border border-slate-950 flex flex-col min-h-[420px] max-h-[460px] overflow-hidden">
+                <div className="bg-slate-50/90 rounded-2xl p-4 shadow-xs border border-slate-200 flex flex-col min-h-[420px] max-h-[460px] overflow-hidden">
                   {/* LST Meta Header */}
-                  <div className="border-b border-slate-800 pb-2 mb-3 text-[13px] text-slate-500 font-mono flex justify-between select-none">
+                  <div className="border-b border-slate-200 pb-2 mb-3 text-[13px] text-slate-600 font-mono flex justify-between select-none">
                     <span>MASM v5.10 - 16-BIT ASSEMBLER LOG</span>
                     <span>MYPROGRAM.LST</span>
                   </div>
 
-                  <div className="flex items-center gap-2 bg-slate-850/80 px-3 py-1.5 rounded-lg border border-slate-800 mb-3 shrink-0">
-                    <Search className="w-3.5 h-3.5 text-slate-500" />
+                  <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200 mb-3 shrink-0 shadow-2xs">
+                    <Search className="w-3.5 h-3.5 text-slate-400" />
                     <input
                       type="text"
                       placeholder="Search source lines, comments, or opcodes..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="bg-transparent border-none text-slate-200 text-[13px] focus:outline-none w-full font-mono"
+                      className="bg-transparent border-none text-slate-800 text-[13px] focus:outline-none w-full font-mono placeholder:text-slate-400"
                     />
                   </div>
 
                   {/* Column headers */}
-                  <div className="grid grid-cols-12 gap-1 px-2 py-1 text-[13px] text-indigo-400 font-mono font-bold uppercase tracking-wider border-b border-slate-800/60 select-none shrink-0">
+                  <div className="grid grid-cols-12 gap-1 px-2 py-1 text-[13px] text-indigo-700 font-mono font-bold uppercase tracking-wider border-b border-slate-200 select-none shrink-0 bg-slate-100/70 rounded-md">
                     <span className="col-span-1 text-center">LINE</span>
                     <span className="col-span-2">OFFSET</span>
                     <span className="col-span-3">MACH BYTES</span>
@@ -433,7 +426,7 @@ export default function AssemblerOutputsSimulator() {
 
                   {/* Listing content */}
                   <div className="flex-1 overflow-y-auto font-mono text-[13px] space-y-0.5 pt-2 pr-1 scrollbar-thin">
-                    {filteredLstLines.map((line, idx) => {
+                    {filteredLstLines.map((line) => {
                       const isHovered = hoveredLine?.lineNum === line.lineNum;
                       return (
                         <div
@@ -441,21 +434,21 @@ export default function AssemblerOutputsSimulator() {
                           onMouseEnter={() => setHoveredLine(line)}
                           className={`grid grid-cols-12 gap-1 p-1 rounded-md transition-all items-center ${
                             isHovered 
-                              ? 'bg-indigo-950/90 text-indigo-100 border border-indigo-900/60' 
-                              : 'bg-transparent border border-transparent text-slate-300'
+                              ? 'bg-indigo-100/80 text-indigo-950 border border-indigo-200 shadow-2xs' 
+                              : 'bg-transparent border border-transparent text-slate-700'
                           }`}
                         >
-                          <span className="col-span-1 text-slate-500 text-center select-none text-[13px]">
+                          <span className="col-span-1 text-slate-400 text-center select-none text-[13px] font-semibold">
                             {line.lineNum}
                           </span>
-                          <span className="col-span-2 text-indigo-300 font-bold">
+                          <span className="col-span-2 text-indigo-700 font-bold">
                             {line.offset || '   -'}
                           </span>
-                          <span className="col-span-3 text-emerald-400 font-bold select-none">
+                          <span className="col-span-3 text-emerald-700 font-bold select-none">
                             {line.hexCode || '      -'}
                           </span>
                           <span className="col-span-6 flex flex-wrap items-center">
-                            <span className={line.offset ? 'text-slate-100' : 'text-indigo-200'}>
+                            <span className={line.offset ? 'text-slate-900 font-medium' : 'text-indigo-800 font-bold'}>
                               {line.sourceCode.replace(/^\s+/, '')}
                             </span>
                             <span className="text-slate-500 text-[13px] ml-1">
@@ -647,13 +640,13 @@ export default function AssemblerOutputsSimulator() {
 
                   {/* Hex Visualization */}
                   <div className="space-y-1.5">
-                    <span className="text-[13px] font-mono text-slate-400 font-bold block uppercase tracking-wider">
+                    <span className="text-[13px] font-mono text-slate-600 font-bold block uppercase tracking-wider">
                       Actual Hex Bytes inside .OBJ file:
                     </span>
-                    <div className="bg-slate-900 text-emerald-400 font-mono text-[13px] p-3 rounded-xl border border-slate-950 tracking-wider break-all leading-normal shadow-inner">
+                    <div className="bg-slate-50 text-emerald-800 font-mono text-[13px] p-3 rounded-xl border border-slate-200 tracking-wider break-all leading-normal shadow-2xs font-bold">
                       {selectedRecord.hexBytes}
                     </div>
-                    <span className="text-[13px] text-slate-400 block text-right font-mono">
+                    <span className="text-[13px] text-slate-500 block text-right font-mono">
                       Total: {selectedRecord.hexBytes.split(' ').length} Record bytes
                     </span>
                   </div>
@@ -819,8 +812,8 @@ export default function AssemblerOutputsSimulator() {
                       </span>
                     </div>
                     
-                    <div className="bg-slate-900 rounded-xl p-3 border border-slate-950 font-mono text-[13px] text-slate-400 space-y-1">
-                      <div className="grid grid-cols-12 border-b border-slate-800 pb-1 text-[13px] text-slate-500 uppercase tracking-wider animate-none">
+                    <div className="bg-slate-50 rounded-xl p-3 border border-slate-200 font-mono text-[13px] text-slate-700 space-y-1">
+                      <div className="grid grid-cols-12 border-b border-slate-200 pb-1 text-[13px] text-slate-500 uppercase tracking-wider font-bold">
                         <span className="col-span-2">Offset</span>
                         <span className="col-span-10 text-center">Binary Bytes (Hexadecimal)</span>
                       </div>
@@ -831,17 +824,17 @@ export default function AssemblerOutputsSimulator() {
                         
                         let highlightClass = '';
                         if (row.type === 'header' && isHeaderHighlighted) {
-                          highlightClass = 'text-indigo-300 font-bold bg-indigo-950/40 border-l-2 border-indigo-500 pl-1';
+                          highlightClass = 'text-indigo-900 font-bold bg-indigo-100 border-l-2 border-indigo-600 pl-1 rounded-r';
                         } else if (row.type === 'reloc' && isRelocHighlighted) {
-                          highlightClass = 'text-purple-300 font-bold bg-purple-950/40 border-l-2 border-purple-500 pl-1';
+                          highlightClass = 'text-purple-900 font-bold bg-purple-100 border-l-2 border-purple-600 pl-1 rounded-r';
                         } else if (row.type === 'code' && isExecHighlighted) {
-                          highlightClass = 'text-emerald-300 font-bold bg-emerald-950/40 border-l-2 border-emerald-500 pl-1';
+                          highlightClass = 'text-emerald-900 font-bold bg-emerald-100 border-l-2 border-emerald-600 pl-1 rounded-r';
                         }
 
                         return (
                           <div key={row.addr} className={`grid grid-cols-12 py-0.5 transition-all text-[13px] ${highlightClass || 'pl-1'}`} title={row.desc}>
-                            <span className="col-span-2 text-indigo-400/90 font-bold">{row.addr}</span>
-                            <span className="col-span-10 font-bold tracking-wide text-slate-200">
+                            <span className="col-span-2 text-indigo-700 font-bold">{row.addr}</span>
+                            <span className="col-span-10 font-bold tracking-wide text-slate-800">
                               {row.bytes}
                             </span>
                           </div>

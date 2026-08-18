@@ -62,25 +62,25 @@ export default function PPI8255Simulator() {
   };
 
   return (
-    <div className="bg-slate-900 text-slate-100 p-4 md:p-5 rounded-2xl border border-slate-800 shadow-xl space-y-4 text-xs font-sans">
+    <div className="bg-white text-slate-800 p-4 md:p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4 text-xs font-sans">
       {/* Top Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
         <div className="flex items-center gap-2">
-          <div className="p-2 bg-indigo-600/20 rounded-xl border border-indigo-500/30 text-indigo-400">
+          <div className="p-2 bg-indigo-50 rounded-xl border border-indigo-200 text-indigo-600">
             <Cpu className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="font-bold text-sm text-white">Intel 8255 Programmable Peripheral Interface (PPI)</h3>
-            <p className="text-[11px] text-slate-400">24 Programmable I/O Lines (Ports A, B, C) & Control Word Architecture</p>
+            <h3 className="font-bold text-sm text-slate-900">Intel 8255 Programmable Peripheral Interface (PPI)</h3>
+            <p className="text-[11px] text-slate-500">24 Programmable I/O Lines (Ports A, B, C) & Control Word Architecture</p>
           </div>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex bg-slate-800/80 p-1 rounded-xl border border-slate-700/60 gap-1">
+        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 gap-1">
           <button
             onClick={() => setActiveTab('iomode')}
             className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-              activeTab === 'iomode' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+              activeTab === 'iomode' ? 'bg-white text-indigo-700 shadow-xs font-bold border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             I/O Control Word
@@ -88,7 +88,7 @@ export default function PPI8255Simulator() {
           <button
             onClick={() => setActiveTab('bsr')}
             className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-              activeTab === 'bsr' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+              activeTab === 'bsr' ? 'bg-white text-indigo-700 shadow-xs font-bold border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             BSR Mode (Port C)
@@ -96,7 +96,7 @@ export default function PPI8255Simulator() {
           <button
             onClick={() => setActiveTab('pins')}
             className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-              activeTab === 'pins' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+              activeTab === 'pins' ? 'bg-white text-indigo-700 shadow-xs font-bold border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             Live Pin Monitor
@@ -109,29 +109,29 @@ export default function PPI8255Simulator() {
         <div className="space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* Group A Control */}
-            <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2.5">
-              <span className="font-bold text-indigo-400 text-xs uppercase tracking-wider block border-b border-slate-800 pb-1">
+            <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2.5">
+              <span className="font-bold text-indigo-950 text-xs uppercase tracking-wider block border-b border-slate-200 pb-1">
                 Group A (Port A &amp; Port C Upper)
               </span>
 
               <div>
-                <label className="text-[10px] text-slate-400 block mb-1">Group A Operating Mode</label>
+                <label className="text-[10px] text-slate-500 block mb-1">Group A Operating Mode</label>
                 <div className="grid grid-cols-3 gap-1.5 font-semibold">
                   <button
                     onClick={() => setGroupAMode('mode0')}
-                    className={`py-1 rounded border ${groupAMode === 'mode0' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400'}`}
+                    className={`py-1 rounded border cursor-pointer transition-all ${groupAMode === 'mode0' ? 'bg-indigo-600 border-indigo-600 text-white shadow-2xs font-bold' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'}`}
                   >
                     Mode 0 (Basic)
                   </button>
                   <button
                     onClick={() => setGroupAMode('mode1')}
-                    className={`py-1 rounded border ${groupAMode === 'mode1' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400'}`}
+                    className={`py-1 rounded border cursor-pointer transition-all ${groupAMode === 'mode1' ? 'bg-indigo-600 border-indigo-600 text-white shadow-2xs font-bold' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'}`}
                   >
                     Mode 1 (Strobed)
                   </button>
                   <button
                     onClick={() => setGroupAMode('mode2')}
-                    className={`py-1 rounded border ${groupAMode === 'mode2' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400'}`}
+                    className={`py-1 rounded border cursor-pointer transition-all ${groupAMode === 'mode2' ? 'bg-indigo-600 border-indigo-600 text-white shadow-2xs font-bold' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'}`}
                   >
                     Mode 2 (Bi-dir)
                   </button>
@@ -140,19 +140,19 @@ export default function PPI8255Simulator() {
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[10px] text-slate-400 block mb-1">Port A Direction</label>
+                  <label className="text-[10px] text-slate-500 block mb-1">Port A Direction</label>
                   <button
                     onClick={() => setPortADir(portADir === 'input' ? 'output' : 'input')}
-                    className={`w-full py-1 rounded font-bold border ${portADir === 'input' ? 'bg-emerald-950/60 border-emerald-500 text-emerald-300' : 'bg-amber-950/60 border-amber-500 text-amber-300'}`}
+                    className={`w-full py-1.5 rounded font-bold border cursor-pointer transition-all ${portADir === 'input' ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-amber-50 border-amber-300 text-amber-900'}`}
                   >
                     {portADir === 'input' ? 'INPUT (1)' : 'OUTPUT (0)'}
                   </button>
                 </div>
                 <div>
-                  <label className="text-[10px] text-slate-400 block mb-1">Port C Upper Direction</label>
+                  <label className="text-[10px] text-slate-500 block mb-1">Port C Upper Direction</label>
                   <button
                     onClick={() => setPortCUpperDir(portCUpperDir === 'input' ? 'output' : 'input')}
-                    className={`w-full py-1 rounded font-bold border ${portCUpperDir === 'input' ? 'bg-emerald-950/60 border-emerald-500 text-emerald-300' : 'bg-amber-950/60 border-amber-500 text-amber-300'}`}
+                    className={`w-full py-1.5 rounded font-bold border cursor-pointer transition-all ${portCUpperDir === 'input' ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-amber-50 border-amber-300 text-amber-900'}`}
                   >
                     {portCUpperDir === 'input' ? 'INPUT (1)' : 'OUTPUT (0)'}
                   </button>
@@ -161,23 +161,23 @@ export default function PPI8255Simulator() {
             </div>
 
             {/* Group B Control */}
-            <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2.5">
-              <span className="font-bold text-indigo-400 text-xs uppercase tracking-wider block border-b border-slate-800 pb-1">
+            <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2.5">
+              <span className="font-bold text-indigo-950 text-xs uppercase tracking-wider block border-b border-slate-200 pb-1">
                 Group B (Port B &amp; Port C Lower)
               </span>
 
               <div>
-                <label className="text-[10px] text-slate-400 block mb-1">Group B Operating Mode</label>
+                <label className="text-[10px] text-slate-500 block mb-1">Group B Operating Mode</label>
                 <div className="grid grid-cols-2 gap-1.5 font-semibold">
                   <button
                     onClick={() => setGroupBMode('mode0')}
-                    className={`py-1 rounded border ${groupBMode === 'mode0' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400'}`}
+                    className={`py-1 rounded border cursor-pointer transition-all ${groupBMode === 'mode0' ? 'bg-indigo-600 border-indigo-600 text-white shadow-2xs font-bold' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'}`}
                   >
                     Mode 0 (Basic I/O)
                   </button>
                   <button
                     onClick={() => setGroupBMode('mode1')}
-                    className={`py-1 rounded border ${groupBMode === 'mode1' ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-900 border-slate-800 text-slate-400'}`}
+                    className={`py-1 rounded border cursor-pointer transition-all ${groupBMode === 'mode1' ? 'bg-indigo-600 border-indigo-600 text-white shadow-2xs font-bold' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'}`}
                   >
                     Mode 1 (Strobed I/O)
                   </button>
@@ -186,19 +186,19 @@ export default function PPI8255Simulator() {
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-[10px] text-slate-400 block mb-1">Port B Direction</label>
+                  <label className="text-[10px] text-slate-500 block mb-1">Port B Direction</label>
                   <button
                     onClick={() => setPortBDir(portBDir === 'input' ? 'output' : 'input')}
-                    className={`w-full py-1 rounded font-bold border ${portBDir === 'input' ? 'bg-emerald-950/60 border-emerald-500 text-emerald-300' : 'bg-amber-950/60 border-amber-500 text-amber-300'}`}
+                    className={`w-full py-1.5 rounded font-bold border cursor-pointer transition-all ${portBDir === 'input' ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-amber-50 border-amber-300 text-amber-900'}`}
                   >
                     {portBDir === 'input' ? 'INPUT (1)' : 'OUTPUT (0)'}
                   </button>
                 </div>
                 <div>
-                  <label className="text-[10px] text-slate-400 block mb-1">Port C Lower Direction</label>
+                  <label className="text-[10px] text-slate-500 block mb-1">Port C Lower Direction</label>
                   <button
                     onClick={() => setPortCLowerDir(portCLowerDir === 'input' ? 'output' : 'input')}
-                    className={`w-full py-1 rounded font-bold border ${portCLowerDir === 'input' ? 'bg-emerald-950/60 border-emerald-500 text-emerald-300' : 'bg-amber-950/60 border-amber-500 text-amber-300'}`}
+                    className={`w-full py-1.5 rounded font-bold border cursor-pointer transition-all ${portCLowerDir === 'input' ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-amber-50 border-amber-300 text-amber-900'}`}
                   >
                     {portCLowerDir === 'input' ? 'INPUT (1)' : 'OUTPUT (0)'}
                   </button>
@@ -208,14 +208,14 @@ export default function PPI8255Simulator() {
           </div>
 
           {/* Generated Control Byte Display */}
-          <div className="bg-slate-950 p-3 rounded-xl border border-indigo-800/60 flex flex-wrap items-center justify-between gap-3">
+          <div className="bg-slate-50 p-3 rounded-xl border border-indigo-200 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
             <div>
-              <span className="text-[10px] text-indigo-300 uppercase font-bold tracking-wider block">Generated 8255 Control Word</span>
-              <div className="font-mono text-xs text-slate-300 mt-0.5">
-                Binary: <strong className="text-white">{controlWordByte.toString(2).padStart(8, '0')}</strong>
+              <span className="text-[10px] text-indigo-950 uppercase font-bold tracking-wider block">Generated 8255 Control Word</span>
+              <div className="font-mono text-xs text-slate-700 mt-0.5">
+                Binary: <strong className="text-slate-900 font-bold">{controlWordByte.toString(2).padStart(8, '0')}</strong>
               </div>
             </div>
-            <div className="bg-indigo-600 text-white px-4 py-1.5 rounded-lg font-mono font-extrabold text-sm border border-indigo-400 shadow-md">
+            <div className="bg-indigo-600 text-white px-4 py-1.5 rounded-lg font-mono font-extrabold text-sm border border-indigo-600 shadow-xs">
               Control Byte: {controlWordHex}
             </div>
           </div>
@@ -224,21 +224,21 @@ export default function PPI8255Simulator() {
 
       {/* TAB 2: BSR Mode */}
       {activeTab === 'bsr' && (
-        <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-3">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-            <span className="font-bold text-indigo-300 text-xs uppercase tracking-wider">Bit Set / Reset (BSR) Mode for Port C</span>
-            <span className="text-[10px] text-slate-400 font-mono">D7 = 0 (BSR Control Word)</span>
+        <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
+          <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+            <span className="font-bold text-indigo-950 text-xs uppercase tracking-wider">Bit Set / Reset (BSR) Mode for Port C</span>
+            <span className="text-[10px] text-slate-600 font-mono font-bold bg-white px-2 py-0.5 rounded border border-slate-200">D7 = 0 (BSR Control Word)</span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="text-[10px] text-slate-400 block mb-1">Select Port C Bit Pin (PC0–PC7)</label>
+              <label className="text-[10px] text-slate-500 block mb-1">Select Port C Bit Pin (PC0–PC7)</label>
               <div className="grid grid-cols-4 gap-1">
                 {[0, 1, 2, 3, 4, 5, 6, 7].map((b) => (
                   <button
                     key={b}
                     onClick={() => setBsrBit(b)}
-                    className={`py-1 rounded font-mono font-bold border cursor-pointer ${bsrBit === b ? 'bg-indigo-600 text-white border-indigo-400' : 'bg-slate-900 border-slate-800 text-slate-400'}`}
+                    className={`py-1.5 rounded font-mono font-bold border cursor-pointer transition-all ${bsrBit === b ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'}`}
                   >
                     PC{b}
                   </button>
@@ -247,17 +247,17 @@ export default function PPI8255Simulator() {
             </div>
 
             <div>
-              <label className="text-[10px] text-slate-400 block mb-1">Operation Action</label>
+              <label className="text-[10px] text-slate-500 block mb-1">Operation Action</label>
               <div className="flex gap-2">
                 <button
                   onClick={() => setBsrSetReset(1)}
-                  className={`flex-1 py-1.5 rounded font-bold border cursor-pointer ${bsrSetReset === 1 ? 'bg-emerald-600 border-emerald-400 text-white' : 'bg-slate-900 border-slate-800 text-slate-400'}`}
+                  className={`flex-1 py-1.5 rounded font-bold border cursor-pointer transition-all ${bsrSetReset === 1 ? 'bg-emerald-600 border-emerald-600 text-white shadow-2xs' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'}`}
                 >
                   SET (1)
                 </button>
                 <button
                   onClick={() => setBsrSetReset(0)}
-                  className={`flex-1 py-1.5 rounded font-bold border cursor-pointer ${bsrSetReset === 0 ? 'bg-rose-600 border-rose-400 text-white' : 'bg-slate-900 border-slate-800 text-slate-400'}`}
+                  className={`flex-1 py-1.5 rounded font-bold border cursor-pointer transition-all ${bsrSetReset === 0 ? 'bg-rose-600 border-rose-600 text-white shadow-2xs' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'}`}
                 >
                   RESET (0)
                 </button>
@@ -265,13 +265,13 @@ export default function PPI8255Simulator() {
             </div>
           </div>
 
-          <div className="flex items-center justify-between bg-slate-900 p-2.5 rounded-lg border border-slate-800">
-            <div className="font-mono text-xs">
-              BSR Control Word: <strong className="text-indigo-300">{bsrControlWordHex}</strong>
+          <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200 shadow-2xs">
+            <div className="font-mono text-xs text-slate-700">
+              BSR Control Word: <strong className="text-indigo-700 font-bold">{bsrControlWordHex}</strong>
             </div>
             <button
               onClick={handleApplyBSR}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1 rounded-lg font-bold text-xs cursor-pointer transition-all"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-1.5 rounded-lg font-bold text-xs cursor-pointer transition-all shadow-xs"
             >
               Execute BSR Action on PC{bsrBit}
             </button>
@@ -282,14 +282,14 @@ export default function PPI8255Simulator() {
       {/* TAB 3: Live Pin Monitor */}
       {activeTab === 'pins' && (
         <div className="space-y-3">
-          <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-3">
-            <div className="font-bold text-indigo-300 text-xs uppercase tracking-wider">8255 Port Register Pin States</div>
+          <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
+            <div className="font-bold text-indigo-950 text-xs uppercase tracking-wider">8255 Port Register Pin States</div>
 
             {/* Port A */}
-            <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800 space-y-1">
+            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1.5 shadow-2xs">
               <div className="flex justify-between items-center text-[10px]">
-                <strong className="text-emerald-400">Port A (PA0–PA7)</strong>
-                <span className="font-mono text-slate-400">0x{portAVal.toString(16).toUpperCase().padStart(2, '0')}</span>
+                <strong className="text-emerald-800 font-bold">Port A (PA0–PA7)</strong>
+                <span className="font-mono text-slate-600 font-semibold">0x{portAVal.toString(16).toUpperCase().padStart(2, '0')}</span>
               </div>
               <div className="grid grid-cols-8 gap-1 font-mono text-center">
                 {Array.from({ length: 8 }, (_, i) => {
@@ -298,7 +298,7 @@ export default function PPI8255Simulator() {
                     <button
                       key={i}
                       onClick={() => setPortAVal(portAVal ^ (1 << (7 - i)))}
-                      className={`py-1 rounded font-bold text-[10px] cursor-pointer ${bit ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-500'}`}
+                      className={`py-1.5 rounded font-bold text-[10px] cursor-pointer transition-all ${bit ? 'bg-emerald-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}
                     >
                       PA{7 - i}: {bit}
                     </button>
@@ -308,10 +308,10 @@ export default function PPI8255Simulator() {
             </div>
 
             {/* Port B */}
-            <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800 space-y-1">
+            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1.5 shadow-2xs">
               <div className="flex justify-between items-center text-[10px]">
-                <strong className="text-indigo-400">Port B (PB0–PB7)</strong>
-                <span className="font-mono text-slate-400">0x{portBVal.toString(16).toUpperCase().padStart(2, '0')}</span>
+                <strong className="text-indigo-800 font-bold">Port B (PB0–PB7)</strong>
+                <span className="font-mono text-slate-600 font-semibold">0x{portBVal.toString(16).toUpperCase().padStart(2, '0')}</span>
               </div>
               <div className="grid grid-cols-8 gap-1 font-mono text-center">
                 {Array.from({ length: 8 }, (_, i) => {
@@ -320,7 +320,7 @@ export default function PPI8255Simulator() {
                     <button
                       key={i}
                       onClick={() => setPortBVal(portBVal ^ (1 << (7 - i)))}
-                      className={`py-1 rounded font-bold text-[10px] cursor-pointer ${bit ? 'bg-indigo-500 text-slate-950' : 'bg-slate-800 text-slate-500'}`}
+                      className={`py-1.5 rounded font-bold text-[10px] cursor-pointer transition-all ${bit ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}
                     >
                       PB{7 - i}: {bit}
                     </button>
@@ -330,10 +330,10 @@ export default function PPI8255Simulator() {
             </div>
 
             {/* Port C */}
-            <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800 space-y-1">
+            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1.5 shadow-2xs">
               <div className="flex justify-between items-center text-[10px]">
-                <strong className="text-amber-400">Port C (PC0–PC7)</strong>
-                <span className="font-mono text-slate-400">0x{portCVal.toString(16).toUpperCase().padStart(2, '0')}</span>
+                <strong className="text-amber-800 font-bold">Port C (PC0–PC7)</strong>
+                <span className="font-mono text-slate-600 font-semibold">0x{portCVal.toString(16).toUpperCase().padStart(2, '0')}</span>
               </div>
               <div className="grid grid-cols-8 gap-1 font-mono text-center">
                 {Array.from({ length: 8 }, (_, i) => {
@@ -342,7 +342,7 @@ export default function PPI8255Simulator() {
                     <button
                       key={i}
                       onClick={() => setPortCVal(portCVal ^ (1 << (7 - i)))}
-                      className={`py-1 rounded font-bold text-[10px] cursor-pointer ${bit ? 'bg-amber-500 text-slate-950' : 'bg-slate-800 text-slate-500'}`}
+                      className={`py-1.5 rounded font-bold text-[10px] cursor-pointer transition-all ${bit ? 'bg-amber-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}
                     >
                       PC{7 - i}: {bit}
                     </button>

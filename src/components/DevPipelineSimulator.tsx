@@ -216,15 +216,7 @@ export default function DevPipelineSimulator() {
     <div id="dev-pipeline-simulator" className="bg-white border border-slate-200 rounded-3xl p-6 min-h-[480px] text-slate-800 flex flex-col justify-between shadow-xs">
       <div className="space-y-4">
         {/* Simulator Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-3 gap-3">
-          <div>
-            <h2 className="text-lg font-bold font-display text-indigo-600 flex items-center gap-2">
-              <Terminal className="w-5 h-5" />
-              8086 Software Development Pipeline
-            </h2>
-            <p className="text-slate-500 text-xs">Explore how assembly text is compiled, linked, and executed on the MPU</p>
-          </div>
-          
+        <div className="flex flex-col sm:flex-row sm:items-center justify-end border-b border-slate-100 pb-3 gap-3">
           <div className="flex gap-1.5 bg-slate-100/80 p-1 rounded-xl border border-slate-200 max-w-fit self-start sm:self-center">
             <button
               onClick={() => setActiveTab('flow')}

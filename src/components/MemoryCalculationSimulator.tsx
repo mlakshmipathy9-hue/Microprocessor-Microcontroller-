@@ -273,10 +273,10 @@ export default function MemoryCalculationSimulator({ defaultTab = 'segmented-str
         </div>
 
         <div className="border border-indigo-150 rounded-xl overflow-hidden text-[13px] bg-white shadow-2xs">
-          <div className="grid grid-cols-3 bg-indigo-950 text-white font-bold p-3 text-[13px]">
+          <div className="grid grid-cols-3 bg-indigo-50/90 text-indigo-950 font-extrabold p-3 text-[13px] border-b border-indigo-150">
             <div>Feature / Property</div>
-            <div className="text-indigo-200">Non-Overlapping Segmentation</div>
-            <div className="text-purple-200">Overlapping Segmentation</div>
+            <div className="text-indigo-800">Non-Overlapping Segmentation</div>
+            <div className="text-purple-800">Overlapping Segmentation</div>
           </div>
           
           <div className="grid grid-cols-3 p-3 border-b border-slate-150 items-center">
@@ -657,13 +657,7 @@ export default function MemoryCalculationSimulator({ defaultTab = 'segmented-str
   return (
     <div className="flex flex-col h-full bg-white rounded-xl shadow-xs border border-slate-200 overflow-hidden text-slate-900">
       {/* Tab Switcher / Header */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between px-6 py-4 border-b border-slate-200 bg-slate-50/80 gap-3">
-        <div className="flex items-center gap-2">
-          <Layers className="w-5 h-5 text-indigo-700" />
-          <span className="text-[15px] font-bold text-slate-800 font-display">
-            8086 Memory Segmentation &amp; Calculations
-          </span>
-        </div>
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end px-6 py-3 border-b border-slate-200 bg-slate-50/80 gap-3">
 
         {/* Tab Selection buttons */}
         <div className="flex flex-wrap items-center bg-slate-200 p-1 rounded-lg gap-1">
@@ -994,15 +988,15 @@ export default function MemoryCalculationSimulator({ defaultTab = 'segmented-str
                       </div>
                     </div>
 
-                    <div className="bg-indigo-950 text-indigo-100 rounded-lg p-2 text-center font-mono text-[11.5px] flex justify-around items-center">
+                    <div className="bg-indigo-50 border border-indigo-150 text-indigo-950 rounded-lg p-2 text-center font-mono text-[11.5px] flex justify-around items-center shadow-2xs">
                       <div>
-                        <span className="text-indigo-300 text-[9.5px] block font-sans font-bold">MAX MEMORY (BYTES)</span>
-                        <strong className="text-white text-[13px]">2<sup>20</sup> Bytes = 1 MB</strong>
+                        <span className="text-indigo-700 text-[9.5px] block font-sans font-bold">MAX MEMORY (BYTES)</span>
+                        <strong className="text-indigo-950 text-[13px]">2<sup>20</sup> Bytes = 1 MB</strong>
                       </div>
-                      <div className="text-indigo-400 font-light">|</div>
+                      <div className="text-indigo-300 font-light">|</div>
                       <div>
-                        <span className="text-indigo-300 text-[9.5px] block font-sans font-bold">MAX MEMORY (BITS)</span>
-                        <strong className="text-white text-[13px]">2<sup>23</sup> bits = 8.38 Mbits</strong>
+                        <span className="text-indigo-700 text-[9.5px] block font-sans font-bold">MAX MEMORY (BITS)</span>
+                        <strong className="text-indigo-950 text-[13px]">2<sup>23</sup> bits = 8.38 Mbits</strong>
                       </div>
                     </div>
                   </div>
@@ -1059,111 +1053,111 @@ export default function MemoryCalculationSimulator({ defaultTab = 'segmented-str
               <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
                 
                 {/* 1. 8086 MPU Chip (Col-Span-4) */}
-                <div className="xl:col-span-4 bg-slate-900 text-slate-100 rounded-2xl p-5 border border-slate-800 shadow-lg relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl"></div>
-                  <div className="flex items-center gap-2 mb-4 pb-2 border-b border-slate-800">
-                    <Cpu className="w-5 h-5 text-indigo-400" />
+                <div className="xl:col-span-4 bg-slate-50 text-slate-900 rounded-2xl p-5 border border-slate-200/80 shadow-2xs relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl"></div>
+                  <div className="flex items-center gap-2 mb-4 pb-2 border-b border-slate-200">
+                    <Cpu className="w-5 h-5 text-indigo-600" />
                     <div>
-                      <h4 className="font-mono font-bold text-[14px] text-white tracking-wide">8086/8088 MPU</h4>
-                      <span className="text-[11px] text-indigo-400 uppercase font-mono tracking-wider">Microprocessor Unit</span>
+                      <h4 className="font-mono font-bold text-[14px] text-slate-900 tracking-wide">8086/8088 MPU</h4>
+                      <span className="text-[11px] text-indigo-600 uppercase font-mono tracking-wider">Microprocessor Unit</span>
                     </div>
                   </div>
 
                   <div className="space-y-3 font-mono text-[13px]">
                     {/* IP Block */}
-                    <div className="p-2.5 bg-slate-800/80 rounded-lg border border-slate-700/60 hover:border-indigo-400/60 transition-all">
+                    <div className="p-2.5 bg-white rounded-lg border border-slate-200 shadow-2xs hover:border-indigo-400 transition-all">
                       <div className="flex justify-between items-center">
-                        <span className="font-bold text-slate-400 text-[13px]">Instruction Pointer</span>
-                        <span className="text-white bg-slate-700 px-2 py-0.5 rounded text-[13px] font-bold">IP</span>
+                        <span className="font-bold text-slate-700 text-[13px]">Instruction Pointer</span>
+                        <span className="text-indigo-900 bg-indigo-50 border border-indigo-150 px-2 py-0.5 rounded text-[13px] font-bold">IP</span>
                       </div>
-                      <p className="text-[11px] text-slate-400 mt-1 font-sans">Holds 16-bit offset of next instruction.</p>
+                      <p className="text-[11px] text-slate-500 mt-1 font-sans">Holds 16-bit offset of next instruction.</p>
                     </div>
 
                     {/* Segment Registers */}
-                    <div className="bg-slate-800/40 p-3 rounded-xl border border-slate-700/40 space-y-2">
-                      <span className="text-[11px] text-indigo-400 font-bold uppercase tracking-wider block">Segment Registers (16-Bit)</span>
+                    <div className="bg-slate-100/70 p-3 rounded-xl border border-slate-200 space-y-2">
+                      <span className="text-[11px] text-indigo-700 font-bold uppercase tracking-wider block">Segment Registers (16-Bit)</span>
                       
                       <div className="grid grid-cols-1 gap-1.5">
                         <button
                           onMouseEnter={() => setSelectedSegmentId('cs')}
                           className={`w-full p-2 rounded-md border text-left transition-all flex justify-between items-center cursor-pointer ${
-                            selectedSegmentId === 'cs' ? 'bg-indigo-950/80 border-indigo-500 text-white' : 'bg-slate-800/80 border-slate-700 text-slate-300 hover:border-slate-500'
+                            selectedSegmentId === 'cs' ? 'bg-indigo-100/90 border-indigo-400 text-indigo-950 font-bold shadow-2xs' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
                           }`}
                         >
                           <span className="font-bold text-[13px]">Code Segment Register</span>
-                          <span className="font-bold text-indigo-400 font-mono text-[13px]">CS</span>
+                          <span className="font-bold text-indigo-700 font-mono text-[13px]">CS</span>
                         </button>
 
                         <button
                           onMouseEnter={() => setSelectedSegmentId('ds')}
                           className={`w-full p-2 rounded-md border text-left transition-all flex justify-between items-center cursor-pointer ${
-                            selectedSegmentId === 'ds' ? 'bg-emerald-950/80 border-emerald-500 text-white' : 'bg-slate-800/80 border-slate-700 text-slate-300 hover:border-slate-500'
+                            selectedSegmentId === 'ds' ? 'bg-emerald-100/90 border-emerald-400 text-emerald-950 font-bold shadow-2xs' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
                           }`}
                         >
                           <span className="font-bold text-[13px]">Data Segment Register</span>
-                          <span className="font-bold text-emerald-400 font-mono text-[13px]">DS</span>
+                          <span className="font-bold text-emerald-700 font-mono text-[13px]">DS</span>
                         </button>
 
                         <button
                           onMouseEnter={() => setSelectedSegmentId('ss')}
                           className={`w-full p-2 rounded-md border text-left transition-all flex justify-between items-center cursor-pointer ${
-                            selectedSegmentId === 'ss' ? 'bg-rose-950/80 border-rose-500 text-white' : 'bg-slate-800/80 border-slate-700 text-slate-300 hover:border-slate-500'
+                            selectedSegmentId === 'ss' ? 'bg-rose-100/90 border-rose-400 text-rose-950 font-bold shadow-2xs' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
                           }`}
                         >
                           <span className="font-bold text-[13px]">Stack Segment Register</span>
-                          <span className="font-bold text-rose-400 font-mono text-[13px]">SS</span>
+                          <span className="font-bold text-rose-700 font-mono text-[13px]">SS</span>
                         </button>
 
                         <button
                           onMouseEnter={() => setSelectedSegmentId('es')}
                           className={`w-full p-2 rounded-md border text-left transition-all flex justify-between items-center cursor-pointer ${
-                            selectedSegmentId === 'es' ? 'bg-amber-950/80 border-amber-500 text-white' : 'bg-slate-800/80 border-slate-700 text-slate-300 hover:border-slate-500'
+                            selectedSegmentId === 'es' ? 'bg-amber-100/90 border-amber-400 text-amber-950 font-bold shadow-2xs' : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
                           }`}
                         >
                           <span className="font-bold text-[13px]">Extra Segment Register</span>
-                          <span className="font-bold text-amber-400 font-mono text-[13px]">ES</span>
+                          <span className="font-bold text-amber-700 font-mono text-[13px]">ES</span>
                         </button>
                       </div>
                     </div>
 
                     {/* General Purpose Registers */}
-                    <div className="bg-slate-800/40 p-3 rounded-xl border border-slate-700/40">
-                      <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider block mb-1.5">General Purpose Registers (8/16-Bit)</span>
+                    <div className="bg-slate-100/70 p-3 rounded-xl border border-slate-200">
+                      <span className="text-[11px] text-slate-600 font-bold uppercase tracking-wider block mb-1.5">General Purpose Registers (8/16-Bit)</span>
                       <div className="grid grid-cols-2 gap-1.5 text-[11px]">
-                        <div className="bg-slate-800/80 p-1.5 rounded border border-slate-700 text-center">
-                          <span className="text-slate-400 block text-[10px]">Accumulator</span>
-                          <strong className="text-white text-[13px]">AX (AH | AL)</strong>
+                        <div className="bg-white p-1.5 rounded border border-slate-200 text-center shadow-2xs">
+                          <span className="text-slate-500 block text-[10px]">Accumulator</span>
+                          <strong className="text-slate-900 text-[13px]">AX (AH | AL)</strong>
                         </div>
-                        <div className="bg-slate-800/80 p-1.5 rounded border border-slate-700 text-center">
-                          <span className="text-slate-400 block text-[10px]">Base Register</span>
-                          <strong className="text-white text-[13px]">BX (BH | BL)</strong>
+                        <div className="bg-white p-1.5 rounded border border-slate-200 text-center shadow-2xs">
+                          <span className="text-slate-500 block text-[10px]">Base Register</span>
+                          <strong className="text-slate-900 text-[13px]">BX (BH | BL)</strong>
                         </div>
-                        <div className="bg-slate-800/80 p-1.5 rounded border border-slate-700 text-center">
-                          <span className="text-slate-400 block text-[10px]">Count Register</span>
-                          <strong className="text-white text-[13px]">CX (CH | CL)</strong>
+                        <div className="bg-white p-1.5 rounded border border-slate-200 text-center shadow-2xs">
+                          <span className="text-slate-500 block text-[10px]">Count Register</span>
+                          <strong className="text-slate-900 text-[13px]">CX (CH | CL)</strong>
                         </div>
-                        <div className="bg-slate-800/80 p-1.5 rounded border border-slate-700 text-center">
-                          <span className="text-slate-400 block text-[10px]">Data Register</span>
-                          <strong className="text-white text-[13px]">DX (DH | DL)</strong>
+                        <div className="bg-white p-1.5 rounded border border-slate-200 text-center shadow-2xs">
+                          <span className="text-slate-500 block text-[10px]">Data Register</span>
+                          <strong className="text-slate-900 text-[13px]">DX (DH | DL)</strong>
                         </div>
                       </div>
                     </div>
 
                     {/* Pointer & Index Registers */}
-                    <div className="bg-slate-800/40 p-3 rounded-xl border border-slate-700/40">
-                      <span className="text-[11px] text-slate-400 font-bold uppercase tracking-wider block mb-1.5">Pointer &amp; Index Registers (16-Bit)</span>
-                      <div className="grid grid-cols-4 gap-1 text-center font-bold text-white text-[13px]">
-                        <div className="bg-slate-800/80 p-2 rounded border border-slate-700">SP</div>
-                        <div className="bg-slate-800/80 p-2 rounded border border-slate-700">BP</div>
-                        <div className="bg-slate-800/80 p-2 rounded border border-slate-700">SI</div>
-                        <div className="bg-slate-800/80 p-2 rounded border border-slate-700">DI</div>
+                    <div className="bg-slate-100/70 p-3 rounded-xl border border-slate-200">
+                      <span className="text-[11px] text-slate-600 font-bold uppercase tracking-wider block mb-1.5">Pointer &amp; Index Registers (16-Bit)</span>
+                      <div className="grid grid-cols-4 gap-1 text-center font-bold text-slate-900 text-[13px]">
+                        <div className="bg-white p-2 rounded border border-slate-200 shadow-2xs">SP</div>
+                        <div className="bg-white p-2 rounded border border-slate-200 shadow-2xs">BP</div>
+                        <div className="bg-white p-2 rounded border border-slate-200 shadow-2xs">SI</div>
+                        <div className="bg-white p-2 rounded border border-slate-200 shadow-2xs">DI</div>
                       </div>
                     </div>
 
                     {/* SR Box */}
-                    <div className="p-2 bg-slate-800/80 rounded-lg border border-slate-700 text-center">
-                      <span className="text-slate-400 text-[11px] font-sans mr-2">Status Register / Flags:</span>
-                      <strong className="text-indigo-400 text-[13px]">SR</strong>
+                    <div className="p-2 bg-white rounded-lg border border-slate-200 text-center shadow-2xs">
+                      <span className="text-slate-600 text-[11px] font-sans mr-2">Status Register / Flags:</span>
+                      <strong className="text-indigo-700 text-[13px]">SR</strong>
                     </div>
                   </div>
                 </div>
@@ -1673,16 +1667,16 @@ export default function MemoryCalculationSimulator({ defaultTab = 'segmented-str
                       </div>
 
                       {/* Exponential Summary */}
-                      <div className="bg-indigo-950 text-indigo-100 rounded-lg p-2.5 text-center font-mono text-[11.5px] space-y-1 shadow-2xs">
+                      <div className="bg-indigo-50 border border-indigo-150 text-indigo-950 rounded-lg p-2.5 text-center font-mono text-[11.5px] space-y-1 shadow-2xs">
                         <div className="flex justify-around items-center">
                           <div>
-                            <span className="text-indigo-300 text-[9.5px] block font-sans font-bold">MAX MEMORY (BYTES)</span>
-                            <strong className="text-white text-[13px]">2<sup>20</sup> Bytes</strong>
+                            <span className="text-indigo-700 text-[9.5px] block font-sans font-bold">MAX MEMORY (BYTES)</span>
+                            <strong className="text-indigo-950 text-[13px]">2<sup>20</sup> Bytes</strong>
                           </div>
-                          <div className="text-indigo-400 font-light">|</div>
+                          <div className="text-indigo-300 font-light">|</div>
                           <div>
-                            <span className="text-indigo-300 text-[9.5px] block font-sans font-bold">MAX MEMORY (BITS)</span>
-                            <strong className="text-white text-[13px]">2<sup>23</sup> bits</strong>
+                            <span className="text-indigo-700 text-[9.5px] block font-sans font-bold">MAX MEMORY (BITS)</span>
+                            <strong className="text-indigo-950 text-[13px]">2<sup>23</sup> bits</strong>
                           </div>
                         </div>
                       </div>
@@ -1752,7 +1746,7 @@ export default function MemoryCalculationSimulator({ defaultTab = 'segmented-str
                             {block.assemblyExample && (
                               <div>
                                 <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-1.5">Sample Assembly / CPU Routine</span>
-                                <div className="bg-slate-900 rounded-lg p-3 border border-slate-800 font-mono text-[11.5px] text-slate-300 leading-normal whitespace-pre-wrap shadow-inner relative">
+                                <div className="bg-slate-50 rounded-lg p-3 border border-slate-200 font-mono text-[11.5px] text-indigo-950 font-semibold leading-normal whitespace-pre-wrap relative shadow-2xs">
                                   <span className="absolute right-2 top-1.5 text-[9px] font-sans text-slate-500 uppercase font-bold tracking-wider">8086 Assembly</span>
                                   {block.assemblyExample}
                                 </div>
@@ -1942,38 +1936,38 @@ export default function MemoryCalculationSimulator({ defaultTab = 'segmented-str
                             {/* ODD BANK (UPPER 512 KB) */}
                             <div className={`border-2 rounded-xl p-4 text-center transition-all flex flex-col justify-between h-44 shadow-2xs ${
                               isOddActive 
-                                ? 'border-indigo-500 bg-indigo-950 text-white scale-[1.01] shadow-md' 
-                                : 'border-slate-300 bg-slate-100 text-slate-400'
+                                ? 'border-indigo-500 bg-indigo-50/90 text-indigo-950 scale-[1.01] shadow-sm' 
+                                : 'border-slate-200 bg-slate-50 text-slate-500'
                             }`}>
                               <div>
-                                <span className={`text-[10px] font-mono font-bold block uppercase tracking-wider ${isOddActive ? 'text-indigo-300' : 'text-slate-400'}`}>
+                                <span className={`text-[10px] font-mono font-bold block uppercase tracking-wider ${isOddActive ? 'text-indigo-800' : 'text-slate-500'}`}>
                                   Upper Memory Bank (Odd Bank)
                                 </span>
-                                <strong className="text-[15px] font-sans block mt-1">512 KB Space</strong>
-                                <span className="text-[11px] block mt-1 font-mono text-slate-400">Addresses: 00001H, 00003H, ... FFFFFH</span>
+                                <strong className="text-[15px] font-sans block mt-1 text-slate-900">512 KB Space</strong>
+                                <span className="text-[11px] block mt-1 font-mono text-slate-500">Addresses: 00001H, 00003H, ... FFFFFH</span>
                               </div>
-                              <div className="pt-2 border-t border-dashed border-slate-700/50">
-                                <span className="text-[11px] block font-semibold text-slate-300">Bus Hook: <strong className="font-mono text-indigo-300">D8 - D15</strong></span>
-                                <span className="text-[10px] block mt-0.5 text-slate-400">Enabled by <strong className="font-mono text-indigo-300">BHE# = 0</strong></span>
+                              <div className="pt-2 border-t border-dashed border-slate-200">
+                                <span className="text-[11px] block font-semibold text-slate-700">Bus Hook: <strong className="font-mono text-indigo-700">D8 - D15</strong></span>
+                                <span className="text-[10px] block mt-0.5 text-slate-500">Enabled by <strong className="font-mono text-indigo-700">BHE# = 0</strong></span>
                               </div>
                             </div>
 
                             {/* EVEN BANK (LOWER 512 KB) */}
                             <div className={`border-2 rounded-xl p-4 text-center transition-all flex flex-col justify-between h-44 shadow-2xs ${
                               isEvenActive 
-                                ? 'border-emerald-500 bg-emerald-950 text-white scale-[1.01] shadow-md' 
-                                : 'border-slate-300 bg-slate-100 text-slate-400'
+                                ? 'border-emerald-500 bg-emerald-50/90 text-emerald-950 scale-[1.01] shadow-sm' 
+                                : 'border-slate-200 bg-slate-50 text-slate-500'
                             }`}>
                               <div>
-                                <span className={`text-[10px] font-mono font-bold block uppercase tracking-wider ${isEvenActive ? 'text-emerald-300' : 'text-slate-400'}`}>
+                                <span className={`text-[10px] font-mono font-bold block uppercase tracking-wider ${isEvenActive ? 'text-emerald-800' : 'text-slate-500'}`}>
                                   Lower Memory Bank (Even Bank)
                                 </span>
-                                <strong className="text-[15px] font-sans block mt-1">512 KB Space</strong>
-                                <span className="text-[11px] block mt-1 font-mono text-slate-400">Addresses: 00000H, 00002H, ... FFFFEH</span>
+                                <strong className="text-[15px] font-sans block mt-1 text-slate-900">512 KB Space</strong>
+                                <span className="text-[11px] block mt-1 font-mono text-slate-500">Addresses: 00000H, 00002H, ... FFFFEH</span>
                               </div>
-                              <div className="pt-2 border-t border-dashed border-slate-700/50">
-                                <span className="text-[11px] block font-semibold text-slate-300">Bus Hook: <strong className="font-mono text-emerald-300">D0 - D7</strong></span>
-                                <span className="text-[10px] block mt-0.5 text-slate-400">Enabled by <strong className="font-mono text-emerald-300">A0 = 0</strong></span>
+                              <div className="pt-2 border-t border-dashed border-slate-200">
+                                <span className="text-[11px] block font-semibold text-slate-700">Bus Hook: <strong className="font-mono text-emerald-700">D0 - D7</strong></span>
+                                <span className="text-[10px] block mt-0.5 text-slate-500">Enabled by <strong className="font-mono text-emerald-700">A0 = 0</strong></span>
                               </div>
                             </div>
                           </div>
@@ -2009,18 +2003,18 @@ export default function MemoryCalculationSimulator({ defaultTab = 'segmented-str
                           </div>
 
                           {/* Academic explanation block */}
-                          <div className="bg-slate-900 rounded-lg p-3 text-[12.5px] leading-relaxed text-slate-300">
-                            <strong className="text-white block text-[13px] mb-1 font-sans">🎓 Syllabus Guide: Why does the 8086 split physical memory into two banks?</strong>
+                          <div className="bg-slate-50 rounded-lg p-3 text-[12.5px] leading-relaxed text-slate-700 border border-slate-200">
+                            <strong className="text-slate-900 block text-[13px] mb-1 font-sans">🎓 Syllabus Guide: Why does the 8086 split physical memory into two banks?</strong>
                             <p className="font-sans">
                               The 8086 is a <strong>16-bit processor</strong> but must remain compatible with 8-bit peripherals and single-byte operations. Splitting RAM into Even and Odd physical banks allows the system board to read 8 bits from either bank independently, or fetch a full 16-bit word from both banks simultaneously (aligned word access). 
                             </p>
                             {bankOp === 'read-word-odd' && (
-                              <p className="mt-2 text-amber-300 border-t border-slate-800 pt-2 font-sans font-medium">
+                              <p className="mt-2 text-amber-900 bg-amber-50 p-2 rounded border border-amber-200 font-sans font-medium">
                                 ⚠️ <strong>Misaligned word penalty:</strong> Since address 00041H is ODD, the lower byte of the word sits in address 00041H (Odd Bank), but the upper byte sits in address 00042H (Even Bank). The processor cannot activate both banks at once for two different address alignments, forcing the BIU to run <strong>two back-to-back hardware cycles</strong>. Align variables on even addresses to keep code running fast!
                               </p>
                             )}
                             {bankOp === 'read-ivt-vector' && (
-                              <p className="mt-2 text-blue-300 border-t border-slate-800 pt-2 font-sans font-medium">
+                              <p className="mt-2 text-blue-900 bg-blue-50 p-2 rounded border border-blue-200 font-sans font-medium">
                                 ⚡ <strong>IVT Vector Transfer:</strong> Fetching the 4-byte interrupt vector for INT 21H from address 00084H requires reading a 32-bit far pointer (CS:IP). Since the 8086 data bus is 16-bit wide, the BIU performs <strong>Cycle 1</strong> to fetch the 16-bit Offset (IP = 00084H/00085H) from both Even and Odd banks simultaneously, followed immediately by <strong>Cycle 2</strong> to fetch the 16-bit Segment (CS = 00086H/00087H)!
                               </p>
                             )}

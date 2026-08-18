@@ -1560,22 +1560,8 @@ export default function InstructionDecoderSimulator({
       <div className="space-y-6 relative z-10">
         
         {/* Simulator Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-150 pb-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="p-2 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-xl">
-                <Cpu className="w-5 h-5" />
-              </span>
-              <h2 className="text-lg md:text-xl font-black text-slate-900 tracking-tight font-sans">
-                8086 Instruction & ALU Execution Laboratory
-              </h2>
-            </div>
-            <p className="text-xs text-slate-500 mt-1">
-              Intel 8086 Silicon Instruction Emulation & Interactive Execution Suite
-            </p>
-          </div>
-
-          {/* Navigation Tabs - SAME STYLE AS SLIDE 2 */}
+        <div className="flex flex-col md:flex-row md:items-center justify-end gap-4 border-b border-slate-150 pb-3">
+          {/* Navigation Tabs */}
           <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-2xl border border-slate-200/80 self-start md:self-auto overflow-x-auto max-w-full">
             {!hideLabTab && (
               <button

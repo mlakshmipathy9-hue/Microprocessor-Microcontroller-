@@ -223,21 +223,8 @@ export const courseData: Module[] = [
         ]
       },
       {
-        id: 'm2-pipelining',
-        title: '2. Instruction Pipelining & Prefetch Queue',
-        moduleTitle: 'Module 2: 8086 Internal Architecture & Execution Unit',
-        moduleId: 'm2',
-        points: [
-          'Two MOV Instructions Pipelining Example: Consider two sequential instructions: MOV AX, 1234H (B8 34 12) and MOV BX, 5678H (BB 78 56).',
-          'Phase 1 (Fetch Instruction 1): The Bus Interface Unit (BIU) fetches the 3 bytes for MOV AX, 1234H from memory into the 6-byte FIFO Prefetch Queue.',
-          'Phase 2 (Parallel Overlap): While the Execution Unit (EU) decodes and executes MOV AX, 1234H (loading 1234H into AX), the BIU concurrently prefetches the 3 bytes for MOV BX, 5678H from memory into the queue.',
-          'Phase 3 (Zero Delay Execution): When MOV AX finishes, MOV BX, 5678H is already sitting in the queue. The EU executes it immediately with zero memory fetch delay (loading 5678H into BX).'
-        ],
-        interactiveType: 'pipelining'
-      },
-      {
         id: 'm2-s2',
-        title: '3. Execution Unit (EU) & Registers',
+        title: '2. Execution Unit (EU) & Registers',
         moduleTitle: 'Module 2: 8086 Internal Architecture & Execution Unit',
         moduleId: 'm2',
         points: [
@@ -247,6 +234,20 @@ export const courseData: Module[] = [
           'Pointer & Index Registers (EU): SP (Stack Pointer), BP (Base Pointer), SI (Source Index), DI (Destination Index).'
         ],
         interactiveType: 'architecture'
+      },
+      {
+        id: 'm2-pipelining',
+        title: '3. Instruction Pipelining & Prefetch Queue',
+        moduleTitle: 'Module 2: 8086 Internal Architecture & Execution Unit',
+        moduleId: 'm2',
+        points: [
+          'Two MOV Instructions Pipelining Example: Consider sequential instructions MOV AX, 1234H (B8 34 12), MOV BX, 5678H (BB 78 56), and MOV CX, 9ABCH (B9 BC 9A).',
+          'Phase 1 (Fetch Instruction 1): The Bus Interface Unit (BIU) fetches the 3 bytes for MOV AX, 1234H from memory into the 6-byte FIFO Prefetch Queue (Clocks C1–C3).',
+          'Phase 2 (Parallel Overlap): While the Execution Unit (EU) decodes and executes MOV AX, 1234H (Clocks C4–C6), the BIU concurrently prefetches the 3 bytes for MOV BX, 5678H from memory into the queue.',
+          'Phase 3 (Zero Delay Execution): When MOV AX finishes, MOV BX is already sitting in the queue. The EU executes it immediately with zero memory fetch delay.',
+          'Graphical Waveform Analysis: Digital timing waveforms illustrate simultaneous BIU Fetch and EU Execute activity across clock cycles, demonstrating a 33.3% throughput increase over non-pipelined execution.'
+        ],
+        interactiveType: 'pipelining'
       },
       {
         id: 'm2-s3',
@@ -453,21 +454,21 @@ export const courseData: Module[] = [
         ]
       },
       {
-        id: 'm4-s3',
-        title: '2. Interactive 8086 Pin Diagram & M/IO Pin Function',
+        id: 'm4-s2',
+        title: '2. 8086 Pin Groupings & Functional Categories',
         moduleTitle: 'Module 4: 8086 Pin Configuration & Operating Modes',
         moduleId: 'm4',
         points: [
-          'Address/Data Bus Pins: AD0 to AD15 (Pins 2-16 & 39).',
-          'M/IO Pin (Pin 28 in Min Mode): Connected to Memory & I/O Address Decoders. HIGH (+5V) selects 1 MB Memory space; LOW (0V) selects 64 KB I/O Port space (IN/OUT instructions).',
-          'Control Signals: RD (Read), WR (Write), ALE (Address Latch Enable), READY (Acknowledge from slow memory).',
-          'Minimum Mode Bus Commands: M/IO combined with RD & WR forms MEMR (1, RD=0), MEMW (1, WR=0), IOR (0, RD=0), and IOW (0, WR=0).',
-          'Maximum Mode (Pin 28 = S2): Pin 28 becomes status line S2 sent to external 8288 Bus Controller, which outputs separate MRDC/MWTC & IORC/IOWC lines.'
+          'Broad Signal Classification: The 40 pins of the Intel 8086 IC are broadly categorized into 3 Major Operational Groups: (1) Common Signals (32 Pins), (2) Minimum Mode Signals (8 Pins), and (3) Maximum Mode Signals (8 Pins).',
+          'Group 1: Common Signals (32 Pins): Pins 1–23 & 32–40 perform identical functions in both MIN & MAX modes. Includes AD0–AD15 (Pins 2–16, 39), A16/S3–A19/S6 (Pins 35–38), BHĒ/S7 (Pin 34), RD̄ (Pin 32), READY (22), RESET (21), CLK (19), INTR (18), NMI (17), TEST̄ (23), MN/MX̄ (33), VCC (40), and GND (1 & 20).',
+          'Group 2: Minimum Mode Signals (8 Pins): Active on Pins 24–31 when MN/MX̄ = +5V (Single CPU mode). CPU outputs direct control strobes: INTĀ (24), ALE (25), DEN̄ (26), DT/R̄ (27), M/IŌ (28), WR̄ (29), HLDA (30), and HOLD (31).',
+          'Group 3: Maximum Mode Signals (8 Pins): Active on Pins 24–31 when MN/MX̄ = 0V (Multiprocessor mode). Pins reconfigured for status lines S̄₀, S̄₁, S̄₂ (26–28 decoded by 8288 Bus Controller), Queue Status QS0, QS1 (24–25), LOCK̄ (29), and RQ̄/GT1̄, RQ̄/GT0̄ (30–31).',
+          'Functional Sub-Groupings: Within these broad categories, pins are sub-grouped into Address/Data Bus (21 pins), Control (9/4 pins), Status (5/10 pins), System Control (6 pins), and Power Supply/CLK (4 pins).'
         ],
         interactiveType: 'pins'
       },
       {
-        id: 'm4-s2',
+        id: 'm4-s3',
         title: '3. Minimum Mode vs. Maximum Mode Environments',
         moduleTitle: 'Module 4: 8086 Pin Configuration & Operating Modes',
         moduleId: 'm4',
@@ -563,27 +564,32 @@ export const courseData: Module[] = [
     slides: [
       {
         id: 'm5-s1',
-        title: '1. Understanding System Timing',
+        title: '1. Understanding System Timing & Bus Cycles',
         moduleTitle: 'Module 5: System Timing & Bus Cycles',
         moduleId: 'm5',
         points: [
-          'Clock Cycle (T-state): The basic unit of time, equal to one period of the CLK input.',
-          'Bus Cycle / Machine Cycle: Time taken to perform one external access (e.g. read, write, I/O). Comprises exactly 4 T-states (T1, T2, T3, T4).',
-          'T1: Address phase. CPU outputs physical address, ALE goes high.',
-          'T2: Bus turnaround. Read/Write control signals go Low. Data direction is selected.',
-          'T3: Data phase. Data transfer is performed. Slow memory inserts WAIT states.',
-          'T4: Rest phase. Controls return to inactive states, ending cycle.'
+          'Minimum Mode Bus Timing: In Minimum Mode (MN/MX = +5V), the 8086 CPU directly generates control signals (ALE, DEN, DT/R, M/IO, RD, WR) across a 4 T-state bus cycle.',
+          'Clock Cycle (T-state): The basic unit of time equal to one period of the system CLK oscillator input.',
+          'Standard Bus Cycle (Machine Cycle): Time taken to perform one external access (Read/Write to Memory or I/O). Comprises 4 T-states (T1, T2, T3, T4).',
+          'T1 (Address Phase): CPU places 20-bit physical address on multiplexed bus (AD0-AD15) and pulses ALE HIGH to latch address into external 8282 latches.',
+          'T2 (Bus Turnaround): ALE drops LOW. RD/WR control lines transition LOW. DT/R selects data direction and DEN enables 8286 transceivers.',
+          'T3 (Data Phase): Data transfer occurs over D0-D15. Slow devices pull READY line LOW to insert Wait States (Tw) between T3 and T4.',
+          'T4 (Cycle Completion): RD/WR and DEN return HIGH, disabling transceivers and releasing the bus for the next cycle.',
+          'Note on Maximum Mode: In Maximum Mode (MN/MX = GND), an external 8288 Bus Controller chip decodes the CPU status lines (S0, S1, S2) to output bus commands like MRDC (Memory Read), MWTC (Memory Write), IORC (I/O Read), and IOWC (I/O Write) instead.'
         ]
       },
       {
         id: 'm5-s2',
-        title: '2. Interactive Waveform Timing Explorer',
+        title: '2. Interactive Waveform Timing Explorer (Memory & I/O Read/Write)',
         moduleTitle: 'Module 5: System Timing & Bus Cycles',
         moduleId: 'm5',
         points: [
-          'Observe ALE going high strictly during T1 to capture the address multiplexed on the bus.',
-          'RD / WR go active low during T2, staying low throughout T3 to allow signal settling.',
-          'DEN controls external buffer connection to avoid bus collision noise.'
+          'Interactive Timing Waveforms: Visualizes CPU bus signal transitions across clock states (T1–T4) for Memory Read, Memory Write, I/O Read, and I/O Write bus cycles.',
+          'Memory Operations (M/IO# = HIGH): Accesses RAM/ROM using 20-bit physical addresses. Active control signals are RD# (Memory Read) or WR# (Memory Write).',
+          'I/O Operations (M/IO# = LOW): Accesses peripheral ports using 16-bit port addresses (IN / OUT instructions). Active control signals are RD# (I/O Read) or WR# (I/O Write).',
+          'Address Latch Enable (ALE): Pulses HIGH during T1 to trigger external 8282 latches to capture multiplexed address lines (AD0–AD15) before data phase.',
+          'Transceiver Control (DT/R# & DEN#): DT/R# sets data direction (0 for Read, 1 for Write) and DEN# enables 8286 transceivers during T2–T3.',
+          'Maximum Mode Equivalents: Uses external 8288 Bus Controller to output MRDC# (Mem Read), MWTC# (Mem Write), IORC# (I/O Read), and IOWC# (I/O Write).'
         ],
         interactiveType: 'timing'
       },
@@ -1549,30 +1555,118 @@ export const courseData: Module[] = [
     slides: [
       {
         id: 'm15-s1',
-        title: '1. Interfacing Switches, LEDs & Seven Segment Displays 💡',
+        title: '1. Stepper Motor Interfacing: Circuit Blocks, Simulator & ALP Code 🔌🔄💻',
         moduleTitle: 'Module 15: Peripheral Interfacing (LEDs, Displays & Stepper Motor)',
         moduleId: 'm15',
         interactiveType: 'peripheral-interfacing',
         points: [
-          'Switch Interfacing & Debouncing: Mechanical push switches generate contact bounce noise when pressed; hardware (SR flip-flops, RC filters) or software delays (~20 ms) resolve bounce.',
-          'LED Interfacing: LEDs require current-limiting resistors (220Ω - 330Ω). In Active-Low logic, MPU outputs 0 to light LED; in Active-High logic, MPU outputs 1.',
-          'Seven Segment Display Types: Common Anode (all anodes connected to +5V; active-low logic 0 turns on segment) and Common Cathode (all cathodes grounded; active-high logic 1 turns on segment).',
-          'Display Segment Mapping: 7 segments (a, b, c, d, e, f, g) plus Decimal Point (dp) are mapped to 8-bit port lines (D0-D7). For Common Cathode digit "0" (a,b,c,d,e,f ON), 7-segment code is 3FH.',
-          'Multiplexed Display System: Uses 8255 Port A to send segment data and Port C to drive digit select transistors sequentially for multi-digit displays.'
+          'Block 1: 8086 Microprocessor (Controller / Master Unit)\n• Function: Acts as the brain of the system. It executes the Assembly Language Program (ALP), generates digital timing pulses, and determines the rotation direction (CW/CCW), speed (via software delay loops), and total step count.\n• Key Connections:\n  - AD0–AD15: Multiplexed Address/Data bus lines.\n  - ALE: Pulses HIGH in T1 to latch the address into the 74LS373.\n  - M/IO#, RD#, WR#: System control bus signals specifying an I/O write cycle.',
+          'Block 2: Address Demultiplexer & Decoder Stage\nThis stage ensures that I/O addresses issued by the 8086 correctly select the 8255 PPI chip without bus contention.\n• 74LS373 Octal Transparent D-Latch:\n  - Function: Latches the lower 16 address bits (A0–A15) when ALE is HIGH and holds them steady during T2–T4 so that AD0–AD7 can be used as a bidirectional data bus (D0–D7).\n• 74LS138 (3-to-8 Line Decoder):\n  - Function: Decodes upper address bits (A2–A7) along with M/IO# to output an active-low CS# (Chip Select) signal to pin 6 of the 8255 PPI at the assigned base port address (e.g., 80H).\n• Port Address Map:\n  - Port A = 80H (A1=0, A0=0)\n  - Port B = 82H (A1=0, A0=1)\n  - Port C = 84H (A1=1, A0=0)\n  - Control Word Register = 86H (A1=1, A0=1)',
+          'Block 3: Intel 8255 Programmable Peripheral Interface (PPI)\n• Function: Provides programmable parallel I/O ports to interface the CPU with the motor driver.\n• Configuration:\n  - Initialized in Mode 0 (Basic I/O) with Port A configured as an Output port by sending control byte 80H (10000000b) to the Control Register at address 86H.\n  - Pins PA0–PA3 output the 4-bit excitation nibble (03H, 06H, 0CH, 09H) to energize the motor phases in sequence.',
+          'Block 4: ULN2003A Darlington Transistor Driver IC\n• Why it is Required:\n  - Current Amplification: The 8255 I/O pins can only provide ~1.6 mA to 2.5 mA of current (logic levels 0V/5V), whereas each stepper motor coil requires 200 mA to 500 mA at +12V DC.\n  - Inductive Back-EMF Suppression: Motor coils are inductors. When current to a coil is suddenly shut off, a dangerous reverse voltage spike (V = -L di/dt) is generated.\n• Internal Structure & Connections:\n  - Contains 7 open-collector Darlington pairs with integral suppression diodes.\n  - Inputs (1B–4B / In1–In4): Connected to 8255 pins PA0–PA3.\n  - Outputs (1C–4C / Out1–Out4): Connected to Motor Coils Phase A, B, C, D.\n  - Pin 8 (GND): Connected to common system ground.\n  - Pin 9 (COM): Connected to +12V DC to connect internal freewheeling clamp diodes across the coils.',
+          'Block 5: 4-Phase Stepper Motor (Actuator) & Excitation Modes\n• Operating Principle: Electromechanical transducer converting digital excitation pulses into discrete mechanical angular displacement. Step Angle (β) = 360° / (Number of Stator Phases × Rotor Teeth); 4 phases with 50 teeth yields 1.8°/step (200 steps/rev).\n• Wave Drive (1-Phase ON): Single coil energized at a time (01H -> 02H -> 04H -> 08H); lowest power consumption, 1.8° step angle.\n• Full-Step Drive (2-Phase ON): Two adjacent coils energized simultaneously (03H -> 06H -> 0CH -> 09H); produces ~1.414× maximum holding torque.\n• Half-Step Drive (Alternating 1 & 2 Phase ON): Alternates 1-phase and 2-phase excitation (01H -> 03H -> 02H -> 06H -> 04H -> 0CH -> 08H -> 09H); doubles angular resolution to 0.9°/step (400 steps/rev).',
+          '8086 Assembly Program (ALP) Tab:\n• Code Structure: Complete line-by-line commented assembly program implementing 8255 PPI initialization (80H to port 86H), 2-phase ON excitation lookup table (03H, 06H, 0CH, 09H), and software settling delay subroutine (~50 ms) accessible directly via the dedicated "Stepper Motor ALP (Code)" tab.'
         ]
       },
       {
         id: 'm15-s2',
-        title: '2. Stepper Motor Architecture & Interfacing 🔄',
+        title: '2. Seven-Segment LED Display Interfacing 💡',
         moduleTitle: 'Module 15: Peripheral Interfacing (LEDs, Displays & Stepper Motor)',
         moduleId: 'm15',
         interactiveType: 'peripheral-interfacing',
         points: [
-          'Stepper Motor Principle: Electromechanical device that converts electrical digital pulses into discrete mechanical angular movements (steps).',
-          'Step Angle Calculation: Step Angle (β) = 360° / (Number of Stator Phases × Rotor Teeth). Common step angles include 1.8° (200 steps/rev) and 7.5° (48 steps/rev).',
-          'Excitation Sequences: Wave Drive (one phase ON at a time: 11H -> 22H -> 44H -> 88H), Full-Step Drive (two phases ON: 33H -> 66H -> CCH -> 99H), and Half-Step Drive (alternating 1 and 2 phases for twice the angular resolution).',
-          'Driver IC (ULN2003 / L293D): Microprocessor pins cannot supply high inductive current (~500mA); high-current Darlington transistor array ICs (ULN2003) buffer 8255 port pins.',
-          '8086 Control Program: MPU outputs sequence bytes to 8255 Port A with software delay loops between step pulses to control motor speed and rotation direction.'
+          'Display Segment Mapping: 7 LED segments (a, b, c, d, e, f, g) plus Decimal Point (dp) are mapped to 8-bit port lines (D0-D7). Resistors (220Ω - 330Ω) limit current to safe levels (~10-15 mA).',
+          'Common Cathode Configuration: All LED cathodes share a common ground (0V); applying Logic HIGH (1 or +5V) to an individual anode pin illuminates that segment (e.g., digit "0" code = 3FH).',
+          'Common Anode Configuration: All LED anodes share a common +5V rail; applying Logic LOW (0 or 0V) to an individual cathode pin illuminates that segment (e.g., digit "0" code = C0H).',
+          'Multiplexed Multi-Digit Display: Uses 8255 Port A to transmit 7-segment data codes and Port C pins to drive digit select transistors (BC547/BC557) sequentially at ~50 Hz for flicker-free persistence of vision.',
+          'BCD to 7-Segment Conversion: 8086 uses lookup tables (`XLAT` instruction) to convert raw BCD/hex values into corresponding 7-segment byte patterns efficiently.'
+        ]
+      },
+      {
+        id: 'm15-s3',
+        title: '3. 4x4 Matrix Keypad Interfacing & Debouncing ⌨️',
+        moduleTitle: 'Module 15: Peripheral Interfacing (LEDs, Displays & Stepper Motor)',
+        moduleId: 'm15',
+        interactiveType: 'peripheral-interfacing',
+        points: [
+          'Matrix Keypad Architecture: 16 push-buttons arranged in 4 rows (R0-R3) and 4 columns (C0-C3), saving I/O pins (requires only 8 pins instead of 16 dedicated lines).',
+          'Row Scan & Column Sense: 8255 Port A (PA0-PA3) outputs active-LOW signals to rows one at a time, while Port B (PB0-PB3) reads columns pulled HIGH by 10kΩ resistors. If a key is pressed, its column line reads LOW (0).',
+          'Contact Bouncing & Software Debounce: Mechanical switches vibrate for 10-20 ms upon contact closure; software delay loops (~20 ms) verify steady-state signals before registering a valid keypress.',
+          'Key Identification Algorithm: Ground all rows to detect any press -> Wait 20 ms debounce -> Ground rows sequentially to identify row -> Read Port B column nibble -> Calculate key code via lookup table.',
+          'Two-Key Lockout & N-Key Rollover: Program prevents false multi-triggering by waiting for complete key release before scanning for the next input.'
+        ]
+      },
+      {
+        id: 'm15-s4',
+        title: '4. Traffic Light Controller Interfacing 🚦',
+        moduleTitle: 'Module 15: Peripheral Interfacing (LEDs, Displays & Stepper Motor)',
+        moduleId: 'm15',
+        interactiveType: 'peripheral-interfacing',
+        points: [
+          'Traffic Controller Architecture: Controls a 4-way road intersection (North-South and East-West corridors) using 8255 parallel I/O lines driving Red, Yellow, and Green LED arrays.',
+          'Port Line Mapping: 8255 Port A pins mapped as PA0=NS Red, PA1=NS Yellow, PA2=NS Green, PA3=EW Red, PA4=EW Yellow, PA5=EW Green.',
+          'State Sequencing Machine: Phase 1: NS Green & EW Red (Code 21H) -> Phase 2: NS Yellow & EW Red (Code 11H) -> Phase 3: NS Red & EW Green (Code 0CH) -> Phase 4: NS Red & EW Yellow (Code 0AH).',
+          'Software Timing Delays: 8086 uses nested software delay loops or programmable timer (8253/8254) interrupts to hold green signals for extended durations (~30s) and yellow signals for brief transitions (~3-5s).',
+          'Pedestrian & Sensor Extension: Port C lines can be configured as inputs to accept pedestrian crosswalk push-buttons and inductive vehicle loop sensors.'
+        ]
+      },
+      {
+        id: 'm15-s5',
+        title: '5. 8086 Assembly Programs (ALP) for Peripherals 💻',
+        moduleTitle: 'Module 15: Peripheral Interfacing (LEDs, Displays & Stepper Motor)',
+        moduleId: 'm15',
+        interactiveType: 'peripheral-interfacing',
+        points: [
+          'Complete 8086 Stepper Motor ALP (Line-by-Line Commented):\n' +
+          '; --- 8086 Stepper Motor Control Program via 8255 PPI ---\n' +
+          '.MODEL SMALL                  ; Specify small memory model\n' +
+          '.STACK 64                     ; Allocate 64 bytes for stack operations\n' +
+          '.DATA                         ; Begin data segment\n' +
+          '  STEP_CW DB 03H,06H,0CH,09H ; 4-phase 2-phase ON clockwise excitation sequence (PA0-PA3)\n' +
+          '.CODE                         ; Begin code segment\n' +
+          'MAIN PROC                     ; Program entry point\n' +
+          '  MOV AX, @DATA               ; Load address of data segment into AX\n' +
+          '  MOV DS, AX                  ; Initialize DS with data segment base\n' +
+          '  MOV AL, 80H                 ; Control Word 80H: Mode 0, Port A/B/C as outputs\n' +
+          '  OUT 86H, AL                 ; Write control word to 8255 control register (port 86H)\n' +
+          'ROTATE:                       ; Continuous rotation label\n' +
+          '  MOV SI, 0                   ; Reset lookup table pointer to first step\n' +
+          '  MOV CX, 4                   ; Load CX with 4 (4 steps per full electrical cycle)\n' +
+          'STEP_LOOP:                    ; Single step sequence loop\n' +
+          '  MOV AL, STEP_CW[SI]         ; Load current excitation code from memory into AL\n' +
+          '  OUT 80H, AL                 ; Output 4-bit nibble to Port A (80H) -> ULN2003 driver\n' +
+          '  CALL DELAY                  ; Wait for rotor to align with stator field\n' +
+          '  INC SI                      ; Point SI to next excitation code\n' +
+          '  LOOP STEP_LOOP              ; Decrement CX; repeat while CX != 0\n' +
+          '  JMP ROTATE                  ; Repeat full rotation sequence indefinitely\n' +
+          'DELAY PROC                    ; Software delay subroutine\n' +
+          '  PUSH CX                     ; Preserve outer loop counter on stack\n' +
+          '  MOV CX, 0FFFFH              ; Load delay counter (65535 loop iterations)\n' +
+          'D1: LOOP D1                   ; Decrement CX until 0 (software delay ~50ms)\n' +
+          '  POP CX                      ; Restore CX register from stack\n' +
+          '  RET                         ; Return to caller\n' +
+          'DELAY ENDP                    ; End of delay subroutine\n' +
+          'MAIN ENDP                     ; End of main procedure\n' +
+          'END MAIN                      ; Program end marker',
+          '7-Segment Display ALP with Line-by-Line Comments:\n' +
+          '; --- Display Hex Digits 0-F on 7-Segment via 8255 Port A ---\n' +
+          'MOV AL, 80H                   ; Control Word 80H (Mode 0, all ports output)\n' +
+          'OUT 86H, AL                   ; Configure 8255 PPI at port 86H\n' +
+          'MOV BX, OFFSET TABLE          ; Load base address of 7-segment lookup table into BX\n' +
+          'MOV AL, 05H                   ; Value to display (Hex digit 5)\n' +
+          'XLAT                          ; Translate AL = TABLE[AL] -> returns 6DH for digit 5\n' +
+          'OUT 80H, AL                   ; Output segment code 6DH to Port A (80H)\n' +
+          'HLT                           ; Halt 8086 execution',
+          '4x4 Keypad Scanning ALP with Line-by-Line Comments:\n' +
+          '; --- 4x4 Keypad Row-Scan Subroutine ---\n' +
+          'MOV AL, 82H                   ; CW: Port A=Output (rows), Port B=Input (columns)\n' +
+          'OUT 86H, AL                   ; Initialize 8255 control port (86H)\n' +
+          'MOV AL, 0FEH                  ; Ground Row 0 (PA0=0, PA1-PA3=1)\n' +
+          'OUT 80H, AL                   ; Send row scan ground mask to Port A (80H)\n' +
+          'IN AL, 82H                    ; Read column response lines from Port B (82H)\n' +
+          'AND AL, 0FH                   ; Mask upper nibble to isolate 4 column bits\n' +
+          'CMP AL, 0FH                   ; Compare with 0FH (all HIGH = no key in Row 0)\n' +
+          'JNZ KEY_FOUND                 ; If not 0FH, key is pressed in Row 0! Branch.'
         ]
       },
       {
@@ -2058,5 +2152,700 @@ export const courseData: Module[] = [
         ]
       }
     ]
+  },
+  {
+    id: 'm21',
+    title: 'Module 21: 8051 Microcontroller Architecture',
+    slides: [
+      {
+        id: 'm21-s1',
+        title: '1. Introduction to Microcontrollers & 8051 Overview',
+        moduleTitle: 'Module 21: 8051 Microcontroller Architecture',
+        moduleId: 'm21',
+        points: [
+          'Microprocessor vs. Microcontroller: A Microprocessor (like 8086) contains only CPU core components (ALU, Registers) and requires external RAM, ROM, Timers, and I/O chips on the motherboard. A Microcontroller (like 8051) integrates CPU, RAM, ROM, Timers, Serial Port, and Parallel I/O ports on a single silicon die.',
+          'Intel 8051 Core Features: 8-bit CPU optimized for control applications, Harvard Architecture (separate 64 KB Program ROM and 64 KB Data RAM address spaces).',
+          'On-Chip Resources: 128 Bytes Internal RAM, 4 KB On-Chip Flash/EPROM ROM, Two 16-bit Timers/Counters (Timer 0 & Timer 1), Full-Duplex Serial UART Port, Four 8-bit Parallel I/O Ports (32 I/O lines), and 5-source Interrupt Controller with 2 priority levels.',
+          'Oscillator & Clock: On-chip oscillator circuit driven by an external quartz crystal (typically 11.0592 MHz or 12 MHz). 1 Machine Cycle = 12 Clock Cycles (1 μs period at 12 MHz).'
+        ]
+      },
+      {
+        id: 'm21-s2',
+        title: '2. 8051 Hardware Block Diagram & Core Units',
+        moduleTitle: 'Module 21: 8051 Microcontroller Architecture',
+        moduleId: 'm21',
+        points: [
+          'Interactive 8051 Block Diagram: Click any internal hardware block to inspect functional capabilities, registers, and interconnect buses.',
+          'Arithmetic Logic Unit (ALU): Performs 8-bit addition, subtraction, multiplication (MUL AB), division (DIV AB), BCD adjustment (DA A), and bitwise logic operations.',
+          'Accumulator (A / ACC) & B Register: Primary 8-bit registers residing at SFR addresses E0H and F0H.',
+          'Program Counter (PC) & Data Pointer (DPTR): PC is a 16-bit register holding the ROM instruction address. DPTR is a 16-bit register (split into DPH at 83H and DPL at 82H) used for external memory data transfer.'
+        ],
+        interactiveType: 'mcu-8051'
+      },
+      {
+        id: 'm21-quiz',
+        title: 'Module 21 Recap Quiz',
+        moduleTitle: 'Module 21: 8051 Microcontroller Architecture',
+        moduleId: 'm21',
+        interactiveType: 'quiz',
+        quizQuestions: [
+          {
+            question: 'How much internal data RAM and on-chip program ROM does the standard Intel 8051 microcontroller contain?',
+            options: ['64 KB RAM, 64 KB ROM', '128 Bytes RAM, 4 KB ROM', '1 KB RAM, 16 KB ROM', '256 Bytes RAM, 8 KB ROM'],
+            correctAnswer: 1,
+            explanation: 'The standard 8051 contains 128 Bytes of internal RAM and 4 KB of on-chip program ROM.'
+          },
+          {
+            question: 'How many clock oscillator cycles make up exactly one 8051 machine cycle?',
+            options: ['1', '4', '6', '12'],
+            correctAnswer: 3,
+            explanation: 'An 8051 machine cycle consists of 12 clock oscillator periods (states S1P1 through S6P2).'
+          },
+          {
+            question: 'Which 16-bit register in the 8051 is used as a memory pointer for accessing external RAM (MOVX) or program ROM tables (MOVC)?',
+            options: ['Program Counter (PC)', 'Data Pointer (DPTR)', 'Stack Pointer (SP)', 'Accumulator (ACC)'],
+            correctAnswer: 1,
+            explanation: 'The 16-bit Data Pointer (DPTR = DPH:DPL) serves as the primary pointer for external memory accesses.'
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'm22',
+    title: 'Module 22: Special Function Registers (SFRs) & Memory',
+    slides: [
+      {
+        id: 'm22-s1',
+        title: '1. 8051 Internal RAM & ROM Memory Organization',
+        moduleTitle: 'Module 22: Special Function Registers (SFRs) & Memory',
+        moduleId: 'm22',
+        points: [
+          'Internal RAM Structure (00H to 7FH - 128 Bytes): Divided into 3 distinct zones:',
+          '1) Register Banks 0–3 (00H–1FH): 32 bytes arranged into 4 switchable banks, each containing registers R0 through R7.',
+          '2) Bit Addressable RAM (20H–2FH): 16 bytes containing 128 individually addressable bits (bit addresses 00H through 7FH). Allows Boolean operations without affecting adjacent bits.',
+          '3) General Purpose Scratchpad RAM (30H–7FH): 80 bytes for general variables and the internal hardware stack.',
+          'Upper 128 Bytes RAM Space (80H–FFH): Dedicated to Special Function Registers (SFRs).'
+        ]
+      },
+      {
+        id: 'm22-s2',
+        title: '2. Special Function Registers (SFRs) Map & Bit Addressability',
+        moduleTitle: 'Module 22: Special Function Registers (SFRs) & Memory',
+        moduleId: 'm22',
+        points: [
+          'SFR Memory Map (80H to FFH): Control and status registers for CPU core, timers, serial port, I/O ports, and interrupts.',
+          'Bit Addressable SFRs: SFRs whose hexadecimal addresses end in 0H or 8H (e.g. ACC @ E0H, B @ F0H, PSW @ D0H, P0 @ 80H, P1 @ 90H, P2 @ A0H, P3 @ B0H, TCON @ 88H, SCON @ 98H, IE @ A8H, IP @ B8H) are individually bit-addressable!',
+          'Byte-Only SFRs: SP (81H), DPTR (DPH=83H, DPL=82H), TMOD (89H), TH0/TL0 (8CH/8AH), TH1/TL1 (8DH/8BH), SBUF (99H), PCON (87H).'
+        ],
+        interactiveType: 'sfr-memory'
+      },
+      {
+        id: 'm22-s3',
+        title: '3. Program Status Word (PSW) & Register Bank Switching',
+        moduleTitle: 'Module 22: Special Function Registers (SFRs) & Memory',
+        moduleId: 'm22',
+        points: [
+          'Program Status Word (PSW @ D0H): 8-bit flag register holding CPU status flags:',
+          'PSW.7 (CY): Carry flag set on unsigned arithmetic carry or borrow.',
+          'PSW.6 (AC): Auxiliary Carry flag set on carry out of bit 3 (used for BCD DA A).',
+          'PSW.5 (F0): General purpose user flag bit 0.',
+          'PSW.4 & PSW.3 (RS1 & RS0): Register Bank Selector bits (00 = Bank 0 at 00H, 01 = Bank 1 at 08H, 10 = Bank 2 at 10H, 11 = Bank 3 at 18H).',
+          'PSW.2 (OV): Overflow flag set on signed two\'s complement arithmetic overflow.',
+          'PSW.1: Reserved for user/future expansion.',
+          'PSW.0 (P): Parity flag automatically updated by hardware (1 if Accumulator has odd number of 1s).'
+        ]
+      },
+      {
+        id: 'm22-quiz',
+        title: 'Module 22 Recap Quiz',
+        moduleTitle: 'Module 22: Special Function Registers (SFRs) & Memory',
+        moduleId: 'm22',
+        interactiveType: 'quiz',
+        quizQuestions: [
+          {
+            question: 'Which bits in the Program Status Word (PSW) register select the active register bank (Banks 0–3)?',
+            options: ['CY and AC', 'RS1 and RS0', 'OV and P', 'F0 and F1'],
+            correctAnswer: 1,
+            explanation: 'RS1 (PSW.4) and RS0 (PSW.3) select the active working register bank (00 = Bank 0, 01 = Bank 1, 10 = Bank 2, 11 = Bank 3).'
+          },
+          {
+            question: 'What is the default RAM stack location loaded into the Stack Pointer (SP @ 81H) upon hardware reset?',
+            options: ['00H', '07H', '20H', '80H'],
+            correctAnswer: 1,
+            explanation: 'Upon reset, SP is loaded with 07H, meaning the first PUSH instruction increments SP to 08H (start of Register Bank 1).'
+          },
+          {
+            question: 'Which range of internal RAM addresses contains 128 individually addressable bits (bit addresses 00H–7FH)?',
+            options: ['00H to 0FH', '20H to 2FH', '30H to 7FH', '80H to FFH'],
+            correctAnswer: 1,
+            explanation: 'Addresses 20H through 2FH (16 bytes) form the bit-addressable RAM space in the 8051.'
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'm23',
+    title: 'Module 23: 8051 I/O Pins, Ports & Circuits',
+    slides: [
+      {
+        id: 'm23-s1',
+        title: '1. 8051 40-Pin DIP Package & Power/Oscillator Pins',
+        moduleTitle: 'Module 23: 8051 I/O Pins, Ports & Circuits',
+        moduleId: 'm23',
+        points: [
+          '40-Pin Dual In-line Package (DIP): 32 pins dedicated to 4 parallel I/O ports, plus 8 control and power supply pins.',
+          'VCC (Pin 40) & GND (Pin 20): +5V DC regulated power supply and ground return.',
+          'XTAL1 (Pin 19) & XTAL2 (Pin 18): On-chip oscillator input/output connected to external quartz crystal and two 30 pF capacitors.',
+          'RESET (Pin 9): Active HIGH reset input requiring at least 2 machine cycles (24 clock periods) HIGH to reset processor.',
+          'EA# / VPP (Pin 31 - External Access): Tied HIGH (+5V) for internal 4KB ROM execution; tied LOW (0V) for external ROM (0000H–FFFFH).'
+        ]
+      },
+      {
+        id: 'm23-s2',
+        title: '2. Parallel I/O Ports Structure (P0, P1, P2, P3) & Circuits',
+        moduleTitle: 'Module 23: 8051 I/O Pins, Ports & Circuits',
+        moduleId: 'm23',
+        points: [
+          'Four 8-bit Parallel Ports (32 Bidirectional Lines): Port 0 (Pins 32–39), Port 1 (Pins 1–8), Port 2 (Pins 21–28), Port 3 (Pins 10–17).',
+          'Port 0 Circuit: True Open-Drain bidirectional port without internal pull-up resistors. Requires external 10kΩ pull-up resistor array for general digital I/O. Functions as multiplexed low-order address/data bus (AD0–AD7) during external memory expansion.',
+          'Ports 1, 2, 3 Circuits: Quasi-bidirectional ports with internal FET pull-up resistors. Must write 1s to port latches before reading external inputs.',
+          'Port 2 Circuit: Outputs high-order address byte (A8–A15) when interfacing with external ROM/RAM.'
+        ],
+        interactiveType: 'mcu-pins'
+      },
+      {
+        id: 'm23-s3',
+        title: '3. Port 3 Alternate Functions & Bus Control Signals',
+        moduleTitle: 'Module 23: 8051 I/O Pins, Ports & Circuits',
+        moduleId: 'm23',
+        points: [
+          'Port 3 Multi-Functional Lines:',
+          '• P3.0 (RXD) & P3.1 (TXD): Serial data input / output pins for 8251/UART communication.',
+          '• P3.2 (INT0#) & P3.3 (INT1#): External hardware interrupt inputs 0 and 1.',
+          '• P3.4 (T0) & P3.5 (T1): External timer/counter clock inputs.',
+          '• P3.6 (WR#) & P3.7 (RD#): Active-low write and read strobe lines for external RAM (MOVX).',
+          'ALE / PROG# (Pin 30): Address Latch Enable pulses HIGH to latch Port 0 address (A0–A7) into external 74LS373 latch.',
+          'PSEN# (Pin 29): Program Store Enable output strobe for fetching instructions from external EPROM.'
+        ]
+      },
+      {
+        id: 'm23-quiz',
+        title: 'Module 23 Recap Quiz',
+        moduleTitle: 'Module 23: 8051 I/O Pins, Ports & Circuits',
+        moduleId: 'm23',
+        interactiveType: 'quiz',
+        quizQuestions: [
+          {
+            question: 'Which 8051 I/O port has open-drain outputs and requires external pull-up resistors when used as general-purpose digital I/O?',
+            options: ['Port 0', 'Port 1', 'Port 2', 'Port 3'],
+            correctAnswer: 0,
+            explanation: 'Port 0 is an open-drain port without internal pull-ups, requiring an external pull-up resistor network for standalone I/O.'
+          },
+          {
+            question: 'What is the function of the PSEN# (Pin 29) signal on the 8051 microcontroller?',
+            options: [
+              'Power supply enable for standby mode',
+              'Active-low output enable strobe for reading code from external ROM',
+              'Parallel printer strobe signal',
+              'Analog reference voltage input'
+            ],
+            correctAnswer: 1,
+            explanation: 'PSEN# (Program Store Enable) is an active-low output signal connected to the Output Enable (OE#) pin of external program EPROMs.'
+          },
+          {
+            question: 'Which pin on Port 3 serves as the active-low External Interrupt 0 input (INT0#)?',
+            options: ['P3.0', 'P3.2', 'P3.4', 'P3.6'],
+            correctAnswer: 1,
+            explanation: 'Pin P3.2 serves as the External Interrupt 0 input (INT0#).'
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'm24',
+    title: 'Module 24: 8051 Addressing Modes & Instruction Set',
+    slides: [
+      {
+        id: 'm24-s1',
+        title: '1. 8051 Addressing Modes Overview',
+        moduleTitle: 'Module 24: 8051 Addressing Modes & Instruction Set',
+        moduleId: 'm24',
+        points: [
+          'Addressing Modes: Methods used by 8051 instructions to specify operand memory locations or constant values.',
+          '1) Immediate Addressing: Operand is a constant data value preceded by "#" (e.g. MOV A, #55H / MOV DPTR, #1234H).',
+          '2) Register Addressing: Operands are held in working registers R0–R7, A, B, DPTR, or C (e.g. MOV A, R3 / ADD A, R0).',
+          '3) Direct Addressing: Operands specified by 8-bit RAM memory or SFR hexadecimal address (e.g. MOV A, 30H / MOV 90H, A).',
+          '4) Register-Indirect Addressing: Memory location pointed to by R0 or R1 using "@" prefix (e.g. MOV A, @R0 / MOVX A, @DPTR).',
+          '5) Indexed Addressing: Program ROM table lookup using DPTR or PC as base and A as offset (e.g. MOVC A, @A+DPTR).'
+        ]
+      },
+      {
+        id: 'm24-s2',
+        title: '2. 8051 Instruction Set Groups & Opcode Explorer',
+        moduleTitle: 'Module 24: 8051 Addressing Modes & Instruction Set',
+        moduleId: 'm24',
+        points: [
+          '8051 Instruction Classification (5 Categories):',
+          '• Data Transfer Instructions: MOV, MOVX, MOVC, PUSH, POP, XCHG, XCHD.',
+          '• Arithmetic Instructions: ADD, ADDC, SUBB, INC, DEC, MUL AB, DIV AB, DA A.',
+          '• Logical Instructions: ANL, ORL, XRL, CLR A, CPL A, RL, RLC, RR, RRC, SWAP A.',
+          '• Bit / Boolean Instructions: CLR bit, SETB bit, CPL bit, ANL C, bit, ORL C, bit, MOV C, bit.',
+          '• Program Branching Instructions: LJMP, AJMP, SJMP, JZ, JNZ, CJNE, DJNZ, LCALL, ACALL, RET, RETI.'
+        ],
+        interactiveType: 'mcu-instructions'
+      },
+      {
+        id: 'm24-s3',
+        title: '3. Special Instructions & Boolean Feature Set',
+        moduleTitle: 'Module 24: 8051 Addressing Modes & Instruction Set',
+        moduleId: 'm24',
+        points: [
+          'Boolean Processor Capabilities: The 8051 includes a complete single-bit Boolean processor with the Carry Flag (CY) acting as a 1-bit accumulator!',
+          'Single-Bit Logic Commands: SETB C, CLR P1.0, CPL ACC.7, ANL C, P3.2 enable instant bit manipulation without read-modify-write masking overhead.',
+          'Compare and Jump if Not Equal (CJNE): Compares 2 bytes and branches if not equal; sets Carry Flag if Destination < Source.',
+          'Decrement and Jump if Not Zero (DJNZ): Decrements register/RAM byte by 1 and branches if non-zero in a single 2-byte instruction (ideal for hardware delay loops!).'
+        ]
+      },
+      {
+        id: 'm24-quiz',
+        title: 'Module 24 Recap Quiz',
+        moduleTitle: 'Module 24: 8051 Addressing Modes & Instruction Set',
+        moduleId: 'm24',
+        interactiveType: 'quiz',
+        quizQuestions: [
+          {
+            question: 'Which addressing mode is used in the instruction MOV A, @R0?',
+            options: ['Immediate Addressing', 'Direct Addressing', 'Register-Indirect Addressing', 'Indexed Addressing'],
+            correctAnswer: 2,
+            explanation: 'The "@" symbol indicates Register-Indirect addressing, where R0 holds the internal RAM memory pointer.'
+          },
+          {
+            question: 'What does the instruction DJNZ R2, LOOP do during execution?',
+            options: [
+              'Increments R2 and jumps if zero',
+              'Decrements R2 by 1 and jumps to LOOP if R2 is NOT zero',
+              'Divides R2 by 2 and branches unconditionally',
+              'Compares R2 with Zero and sets the Zero Flag'
+            ],
+            correctAnswer: 1,
+            explanation: 'DJNZ (Decrement and Jump if Not Zero) decrements R2 and branches to LOOP if R2 != 0.'
+          },
+          {
+            question: 'Which instruction reads a constant data byte from Program ROM into the Accumulator using indexed addressing?',
+            options: ['MOV A, 30H', 'MOVX A, @DPTR', 'MOVC A, @A+DPTR', 'PUSH 0E0H'],
+            correctAnswer: 2,
+            explanation: 'MOVC A, @A+DPTR reads a byte from Code/Program ROM using the sum of A and DPTR as the 16-bit ROM address.'
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'm25',
+    title: 'Module 25: 8051 Assembly Language Programming',
+    slides: [
+      {
+        id: 'm25-s1',
+        title: '1. 8051 Assembly Syntax, Directives & Structure',
+        moduleTitle: 'Module 25: 8051 Assembly Language Programming',
+        moduleId: 'm25',
+        points: [
+          'Assembly Program Structure: Written using mnemonics, labels, operands, and assembler directives.',
+          'Core Directives:',
+          '• ORG (Origin): Sets starting memory address for machine code (e.g. ORG 0000H).',
+          '• EQU (Equate): Assigns a symbolic label to a constant address or value (e.g. LED EQU P1.0).',
+          '• END: Mandatory termination directive for the assembler.',
+          '• DB (Define Byte) & DW (Define Word): Reserves byte or 16-bit word data tables in ROM memory.'
+        ]
+      },
+      {
+        id: 'm25-s2',
+        title: '2. Interactive 8051 ALP Execution Engine & LED Port Simulator',
+        moduleTitle: 'Module 25: 8051 Assembly Language Programming',
+        moduleId: 'm25',
+        points: [
+          'Interactive 8051 Assembly Simulator: Step through 8051 programs, monitor register files (A, B, R0–R7, DPTR, SP, PC), and watch real-time Port 1 LED outputs update!',
+          'Programming Examples Included: Accumulator operations, loop counters with DJNZ, port toggling, and bit manipulation.'
+        ],
+        interactiveType: 'mcu-alp'
+      },
+      {
+        id: 'm25-quiz',
+        title: 'Module 25 Recap Quiz',
+        moduleTitle: 'Module 25: 8051 Assembly Language Programming',
+        moduleId: 'm25',
+        interactiveType: 'quiz',
+        quizQuestions: [
+          {
+            question: 'Which assembler directive sets the starting program counter origin address in 8051 code memory?',
+            options: ['EQU', 'ORG', 'END', 'DB'],
+            correctAnswer: 1,
+            explanation: 'The ORG (Origin) directive specifies the exact starting ROM memory address for subsequent machine code instructions.'
+          },
+          {
+            question: 'What is the effect of executing CPL P1.0 in an 8051 assembly loop driving an LED?',
+            options: [
+              'Clears Port 1 pin 0 to 0V permanently',
+              'Complements (toggles) the logic state of Port 1 pin 0 between 0 and 1',
+              'Sets Port 1 pin 0 to +5V high impedance',
+              'Resets the entire microcontroller'
+            ],
+            correctAnswer: 1,
+            explanation: 'CPL P1.0 complements (inverts) the logical state of pin P1.0, toggling an attached LED on or off.'
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'm26',
+    title: 'Module 26: 8051 Timers & Serial Port Programming',
+    slides: [
+      {
+        id: 's26-1',
+        title: '8051 Hardware Timers / Counters (Timer 0 & Timer 1)',
+        moduleTitle: 'Module 26: 8051 Timers & Serial Port Programming',
+        moduleId: 'm26',
+        points: [
+          'The 8051 microcontroller contains two 16-bit Timer/Counter hardware modules: Timer 0 (TH0, TL0) and Timer 1 (TH1, TL1).',
+          'Operating Modes: In Timer mode, the register counts internal machine cycles (XTAL frequency ÷ 12). In Counter mode, it counts negative-edge transitions on external pins T0 (P3.4) or T1 (P3.5).',
+          'TMOD Register (89H): 8-bit non-bit-addressable register that configures the operating mode (Mode 0, 1, 2, 3) and source (C/T# bit) for Timer 0 and Timer 1.',
+          'TCON Register (88H): Bit-addressable control register containing TR0/TR1 (timer run flags) and TF0/TF1 (timer overflow flags).'
+        ]
+      },
+      {
+        id: 's26-2',
+        title: 'Timer Operating Modes & Baud Rate Generation',
+        moduleTitle: 'Module 26: 8051 Timers & Serial Port Programming',
+        moduleId: 'm26',
+        points: [
+          'Mode 0: 13-bit timer mode (8-bit THx + 5-bit prescaler TLx). Counts from 0000H to 1FFFH.',
+          'Mode 1: 16-bit timer mode (8-bit THx + 8-bit TLx). Counts from 0000H to FFFFH (65,536 cycles max).',
+          'Mode 2: 8-bit auto-reload mode. TLx acts as the active 8-bit counter while THx holds the reload value. On overflow, TLx is reloaded from THx automatically (ideal for UART baud rate generation).',
+          'Baud Rate Calculation for 8051 UART Mode 1:',
+          'Baud Rate = (2^SMOD ÷ 32) × (Crystal Frequency ÷ (12 × (256 - TH1)))',
+          'With 11.0592 MHz crystal and SMOD=0: TH1 = 256 - (11,059,200 ÷ (384 × Baud Rate)). For 9600 Baud, TH1 = 256 - 3 = 253 = 0xFD.'
+        ]
+      },
+      {
+        id: 's26-3',
+        title: 'Interactive 8051 Timers & Serial Port Configurator',
+        moduleTitle: 'Module 26: 8051 Timers & Serial Port Programming',
+        moduleId: 'm26',
+        interactiveType: 'mcu-timers-serial'
+      },
+      {
+        id: 's26-4',
+        title: 'Module 26 Assessment: Timers & Serial Communication',
+        moduleTitle: 'Module 26: 8051 Timers & Serial Port Programming',
+        moduleId: 'm26',
+        interactiveType: 'quiz',
+        quizQuestions: [
+          {
+            question: 'In 8051 Timer Mode 2 (8-bit auto-reload), what happens when TLx overflows from FFH to 00H?',
+            options: [
+              'The timer stops running permanently until a hardware reset occurs',
+              'TLx is automatically reloaded with the value stored in THx and TFx is set',
+              'THx is cleared to 00H and the program halts',
+              'The timer switches automatically to 16-bit Mode 1'
+            ],
+            correctAnswer: 1,
+            explanation: 'In Mode 2, TLx acts as the 8-bit counter. Upon overflow, the content of THx is loaded into TLx automatically, and the overflow flag TFx is set to 1.'
+          },
+          {
+            question: 'What initial value must be loaded into TH1 to achieve a 9600 baud rate with an 11.0592 MHz crystal (SMOD = 0)?',
+            options: [
+              '0xFF (-1)',
+              '0xFD (-3)',
+              '0xF4 (-12)',
+              '0xE8 (-24)'
+            ],
+            correctAnswer: 1,
+            explanation: 'For 9600 baud rate at 11.0592 MHz with SMOD=0, TH1 = 256 - (11,059,200 / (384 * 9600)) = 256 - 3 = 253 = 0xFD.'
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'm27',
+    title: 'Module 27: 8051 Interrupts, LCD & Keypad Interfacing',
+    slides: [
+      {
+        id: 's27-1',
+        title: '8051 Interrupt Structure & Priority Control',
+        moduleTitle: 'Module 27: 8051 Interrupts, LCD & Keypad Interfacing',
+        moduleId: 'm27',
+        points: [
+          'The 8051 microcontroller supports 5 hardware interrupt sources + Reset vector:',
+          '1. Reset (0000H) - Highest priority hardware reset vector.',
+          '2. External Interrupt 0 (INT0# @ 0003H) - Triggered via pin P3.2 (low level or falling edge).',
+          '3. Timer 0 Interrupt (TF0 @ 000BH) - Triggered on Timer 0 overflow.',
+          '4. External Interrupt 1 (INT1# @ 0013H) - Triggered via pin P3.3.',
+          '5. Timer 1 Interrupt (TF1 @ 001BH) - Triggered on Timer 1 overflow.',
+          '6. Serial Port Interrupt (RI/TI @ 0023H) - Triggered when a byte is received or transmitted.',
+          'Interrupt Enable (IE @ A8H) & Interrupt Priority (IP @ B8H) registers govern global/individual enable flags and 2-level priority schemes.'
+        ]
+      },
+      {
+        id: 's27-2',
+        title: 'HD44780 16x2 LCD & Matrix Keypad Interfacing',
+        moduleTitle: 'Module 27: 8051 Interrupts, LCD & Keypad Interfacing',
+        moduleId: 'm27',
+        points: [
+          '16x2 Character LCD Interfacing (HD44780):',
+          'Data Lines (D0–D7 connected to P0 or P2), Control Lines: RS (Register Select: 0=Command, 1=Data), RW (Read/Write: 0=Write), EN (Enable pulse high-to-low transition).',
+          'Key Initialization Commands: 38H (2 lines, 5x7 matrix), 0EH (Display ON, cursor ON), 01H (Clear display screen), 80H (Force cursor to line 1 start).',
+          '4x4 Matrix Keypad Scanning:',
+          'Rows (P1.0–P1.3) are configured as outputs and driven LOW one at a time. Columns (P1.4–P1.7) with internal pull-ups are read as inputs. A LOW on any column indicates a key press at the row-column intersection.'
+        ]
+      },
+      {
+        id: 's27-3',
+        title: 'Interactive Interrupts, LCD & Keypad Simulator',
+        moduleTitle: 'Module 27: 8051 Interrupts, LCD & Keypad Interfacing',
+        moduleId: 'm27',
+        interactiveType: 'mcu-interrupts-lcd'
+      },
+      {
+        id: 's27-4',
+        title: 'Module 27 Assessment: Interrupts & Display Interfaces',
+        moduleTitle: 'Module 27: 8051 Interrupts, LCD & Keypad Interfacing',
+        moduleId: 'm27',
+        interactiveType: 'quiz',
+        quizQuestions: [
+          {
+            question: 'What is the vector address for External Interrupt 0 (INT0#) in the 8051 microcontroller?',
+            options: [
+              '0000H',
+              '0003H',
+              '000BH',
+              '0013H'
+            ],
+            correctAnswer: 1,
+            explanation: 'External Interrupt 0 (INT0#) branches to vector address 0003H when triggered.'
+          },
+          {
+            question: 'In HD44780 LCD interfacing, what logic state must RS (Register Select) be set to when sending display ASCII characters?',
+            options: [
+              'RS = 0 (Command Register)',
+              'RS = 1 (Data Register)',
+              'RS = High Impedance',
+              'RS does not matter'
+            ],
+            correctAnswer: 1,
+            explanation: 'Setting RS = 1 selects the LCD Data Register, allowing incoming byte data to be written directly onto the LCD display matrix.'
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'm28',
+    title: 'Module 28: ADC, DAC, Sensor & External Memory Interfacing',
+    slides: [
+      {
+        id: 's28-1',
+        title: 'ADC0804 & LM35 Analog Sensor Interfacing',
+        moduleTitle: 'Module 28: ADC, DAC, Sensor & External Memory Interfacing',
+        moduleId: 'm28',
+        points: [
+          'LM35 Precision Temperature Sensor: Analog output voltage scaled at 10 mV/°C (e.g., 250 mV at 25°C).',
+          'ADC0804 8-Bit Analog-to-Digital Converter: Successive Approximation ADC with 8-bit output (resolution = Vref/2 / 128 = ~19.5 mV/step).',
+          'Interfacing Protocol: 8051 pulses CS# & WR# LOW to start conversion. ADC asserts INTR# LOW when conversion finishes. 8051 reads 8-bit digital output DB0–DB7 via Port 0 by pulsing RD# LOW.'
+        ]
+      },
+      {
+        id: 's28-2',
+        title: 'DAC0808 & External Memory Bus (64KB RAM/ROM)',
+        moduleTitle: 'Module 28: ADC, DAC, Sensor & External Memory Interfacing',
+        moduleId: 'm28',
+        points: [
+          'DAC0808 8-Bit Digital-to-Analog Converter: Converts 8-bit digital data on DB0–DB7 into proportional analog output current (Iout = Iref × (D/256)), converted to voltage using an Operational Amplifier.',
+          'External Memory Expansion (up to 64KB Program ROM & 64KB Data RAM):',
+          'Port 0 serves as multiplexed low-order address/data bus (A0–A7 / D0–D7).',
+          'ALE (Address Latch Enable) pulses HIGH to latch low address bits into a 74HC373 latch.',
+          'Port 2 outputs high-order address bits A8–A15.',
+          'Control Signals: PSEN# (Program Store Enable) reads external EPROM/Flash ROM. RD# (P3.7) and WR# (P3.6) read/write external SRAM.'
+        ]
+      },
+      {
+        id: 's28-3',
+        title: 'Interactive ADC, DAC & Sensor Interfacing Explorer',
+        moduleTitle: 'Module 28: ADC, DAC, Sensor & External Memory Interfacing',
+        moduleId: 'm28',
+        interactiveType: 'mcu-adc-dac'
+      },
+      {
+        id: 's28-4',
+        title: 'Module 28 Assessment: Sensors & Data Converters',
+        moduleTitle: 'Module 28: ADC, DAC, Sensor & External Memory Interfacing',
+        moduleId: 'm28',
+        interactiveType: 'quiz',
+        quizQuestions: [
+          {
+            question: 'Which signal from the 8051 microcontroller is used as the active-LOW read strobe for external Program ROM code fetches?',
+            options: [
+              'ALE (Address Latch Enable)',
+              'PSEN# (Program Store Enable)',
+              'RD# (P3.7)',
+              'WR# (P3.6)'
+            ],
+            correctAnswer: 1,
+            explanation: 'PSEN# (Program Store Enable) is the dedicated read control signal used exclusively when fetching instructions from external Program ROM.'
+          },
+          {
+            question: 'What is the voltage output of an LM35 temperature sensor at 30°C given its 10 mV/°C scale factor?',
+            options: [
+              '30 mV',
+              '300 mV (0.30 V)',
+              '3.0 V',
+              '30 V'
+            ],
+            correctAnswer: 1,
+            explanation: 'Since the LM35 produces 10 mV per degree Celsius, at 30°C the output voltage is 30 * 10 mV = 300 mV (0.3 V).'
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'm29',
+    title: 'Module 29: Stepper Motor & Waveform Generation',
+    slides: [
+      {
+        id: 's29-1',
+        title: 'Stepper Motor Control Principles & Driver Circuits',
+        moduleTitle: 'Module 29: Stepper Motor & Waveform Generation',
+        moduleId: 'm29',
+        points: [
+          'Stepper Motor Construction: Brushless DC electric motor that divides a full rotation into discrete equal steps (e.g., 1.8° step angle = 200 steps/rev).',
+          'Interfacing Drivers: 8051 I/O pins cannot drive inductive motor coils directly due to current limits (~10mA). ULN2003 (Darlington transistor array) or L293D (H-Bridge) drivers are required.',
+          'Excitation Step Sequences:',
+          '1. Wave Drive (Single Phase): Energizes 1 coil at a time (1000 -> 0100 -> 0010 -> 0001). Lowest power.',
+          '2. Full-Step Drive (Two Phase): Energizes 2 coils simultaneously (1100 -> 0110 -> 0011 -> 1001). Maximum torque.',
+          '3. Half-Step Drive: Alternates single and dual coils (1000 -> 1100 -> 0100 -> 0110...). Twice the angular resolution.'
+        ]
+      },
+      {
+        id: 's29-2',
+        title: 'Analog Waveform Generation using DAC0808',
+        moduleTitle: 'Module 29: Stepper Motor & Waveform Generation',
+        moduleId: 'm29',
+        points: [
+          'Square Wave Generation: Repeatedly output 00H and FFH to DAC with timer delay loops.',
+          'Ramp / Sawtooth Wave Generation: Increment digital output byte from 00H to FFH sequentially (MOV A, #00H -> OUT -> INC A).',
+          'Triangular Wave Generation: Increment byte from 00H to FFH, then decrement from FFH back to 00H in a continuous loop.',
+          'Sine Wave Generation: Store pre-calculated sine values (e.g., 36 samples for 0°–360°) in 8051 Program ROM and cycle through using look-up table pointer (MOVC A, @A+DPTR).'
+        ]
+      },
+      {
+        id: 's29-3',
+        title: 'Interactive Stepper Motor & Waveform Generator',
+        moduleTitle: 'Module 29: Stepper Motor & Waveform Generation',
+        moduleId: 'm29',
+        interactiveType: 'mcu-stepper-wave'
+      },
+      {
+        id: 's29-4',
+        title: 'Module 29 Assessment: Motors & Signal Generation',
+        moduleTitle: 'Module 29: Stepper Motor & Waveform Generation',
+        moduleId: 'm29',
+        interactiveType: 'quiz',
+        quizQuestions: [
+          {
+            question: 'Why is a driver IC like ULN2003 or L293D necessary between an 8051 microcontroller port and a stepper motor?',
+            options: [
+              '8051 port pins operate in analog mode and cannot send digital signals',
+              '8051 I/O pins cannot source/sink the high currents (~500mA) and inductive back-EMF required by motor coils',
+              'Stepper motors require AC voltages',
+              'The driver IC reduces the step angle of the motor'
+            ],
+            correctAnswer: 1,
+            explanation: 'Microcontroller pins can only safely output ~10-20mA at 5V, whereas stepper motor coils demand several hundred milliamps and require inductive back-EMF flyback diode protection.'
+          },
+          {
+            question: 'How many total steps are required for a stepper motor with a 1.8° step angle to complete one full 360° revolution?',
+            options: [
+              '100 steps',
+              '180 steps',
+              '200 steps',
+              '360 steps'
+            ],
+            correctAnswer: 2,
+            explanation: 'Total steps = 360° / 1.8° = 200 steps per full revolution.'
+          }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'm30',
+    title: 'Module 30: Comparison of Microprocessor, Microcontroller, PIC & ARM Processors',
+    slides: [
+      {
+        id: 's30-1',
+        title: 'Architectural Comparison: Microprocessor vs. Microcontroller',
+        moduleTitle: 'Module 30: Comparison of Microprocessor, Microcontroller, PIC & ARM Processors',
+        moduleId: 'm30',
+        points: [
+          'Microprocessor (e.g., Intel 8086 / x86): Contains CPU core only (ALU, Registers, Control Unit). RAM, ROM, Timers, and I/O ports must be connected externally via system buses. High computational power, expensive, high power consumption.',
+          'Microcontroller (e.g., Intel 8051): Integrated System-on-Chip (SoC) combining CPU core, RAM, Flash ROM, Timers, Serial UART, and Parallel I/O ports on a single silicon die. Low cost, low power, ideal for embedded control.'
+        ]
+      },
+      {
+        id: 's30-2',
+        title: 'PIC vs. ARM Processor Architectures',
+        moduleTitle: 'Module 30: Comparison of Microprocessor, Microcontroller, PIC & ARM Processors',
+        moduleId: 'm30',
+        points: [
+          'PIC Microcontrollers (Microchip): 8-bit / 16-bit RISC architecture (Harvard structure). Uses simple 35-instruction set, single-word execution, internal EEPROM, and high noise immunity for industrial systems.',
+          'ARM Processors (Advanced RISC Machine / Cortex-M & Cortex-A): 32-bit / 64-bit high-performance RISC architecture. Features load-store architecture, Thumb-2 instruction set, multi-stage hardware pipeline, low power per watt, and powers smartphones, automotive, and robotics.'
+        ]
+      },
+      {
+        id: 's30-3',
+        title: 'Interactive MPU, MCU, PIC & ARM Comparison Matrix',
+        moduleTitle: 'Module 30: Comparison of Microprocessor, Microcontroller, PIC & ARM Processors',
+        moduleId: 'm30',
+        interactiveType: 'processor-comparison'
+      },
+      {
+        id: 's30-4',
+        title: 'Module 30 Assessment: Processor Architectures',
+        moduleTitle: 'Module 30: Comparison of Microprocessor, Microcontroller, PIC & ARM Processors',
+        moduleId: 'm30',
+        interactiveType: 'quiz',
+        quizQuestions: [
+          {
+            question: 'What is a fundamental architectural distinction between a Microprocessor (like 8086) and a Microcontroller (like 8051)?',
+            options: [
+              'A microprocessor contains RAM and ROM on chip, whereas a microcontroller does not',
+              'A microcontroller integrates CPU, RAM, ROM, Timers, and I/O on a single chip, whereas a microprocessor contains CPU only',
+              'Microprocessors do not use system buses',
+              'Microcontrollers cannot execute assembly language instructions'
+            ],
+            correctAnswer: 1,
+            explanation: 'A microcontroller is a complete single-chip computer system with on-die RAM, ROM, timers, and I/O, whereas a microprocessor is solely a central processing unit requiring external peripheral chips.'
+          },
+          {
+            question: 'Which processor architecture family dominates modern mobile devices, IoT edge systems, and high-performance embedded systems due to its high power efficiency and 32/64-bit RISC pipeline?',
+            options: [
+              'Intel 8086',
+              'Intel 8051',
+              'ARM Cortex Processors',
+              'Zilog Z80'
+            ],
+            correctAnswer: 2,
+            explanation: 'ARM processors (Cortex-M, Cortex-R, Cortex-A) dominate mobile, embedded, and IoT computing due to their high performance-per-watt 32/64-bit RISC architecture.'
+          }
+        ]
+      }
+    ]
   }
 ];
+
+

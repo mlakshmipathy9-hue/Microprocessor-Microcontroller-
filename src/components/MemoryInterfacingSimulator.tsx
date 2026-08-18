@@ -205,25 +205,25 @@ export default function MemoryInterfacingSimulator() {
   const outputs = Array.from({ length: 8 }, (_, idx) => (decoderEnabled && idx === decoderSelectIndex) ? 0 : 1);
 
   return (
-    <div className="bg-slate-900 text-slate-100 p-4 md:p-5 rounded-2xl border border-slate-800 shadow-xl space-y-4 text-xs font-sans">
+    <div className="bg-white text-slate-800 p-4 md:p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4 text-xs font-sans">
       {/* Top Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
         <div className="flex items-center gap-2">
-          <div className="p-2 bg-indigo-600/20 rounded-xl border border-indigo-500/30 text-indigo-400">
+          <div className="p-2 bg-indigo-50 rounded-xl border border-indigo-200 text-indigo-600">
             <Database className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="font-bold text-sm text-white">Semiconductor Memory Interfacing & Architecture</h3>
-            <p className="text-[11px] text-slate-400">Memory Hierarchy, RAM vs ROM Technologies, Bank Selection & Address Decoding</p>
+            <h3 className="font-bold text-sm text-slate-900">Semiconductor Memory Interfacing & Architecture</h3>
+            <p className="text-[11px] text-slate-500">Memory Hierarchy, RAM vs ROM Technologies, Bank Selection & Address Decoding</p>
           </div>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex flex-wrap bg-slate-800/80 p-1 rounded-xl border border-slate-700/60 gap-1">
+        <div className="flex flex-wrap bg-slate-100 p-1 rounded-xl border border-slate-200 gap-1">
           <button
             onClick={() => setActiveTab('hierarchy')}
             className={`px-2.5 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-              activeTab === 'hierarchy' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+              activeTab === 'hierarchy' ? 'bg-white text-indigo-700 shadow-xs font-bold border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             Memory Hierarchy
@@ -231,7 +231,7 @@ export default function MemoryInterfacingSimulator() {
           <button
             onClick={() => setActiveTab('types')}
             className={`px-2.5 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-              activeTab === 'types' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+              activeTab === 'types' ? 'bg-white text-indigo-700 shadow-xs font-bold border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             RAM & ROM Types
@@ -239,7 +239,7 @@ export default function MemoryInterfacingSimulator() {
           <button
             onClick={() => setActiveTab('bank')}
             className={`px-2.5 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-              activeTab === 'bank' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+              activeTab === 'bank' ? 'bg-white text-indigo-700 shadow-xs font-bold border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             Even/Odd Banks
@@ -247,7 +247,7 @@ export default function MemoryInterfacingSimulator() {
           <button
             onClick={() => setActiveTab('decoder')}
             className={`px-2.5 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-              activeTab === 'decoder' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+              activeTab === 'decoder' ? 'bg-white text-indigo-700 shadow-xs font-bold border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             74LS138 Decoder
@@ -255,7 +255,7 @@ export default function MemoryInterfacingSimulator() {
           <button
             onClick={() => setActiveTab('map')}
             className={`px-2.5 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-              activeTab === 'map' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+              activeTab === 'map' ? 'bg-white text-indigo-700 shadow-xs font-bold border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             1 MB Memory Map
@@ -266,12 +266,12 @@ export default function MemoryInterfacingSimulator() {
       {/* TAB: Memory Hierarchy */}
       {activeTab === 'hierarchy' && (
         <div className="space-y-4">
-          <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
+          <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
             <div className="flex justify-between items-center mb-3">
-              <span className="text-indigo-300 font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5 text-indigo-400" /> System Storage & Memory Hierarchy Pyramid
+              <span className="text-indigo-950 font-bold text-[11px] uppercase tracking-wider flex items-center gap-1.5">
+                <Layers className="w-3.5 h-3.5 text-indigo-600" /> System Storage & Memory Hierarchy Pyramid
               </span>
-              <span className="text-[10px] text-slate-400">Click any pyramid level to view technical parameters</span>
+              <span className="text-[10px] text-slate-500">Click any pyramid level to view technical parameters</span>
             </div>
 
             {/* Pyramid Visual */}
@@ -285,19 +285,19 @@ export default function MemoryInterfacingSimulator() {
                   'from-indigo-600 to-blue-600 border-indigo-400',
                   'from-blue-600 to-teal-600 border-blue-400',
                   'from-teal-600 to-emerald-600 border-teal-400',
-                  'from-slate-700 to-slate-800 border-slate-600'
+                  'from-slate-600 to-slate-700 border-slate-500'
                 ];
 
                 return (
                   <button
                     key={lvl.level}
                     onClick={() => setSelectedHierarchyLevel(lvl.level)}
-                    className={`${widths[lvl.level]} mx-auto block transition-all duration-200 cursor-pointer text-center p-2 rounded-xl bg-gradient-to-r ${colors[lvl.level]} border shadow-md hover:brightness-125 ${
-                      isSelected ? 'ring-2 ring-amber-400 scale-[1.02]' : 'opacity-90'
+                    className={`${widths[lvl.level]} mx-auto block transition-all duration-200 cursor-pointer text-center p-2 rounded-xl bg-gradient-to-r ${colors[lvl.level]} border shadow-xs hover:brightness-110 ${
+                      isSelected ? 'ring-2 ring-indigo-500 scale-[1.02]' : 'opacity-95'
                     }`}
                   >
                     <div className="flex items-center justify-between px-3 text-white font-bold">
-                      <span className="text-[10px] bg-slate-950/60 px-2 py-0.5 rounded-md text-amber-300 font-mono">
+                      <span className="text-[10px] bg-black/30 px-2 py-0.5 rounded-md text-amber-200 font-mono">
                         Level {lvl.level}
                       </span>
                       <span className="text-xs truncate px-2">{lvl.name}</span>
@@ -308,9 +308,9 @@ export default function MemoryInterfacingSimulator() {
               })}
             </div>
             
-            <div className="flex justify-between text-[10px] text-slate-400 mt-2 px-4 font-mono">
-              <span className="text-purple-400 font-bold">▲ Fastest Speed / Smallest Capacity / Highest Cost</span>
-              <span className="text-slate-400 font-bold">▼ Slowest Speed / Largest Capacity / Lowest Cost</span>
+            <div className="flex justify-between text-[10px] text-slate-500 mt-2.5 px-4 font-mono">
+              <span className="text-purple-700 font-bold">▲ Fastest Speed / Smallest Capacity / Highest Cost</span>
+              <span className="text-slate-600 font-bold">▼ Slowest Speed / Largest Capacity / Lowest Cost</span>
             </div>
           </div>
 
@@ -318,41 +318,41 @@ export default function MemoryInterfacingSimulator() {
           {(() => {
             const levelInfo = hierarchyLevels[selectedHierarchyLevel];
             return (
-              <div className="bg-slate-950/80 p-4 rounded-xl border border-indigo-500/30 space-y-3">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                  <h4 className="font-bold text-sm text-indigo-300 flex items-center gap-2">
+              <div className="bg-white p-4 rounded-xl border border-indigo-100 shadow-2xs space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                  <h4 className="font-bold text-sm text-indigo-950 flex items-center gap-2">
                     <span className="p-1 bg-indigo-600 text-white rounded font-mono text-xs">L{levelInfo.level}</span>
-                    {levelInfo.name} — <span className="text-slate-300">{levelInfo.type}</span>
+                    {levelInfo.name} — <span className="text-slate-600 font-normal">{levelInfo.type}</span>
                   </h4>
                   <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono ${
-                    levelInfo.volatility === 'Volatile' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                    levelInfo.volatility === 'Volatile' ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                   }`}>
                     {levelInfo.volatility} Memory
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5 font-mono text-[11px]">
-                  <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
-                    <span className="text-slate-400 text-[10px] block font-sans">Typical Access Latency</span>
-                    <strong className="text-emerald-400 text-xs">{levelInfo.speed}</strong>
+                  <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                    <span className="text-slate-500 text-[10px] block font-sans">Typical Access Latency</span>
+                    <strong className="text-emerald-700 text-xs font-bold">{levelInfo.speed}</strong>
                   </div>
-                  <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
-                    <span className="text-slate-400 text-[10px] block font-sans">Storage Capacity</span>
-                    <strong className="text-indigo-300 text-xs">{levelInfo.capacity}</strong>
+                  <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                    <span className="text-slate-500 text-[10px] block font-sans">Storage Capacity</span>
+                    <strong className="text-indigo-700 text-xs font-bold">{levelInfo.capacity}</strong>
                   </div>
-                  <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
-                    <span className="text-slate-400 text-[10px] block font-sans">Cost Per Bit</span>
-                    <strong className="text-amber-400 text-xs">{levelInfo.cost}</strong>
+                  <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                    <span className="text-slate-500 text-[10px] block font-sans">Cost Per Bit</span>
+                    <strong className="text-amber-800 text-xs font-bold">{levelInfo.cost}</strong>
                   </div>
-                  <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
-                    <span className="text-slate-400 text-[10px] block font-sans">Cell Technology</span>
-                    <strong className="text-blue-300 text-xs truncate block">{levelInfo.tech}</strong>
+                  <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                    <span className="text-slate-500 text-[10px] block font-sans">Cell Technology</span>
+                    <strong className="text-blue-700 text-xs truncate block font-bold">{levelInfo.tech}</strong>
                   </div>
                 </div>
 
-                <div className="bg-indigo-950/30 border border-indigo-800/40 p-3 rounded-lg text-slate-200">
-                  <span className="text-indigo-300 font-bold block mb-0.5">8086 System Integration & Role:</span>
-                  <p className="text-slate-300 text-[11px] leading-relaxed">{levelInfo.useCase}</p>
+                <div className="bg-indigo-50/70 border border-indigo-200 p-3 rounded-lg text-slate-700">
+                  <span className="text-indigo-950 font-bold block mb-0.5">8086 System Integration & Role:</span>
+                  <p className="text-slate-600 text-[11px] leading-relaxed">{levelInfo.useCase}</p>
                 </div>
               </div>
             );
@@ -363,8 +363,8 @@ export default function MemoryInterfacingSimulator() {
       {/* TAB: RAM & ROM Types */}
       {activeTab === 'types' && (
         <div className="space-y-4">
-          <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-3">
-            <div className="text-indigo-300 font-bold text-[11px] uppercase tracking-wider">
+          <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
+            <div className="text-indigo-950 font-bold text-[11px] uppercase tracking-wider">
               Select Memory Technology to Compare Technical Specifications
             </div>
 
@@ -384,8 +384,8 @@ export default function MemoryInterfacingSimulator() {
                   onClick={() => setSelectedMemoryType(item.id)}
                   className={`py-2 px-2 rounded-lg text-[11px] font-bold cursor-pointer transition-all border ${
                     selectedMemoryType === item.id
-                      ? 'bg-indigo-600 text-white border-indigo-400 shadow-md scale-[1.02]'
-                      : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white hover:bg-slate-800'
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs'
+                      : 'bg-white text-slate-600 border-slate-200 hover:text-slate-900 hover:bg-slate-100'
                   }`}
                 >
                   {item.label}
@@ -398,48 +398,48 @@ export default function MemoryInterfacingSimulator() {
           {(() => {
             const spec = memoryTypesData[selectedMemoryType] || memoryTypesData.sram;
             return (
-              <div className="bg-slate-950/80 p-4 rounded-xl border border-slate-800 space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
                   <div>
-                    <h4 className="font-bold text-sm text-indigo-300">{spec.title}</h4>
-                    <span className="text-[11px] text-slate-400 font-mono">{spec.category}</span>
+                    <h4 className="font-bold text-sm text-slate-900">{spec.title}</h4>
+                    <span className="text-[11px] text-slate-500 font-mono">{spec.category}</span>
                   </div>
                   <span className={`px-2.5 py-1 rounded text-[10px] font-mono font-bold ${
                     spec.volatility.startsWith('Volatile')
-                      ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                      : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                      ? 'bg-amber-50 text-amber-800 border border-amber-200'
+                      : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                   }`}>
                     {spec.volatility}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
-                  <div className="bg-slate-900 p-3 rounded-lg border border-slate-800 space-y-1">
-                    <span className="text-slate-400 font-bold block text-[10px]">BIT CELL TECHNOLOGY</span>
-                    <p className="text-slate-200 font-mono">{spec.cellTech}</p>
+                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1">
+                    <span className="text-slate-500 font-bold block text-[10px]">BIT CELL TECHNOLOGY</span>
+                    <p className="text-slate-800 font-mono">{spec.cellTech}</p>
                   </div>
-                  <div className="bg-slate-900 p-3 rounded-lg border border-slate-800 space-y-1">
-                    <span className="text-slate-400 font-bold block text-[10px]">ACCESS SPEED / LATENCY</span>
-                    <p className="text-emerald-400 font-mono font-bold">{spec.speed}</p>
+                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1">
+                    <span className="text-slate-500 font-bold block text-[10px]">ACCESS SPEED / LATENCY</span>
+                    <p className="text-emerald-700 font-mono font-bold">{spec.speed}</p>
                   </div>
-                  <div className="bg-slate-900 p-3 rounded-lg border border-slate-800 space-y-1">
-                    <span className="text-slate-400 font-bold block text-[10px]">DYNAMIC REFRESH REQUIREMENT</span>
-                    <p className="text-indigo-300 font-mono">{spec.refresh}</p>
+                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1">
+                    <span className="text-slate-500 font-bold block text-[10px]">DYNAMIC REFRESH REQUIREMENT</span>
+                    <p className="text-indigo-700 font-mono font-semibold">{spec.refresh}</p>
                   </div>
-                  <div className="bg-slate-900 p-3 rounded-lg border border-slate-800 space-y-1">
-                    <span className="text-slate-400 font-bold block text-[10px]">ERASING & REPROGRAMMING METHOD</span>
-                    <p className="text-amber-300 font-mono">{spec.eraseMethod}</p>
+                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-1">
+                    <span className="text-slate-500 font-bold block text-[10px]">ERASING & REPROGRAMMING METHOD</span>
+                    <p className="text-amber-800 font-mono font-semibold">{spec.eraseMethod}</p>
                   </div>
                 </div>
 
                 <div className="space-y-2 pt-1">
-                  <div className="bg-slate-900 p-3 rounded-lg border border-slate-800">
-                    <strong className="text-indigo-300 block mb-0.5">Technology Overview:</strong>
-                    <p className="text-slate-300 text-[11px] leading-relaxed">{spec.description}</p>
+                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                    <strong className="text-indigo-950 block mb-0.5">Technology Overview:</strong>
+                    <p className="text-slate-600 text-[11px] leading-relaxed">{spec.description}</p>
                   </div>
-                  <div className="bg-emerald-950/30 border border-emerald-800/40 p-3 rounded-lg text-emerald-200">
-                    <strong className="text-emerald-300 block mb-0.5">Role in Microprocessor / 8086 Interfacing:</strong>
-                    <p className="text-slate-300 text-[11px] leading-relaxed">{spec.microRole}</p>
+                  <div className="bg-emerald-50 border border-emerald-200 p-3 rounded-lg text-emerald-950">
+                    <strong className="text-emerald-900 block mb-0.5">Role in Microprocessor / 8086 Interfacing:</strong>
+                    <p className="text-slate-700 text-[11px] leading-relaxed">{spec.microRole}</p>
                   </div>
                 </div>
               </div>
@@ -451,34 +451,34 @@ export default function MemoryInterfacingSimulator() {
       {/* TAB 1: Even/Odd Memory Banks */}
       {activeTab === 'bank' && (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-950/70 p-3.5 rounded-xl border border-slate-800">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
             {/* Input Controls */}
             <div className="space-y-3">
-              <label className="block text-indigo-300 font-bold text-[11px] uppercase tracking-wider">
+              <label className="block text-indigo-950 font-bold text-[11px] uppercase tracking-wider">
                 1. Target Physical Address (Hex 00000H–FFFFFH)
               </label>
               <div className="flex items-center gap-2">
-                <span className="font-mono text-slate-400 text-sm">0x</span>
+                <span className="font-mono text-slate-500 text-sm">0x</span>
                 <input
                   type="text"
                   maxLength={5}
                   value={addressHex}
                   onChange={(e) => setAddressHex(e.target.value.toUpperCase().replace(/[^0-9A-F]/g, ''))}
-                  className="bg-slate-900 border border-slate-700 text-indigo-300 font-mono text-sm px-3 py-1.5 rounded-lg w-32 focus:outline-hidden focus:border-indigo-500 font-bold"
+                  className="bg-white border border-slate-300 text-indigo-950 font-mono text-sm px-3 py-1.5 rounded-lg w-32 focus:outline-hidden focus:border-indigo-500 font-bold shadow-2xs"
                 />
-                <span className={`px-2.5 py-1 rounded text-[10px] font-mono font-bold ${isEvenAddress ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}`}>
+                <span className={`px-2.5 py-1 rounded text-[10px] font-mono font-bold ${isEvenAddress ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-amber-50 text-amber-800 border border-amber-200'}`}>
                   {isEvenAddress ? 'EVEN Address' : 'ODD Address'}
                 </span>
               </div>
 
-              <label className="block text-indigo-300 font-bold text-[11px] uppercase tracking-wider pt-1">
+              <label className="block text-indigo-950 font-bold text-[11px] uppercase tracking-wider pt-1">
                 2. Data Transfer Size
               </label>
               <div className="flex gap-2">
                 <button
                   onClick={() => setTransferType('byte')}
                   className={`flex-1 py-1.5 px-3 rounded-lg border font-semibold cursor-pointer transition-all ${
-                    transferType === 'byte' ? 'bg-indigo-600/30 border-indigo-500 text-indigo-200' : 'bg-slate-900 border-slate-800 text-slate-400'
+                    transferType === 'byte' ? 'bg-indigo-50 border-indigo-400 text-indigo-900 font-bold shadow-2xs' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'
                   }`}
                 >
                   8-Bit Byte Transfer
@@ -486,7 +486,7 @@ export default function MemoryInterfacingSimulator() {
                 <button
                   onClick={() => setTransferType('word')}
                   className={`flex-1 py-1.5 px-3 rounded-lg border font-semibold cursor-pointer transition-all ${
-                    transferType === 'word' ? 'bg-indigo-600/30 border-indigo-500 text-indigo-200' : 'bg-slate-900 border-slate-800 text-slate-400'
+                    transferType === 'word' ? 'bg-indigo-50 border-indigo-400 text-indigo-900 font-bold shadow-2xs' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'
                   }`}
                 >
                   16-Bit Word Transfer
@@ -495,21 +495,21 @@ export default function MemoryInterfacingSimulator() {
             </div>
 
             {/* Signal Outputs */}
-            <div className="bg-slate-900 p-3 rounded-lg border border-slate-800 space-y-2">
-              <div className="text-slate-400 font-bold text-[10px] uppercase tracking-wider">Bus Control Line States</div>
+            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-2 shadow-2xs">
+              <div className="text-slate-500 font-bold text-[10px] uppercase tracking-wider">Bus Control Line States</div>
               <div className="grid grid-cols-2 gap-2 font-mono">
-                <div className={`p-2 rounded border ${a0 === 0 ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-300' : 'bg-slate-950 border-slate-800 text-slate-500'}`}>
-                  <div className="text-[10px] text-slate-400">A0 Line (Address bit 0)</div>
+                <div className={`p-2 rounded border ${a0 === 0 ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
+                  <div className="text-[10px] text-slate-500 font-sans">A0 Line (Address bit 0)</div>
                   <div className="text-base font-extrabold">{a0} ({a0 === 0 ? 'LOW - Enable Even' : 'HIGH'})</div>
                 </div>
-                <div className={`p-2 rounded border ${bhe === 0 ? 'bg-indigo-950/60 border-indigo-500/50 text-indigo-300' : 'bg-slate-950 border-slate-800 text-slate-500'}`}>
-                  <div className="text-[10px] text-slate-400">BHE# Line (Bus High Enable)</div>
+                <div className={`p-2 rounded border ${bhe === 0 ? 'bg-indigo-50 border-indigo-300 text-indigo-900' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
+                  <div className="text-[10px] text-slate-500 font-sans">BHE# Line (Bus High Enable)</div>
                   <div className="text-base font-extrabold">{bhe} ({bhe === 0 ? 'LOW - Enable Odd' : 'HIGH'})</div>
                 </div>
               </div>
-              <div className="p-2 bg-slate-950 rounded border border-slate-800 text-[11px] text-slate-300 flex items-center justify-between">
+              <div className="p-2 bg-slate-50 rounded border border-slate-200 text-[11px] text-slate-700 flex items-center justify-between">
                 <span>Bus Cycles Needed:</span>
-                <span className={`font-bold font-mono px-2 py-0.5 rounded ${busCycles === 1 ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}`}>
+                <span className={`font-bold font-mono px-2 py-0.5 rounded ${busCycles === 1 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800 border border-rose-200'}`}>
                   {busCycles} {busCycles === 1 ? 'Cycle' : 'Cycles (Misaligned Penalty!)'}
                 </span>
               </div>
@@ -519,38 +519,38 @@ export default function MemoryInterfacingSimulator() {
           {/* Interactive Memory Banks Diagram */}
           <div className="grid grid-cols-2 gap-4">
             {/* Even Bank */}
-            <div className={`p-3.5 rounded-xl border transition-all ${evenBankActive ? 'bg-emerald-950/40 border-emerald-500 shadow-lg shadow-emerald-950/50' : 'bg-slate-950/50 border-slate-800 opacity-60'}`}>
+            <div className={`p-3.5 rounded-xl border transition-all ${evenBankActive ? 'bg-emerald-50/80 border-emerald-300 shadow-xs' : 'bg-slate-50 border-slate-200 opacity-60'}`}>
               <div className="flex items-center justify-between mb-2">
-                <span className="font-bold text-emerald-400 text-xs flex items-center gap-1.5">
-                  <Database className="w-3.5 h-3.5" /> Even Bank (512 KB)
+                <span className="font-bold text-emerald-900 text-xs flex items-center gap-1.5">
+                  <Database className="w-3.5 h-3.5 text-emerald-600" /> Even Bank (512 KB)
                 </span>
-                <span className="font-mono text-[10px] bg-emerald-900/40 text-emerald-300 px-2 py-0.5 rounded border border-emerald-700/50">D0–D7 Data Bus</span>
+                <span className="font-mono text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded border border-emerald-200 font-bold">D0–D7 Data Bus</span>
               </div>
-              <p className="text-[11px] text-slate-300 mb-2">Activated when <strong className="text-white">A0 = 0</strong>. Holds even memory addresses (00000H, 00002H, 00004H...).</p>
-              <div className={`p-2 rounded text-center font-bold font-mono text-[11px] ${evenBankActive ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-500'}`}>
+              <p className="text-[11px] text-slate-600 mb-2">Activated when <strong className="text-slate-900">A0 = 0</strong>. Holds even memory addresses (00000H, 00002H, 00004H...).</p>
+              <div className={`p-2 rounded text-center font-bold font-mono text-[11px] ${evenBankActive ? 'bg-emerald-600 text-white shadow-2xs' : 'bg-slate-200 text-slate-500'}`}>
                 {evenBankActive ? '● BANK ACTIVE (D0-D7)' : '○ BANK INACTIVE'}
               </div>
             </div>
 
             {/* Odd Bank */}
-            <div className={`p-3.5 rounded-xl border transition-all ${oddBankActive ? 'bg-indigo-950/40 border-indigo-500 shadow-lg shadow-indigo-950/50' : 'bg-slate-950/50 border-slate-800 opacity-60'}`}>
+            <div className={`p-3.5 rounded-xl border transition-all ${oddBankActive ? 'bg-indigo-50/80 border-indigo-300 shadow-xs' : 'bg-slate-50 border-slate-200 opacity-60'}`}>
               <div className="flex items-center justify-between mb-2">
-                <span className="font-bold text-indigo-400 text-xs flex items-center gap-1.5">
-                  <Database className="w-3.5 h-3.5" /> Odd Bank (512 KB)
+                <span className="font-bold text-indigo-900 text-xs flex items-center gap-1.5">
+                  <Database className="w-3.5 h-3.5 text-indigo-600" /> Odd Bank (512 KB)
                 </span>
-                <span className="font-mono text-[10px] bg-indigo-900/40 text-indigo-300 px-2 py-0.5 rounded border border-indigo-700/50">D8–D15 Data Bus</span>
+                <span className="font-mono text-[10px] bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded border border-indigo-200 font-bold">D8–D15 Data Bus</span>
               </div>
-              <p className="text-[11px] text-slate-300 mb-2">Activated when <strong className="text-white">BHE# = 0</strong>. Holds odd memory addresses (00001H, 00003H, 00005H...).</p>
-              <div className={`p-2 rounded text-center font-bold font-mono text-[11px] ${oddBankActive ? 'bg-indigo-500 text-slate-950' : 'bg-slate-800 text-slate-500'}`}>
+              <p className="text-[11px] text-slate-600 mb-2">Activated when <strong className="text-slate-900">BHE# = 0</strong>. Holds odd memory addresses (00001H, 00003H, 00005H...).</p>
+              <div className={`p-2 rounded text-center font-bold font-mono text-[11px] ${oddBankActive ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-slate-200 text-slate-500'}`}>
                 {oddBankActive ? '● BANK ACTIVE (D8-D15)' : '○ BANK INACTIVE'}
               </div>
             </div>
           </div>
 
-          <div className="p-3 bg-indigo-950/30 border border-indigo-800/40 rounded-xl text-indigo-200 text-[11.5px] flex items-start gap-2">
-            <CheckCircle2 className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+          <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-xl text-slate-800 text-[11.5px] flex items-start gap-2">
+            <CheckCircle2 className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
             <div>
-              <strong className="text-white">Operational Summary: </strong>
+              <strong className="text-slate-900">Operational Summary: </strong>
               {transferDescription}
             </div>
           </div>
@@ -560,43 +560,43 @@ export default function MemoryInterfacingSimulator() {
       {/* TAB 2: 74LS138 Address Decoder */}
       {activeTab === 'decoder' && (
         <div className="space-y-3">
-          <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-3">
+          <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="font-bold text-indigo-300 text-xs uppercase tracking-wider">IC 74LS138 3-to-8 Line Address Decoder Inputs</span>
-              <span className={`text-[10px] font-mono px-2.5 py-0.5 rounded font-bold ${decoderEnabled ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}`}>
+              <span className="font-bold text-indigo-950 text-xs uppercase tracking-wider">IC 74LS138 3-to-8 Line Address Decoder Inputs</span>
+              <span className={`text-[10px] font-mono px-2.5 py-0.5 rounded font-bold ${decoderEnabled ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'}`}>
                 Decoder {decoderEnabled ? 'ENABLED (G1=1, G2A#=0, G2B#=0)' : 'DISABLED'}
               </span>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {/* Select Line A19 */}
-              <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
-                <span className="text-slate-400 text-[10px] block">Address Bit A19 (Select C)</span>
+              <div className="bg-white p-2.5 rounded-lg border border-slate-200 shadow-2xs">
+                <span className="text-slate-500 text-[10px] block">Address Bit A19 (Select C)</span>
                 <button
                   onClick={() => setA19(a19 === 1 ? 0 : 1)}
-                  className={`mt-1 w-full py-1 rounded font-mono font-bold cursor-pointer transition-all ${a19 === 1 ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400'}`}
+                  className={`mt-1 w-full py-1 rounded font-mono font-bold cursor-pointer transition-all ${a19 === 1 ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                 >
                   Bit C = {a19}
                 </button>
               </div>
 
               {/* Select Line A18 */}
-              <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
-                <span className="text-slate-400 text-[10px] block">Address Bit A18 (Select B)</span>
+              <div className="bg-white p-2.5 rounded-lg border border-slate-200 shadow-2xs">
+                <span className="text-slate-500 text-[10px] block">Address Bit A18 (Select B)</span>
                 <button
                   onClick={() => setA18(a18 === 1 ? 0 : 1)}
-                  className={`mt-1 w-full py-1 rounded font-mono font-bold cursor-pointer transition-all ${a18 === 1 ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400'}`}
+                  className={`mt-1 w-full py-1 rounded font-mono font-bold cursor-pointer transition-all ${a18 === 1 ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                 >
                   Bit B = {a18}
                 </button>
               </div>
 
               {/* Select Line A17 */}
-              <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
-                <span className="text-slate-400 text-[10px] block">Address Bit A17 (Select A)</span>
+              <div className="bg-white p-2.5 rounded-lg border border-slate-200 shadow-2xs">
+                <span className="text-slate-500 text-[10px] block">Address Bit A17 (Select A)</span>
                 <button
                   onClick={() => setA17(a17 === 1 ? 0 : 1)}
-                  className={`mt-1 w-full py-1 rounded font-mono font-bold cursor-pointer transition-all ${a17 === 1 ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400'}`}
+                  className={`mt-1 w-full py-1 rounded font-mono font-bold cursor-pointer transition-all ${a17 === 1 ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                 >
                   Bit A = {a17}
                 </button>
@@ -605,8 +605,8 @@ export default function MemoryInterfacingSimulator() {
           </div>
 
           {/* 74LS138 Output Pin States */}
-          <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2">
-            <div className="text-slate-400 font-bold text-[10px] uppercase tracking-wider">Active-LOW Chip Select Outputs (Y0# to Y7#)</div>
+          <div className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-2 shadow-2xs">
+            <div className="text-slate-500 font-bold text-[10px] uppercase tracking-wider">Active-LOW Chip Select Outputs (Y0# to Y7#)</div>
             <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
               {outputs.map((val, idx) => {
                 const isActive = val === 0;
@@ -614,7 +614,7 @@ export default function MemoryInterfacingSimulator() {
                   <div
                     key={idx}
                     className={`p-2 rounded-lg border text-center font-mono transition-all ${
-                      isActive ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-extrabold shadow-md scale-105' : 'bg-slate-900 border-slate-800 text-slate-500'
+                      isActive ? 'bg-emerald-600 text-white border-emerald-600 font-extrabold shadow-xs scale-105' : 'bg-slate-50 border-slate-200 text-slate-600'
                     }`}
                   >
                     <div className="text-[9px] opacity-80">Y{idx}#</div>
@@ -630,46 +630,46 @@ export default function MemoryInterfacingSimulator() {
 
       {/* TAB 3: RAM & ROM 1MB Map */}
       {activeTab === 'map' && (
-        <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-3">
-          <div className="text-indigo-300 font-bold text-[11px] uppercase tracking-wider">
+        <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
+          <div className="text-indigo-950 font-bold text-[11px] uppercase tracking-wider">
             8086 1 MB Physical Memory Map Architecture
           </div>
 
           <div className="space-y-2 font-mono text-[11px]">
             {/* Top ROM */}
-            <div className="bg-amber-950/40 border border-amber-500/60 p-2.5 rounded-lg flex items-center justify-between text-amber-200">
+            <div className="bg-amber-50 border border-amber-300 p-2.5 rounded-lg flex items-center justify-between text-amber-950">
               <div className="flex items-center gap-2">
-                <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
+                <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
                 <div>
-                  <strong className="text-amber-300">System EPROM / ROM (Boot Firmware)</strong>
-                  <p className="text-[10px] text-amber-400/80 font-sans">8086 starts execution at FFFF0H upon hardware RESET!</p>
+                  <strong className="text-amber-900">System EPROM / ROM (Boot Firmware)</strong>
+                  <p className="text-[10px] text-amber-800 font-sans">8086 starts execution at FFFF0H upon hardware RESET!</p>
                 </div>
               </div>
-              <span className="bg-amber-900/60 text-amber-300 px-2 py-1 rounded text-[10px]">FFFF0H – FFFFFH</span>
+              <span className="bg-amber-100 text-amber-900 border border-amber-200 font-bold px-2 py-1 rounded text-[10px]">FFFF0H – FFFFFH</span>
             </div>
 
             {/* General User RAM */}
-            <div className="bg-indigo-950/40 border border-indigo-500/40 p-2.5 rounded-lg flex items-center justify-between text-indigo-200">
+            <div className="bg-indigo-50 border border-indigo-200 p-2.5 rounded-lg flex items-center justify-between text-indigo-950">
               <div className="flex items-center gap-2">
-                <Database className="w-4 h-4 text-indigo-400 shrink-0" />
+                <Database className="w-4 h-4 text-indigo-600 shrink-0" />
                 <div>
-                  <strong className="text-indigo-300">SRAM / DRAM Main Memory Space</strong>
-                  <p className="text-[10px] text-indigo-400/80 font-sans">Code Segment, Data Segment, Stack Segment &amp; Extra Segment storage.</p>
+                  <strong className="text-indigo-900">SRAM / DRAM Main Memory Space</strong>
+                  <p className="text-[10px] text-slate-600 font-sans">Code Segment, Data Segment, Stack Segment &amp; Extra Segment storage.</p>
                 </div>
               </div>
-              <span className="bg-indigo-900/60 text-indigo-300 px-2 py-1 rounded text-[10px]">00400H – FFFEFH</span>
+              <span className="bg-indigo-100 text-indigo-900 border border-indigo-200 font-bold px-2 py-1 rounded text-[10px]">00400H – FFFEFH</span>
             </div>
 
             {/* IVT Table at Bottom */}
-            <div className="bg-emerald-950/40 border border-emerald-500/60 p-2.5 rounded-lg flex items-center justify-between text-emerald-200">
+            <div className="bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg flex items-center justify-between text-emerald-950">
               <div className="flex items-center gap-2">
-                <Cpu className="w-4 h-4 text-emerald-400 shrink-0" />
+                <Cpu className="w-4 h-4 text-emerald-600 shrink-0" />
                 <div>
-                  <strong className="text-emerald-300">Interrupt Vector Table (IVT - 1 KB)</strong>
-                  <p className="text-[10px] text-emerald-400/80 font-sans">Holds 256 interrupt pointer vectors (4 bytes each for CS:IP ISR locations).</p>
+                  <strong className="text-emerald-900">Interrupt Vector Table (IVT - 1 KB)</strong>
+                  <p className="text-[10px] text-slate-600 font-sans">Holds 256 interrupt pointer vectors (4 bytes each for CS:IP ISR locations).</p>
                 </div>
               </div>
-              <span className="bg-emerald-900/60 text-emerald-300 px-2 py-1 rounded text-[10px]">00000H – 003FFH</span>
+              <span className="bg-emerald-100 text-emerald-900 border border-emerald-200 font-bold px-2 py-1 rounded text-[10px]">00000H – 003FFH</span>
             </div>
           </div>
         </div>

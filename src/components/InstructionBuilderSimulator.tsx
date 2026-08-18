@@ -233,44 +233,44 @@ export const InstructionBuilderSimulator: React.FC = () => {
             </div>
 
             {/* Right Column: Live Generated Instruction Card (5 cols) */}
-            <div className="lg:col-span-5 bg-slate-900 text-slate-100 rounded-2xl p-5 border border-slate-800 flex flex-col justify-between shadow-lg relative overflow-hidden">
+            <div className="lg:col-span-5 bg-indigo-50/40 text-slate-800 rounded-2xl p-5 border border-indigo-100 flex flex-col justify-between shadow-xs relative overflow-hidden">
               <div className="space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <span className="text-[10px] font-mono uppercase text-indigo-400 font-bold tracking-wider">
+                <div className="flex items-center justify-between border-b border-indigo-100 pb-3">
+                  <span className="text-[10px] font-mono uppercase text-indigo-700 font-bold tracking-wider">
                     Generated Assembly Instruction
                   </span>
-                  <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950 border border-emerald-800 px-2.5 py-0.5 rounded-full font-bold">
+                  <span className="text-[10px] font-mono text-emerald-800 bg-emerald-100/80 border border-emerald-300 px-2.5 py-0.5 rounded-full font-bold">
                     {bytesLength} Byte(s)
                   </span>
                 </div>
 
                 {/* Main Instruction Display */}
-                <div className="bg-slate-950 p-4 rounded-xl border border-slate-800/80 text-center space-y-1">
+                <div className="bg-white p-4 rounded-xl border border-indigo-150 text-center space-y-1 shadow-2xs">
                   <span className="text-[10px] uppercase font-mono text-slate-400 font-bold">Your Instruction:</span>
-                  <div className="text-2xl sm:text-3xl font-extrabold font-mono text-amber-300 tracking-wide py-1">
+                  <div className="text-2xl sm:text-3xl font-extrabold font-mono text-indigo-900 tracking-wide py-1">
                     {instructionStr}
                   </div>
                 </div>
 
                 {/* Metadata Details Grid */}
                 <div className="grid grid-cols-2 gap-2 text-xs font-mono">
-                  <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700">
+                  <div className="bg-white p-2.5 rounded-lg border border-slate-200 shadow-2xs">
                     <span className="text-[9.5px] text-slate-400 block font-sans">Opcode:</span>
-                    <span className="font-bold text-indigo-300">{operation} ({getOpcodeHex(operation)})</span>
+                    <span className="font-bold text-indigo-700">{operation} ({getOpcodeHex(operation)})</span>
                   </div>
-                  <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700">
+                  <div className="bg-white p-2.5 rounded-lg border border-slate-200 shadow-2xs">
                     <span className="text-[9.5px] text-slate-400 block font-sans">Destination:</span>
-                    <span className="font-bold text-emerald-400">{destReg}</span>
+                    <span className="font-bold text-emerald-700">{destReg}</span>
                   </div>
-                  <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700">
+                  <div className="bg-white p-2.5 rounded-lg border border-slate-200 shadow-2xs">
                     <span className="text-[9.5px] text-slate-400 block font-sans">Source:</span>
-                    <span className="font-bold text-amber-400">
+                    <span className="font-bold text-amber-700">
                       {operation === 'INC' ? 'None (Unary)' : sourceType === 'Immediate' ? immValue : sourceType}
                     </span>
                   </div>
-                  <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700">
+                  <div className="bg-white p-2.5 rounded-lg border border-slate-200 shadow-2xs">
                     <span className="text-[9.5px] text-slate-400 block font-sans">Addressing Mode:</span>
-                    <span className="font-bold text-sky-300">{addressingMode}</span>
+                    <span className="font-bold text-sky-700">{addressingMode}</span>
                   </div>
                 </div>
 
@@ -279,18 +279,18 @@ export const InstructionBuilderSimulator: React.FC = () => {
                   <span className="text-[10px] font-mono text-slate-400 uppercase font-bold block">
                     Instruction Component Format:
                   </span>
-                  <div className="flex text-center text-xs font-mono font-bold rounded-lg overflow-hidden border border-slate-700">
-                    <div className="flex-1 bg-indigo-900/90 text-indigo-200 py-2 border-r border-slate-800">
-                      <span className="text-[9px] block text-indigo-400 font-sans">Opcode</span>
+                  <div className="flex text-center text-xs font-mono font-bold rounded-lg overflow-hidden border border-slate-200 shadow-2xs">
+                    <div className="flex-1 bg-indigo-100 text-indigo-900 py-2 border-r border-slate-200">
+                      <span className="text-[9px] block text-indigo-600 font-sans">Opcode</span>
                       {operation}
                     </div>
-                    <div className="flex-1 bg-emerald-900/90 text-emerald-200 py-2 border-r border-slate-800">
-                      <span className="text-[9px] block text-emerald-400 font-sans">Dest</span>
+                    <div className="flex-1 bg-emerald-100 text-emerald-900 py-2 border-r border-slate-200">
+                      <span className="text-[9px] block text-emerald-600 font-sans">Dest</span>
                       {destReg}
                     </div>
                     {operation !== 'INC' && (
-                      <div className="flex-1 bg-amber-900/90 text-amber-200 py-2">
-                        <span className="text-[9px] block text-amber-400 font-sans">Source</span>
+                      <div className="flex-1 bg-amber-100 text-amber-900 py-2">
+                        <span className="text-[9px] block text-amber-600 font-sans">Source</span>
                         {sourceType === 'Immediate' ? immValue : sourceType}
                       </div>
                     )}
@@ -318,44 +318,44 @@ export const InstructionBuilderSimulator: React.FC = () => {
             </p>
 
             {/* Visual Format Box Diagram requested in Prompt */}
-            <div className="bg-slate-900 text-slate-100 p-4 sm:p-5 rounded-2xl border border-slate-800 space-y-3 font-mono">
-              <div className="text-[11px] font-bold text-indigo-300 uppercase tracking-wider text-center">
+            <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 space-y-3 font-mono shadow-xs">
+              <div className="text-[11px] font-bold text-indigo-700 uppercase tracking-wider text-center">
                 Visual 8086 Instruction Byte Structure Diagram
               </div>
 
               {/* Box Diagram */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-1 text-center text-xs font-bold font-mono">
-                <div className="p-3 bg-indigo-900/80 border border-indigo-700 rounded-lg">
-                  <span className="text-[9px] text-indigo-300 block font-sans">Byte 1 (Opt)</span>
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-1.5 text-center text-xs font-bold font-mono">
+                <div className="p-3 bg-indigo-50 border border-indigo-200 text-indigo-900 rounded-lg shadow-2xs">
+                  <span className="text-[9px] text-indigo-600 block font-sans">Byte 1 (Opt)</span>
                   Prefix
                 </div>
-                <div className="p-3 bg-emerald-900/80 border border-emerald-700 rounded-lg">
-                  <span className="text-[9px] text-emerald-300 block font-sans">Byte 1-2</span>
+                <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-lg shadow-2xs">
+                  <span className="text-[9px] text-emerald-600 block font-sans">Byte 1-2</span>
                   Opcode
                 </div>
-                <div className="p-3 bg-sky-900/80 border border-sky-700 rounded-lg">
-                  <span className="text-[9px] text-sky-300 block font-sans">Byte 2 Bit 7-6</span>
+                <div className="p-3 bg-sky-50 border border-sky-200 text-sky-900 rounded-lg shadow-2xs">
+                  <span className="text-[9px] text-sky-600 block font-sans">Byte 2 Bit 7-6</span>
                   Mod
                 </div>
-                <div className="p-3 bg-purple-900/80 border border-purple-700 rounded-lg">
-                  <span className="text-[9px] text-purple-300 block font-sans">Byte 2 Bit 5-3</span>
+                <div className="p-3 bg-purple-50 border border-purple-200 text-purple-900 rounded-lg shadow-2xs">
+                  <span className="text-[9px] text-purple-600 block font-sans">Byte 2 Bit 5-3</span>
                   Reg
                 </div>
-                <div className="p-3 bg-amber-900/80 border border-amber-700 rounded-lg">
-                  <span className="text-[9px] text-amber-300 block font-sans">Byte 2 Bit 2-0</span>
+                <div className="p-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg shadow-2xs">
+                  <span className="text-[9px] text-amber-600 block font-sans">Byte 2 Bit 2-0</span>
                   R/M
                 </div>
-                <div className="p-3 bg-teal-900/80 border border-teal-700 rounded-lg">
-                  <span className="text-[9px] text-teal-300 block font-sans">Byte 3-4 (Opt)</span>
+                <div className="p-3 bg-teal-50 border border-teal-200 text-teal-900 rounded-lg shadow-2xs">
+                  <span className="text-[9px] text-teal-600 block font-sans">Byte 3-4 (Opt)</span>
                   Displacement
                 </div>
-                <div className="p-3 bg-rose-900/80 border border-rose-700 rounded-lg">
-                  <span className="text-[9px] text-rose-300 block font-sans">Byte 5-6 (Opt)</span>
+                <div className="p-3 bg-rose-50 border border-rose-200 text-rose-900 rounded-lg shadow-2xs">
+                  <span className="text-[9px] text-rose-600 block font-sans">Byte 5-6 (Opt)</span>
                   Immediate Data
                 </div>
               </div>
 
-              <div className="text-center text-[10px] text-slate-400 pt-1 font-sans">
+              <div className="text-center text-[10px] text-slate-500 pt-1 font-sans">
                 ▲ Optional fields (Prefix, Displacement, Immediate Data) are omitted when not required by the instruction.
               </div>
             </div>
@@ -453,24 +453,24 @@ export const InstructionBuilderSimulator: React.FC = () => {
             </div>
 
             {/* Execution Flow Diagram */}
-            <div className="bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-xs text-center border border-slate-800 space-y-2">
-              <span className="text-[10px] uppercase font-bold text-amber-400 block tracking-wider">
+            <div className="bg-white p-4 rounded-xl font-mono text-xs text-center border border-amber-200 space-y-2 shadow-2xs">
+              <span className="text-[10px] uppercase font-bold text-amber-800 block tracking-wider">
                 Microprocessor Execution Flow
               </span>
               <div className="flex flex-wrap items-center justify-center gap-2 text-xs font-bold pt-1">
-                <span className="px-3 py-1 bg-indigo-900/90 text-indigo-200 rounded-lg border border-indigo-700">
+                <span className="px-3 py-1 bg-indigo-50 text-indigo-900 rounded-lg border border-indigo-200 shadow-2xs">
                   Assembly Language
                 </span>
-                <span className="text-amber-400">↓</span>
-                <span className="px-3 py-1 bg-emerald-900/90 text-emerald-200 rounded-lg border border-emerald-700">
+                <span className="text-amber-600 font-extrabold">→</span>
+                <span className="px-3 py-1 bg-emerald-50 text-emerald-900 rounded-lg border border-emerald-200 shadow-2xs">
                   Opcode + Operand(s)
                 </span>
-                <span className="text-amber-400">↓</span>
-                <span className="px-3 py-1 bg-sky-900/90 text-sky-200 rounded-lg border border-sky-700">
+                <span className="text-amber-600 font-extrabold">→</span>
+                <span className="px-3 py-1 bg-sky-50 text-sky-900 rounded-lg border border-sky-200 shadow-2xs">
                   Machine Code
                 </span>
-                <span className="text-amber-400">↓</span>
-                <span className="px-3 py-1 bg-amber-900/90 text-amber-200 rounded-lg border border-amber-700">
+                <span className="text-amber-600 font-extrabold">→</span>
+                <span className="px-3 py-1 bg-amber-50 text-amber-950 rounded-lg border border-amber-300 shadow-2xs">
                   8086 Executes
                 </span>
               </div>

@@ -25,8 +25,10 @@ export default function Sidebar({
   currentLabId
 }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeUnit, setActiveUnit] = useState<'unit1' | 'unit2' | 'unit3' | 'labs'>(() => {
+  const [activeUnit, setActiveUnit] = useState<'unit1' | 'unit2' | 'unit3' | 'unit4' | 'unit5' | 'labs'>(() => {
     if (currentModuleId === 'm20') return 'labs';
+    if (['m26', 'm27', 'm28', 'm29', 'm30'].some(id => currentModuleId === id)) return 'unit5';
+    if (['m21', 'm22', 'm23', 'm24', 'm25'].some(id => currentModuleId === id)) return 'unit4';
     if (['m13', 'm14', 'm15', 'm16', 'm17', 'm18', 'm19'].some(id => currentModuleId === id)) return 'unit3';
     return ['m8', 'm9', 'm10', 'm11', 'm12'].some(id => currentModuleId === id) ? 'unit2' : 'unit1';
   });
@@ -36,6 +38,8 @@ export default function Sidebar({
       setActiveUnit('labs');
       return;
     }
+    const isUnit5 = ['m26', 'm27', 'm28', 'm29', 'm30'].some(id => currentModuleId === id);
+    const isUnit4 = ['m21', 'm22', 'm23', 'm24', 'm25'].some(id => currentModuleId === id);
     const isUnit3 = ['m13', 'm14', 'm15', 'm16', 'm17', 'm18', 'm19'].some(id => currentModuleId === id);
     const isUnit2 = ['m8', 'm9', 'm10', 'm11', 'm12'].some(id => currentModuleId === id);
     const activeModule = modules.find(m => m.id === currentModuleId);
@@ -45,7 +49,7 @@ export default function Sidebar({
     if (activeUnit === 'labs' && isLab) {
       return;
     }
-    setActiveUnit(isUnit3 ? 'unit3' : isUnit2 ? 'unit2' : 'unit1');
+    setActiveUnit(isUnit5 ? 'unit5' : isUnit4 ? 'unit4' : isUnit3 ? 'unit3' : isUnit2 ? 'unit2' : 'unit1');
   }, [currentModuleId, currentSlideId, modules]);
 
   // Compute progress percent
@@ -97,6 +101,16 @@ export default function Sidebar({
             'instruction-decoder': ["instructions", "instruction set", "decoder", "add", "sub", "and", "or", "alu", "data transfer"],
             'directive-sandbox': ["assembler directives", "directives", "db", "dw", "segment", "assume", "org", "end", "stack", "call", "ret", "proc", "near", "far"],
             'assembler-playground': ["write programs", "assembler", "playground", "debugger", "registers", "memory", "simulation"],
+            'mcu-8051': ["8051", "microcontroller", "mcu", "block diagram", "harvard architecture", "alu", "timer", "serial", "interrupts"],
+            'sfr-memory': ["sfr", "special function registers", "psw", "accumulator", "b register", "dptr", "stack pointer", "ram", "register bank"],
+            'mcu-pins': ["ports", "pins", "port 0", "port 1", "port 2", "port 3", "dip-40", "pull-up", "ea", "psen", "ale"],
+            'mcu-instructions': ["8051 instructions", "movx", "movc", "djnz", "cjne", "setb", "clr", "boolean", "addressing modes"],
+            'mcu-alp': ["8051 assembly", "alp", "led", "simulator", "assembly programming", "code execution"],
+            'mcu-timers-serial': ["8051 timers", "timer 0", "timer 1", "tmod", "tcon", "mode 0", "mode 1", "mode 2", "serial port", "uart", "baud rate", "scon", "sbuf"],
+            'mcu-interrupts-lcd': ["8051 interrupts", "ie", "ip", "external interrupt", "lcd interfacing", "hd44780", "16x2 lcd", "matrix keypad", "keypad scanning"],
+            'mcu-adc-dac': ["adc0804", "dac0808", "analog to digital", "digital to analog", "lm35", "temperature sensor", "sensor interfacing"],
+            'mcu-stepper-wave': ["stepper motor", "stepper motor interfacing", "waveform generator", "square wave", "sine wave", "triangular wave", "sawtooth"],
+            'processor-comparison': ["processor comparison", "microprocessor vs microcontroller", "8086 vs 8051", "pic vs arm", "pic microcontroller", "arm cortex"],
             quiz: ["quiz", "assessment", "mcq", "gate", "exam", "question"]
           };
           const keywords = typeKeywords[s.interactiveType] || [];
@@ -141,7 +155,11 @@ export default function Sidebar({
                 </h1>
                 <span className="text-[9px] text-indigo-600 font-mono tracking-wider font-semibold uppercase">
                   {currentModuleId === 'm20' || activeUnit === 'labs'
-                    ? 'UNIT-4: LAB RESOURCES & MANUALS'
+                    ? 'UNIT-6: LAB RESOURCES & MANUALS'
+                    : ['m26', 'm27', 'm28', 'm29', 'm30'].some(id => currentModuleId === id)
+                    ? 'UNIT-5: MICROCONTROLLER INTERFACING'
+                    : ['m21', 'm22', 'm23', 'm24', 'm25'].some(id => currentModuleId === id)
+                    ? 'UNIT-4: 8051 MICROCONTROLLER'
                     : ['m13', 'm14', 'm15', 'm16', 'm17', 'm18', 'm19'].some(id => currentModuleId === id)
                     ? 'UNIT-3: 8086 INTERFACING'
                     : ['m8', 'm9', 'm10', 'm11', 'm12'].some(id => currentModuleId === id)
@@ -175,7 +193,11 @@ export default function Sidebar({
               <span className="flex items-center gap-1 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 text-slate-600">
                 <GraduationCap className="w-3 h-3 text-indigo-600" />
                 {currentModuleId === 'm20' || activeUnit === 'labs'
-                  ? 'UNIT-4: Lab Resources & Manuals'
+                  ? 'UNIT-6: Lab Resources & Manuals'
+                  : ['m26', 'm27', 'm28', 'm29', 'm30'].some(id => currentModuleId === id)
+                  ? 'UNIT-5: Microcontroller Interfacing'
+                  : ['m21', 'm22', 'm23', 'm24', 'm25'].some(id => currentModuleId === id)
+                  ? 'UNIT-4: 8051 Microcontroller'
                   : ['m13', 'm14', 'm15', 'm16', 'm17', 'm18', 'm19'].some(id => currentModuleId === id)
                   ? 'UNIT-3: 8086 Interfacing'
                   : ['m8', 'm9', 'm10', 'm11', 'm12'].some(id => currentModuleId === id)
@@ -311,13 +333,15 @@ export default function Sidebar({
                     <select
                       id="unit-selector"
                       value={activeUnit}
-                      onChange={(e) => setActiveUnit(e.target.value as 'unit1' | 'unit2' | 'unit3' | 'labs')}
+                      onChange={(e) => setActiveUnit(e.target.value as 'unit1' | 'unit2' | 'unit3' | 'unit4' | 'unit5' | 'labs')}
                       className="w-full pl-9 pr-10 py-2.5 bg-white border border-slate-200 hover:border-indigo-300 text-slate-700 font-bold rounded-xl text-xs shadow-xs focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all cursor-pointer appearance-none outline-none"
                     >
                       <option value="unit1">Unit I: System Architecture</option>
                       <option value="unit2">Unit II: 8086 Programming</option>
                       <option value="unit3">Unit III: 8086 Interfacing</option>
-                      <option value="labs">Unit IV: Lab Resources & Experiments Manual</option>
+                      <option value="unit4">Unit IV: 8051 Microcontroller</option>
+                      <option value="unit5">Unit V: Microcontroller Interfacing</option>
+                      <option value="labs">Unit VI: Lab Resources & Experiments Manual</option>
                     </select>
                     <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
                       <GraduationCap className="h-4 w-4 text-indigo-600" />
@@ -332,7 +356,7 @@ export default function Sidebar({
                   <div className="text-[10px] font-bold font-mono text-slate-400 uppercase tracking-widest px-1 flex justify-between items-center">
                     <span>Learning Modules</span>
                     <span className="text-[9px] font-semibold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-100 font-sans">
-                      {activeUnit === 'labs' ? 'Unit IV: Lab Resources' : activeUnit === 'unit3' ? 'Unit III: Interfacing' : activeUnit === 'unit2' ? 'Unit II: Programming' : 'Unit I: Architecture'}
+                      {activeUnit === 'labs' ? 'Unit VI: Lab Resources' : activeUnit === 'unit5' ? 'Unit V: MCU Interfacing' : activeUnit === 'unit4' ? 'Unit IV: 8051 Microcontroller' : activeUnit === 'unit3' ? 'Unit III: Interfacing' : activeUnit === 'unit2' ? 'Unit II: Programming' : 'Unit I: Architecture'}
                     </span>
                   </div>
 
@@ -440,11 +464,15 @@ export default function Sidebar({
                       {modules
                         .filter((m) => {
                           if (m.id === 'm20') return false;
+                          const isM5 = ['m26', 'm27', 'm28', 'm29', 'm30'].includes(m.id);
+                          const isM4 = ['m21', 'm22', 'm23', 'm24', 'm25'].includes(m.id);
                           const isM3 = ['m13', 'm14', 'm15', 'm16', 'm17', 'm18', 'm19'].includes(m.id);
                           const isM2 = ['m8', 'm9', 'm10', 'm11', 'm12'].includes(m.id);
+                          if (activeUnit === 'unit5') return isM5;
+                          if (activeUnit === 'unit4') return isM4;
                           if (activeUnit === 'unit3') return isM3;
                           if (activeUnit === 'unit2') return isM2;
-                          return !isM2 && !isM3;
+                          return !isM2 && !isM3 && !isM4 && !isM5;
                         })
                         .map((m) => {
                           const mIdx = modules.findIndex(mod => mod.id === m.id);

@@ -2103,7 +2103,7 @@ END MAIN`;
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <span className="bg-purple-100 text-purple-800 border border-purple-300 px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold tracking-wider uppercase">
-                      UNIT 4 • EXP 1A LAB
+                      UNIT 6 • EXP 1A LAB
                     </span>
                     <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 rounded-md text-[10px] font-mono font-bold tracking-wider uppercase">
                       32-BIT / 64-BIT HARDWARE SIMULATOR

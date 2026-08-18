@@ -325,19 +325,19 @@ export default function MinimumModeHardwareSimulator() {
   return (
     <div className="flex flex-col h-full bg-white rounded-xl shadow-xs border border-slate-100 overflow-hidden">
       {/* Operating Mode Selector Banner */}
-      <div className="bg-slate-900 text-white p-3 md:p-4 flex flex-col md:flex-row items-center justify-between gap-3 border-b border-slate-800">
+      <div className="bg-slate-50 text-slate-900 p-3 md:p-4 flex flex-col md:flex-row items-center justify-between gap-3 border-b border-slate-200">
         <div className="flex items-center gap-2.5">
-          <div className="p-2 bg-indigo-500/20 border border-indigo-400/30 rounded-lg">
-            <CpuIcon className="w-5 h-5 text-indigo-400" />
+          <div className="p-2 bg-indigo-50 border border-indigo-200 rounded-lg">
+            <CpuIcon className="w-5 h-5 text-indigo-600" />
           </div>
           <div>
-            <h2 className="text-sm md:text-base font-display font-bold text-white flex items-center gap-2">
+            <h2 className="text-sm md:text-base font-display font-bold text-slate-900 flex items-center gap-2">
               8086 System Environment Demonstrator
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 font-semibold">
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-900 border border-indigo-200 font-semibold">
                 {operatingEnv === 'minimum' ? 'Single Processor' : 'Multi-Processor'}
               </span>
             </h2>
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-slate-600">
               {operatingEnv === 'minimum'
                 ? 'Minimum Mode: MN/MX = +5V. CPU generates ALE, DEN, DT/R, M/IO, RD, WR directly.'
                 : 'Maximum Mode: MN/MX = GND. CPU sends S0, S1, S2 status to 8288 Bus Controller.'}
@@ -346,13 +346,13 @@ export default function MinimumModeHardwareSimulator() {
         </div>
 
         {/* Toggle Mode Buttons */}
-        <div className="flex bg-slate-800 p-1 rounded-xl border border-slate-700/80 shrink-0">
+        <div className="flex bg-slate-200/80 p-1 rounded-xl border border-slate-300 shrink-0">
           <button
             onClick={() => handleModeChange('minimum')}
             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
               operatingEnv === 'minimum'
-                ? 'bg-indigo-600 text-white shadow-md font-bold'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-indigo-600 text-white shadow-xs font-bold'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <Zap className="w-3.5 h-3.5" />
@@ -362,8 +362,8 @@ export default function MinimumModeHardwareSimulator() {
             onClick={() => handleModeChange('maximum')}
             className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
               operatingEnv === 'maximum'
-                ? 'bg-indigo-600 text-white shadow-md font-bold'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-indigo-600 text-white shadow-xs font-bold'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <Sparkles className="w-3.5 h-3.5" />

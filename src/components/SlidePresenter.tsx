@@ -63,6 +63,10 @@ const Interrupt8259Simulator = React.lazy(() => import('./Interrupt8259Simulator
 const USART8251Simulator = React.lazy(() => import('./USART8251Simulator'));
 const DMA8237Simulator = React.lazy(() => import('./DMA8237Simulator'));
 
+// Unit IV & V Simulators
+const MCU8051Simulator = React.lazy(() => import('./MCU8051Simulator'));
+const MCU8051InterfacingSimulator = React.lazy(() => import('./MCU8051InterfacingSimulator'));
+
 interface SlidePresenterProps {
   slide: Slide;
   onNext: () => void;
@@ -382,6 +386,7 @@ export default function SlidePresenter({
             initialSubTab={slide.id === 'm10-s3' ? 'explanation' : 'instructions'}
             hideGroupsTab={slide.id === 'm10-s3'}
             hideLabTab={slide.id === 'm10-s4'}
+            hideBranchingTab={slide.id === 'm10-s3'}
             hideComparisonTab={slide.id === 'm10-s3'}
             hideRememberTab={slide.id === 'm10-s3'}
             hideGuideBanner={slide.id === 'm10-s3'}
@@ -434,9 +439,22 @@ export default function SlidePresenter({
       case 'ppi-8255':
         component = <PPI8255Simulator />;
         break;
-      case 'peripheral-interfacing':
-        component = <PeripheralInterfacingSimulator />;
+      case 'peripheral-interfacing': {
+        let mode: 'circuit' | 'stepper' | 'stepper-code' | 'display' | 'keypad' | 'traffic' | 'alp' = 'circuit';
+        let allowedTabs: ('circuit' | 'stepper' | 'stepper-code' | 'display' | 'keypad' | 'traffic' | 'alp')[] | undefined = undefined;
+
+        if (slide.id === 'm15-s1') {
+          mode = 'circuit';
+          allowedTabs = ['circuit', 'stepper', 'stepper-code'];
+        }
+        else if (slide.id === 'm15-s2') mode = 'display';
+        else if (slide.id === 'm15-s3') mode = 'keypad';
+        else if (slide.id === 'm15-s4') mode = 'traffic';
+        else if (slide.id === 'm15-s5') mode = 'alp';
+
+        component = <PeripheralInterfacingSimulator initialTab={mode} allowedTabs={allowedTabs} />;
         break;
+      }
       case 'analog-interfacing':
         component = <AnalogInterfacingSimulator />;
         break;
@@ -448,6 +466,36 @@ export default function SlidePresenter({
         break;
       case 'dma-8237':
         component = <DMA8237Simulator />;
+        break;
+      case 'mcu-8051':
+        component = <MCU8051Simulator initialTab="architecture" />;
+        break;
+      case 'sfr-memory':
+        component = <MCU8051Simulator initialTab="sfr" />;
+        break;
+      case 'mcu-pins':
+        component = <MCU8051Simulator initialTab="pins" />;
+        break;
+      case 'mcu-instructions':
+        component = <MCU8051Simulator initialTab="instructions" />;
+        break;
+      case 'mcu-alp':
+        component = <MCU8051Simulator initialTab="alp" />;
+        break;
+      case 'mcu-timers-serial':
+        component = <MCU8051InterfacingSimulator initialTab="timers" />;
+        break;
+      case 'mcu-interrupts-lcd':
+        component = <MCU8051InterfacingSimulator initialTab="interrupts-lcd" />;
+        break;
+      case 'mcu-adc-dac':
+        component = <MCU8051InterfacingSimulator initialTab="adc-dac" />;
+        break;
+      case 'mcu-stepper-wave':
+        component = <MCU8051InterfacingSimulator initialTab="stepper" />;
+        break;
+      case 'processor-comparison':
+        component = <MCU8051InterfacingSimulator initialTab="comparison" />;
         break;
       default:
         return null;
@@ -492,7 +540,7 @@ export default function SlidePresenter({
             {/* Text points (Standard Presentation Layout in a Bento Box) */}
             {(!slide.interactiveType || slide.moduleId === 'm20') && (
               slide.moduleId === 'm20' ? (
-                /* Unit 4 Comprehensive Experiment Layout - AIM ONLY */
+                /* Unit VI Comprehensive Experiment Layout - AIM ONLY */
                 <div className="w-full max-w-full bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between xl:col-span-12 space-y-6">
                   {!fullScreenMode && (
                     <div className="space-y-4">

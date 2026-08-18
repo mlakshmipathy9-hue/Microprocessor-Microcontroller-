@@ -328,13 +328,7 @@ export default function FlagRegisterSimulator() {
   return (
     <div className="flex flex-col h-full bg-white rounded-xl shadow-xs border border-slate-100 overflow-hidden">
       {/* Header with View Mode Switcher */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-5 py-3 border-b border-slate-100 bg-slate-50/70 gap-2">
-        <div className="flex items-center gap-2">
-          <Cpu className="w-4 h-4 text-indigo-600 shrink-0" />
-          <span className="text-sm font-bold text-slate-800 font-display">
-            8086 Register Organization & Flag Disambiguator
-          </span>
-        </div>
+      <div className="flex flex-col sm:flex-row items-center justify-end px-5 py-3 border-b border-slate-100 bg-slate-50/70 gap-2">
 
         {/* Tab Switcher */}
         <div className="flex flex-wrap items-center p-1 bg-slate-200/70 rounded-xl gap-1 shrink-0">
@@ -381,30 +375,30 @@ export default function FlagRegisterSimulator() {
           /* ================= VIEW 3: FLAG DISAMBIGUATOR & BITWISE ALU ANALYZER ================= */
           <div className="space-y-6">
             {/* Top Concept Disambiguation Banner */}
-            <div className="bg-gradient-to-r from-indigo-900 via-slate-900 to-indigo-950 text-white p-4.5 rounded-2xl shadow-md border border-indigo-800/50 space-y-3">
+            <div className="bg-indigo-50/80 text-slate-900 p-4.5 rounded-2xl border border-indigo-150 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="p-1.5 rounded-lg bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                  <span className="p-1.5 rounded-lg bg-amber-100 text-amber-800 border border-amber-200">
                     <Zap className="w-4 h-4" />
                   </span>
                   <div>
-                    <h3 className="font-display font-black text-sm text-white">
+                    <h3 className="font-display font-black text-sm text-slate-900">
                       Flag Disambiguation Guide: AF vs OF vs SF vs PF vs CF
                     </h3>
-                    <p className="text-[11.5px] text-indigo-200/90">
+                    <p className="text-[11.5px] text-slate-600">
                       Master the distinct physical conditions that trigger each status flag in the 8086 ALU.
                     </p>
                   </div>
                 </div>
 
-                <span className="hidden md:inline-flex text-[10px] font-mono font-bold uppercase tracking-wider bg-indigo-500/30 text-indigo-200 px-2.5 py-1 rounded-full border border-indigo-400/30">
+                <span className="hidden md:inline-flex text-[10px] font-mono font-bold uppercase tracking-wider bg-indigo-100 text-indigo-800 px-2.5 py-1 rounded-full border border-indigo-200">
                   Interactive ALU Simulator
                 </span>
               </div>
 
               {/* Quick Preset Selector Buttons */}
-              <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-indigo-800/40">
-                <span className="text-[11px] font-mono text-indigo-300 font-semibold mr-1">
+              <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-indigo-200/60">
+                <span className="text-[11px] font-mono text-indigo-900 font-semibold mr-1">
                   Test Confusing Scenarios:
                 </span>
 
@@ -413,7 +407,7 @@ export default function FlagRegisterSimulator() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
                     activePreset === 'af-demo'
                       ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-xs'
-                      : 'bg-indigo-950/60 text-indigo-200 border-indigo-700/60 hover:bg-indigo-800/50'
+                      : 'bg-white text-indigo-900 border-indigo-200 hover:bg-indigo-100/70'
                   }`}
                 >
                   1. Auxiliary Carry (AF=1, CF=0)
@@ -424,7 +418,7 @@ export default function FlagRegisterSimulator() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
                     activePreset === 'of-demo'
                       ? 'bg-purple-400 text-slate-950 border-purple-300 shadow-xs'
-                      : 'bg-indigo-950/60 text-indigo-200 border-indigo-700/60 hover:bg-indigo-800/50'
+                      : 'bg-white text-indigo-900 border-indigo-200 hover:bg-indigo-100/70'
                   }`}
                 >
                   2. Signed Overflow (OF=1, SF=1, CF=0)
@@ -435,7 +429,7 @@ export default function FlagRegisterSimulator() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
                     activePreset === 'cf-demo'
                       ? 'bg-blue-400 text-slate-950 border-blue-300 shadow-xs'
-                      : 'bg-indigo-950/60 text-indigo-200 border-indigo-700/60 hover:bg-indigo-800/50'
+                      : 'bg-white text-indigo-900 border-indigo-200 hover:bg-indigo-100/70'
                   }`}
                 >
                   3. Unsigned Carry (CF=1, OF=0)
@@ -446,7 +440,7 @@ export default function FlagRegisterSimulator() {
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
                     activePreset === 'pf-demo'
                       ? 'bg-emerald-400 text-slate-950 border-emerald-300 shadow-xs'
-                      : 'bg-indigo-950/60 text-indigo-200 border-indigo-700/60 hover:bg-indigo-800/50'
+                      : 'bg-white text-indigo-900 border-indigo-200 hover:bg-indigo-100/70'
                   }`}
                 >
                   4. Even Parity (PF=1)
@@ -455,22 +449,22 @@ export default function FlagRegisterSimulator() {
             </div>
 
             {/* Interactive 8-Bit Binary ALU Addition Visualizer */}
-            <div className="bg-slate-900 text-white rounded-2xl p-5 border border-slate-800 shadow-lg space-y-4">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-800 pb-3 gap-2">
+            <div className="bg-slate-50/90 text-slate-900 rounded-2xl p-5 border border-slate-200/80 shadow-2xs space-y-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-slate-200 pb-3 gap-2">
                 <div>
-                  <h4 className="font-display font-bold text-sm text-white flex items-center gap-2">
-                    <Binary className="w-4 h-4 text-indigo-400" />
+                  <h4 className="font-display font-bold text-sm text-slate-900 flex items-center gap-2">
+                    <Binary className="w-4 h-4 text-indigo-600" />
                     8-Bit Bitwise ALU Column Addition & Carry Pathway
                   </h4>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-xs text-slate-600">
                     Observe how bitwise carries propagate to set AF, CF, OF, SF, ZF, and PF.
                   </p>
                 </div>
 
                 {/* Input Controls */}
                 <div className="flex items-center gap-3 font-mono text-xs">
-                  <div className="flex items-center gap-1.5 bg-slate-800/80 px-2.5 py-1.5 rounded-lg border border-slate-700">
-                    <span className="text-slate-400">A =</span>
+                  <div className="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-lg border border-slate-200 shadow-2xs">
+                    <span className="text-slate-600">A =</span>
                     <input
                       type="number"
                       min={0}
@@ -480,15 +474,15 @@ export default function FlagRegisterSimulator() {
                         setAluValA(Math.min(255, Math.max(0, parseInt(e.target.value) || 0)));
                         setActivePreset('custom');
                       }}
-                      className="w-12 bg-slate-950 text-amber-300 text-center font-bold rounded border border-slate-700 px-1 py-0.5 focus:outline-hidden"
+                      className="w-12 bg-white text-amber-900 text-center font-bold rounded border border-slate-300 px-1 py-0.5 focus:outline-hidden"
                     />
                     <span className="text-slate-500 text-[10px]">({aluValA.toString(16).toUpperCase().padStart(2, '0')}H)</span>
                   </div>
 
-                  <span className="text-slate-400 font-bold">+</span>
+                  <span className="text-slate-600 font-bold">+</span>
 
-                  <div className="flex items-center gap-1.5 bg-slate-800/80 px-2.5 py-1.5 rounded-lg border border-slate-700">
-                    <span className="text-slate-400">B =</span>
+                  <div className="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-lg border border-slate-200 shadow-2xs">
+                    <span className="text-slate-600">B =</span>
                     <input
                       type="number"
                       min={0}
@@ -498,7 +492,7 @@ export default function FlagRegisterSimulator() {
                         setAluValB(Math.min(255, Math.max(0, parseInt(e.target.value) || 0)));
                         setActivePreset('custom');
                       }}
-                      className="w-12 bg-slate-950 text-amber-300 text-center font-bold rounded border border-slate-700 px-1 py-0.5 focus:outline-hidden"
+                      className="w-12 bg-white text-amber-900 text-center font-bold rounded border border-slate-300 px-1 py-0.5 focus:outline-hidden"
                     />
                     <span className="text-slate-500 text-[10px]">({aluValB.toString(16).toUpperCase().padStart(2, '0')}H)</span>
                   </div>
@@ -509,24 +503,24 @@ export default function FlagRegisterSimulator() {
               <div className="overflow-x-auto pb-2">
                 <div className="min-w-[560px] space-y-2 font-mono text-xs select-none">
                   {/* Bit Index Header */}
-                  <div className="grid grid-cols-10 gap-1 text-center text-[10.5px] font-bold text-slate-400">
+                  <div className="grid grid-cols-10 gap-1 text-center text-[10.5px] font-bold text-slate-600">
                     <span className="col-span-1 text-left text-slate-500">Row</span>
-                    <span className="col-span-1 text-blue-400">CF Out</span>
-                    <span className="text-rose-400">Bit 7 (MSB)</span>
+                    <span className="col-span-1 text-blue-700">CF Out</span>
+                    <span className="text-rose-700">Bit 7 (MSB)</span>
                     <span>Bit 6</span>
                     <span>Bit 5</span>
-                    <span className="text-amber-400">Bit 4</span>
-                    <span className="text-amber-400">Bit 3 (AF)</span>
+                    <span className="text-amber-700">Bit 4</span>
+                    <span className="text-amber-700">Bit 3 (AF)</span>
                     <span>Bit 2</span>
                     <span>Bit 1</span>
                     <span>Bit 0 (LSB)</span>
                   </div>
 
                   {/* Carries Generated Row */}
-                  <div className="grid grid-cols-10 gap-1 text-center items-center bg-slate-950/70 p-2 rounded-xl border border-slate-800">
-                    <span className="col-span-1 text-left font-bold text-slate-400 text-[11px]">Carries</span>
+                  <div className="grid grid-cols-10 gap-1 text-center items-center bg-slate-100/80 p-2 rounded-xl border border-slate-200">
+                    <span className="col-span-1 text-left font-bold text-slate-700 text-[11px]">Carries</span>
                     <span className={`py-1 rounded font-black border text-xs ${
-                      aluResult.cOut[7] === 1 ? 'bg-blue-600 text-white border-blue-400 animate-pulse' : 'bg-slate-900 text-slate-600 border-slate-800'
+                      aluResult.cOut[7] === 1 ? 'bg-blue-600 text-white border-blue-400 animate-pulse' : 'bg-slate-200 text-slate-500 border-slate-300'
                     }`}>
                       {aluResult.cOut[7]}
                     </span>
@@ -538,10 +532,10 @@ export default function FlagRegisterSimulator() {
                           key={`c-${bitIdx}`}
                           className={`py-1 rounded font-bold border text-xs ${
                             isAfCarry
-                              ? 'bg-amber-500 text-slate-950 border-amber-300 font-black animate-bounce'
+                              ? 'bg-amber-500 text-white border-amber-600 font-black animate-bounce'
                               : carryVal === 1
-                                ? 'bg-indigo-900/80 text-indigo-200 border-indigo-700'
-                                : 'text-slate-600 border-transparent'
+                                ? 'bg-indigo-100 text-indigo-900 border-indigo-300'
+                                : 'text-slate-400 border-transparent'
                           }`}
                         >
                           {carryVal}
@@ -552,27 +546,27 @@ export default function FlagRegisterSimulator() {
 
                   {/* Value A Row */}
                   <div className="grid grid-cols-10 gap-1 text-center items-center">
-                    <span className="col-span-2 text-left font-bold text-amber-300 text-[11px]">Val A ({aluValA})</span>
+                    <span className="col-span-2 text-left font-bold text-amber-800 text-[11px]">Val A ({aluValA})</span>
                     {[7, 6, 5, 4, 3, 2, 1, 0].map((bitIdx) => (
-                      <span key={`a-${bitIdx}`} className="py-1 bg-slate-800/80 rounded border border-slate-700 font-bold text-amber-200">
+                      <span key={`a-${bitIdx}`} className="py-1 bg-white rounded border border-slate-200 font-bold text-slate-800 shadow-2xs">
                         {aluResult.bitsA[bitIdx]}
                       </span>
                     ))}
                   </div>
 
                   {/* Value B Row */}
-                  <div className="grid grid-cols-10 gap-1 text-center items-center pb-1 border-b border-slate-800">
-                    <span className="col-span-2 text-left font-bold text-amber-300 text-[11px]">+ Val B ({aluValB})</span>
+                  <div className="grid grid-cols-10 gap-1 text-center items-center pb-1 border-b border-slate-200">
+                    <span className="col-span-2 text-left font-bold text-amber-800 text-[11px]">+ Val B ({aluValB})</span>
                     {[7, 6, 5, 4, 3, 2, 1, 0].map((bitIdx) => (
-                      <span key={`b-${bitIdx}`} className="py-1 bg-slate-800/80 rounded border border-slate-700 font-bold text-amber-200">
+                      <span key={`b-${bitIdx}`} className="py-1 bg-white rounded border border-slate-200 font-bold text-slate-800 shadow-2xs">
                         {aluResult.bitsB[bitIdx]}
                       </span>
                     ))}
                   </div>
 
                   {/* Result Sum Row */}
-                  <div className="grid grid-cols-10 gap-1 text-center items-center bg-indigo-950/80 p-2 rounded-xl border border-indigo-800/80">
-                    <span className="col-span-2 text-left font-bold text-emerald-300 text-[11px]">
+                  <div className="grid grid-cols-10 gap-1 text-center items-center bg-indigo-50/90 p-2 rounded-xl border border-indigo-200">
+                    <span className="col-span-2 text-left font-bold text-emerald-800 text-[11px]">
                       = Result ({aluResult.res8} / {aluResult.res8.toString(16).toUpperCase().padStart(2, '0')}H)
                     </span>
                     {[7, 6, 5, 4, 3, 2, 1, 0].map((bitIdx) => {
@@ -585,10 +579,10 @@ export default function FlagRegisterSimulator() {
                             isMsb
                               ? bitVal === 1
                                 ? 'bg-rose-600 text-white border-rose-400'
-                                : 'bg-emerald-950 text-emerald-300 border-emerald-800'
+                                : 'bg-emerald-100 text-emerald-800 border-emerald-300'
                               : bitVal === 1
-                                ? 'bg-emerald-600/30 text-emerald-200 border-emerald-600/50'
-                                : 'bg-slate-900 text-slate-500 border-slate-800'
+                                ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
+                                : 'bg-slate-100 text-slate-400 border-slate-200'
                           }`}
                         >
                           {bitVal}
@@ -604,13 +598,13 @@ export default function FlagRegisterSimulator() {
                 {/* AF */}
                 <div className={`p-2.5 rounded-xl border flex flex-col justify-between transition-all ${
                   aluResult.flags.AF === 1
-                    ? 'bg-amber-500/20 border-amber-400/60 text-amber-200'
-                    : 'bg-slate-800/50 border-slate-700 text-slate-400'
+                    ? 'bg-amber-50 border-amber-300 text-amber-900'
+                    : 'bg-slate-100/70 border-slate-200 text-slate-500'
                 }`}>
                   <div className="flex items-center justify-between">
                     <span className="font-mono font-black text-xs">AF (Aux Carry)</span>
                     <span className={`px-2 py-0.5 rounded text-xs font-mono font-bold ${
-                      aluResult.flags.AF === 1 ? 'bg-amber-400 text-slate-950' : 'bg-slate-700 text-slate-400'
+                      aluResult.flags.AF === 1 ? 'bg-amber-500 text-white' : 'bg-slate-200 text-slate-600'
                     }`}>
                       {aluResult.flags.AF}
                     </span>
@@ -623,13 +617,13 @@ export default function FlagRegisterSimulator() {
                 {/* OF */}
                 <div className={`p-2.5 rounded-xl border flex flex-col justify-between transition-all ${
                   aluResult.flags.OF === 1
-                    ? 'bg-purple-500/25 border-purple-400/60 text-purple-200'
-                    : 'bg-slate-800/50 border-slate-700 text-slate-400'
+                    ? 'bg-purple-50 border-purple-300 text-purple-900'
+                    : 'bg-slate-100/70 border-slate-200 text-slate-500'
                 }`}>
                   <div className="flex items-center justify-between">
                     <span className="font-mono font-black text-xs">OF (Overflow)</span>
                     <span className={`px-2 py-0.5 rounded text-xs font-mono font-bold ${
-                      aluResult.flags.OF === 1 ? 'bg-purple-400 text-slate-950' : 'bg-slate-700 text-slate-400'
+                      aluResult.flags.OF === 1 ? 'bg-purple-600 text-white' : 'bg-slate-200 text-slate-600'
                     }`}>
                       {aluResult.flags.OF}
                     </span>
@@ -642,13 +636,13 @@ export default function FlagRegisterSimulator() {
                 {/* SF */}
                 <div className={`p-2.5 rounded-xl border flex flex-col justify-between transition-all ${
                   aluResult.flags.SF === 1
-                    ? 'bg-rose-500/25 border-rose-400/60 text-rose-200'
-                    : 'bg-slate-800/50 border-slate-700 text-slate-400'
+                    ? 'bg-rose-50 border-rose-300 text-rose-900'
+                    : 'bg-slate-100/70 border-slate-200 text-slate-500'
                 }`}>
                   <div className="flex items-center justify-between">
                     <span className="font-mono font-black text-xs">SF (Sign Flag)</span>
                     <span className={`px-2 py-0.5 rounded text-xs font-mono font-bold ${
-                      aluResult.flags.SF === 1 ? 'bg-rose-500 text-white' : 'bg-slate-700 text-slate-400'
+                      aluResult.flags.SF === 1 ? 'bg-rose-600 text-white' : 'bg-slate-200 text-slate-600'
                     }`}>
                       {aluResult.flags.SF}
                     </span>
@@ -661,13 +655,13 @@ export default function FlagRegisterSimulator() {
                 {/* PF */}
                 <div className={`p-2.5 rounded-xl border flex flex-col justify-between transition-all ${
                   aluResult.flags.PF === 1
-                    ? 'bg-emerald-500/25 border-emerald-400/60 text-emerald-200'
-                    : 'bg-slate-800/50 border-slate-700 text-slate-400'
+                    ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
+                    : 'bg-slate-100/70 border-slate-200 text-slate-500'
                 }`}>
                   <div className="flex items-center justify-between">
                     <span className="font-mono font-black text-xs">PF (Parity)</span>
                     <span className={`px-2 py-0.5 rounded text-xs font-mono font-bold ${
-                      aluResult.flags.PF === 1 ? 'bg-emerald-400 text-slate-950' : 'bg-slate-700 text-slate-400'
+                      aluResult.flags.PF === 1 ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'
                     }`}>
                       {aluResult.flags.PF}
                     </span>
@@ -680,13 +674,13 @@ export default function FlagRegisterSimulator() {
                 {/* CF */}
                 <div className={`p-2.5 rounded-xl border flex flex-col justify-between transition-all ${
                   aluResult.flags.CF === 1
-                    ? 'bg-blue-500/25 border-blue-400/60 text-blue-200'
-                    : 'bg-slate-800/50 border-slate-700 text-slate-400'
+                    ? 'bg-blue-50 border-blue-300 text-blue-900'
+                    : 'bg-slate-100/70 border-slate-200 text-slate-500'
                 }`}>
                   <div className="flex items-center justify-between">
                     <span className="font-mono font-black text-xs">CF (Carry Flag)</span>
                     <span className={`px-2 py-0.5 rounded text-xs font-mono font-bold ${
-                      aluResult.flags.CF === 1 ? 'bg-blue-400 text-slate-950' : 'bg-slate-700 text-slate-400'
+                      aluResult.flags.CF === 1 ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-600'
                     }`}>
                       {aluResult.flags.CF}
                     </span>
@@ -699,13 +693,13 @@ export default function FlagRegisterSimulator() {
                 {/* ZF */}
                 <div className={`p-2.5 rounded-xl border flex flex-col justify-between transition-all ${
                   aluResult.flags.ZF === 1
-                    ? 'bg-indigo-500/25 border-indigo-400/60 text-indigo-200'
-                    : 'bg-slate-800/50 border-slate-700 text-slate-400'
+                    ? 'bg-indigo-50 border-indigo-300 text-indigo-900'
+                    : 'bg-slate-100/70 border-slate-200 text-slate-500'
                 }`}>
                   <div className="flex items-center justify-between">
                     <span className="font-mono font-black text-xs">ZF (Zero Flag)</span>
                     <span className={`px-2 py-0.5 rounded text-xs font-mono font-bold ${
-                      aluResult.flags.ZF === 1 ? 'bg-indigo-400 text-slate-950' : 'bg-slate-700 text-slate-400'
+                      aluResult.flags.ZF === 1 ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-600'
                     }`}>
                       {aluResult.flags.ZF}
                     </span>
@@ -749,7 +743,7 @@ export default function FlagRegisterSimulator() {
                     </p>
                   </div>
 
-                  <div className="p-2 bg-slate-900 text-amber-300 rounded-lg text-[11px] font-mono">
+                  <div className="p-2.5 bg-amber-50 text-amber-900 border border-amber-200 rounded-lg text-[11px] font-mono">
                     💡 <strong>Rule of Thumb:</strong> AF is inside the byte (between nibbles bit 3→4); CF is outside the byte (at the MSB edge bit 7/15).
                   </div>
                 </div>
@@ -785,7 +779,7 @@ export default function FlagRegisterSimulator() {
                     </p>
                   </div>
 
-                  <div className="p-2 bg-slate-900 text-purple-300 rounded-lg text-[11px] font-mono">
+                  <div className="p-2.5 bg-purple-50 text-purple-900 border border-purple-200 rounded-lg text-[11px] font-mono">
                     💡 <strong>Rule of Thumb:</strong> Use <strong>CF</strong> for unsigned numbers (0 to 255); use <strong>OF</strong> for signed numbers (-128 to +127).
                   </div>
                 </div>
@@ -821,7 +815,7 @@ export default function FlagRegisterSimulator() {
                     </p>
                   </div>
 
-                  <div className="p-2 bg-slate-900 text-rose-300 rounded-lg text-[11px] font-mono">
+                  <div className="p-2.5 bg-rose-50 text-rose-900 border border-rose-200 rounded-lg text-[11px] font-mono">
                     💡 <strong>Rule of Thumb:</strong> SF tells you if result <em>looks</em> negative (MSB=1); OF tells you if the signed math was <em>corrupted</em>.
                   </div>
                 </div>
@@ -857,7 +851,7 @@ export default function FlagRegisterSimulator() {
                     </p>
                   </div>
 
-                  <div className="p-2 bg-slate-900 text-emerald-300 rounded-lg text-[11px] font-mono">
+                  <div className="p-2.5 bg-emerald-50 text-emerald-900 border border-emerald-200 rounded-lg text-[11px] font-mono">
                     💡 <strong>Rule of Thumb:</strong> PF checks AL byte parity only! PF = 1 means EVEN number of ones.
                   </div>
                 </div>
@@ -995,12 +989,12 @@ export default function FlagRegisterSimulator() {
               </div>
 
               {/* Code Example Snippet */}
-              <div className="bg-slate-900 text-indigo-300 p-3.5 rounded-xl font-mono text-xs space-y-1">
-                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider flex items-center gap-1">
-                  <Hash className="w-3 h-3 text-indigo-400" />
+              <div className="bg-slate-50 text-indigo-950 p-3.5 rounded-xl font-mono text-xs space-y-1 border border-slate-200">
+                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider flex items-center gap-1">
+                  <Hash className="w-3 h-3 text-indigo-600" />
                   Typical Assembly Instruction Usage:
                 </span>
-                <pre className="text-amber-300 font-semibold whitespace-pre-wrap">{selectedReg.exampleUse}</pre>
+                <pre className="text-indigo-900 font-bold whitespace-pre-wrap">{selectedReg.exampleUse}</pre>
               </div>
             </motion.div>
           </div>
