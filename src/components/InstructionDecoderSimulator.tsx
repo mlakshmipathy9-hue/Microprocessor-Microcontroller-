@@ -1954,12 +1954,12 @@ export default function InstructionDecoderSimulator({
                                 : 'Adjust operands below to see live bitwise manipulations, bit shifts/rotations, and resulting status flags:'}
                             </p>
 
-                            {/* Sliders for Operand A (and Operand B if binary op) */}
+                            {/* Sliders for Destination (and Source if binary op) */}
                             <div className={isUnaryInst ? "grid grid-cols-1 gap-3.5 pt-1" : "grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-1"}>
-                              {/* Operand A */}
+                              {/* Destination (AL) */}
                               <div className="bg-white p-3 rounded-xl border border-indigo-200/80 shadow-2xs space-y-1.5">
                                 <div className="flex justify-between items-center text-[11px] sm:text-xs font-bold">
-                                  <span className="text-indigo-950">{isUnaryInst ? 'Single Operand (AL Destination):' : 'Operand A (AL):'}</span>
+                                  <span className="text-indigo-950">{isUnaryInst ? 'Single Operand (AL Destination):' : 'Destination (AL):'}</span>
                                   <span className="text-emerald-700 font-extrabold">{byteHexFormat(aluValA)} ({aluValA & 0xFF})</span>
                                 </div>
                                 <input
@@ -1982,12 +1982,12 @@ export default function InstructionDecoderSimulator({
                                 </div>
                               </div>
 
-                              {/* Operand B / Immediate (Hidden for Unary Ops) */}
+                              {/* Source / Immediate (Hidden for Unary Ops) */}
                               {!isUnaryInst && (
                                 <div className="bg-white p-3 rounded-xl border border-indigo-200/80 shadow-2xs space-y-1.5">
                                   <div className="flex justify-between items-center text-[11px] sm:text-xs font-bold">
                                     <span className="text-indigo-950">
-                                      Operand B (BL / Imm):
+                                      Source (BL / Imm):
                                     </span>
                                     <span className="text-sky-700 font-extrabold">
                                       {byteHexFormat(aluValB)} ({aluValB & 0xFF})
@@ -2016,7 +2016,7 @@ export default function InstructionDecoderSimulator({
                             {/* Live Bit-by-Bit Operation Breakdown */}
                             <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-indigo-200/80 space-y-2 text-center shadow-2xs w-full overflow-x-auto">
                               <div className="flex justify-between items-center text-[11px] sm:text-xs gap-2 min-w-[300px]">
-                                <span className="text-indigo-950 font-bold shrink-0">{isUnaryInst ? 'Input Operand Bits (AL):' : 'Operand A Bits:'}</span>
+                                <span className="text-indigo-950 font-bold shrink-0">{isUnaryInst ? 'Input Operand Bits (AL):' : 'Destination Bits (AL):'}</span>
                                 <div className="flex gap-1 sm:gap-2 font-mono">
                                   {(aluValA & 0xFF).toString(2).padStart(8, '0').split('').map((bit, idx) => (
                                     <span key={idx} className={`w-6 h-6 sm:w-8 sm:h-8 md:w-9 md:h-9 flex items-center justify-center rounded-md sm:rounded-lg text-xs sm:text-sm font-bold ${bit === '1' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
@@ -2028,7 +2028,7 @@ export default function InstructionDecoderSimulator({
 
                               {!isUnaryInst && (
                                 <div className="flex justify-between items-center text-[11px] sm:text-xs gap-2 min-w-[300px]">
-                                  <span className="text-indigo-950 font-bold shrink-0">Operand B Bits:</span>
+                                  <span className="text-indigo-950 font-bold shrink-0">Source Bits (BL / Imm):</span>
                                   <div className="flex gap-1 sm:gap-2 font-mono">
                                     {(aluValB & 0xFF).toString(2).padStart(8, '0').split('').map((bit, idx) => (
                                       <span key={idx} className={`w-6 h-6 sm:w-8 sm:h-8 md:w-9 md:h-9 flex items-center justify-center rounded-md sm:rounded-lg text-xs sm:text-sm font-bold ${bit === '1' ? 'bg-sky-500 text-white' : 'bg-slate-100 text-slate-500 border border-slate-200'}`}>
@@ -2490,106 +2490,555 @@ export default function InstructionDecoderSimulator({
                           </div>
                         )}
 
-                        {/* Branch Instructions Guide */}
-                        {(activeInstruction.category === 'Branch' || categoryTab === 'Branch') && (
-                          <div className="bg-gradient-to-br from-indigo-50/90 via-slate-50 to-blue-50/90 text-slate-900 p-4.5 rounded-xl border border-indigo-200/80 shadow-xs space-y-4 font-mono">
-                            <div className="flex items-center justify-between border-b border-indigo-200/80 pb-2.5">
-                              <span className="text-sm font-bold uppercase tracking-wider text-indigo-950 flex items-center gap-2">
-                                <Sparkles className="w-4 h-4 text-indigo-600" />
-                                8086 Branch & Control Transfer Instructions Guide
-                              </span>
-                              <span className="text-xs bg-indigo-100 text-indigo-900 px-2.5 py-1 rounded border border-indigo-300 font-extrabold uppercase">
-                                Branch & Control
-                              </span>
+                        {/* Dynamic Branch Instruction Explanation & Interactive Evaluator */}
+                        {(activeInstruction.category === 'Branch' || categoryTab === 'Branch') && (() => {
+                          const cleanOp = activeInstruction.opcode.replace(/^LOCK\s+/, '').replace(/^REP\s+/, '');
+                          const branchMnemonic = cleanOp.split(' ')[0].toUpperCase();
+
+                          const curCF = interactiveFlags.CF ?? flags.CF ?? 0;
+                          const curZF = interactiveFlags.ZF ?? flags.ZF ?? 1;
+                          const curSF = interactiveFlags.SF ?? flags.SF ?? 0;
+                          const curOF = interactiveFlags.OF ?? flags.OF ?? 0;
+                          const curPF = interactiveFlags.PF ?? flags.PF ?? 1;
+
+                          type BranchMeta = {
+                            mnemonic: string;
+                            fullName: string;
+                            categoryType: string;
+                            categoryBadgeColor: string;
+                            conditionFormula: string;
+                            testedFlags: Array<'CF' | 'ZF' | 'SF' | 'OF' | 'PF'>;
+                            isConditionMet: boolean;
+                            trueExplanation: string;
+                            falseExplanation: string;
+                            targetAddr: string;
+                            targetOffset: string;
+                            typicalPredecessor: string;
+                            assemblySnippet: string;
+                            keyRule: string;
+                          };
+
+                          const branchDataMap: Record<string, Omit<BranchMeta, 'mnemonic' | 'isConditionMet'>> = {
+                            JA: {
+                              fullName: 'Jump if Above (CF = 0 AND ZF = 0)',
+                              categoryType: 'Unsigned Comparison Branch (Destination > Source)',
+                              categoryBadgeColor: 'bg-amber-100 text-amber-900 border-amber-300',
+                              conditionFormula: 'CF = 0 ∧ ZF = 0',
+                              testedFlags: ['CF', 'ZF'],
+                              trueExplanation: 'Both CF = 0 (no borrow generated) and ZF = 0 (operands not equal). The unsigned destination operand is strictly greater than the source.',
+                              falseExplanation: 'Condition failed: either a borrow was generated (CF = 1) or the operands were identical (ZF = 1). Unsigned destination is not strictly greater than source.',
+                              targetAddr: '0150H',
+                              targetOffset: '+004EH',
+                              typicalPredecessor: 'CMP AX, BX  ; Compare unsigned AX with BX',
+                              assemblySnippet: 'CMP AX, BX      ; Compare unsigned operands\nJA  0150H        ; Jump to 0150H if AX > BX\nMOV CX, 0000H    ; Fall-through execution (AX <= BX)',
+                              keyRule: 'Used exclusively for unsigned arithmetic comparisons (0 to 255 for 8-bit, 0 to 65535 for 16-bit). Never use JA for signed integers.'
+                            },
+                            JAE: {
+                              fullName: 'Jump if Above or Equal (CF = 0)',
+                              categoryType: 'Unsigned Comparison Branch (Destination ≥ Source)',
+                              categoryBadgeColor: 'bg-amber-100 text-amber-900 border-amber-300',
+                              conditionFormula: 'CF = 0',
+                              testedFlags: ['CF'],
+                              trueExplanation: 'Carry flag is clear (CF = 0). No borrow was generated during subtraction/comparison, so unsigned destination ≥ source.',
+                              falseExplanation: 'Carry flag is set (CF = 1). A borrow was generated, so unsigned destination < source.',
+                              targetAddr: '0150H',
+                              targetOffset: '+004EH',
+                              typicalPredecessor: 'CMP AX, BX  ; Compare unsigned AX with BX',
+                              assemblySnippet: 'CMP AX, BX      ; Compare unsigned operands\nJAE 0150H        ; Jump to 0150H if AX >= BX\nMOV CX, 0000H    ; Fall-through execution (AX < BX)',
+                              keyRule: 'Equivalent to JNB (Jump if Not Below) and JNC (Jump if No Carry). Operates on unsigned operands.'
+                            },
+                            JB: {
+                              fullName: 'Jump if Below (CF = 1)',
+                              categoryType: 'Unsigned Comparison Branch (Destination < Source)',
+                              categoryBadgeColor: 'bg-amber-100 text-amber-900 border-amber-300',
+                              conditionFormula: 'CF = 1',
+                              testedFlags: ['CF'],
+                              trueExplanation: 'Carry flag is set (CF = 1). A borrow was required, meaning unsigned destination is strictly less than the source operand.',
+                              falseExplanation: 'Carry flag is clear (CF = 0). No borrow occurred, so unsigned destination ≥ source.',
+                              targetAddr: '0150H',
+                              targetOffset: '+004EH',
+                              typicalPredecessor: 'CMP AX, BX  ; Compare unsigned AX with BX',
+                              assemblySnippet: 'CMP AX, BX      ; Compare unsigned operands\nJB  0150H        ; Jump to 0150H if AX < BX\nMOV CX, 0000H    ; Fall-through execution (AX >= BX)',
+                              keyRule: 'Equivalent to JNAE (Jump if Not Above or Equal) and JC (Jump if Carry). Detects unsigned underflow.'
+                            },
+                            JBE: {
+                              fullName: 'Jump if Below or Equal (CF = 1 OR ZF = 1)',
+                              categoryType: 'Unsigned Comparison Branch (Destination ≤ Source)',
+                              categoryBadgeColor: 'bg-amber-100 text-amber-900 border-amber-300',
+                              conditionFormula: 'CF = 1 ∨ ZF = 1',
+                              testedFlags: ['CF', 'ZF'],
+                              trueExplanation: 'Either CF = 1 (borrow generated) or ZF = 1 (operands equal). Unsigned destination is less than or equal to source.',
+                              falseExplanation: 'Both CF = 0 and ZF = 0. Unsigned destination is strictly greater than source.',
+                              targetAddr: '0150H',
+                              targetOffset: '+004EH',
+                              typicalPredecessor: 'CMP AX, BX  ; Compare unsigned AX with BX',
+                              assemblySnippet: 'CMP AX, BX      ; Compare unsigned operands\nJBE 0150H        ; Jump to 0150H if AX <= BX\nMOV CX, 0000H    ; Fall-through execution (AX > BX)',
+                              keyRule: 'Equivalent to JNA (Jump if Not Above). Relative displacement range is -128 to +127 bytes.'
+                            },
+                            JE: {
+                              fullName: 'Jump if Equal / Jump if Zero (ZF = 1)',
+                              categoryType: 'Equality / Zero Flag Test (Destination == Source)',
+                              categoryBadgeColor: 'bg-emerald-100 text-emerald-900 border-emerald-300',
+                              conditionFormula: 'ZF = 1',
+                              testedFlags: ['ZF'],
+                              trueExplanation: 'Zero Flag is set (ZF = 1). The previous CMP result was 0 (operands are equal) or previous ALU operation produced zero.',
+                              falseExplanation: 'Zero Flag is clear (ZF = 0). Operands differ or previous ALU operation produced a non-zero result.',
+                              targetAddr: '0150H',
+                              targetOffset: '+004EH',
+                              typicalPredecessor: 'CMP AX, BX  ; Compare operands (AX - BX)',
+                              assemblySnippet: 'CMP AX, BX      ; Compare AX and BX\nJE  0150H        ; Jump to 0150H if AX == BX\nMOV CX, 0000H    ; Fall-through execution (AX != BX)',
+                              keyRule: 'Works identically for both signed and unsigned comparisons. JZ and JE share the identical opcode (74H).'
+                            },
+                            JNE: {
+                              fullName: 'Jump if Not Equal / Jump if Not Zero (ZF = 0)',
+                              categoryType: 'Equality / Zero Flag Test (Destination ≠ Source)',
+                              categoryBadgeColor: 'bg-emerald-100 text-emerald-900 border-emerald-300',
+                              conditionFormula: 'ZF = 0',
+                              testedFlags: ['ZF'],
+                              trueExplanation: 'Zero Flag is clear (ZF = 0). The operands are not equal (CMP difference non-zero) or ALU result was non-zero.',
+                              falseExplanation: 'Zero Flag is set (ZF = 1). Operands are identical (difference is zero).',
+                              targetAddr: '0150H',
+                              targetOffset: '+004EH',
+                              typicalPredecessor: 'CMP AX, BX  ; Compare operands (AX - BX)',
+                              assemblySnippet: 'CMP AX, BX      ; Compare AX and BX\nJNE 0150H        ; Jump to 0150H if AX != BX\nMOV CX, 0000H    ; Fall-through execution (AX == BX)',
+                              keyRule: 'Standard decision jump in 8086 loops and conditionals. JNZ and JNE share opcode 75H.'
+                            },
+                            JG: {
+                              fullName: 'Jump if Greater (ZF = 0 AND SF = OF)',
+                              categoryType: 'Signed 2’s Complement Branch (Destination > Source)',
+                              categoryBadgeColor: 'bg-purple-100 text-purple-900 border-purple-300',
+                              conditionFormula: 'ZF = 0 ∧ (SF = OF)',
+                              testedFlags: ['ZF', 'SF', 'OF'],
+                              trueExplanation: 'Result is non-zero (ZF = 0) and Sign Flag matches Overflow Flag (SF = OF). In signed 2’s complement arithmetic, destination > source.',
+                              falseExplanation: 'Condition failed: either operands are equal (ZF = 1) or sign flag disagrees with overflow flag (SF ≠ OF, meaning destination < source).',
+                              targetAddr: '0150H',
+                              targetOffset: '+004EH',
+                              typicalPredecessor: 'CMP AX, BX  ; Signed 2\'s complement comparison',
+                              assemblySnippet: 'CMP AX, BX      ; Compare signed numbers\nJG  0150H        ; Jump to 0150H if signed AX > BX\nMOV CX, 0000H    ; Fall-through execution (signed AX <= BX)',
+                              keyRule: 'Used exclusively for signed integers (-128..+127 for byte, -32768..+32767 for word). Equivalent to JNLE.'
+                            },
+                            JGE: {
+                              fullName: 'Jump if Greater or Equal (SF = OF)',
+                              categoryType: 'Signed 2’s Complement Branch (Destination ≥ Source)',
+                              categoryBadgeColor: 'bg-purple-100 text-purple-900 border-purple-300',
+                              conditionFormula: 'SF = OF',
+                              testedFlags: ['SF', 'OF'],
+                              trueExplanation: 'Sign Flag equals Overflow Flag (SF = OF). Signed destination is greater than or equal to source.',
+                              falseExplanation: 'Sign Flag differs from Overflow Flag (SF ≠ OF). Signed destination is strictly less than source.',
+                              targetAddr: '0150H',
+                              targetOffset: '+004EH',
+                              typicalPredecessor: 'CMP AX, BX  ; Signed 2\'s complement comparison',
+                              assemblySnippet: 'CMP AX, BX      ; Compare signed numbers\nJGE 0150H        ; Jump to 0150H if signed AX >= BX\nMOV CX, 0000H    ; Fall-through execution (signed AX < BX)',
+                              keyRule: 'Equivalent to JNL (Jump if Not Less). Accurately accounts for 2’s complement arithmetic overflow.'
+                            },
+                            JL: {
+                              fullName: 'Jump if Less (SF ≠ OF)',
+                              categoryType: 'Signed 2’s Complement Branch (Destination < Source)',
+                              categoryBadgeColor: 'bg-purple-100 text-purple-900 border-purple-300',
+                              conditionFormula: 'SF ≠ OF',
+                              testedFlags: ['SF', 'OF'],
+                              trueExplanation: 'Sign Flag differs from Overflow Flag (SF ≠ OF). In signed 2’s complement representation, destination is strictly less than source.',
+                              falseExplanation: 'Sign Flag equals Overflow Flag (SF = OF). Signed destination is greater than or equal to source.',
+                              targetAddr: '0150H',
+                              targetOffset: '+004EH',
+                              typicalPredecessor: 'CMP AX, BX  ; Signed 2\'s complement comparison',
+                              assemblySnippet: 'CMP AX, BX      ; Compare signed numbers\nJL  0150H        ; Jump to 0150H if signed AX < BX\nMOV CX, 0000H    ; Fall-through execution (signed AX >= BX)',
+                              keyRule: 'Equivalent to JNGE (Jump if Not Greater or Equal). Evaluates signed magnitude.'
+                            },
+                            JLE: {
+                              fullName: 'Jump if Less or Equal (ZF = 1 OR SF ≠ OF)',
+                              categoryType: 'Signed 2’s Complement Branch (Destination ≤ Source)',
+                              categoryBadgeColor: 'bg-purple-100 text-purple-900 border-purple-300',
+                              conditionFormula: 'ZF = 1 ∨ (SF ≠ OF)',
+                              testedFlags: ['ZF', 'SF', 'OF'],
+                              trueExplanation: 'Either operands are equal (ZF = 1) or sign differs from overflow (SF ≠ OF). Signed destination ≤ source.',
+                              falseExplanation: 'Operands are unequal (ZF = 0) and SF = OF. Signed destination is strictly greater than source.',
+                              targetAddr: '0150H',
+                              targetOffset: '+004EH',
+                              typicalPredecessor: 'CMP AX, BX  ; Signed 2\'s complement comparison',
+                              assemblySnippet: 'CMP AX, BX      ; Compare signed numbers\nJLE 0150H        ; Jump to 0150H if signed AX <= BX\nMOV CX, 0000H    ; Fall-through execution (signed AX > BX)',
+                              keyRule: 'Equivalent to JNG (Jump if Not Greater). Short jump range is -128 to +127 bytes.'
+                            },
+                            JC: {
+                              fullName: 'Jump if Carry (CF = 1)',
+                              categoryType: 'Status Flag Test Branch (Carry Bit)',
+                              categoryBadgeColor: 'bg-rose-100 text-rose-900 border-rose-300',
+                              conditionFormula: 'CF = 1',
+                              testedFlags: ['CF'],
+                              trueExplanation: 'Carry Flag is set (CF = 1). Indicates an arithmetic carry/borrow or an error returned by BIOS/DOS interrupts.',
+                              falseExplanation: 'Carry Flag is clear (CF = 0). No carry or borrow occurred.',
+                              targetAddr: '0150H',
+                              targetOffset: '+004EH',
+                              typicalPredecessor: 'ADD AX, BX  ; Multi-precision arithmetic or INT 21H',
+                              assemblySnippet: 'ADD AX, BX      ; Add with potential carry\nJC  0150H        ; Branch if carry generated (CF = 1)\nNOP              ; Normal sequential path',
+                              keyRule: 'Frequently used in multi-byte addition/subtraction loops and OS system call status checks.'
+                            },
+                            JO: {
+                              fullName: 'Jump if Overflow (OF = 1)',
+                              categoryType: 'Status Flag Test Branch (Signed Overflow)',
+                              categoryBadgeColor: 'bg-rose-100 text-rose-900 border-rose-300',
+                              conditionFormula: 'OF = 1',
+                              testedFlags: ['OF'],
+                              trueExplanation: 'Overflow Flag is set (OF = 1). A signed arithmetic operation produced a result exceeding the capacity of the destination register.',
+                              falseExplanation: 'Overflow Flag is clear (OF = 0). The signed arithmetic operation did not overflow.',
+                              targetAddr: '0150H',
+                              targetOffset: '+004EH',
+                              typicalPredecessor: 'ADD AX, BX  ; Signed addition',
+                              assemblySnippet: 'ADD AX, BX      ; Signed arithmetic operation\nJO  0150H        ; Jump to error handler on overflow\nNOP              ; Continue if valid range',
+                              keyRule: 'Crucial for numerical error detection and preventing signed truncation defects.'
+                            },
+                            JS: {
+                              fullName: 'Jump if Sign / Negative (SF = 1)',
+                              categoryType: 'Status Flag Test Branch (Sign Bit)',
+                              categoryBadgeColor: 'bg-rose-100 text-rose-900 border-rose-300',
+                              conditionFormula: 'SF = 1',
+                              testedFlags: ['SF'],
+                              trueExplanation: 'Sign Flag is set (SF = 1). The most significant bit (MSB) of the result is 1, indicating a negative value.',
+                              falseExplanation: 'Sign Flag is clear (SF = 0). The result MSB is 0 (positive or zero).',
+                              targetAddr: '0150H',
+                              targetOffset: '+004EH',
+                              typicalPredecessor: 'SUB AL, BL  ; Or TEST AL, 80H',
+                              assemblySnippet: 'SUB AL, BL      ; Subtraction\nJS  0150H        ; Jump to 0150H if result is negative\nNOP              ; Fall-through if positive or zero',
+                              keyRule: 'Opposite is JNS (Jump if Not Sign / Positive, SF = 0).'
+                            },
+                            JP: {
+                              fullName: 'Jump if Parity Even (PF = 1)',
+                              categoryType: 'Status Flag Test Branch (Parity Bit)',
+                              categoryBadgeColor: 'bg-sky-100 text-sky-900 border-sky-300',
+                              conditionFormula: 'PF = 1',
+                              testedFlags: ['PF'],
+                              trueExplanation: 'Parity Flag is set (PF = 1). The lowest 8 bits of the result contain an even count of 1-bits.',
+                              falseExplanation: 'Parity Flag is clear (PF = 0). The result has an odd count of 1-bits.',
+                              targetAddr: '0150H',
+                              targetOffset: '+004EH',
+                              typicalPredecessor: 'IN AL, DX   ; Or AND AL, 0FFH',
+                              assemblySnippet: 'IN  AL, DX      ; Read serial byte\nJP  0150H        ; Jump to 0150H if parity is even\nNOP              ; Fall-through if parity is odd',
+                              keyRule: 'Also known as JPE (Jump if Parity Even). Common in communications and data validation.'
+                            },
+                            JNP: {
+                              fullName: 'Jump if No Parity / Parity Odd (PF = 0)',
+                              categoryType: 'Status Flag Test Branch (Parity Bit)',
+                              categoryBadgeColor: 'bg-sky-100 text-sky-900 border-sky-300',
+                              conditionFormula: 'PF = 0',
+                              testedFlags: ['PF'],
+                              trueExplanation: 'Parity Flag is clear (PF = 0). The lowest 8 bits of the result contain an odd count of 1-bits.',
+                              falseExplanation: 'Parity Flag is set (PF = 1). The result has an even count of 1-bits.',
+                              targetAddr: '0150H',
+                              targetOffset: '+004EH',
+                              typicalPredecessor: 'IN AL, DX   ; Read communication port',
+                              assemblySnippet: 'IN  AL, DX      ; Read input port\nJNP 0150H        ; Jump to error routine if parity odd\nNOP              ; Continue if parity even',
+                              keyRule: 'Also known as JPO (Jump if Parity Odd). Opposite of JP / JPE.'
+                            },
+                            JMP: {
+                              fullName: 'Unconditional Jump (Direct IP Update)',
+                              categoryType: 'Unconditional Control Transfer',
+                              categoryBadgeColor: 'bg-indigo-100 text-indigo-900 border-indigo-300',
+                              conditionFormula: 'Unconditional (No flags inspected)',
+                              testedFlags: [],
+                              trueExplanation: 'Unconditionally transfers execution control to the target address on every execution cycle without inspecting any status flags.',
+                              falseExplanation: '',
+                              targetAddr: '0150H',
+                              targetOffset: '+004EH',
+                              typicalPredecessor: 'Any instruction sequence',
+                              assemblySnippet: 'MOV AX, 1234H   ; Execute preparatory logic\nJMP 0150H        ; Jump directly to 0150H\nMOV BX, 5678H    ; (Skipped by unconditional jump)',
+                              keyRule: 'Supports Short (-128..+127), Near (±32KB in current segment), and Far (inter-segment CS:IP) address modes.'
+                            },
+                            CALL: {
+                              fullName: 'Call Subroutine / Procedure',
+                              categoryType: 'Subroutine Linkage & Stack Operation',
+                              categoryBadgeColor: 'bg-blue-100 text-blue-900 border-blue-300',
+                              conditionFormula: 'SP ← SP - 2, [SS:SP] ← Return IP, IP ← Subroutine',
+                              testedFlags: [],
+                              trueExplanation: 'Pushes the return address (0103H) onto the stack (at SS:SP) and transfers execution control to the subroutine entry point at 0200H.',
+                              falseExplanation: '',
+                              targetAddr: '0200H',
+                              targetOffset: 'Target Procedure',
+                              typicalPredecessor: 'Parameter setup in registers or stack frame',
+                              assemblySnippet: 'MOV AX, 0005H   ; Pass input parameter\nCALL 0200H       ; Push return address (0103H) and jump to 0200H\nMOV DX, AX       ; Execution resumes here when procedure executes RET',
+                              keyRule: 'Every CALL instruction must be paired with a RET instruction inside the procedure to pop the return address.'
+                            },
+                            RET: {
+                              fullName: 'Return from Subroutine / Procedure',
+                              categoryType: 'Subroutine Linkage & Stack Operation',
+                              categoryBadgeColor: 'bg-blue-100 text-blue-900 border-blue-300',
+                              conditionFormula: 'IP ← [SS:SP], SP ← SP + 2',
+                              testedFlags: [],
+                              trueExplanation: 'Pops the 16-bit saved return address from the top of the stack ([SS:SP]) into the Instruction Pointer (IP), resuming caller execution.',
+                              falseExplanation: '',
+                              targetAddr: 'Caller IP (0103H)',
+                              targetOffset: 'Stack Top [SS:SP]',
+                              typicalPredecessor: 'End of subroutine after computing return value',
+                              assemblySnippet: 'MY_PROC PROC\n  ADD AX, BX     ; Compute result\n  RET            ; Pop saved return address from stack into IP\nMY_PROC ENDP',
+                              keyRule: 'RET n optionally adds immediate n bytes to SP after popping IP to cleanly discard passed function parameters.'
+                            }
+                          };
+
+                          const rawMeta = branchDataMap[branchMnemonic] || {
+                            fullName: `${branchMnemonic} Branch Instruction`,
+                            categoryType: 'Control Flow Transfer',
+                            categoryBadgeColor: 'bg-slate-100 text-slate-800 border-slate-300',
+                            conditionFormula: 'Condition evaluation based on 8086 flags',
+                            testedFlags: ['ZF'],
+                            trueExplanation: 'Condition evaluated to true based on processor status flags.',
+                            falseExplanation: 'Condition evaluated to false based on processor status flags.',
+                            targetAddr: '0150H',
+                            targetOffset: '+004EH',
+                            typicalPredecessor: 'CMP AX, BX',
+                            assemblySnippet: `${branchMnemonic} 0150H\nNOP`,
+                            keyRule: 'Short jumps use an 8-bit signed relative displacement (-128 to +127 bytes).'
+                          };
+
+                          // Evaluate dynamic condition satisfaction
+                          let isConditionMet = false;
+                          if (branchMnemonic === 'JMP' || branchMnemonic === 'CALL' || branchMnemonic === 'RET') {
+                            isConditionMet = true;
+                          } else if (branchMnemonic === 'JA') {
+                            isConditionMet = curCF === 0 && curZF === 0;
+                          } else if (branchMnemonic === 'JAE') {
+                            isConditionMet = curCF === 0;
+                          } else if (branchMnemonic === 'JB') {
+                            isConditionMet = curCF === 1;
+                          } else if (branchMnemonic === 'JBE') {
+                            isConditionMet = curCF === 1 || curZF === 1;
+                          } else if (branchMnemonic === 'JE' || branchMnemonic === 'JZ') {
+                            isConditionMet = curZF === 1;
+                          } else if (branchMnemonic === 'JNE' || branchMnemonic === 'JNZ') {
+                            isConditionMet = curZF === 0;
+                          } else if (branchMnemonic === 'JG') {
+                            isConditionMet = curZF === 0 && curSF === curOF;
+                          } else if (branchMnemonic === 'JGE') {
+                            isConditionMet = curSF === curOF;
+                          } else if (branchMnemonic === 'JL') {
+                            isConditionMet = curSF !== curOF;
+                          } else if (branchMnemonic === 'JLE') {
+                            isConditionMet = curZF === 1 || curSF !== curOF;
+                          } else if (branchMnemonic === 'JC') {
+                            isConditionMet = curCF === 1;
+                          } else if (branchMnemonic === 'JO') {
+                            isConditionMet = curOF === 1;
+                          } else if (branchMnemonic === 'JS') {
+                            isConditionMet = curSF === 1;
+                          } else if (branchMnemonic === 'JP') {
+                            isConditionMet = curPF === 1;
+                          } else if (branchMnemonic === 'JNP') {
+                            isConditionMet = curPF === 0;
+                          }
+
+                          const meta: BranchMeta = {
+                            ...rawMeta,
+                            mnemonic: branchMnemonic,
+                            isConditionMet
+                          };
+
+                          const isStackOp = branchMnemonic === 'CALL' || branchMnemonic === 'RET';
+                          const isUnconditional = branchMnemonic === 'JMP';
+
+                          return (
+                            <div className="bg-gradient-to-br from-indigo-50/90 via-slate-50 to-blue-50/90 text-slate-900 p-4 sm:p-5 rounded-xl border border-indigo-200/80 shadow-xs space-y-4 font-mono">
+                              {/* Header with Dynamic Instruction Badge & Classification */}
+                              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-indigo-200/80 pb-3">
+                                <div className="flex items-center gap-2">
+                                  <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
+                                  <span className="text-sm sm:text-base font-bold text-indigo-950">
+                                    {meta.fullName}
+                                  </span>
+                                </div>
+                                <span className={`text-xs px-2.5 py-1 rounded-full border font-extrabold uppercase ${meta.categoryBadgeColor}`}>
+                                  {meta.categoryType}
+                                </span>
+                              </div>
+
+                              {/* Interactive Live Condition Evaluator Card */}
+                              <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-indigo-200 shadow-2xs space-y-3.5">
+                                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                                      Silicon Branch Evaluation:
+                                    </span>
+                                    <code className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                                      {cleanOp}
+                                    </code>
+                                  </div>
+                                  <span className="text-xs font-mono text-slate-500">
+                                    Formula: <strong className="text-slate-800">{meta.conditionFormula}</strong>
+                                  </span>
+                                </div>
+
+                                {/* Interactive Flag Toggles (for conditional jumps) */}
+                                {meta.testedFlags.length > 0 && (
+                                  <div className="space-y-2 bg-indigo-50/50 p-3 rounded-lg border border-indigo-150">
+                                    <div className="flex items-center justify-between text-xs">
+                                      <span className="font-bold text-indigo-950 flex items-center gap-1.5">
+                                        <span>🎛️</span> Click Flag Pills to Test Dynamic Branch Outcomes:
+                                      </span>
+                                      <span className="text-[11px] text-indigo-600 font-medium">
+                                        (Live Flag Simulator)
+                                      </span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-2 pt-0.5">
+                                      {(['CF', 'ZF', 'SF', 'OF', 'PF'] as const).map(flagKey => {
+                                        const isTested = meta.testedFlags.includes(flagKey);
+                                        const val = flagKey === 'CF' ? curCF : flagKey === 'ZF' ? curZF : flagKey === 'SF' ? curSF : flagKey === 'OF' ? curOF : curPF;
+                                        return (
+                                          <button
+                                            key={flagKey}
+                                            onClick={() => {
+                                              const newVal = val === 1 ? 0 : 1;
+                                              setInteractiveFlags(prev => ({ ...prev, [flagKey]: newVal }));
+                                              setFlags(prev => ({ ...prev, [flagKey]: newVal }));
+                                            }}
+                                            className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer border ${
+                                              isTested
+                                                ? val === 1
+                                                  ? 'bg-emerald-600 text-white border-emerald-700 shadow-2xs'
+                                                  : 'bg-slate-200 text-slate-800 border-slate-300 hover:bg-slate-300'
+                                                : val === 1
+                                                  ? 'bg-indigo-100 text-indigo-900 border-indigo-200 opacity-70'
+                                                  : 'bg-slate-100 text-slate-500 border-slate-200 opacity-70'
+                                            }`}
+                                          >
+                                            <span className="font-extrabold">{flagKey}:</span>
+                                            <span className={`px-1.5 py-0.2 rounded font-mono ${val === 1 ? 'bg-white/20 text-white' : 'bg-slate-300 text-slate-900'}`}>
+                                              {val}
+                                            </span>
+                                            {isTested && <span className="text-[10px] bg-white/30 px-1 rounded uppercase">Tested</span>}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* Dynamic Outcome Banner */}
+                                <div className={`p-3.5 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 ${
+                                  isStackOp
+                                    ? 'bg-blue-50/90 border-blue-200 text-blue-950'
+                                    : isUnconditional
+                                    ? 'bg-indigo-50/90 border-indigo-200 text-indigo-950'
+                                    : meta.isConditionMet
+                                    ? 'bg-emerald-50/90 border-emerald-300 text-emerald-950 shadow-2xs'
+                                    : 'bg-rose-50/90 border-rose-300 text-rose-950 shadow-2xs'
+                                }`}>
+                                  <div className="space-y-1 font-sans">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-base sm:text-lg">
+                                        {isStackOp ? '🔄' : isUnconditional ? '🚀' : meta.isConditionMet ? '✅' : '❌'}
+                                      </span>
+                                      <span className="font-extrabold text-sm sm:text-base font-mono">
+                                        {isStackOp
+                                          ? branchMnemonic === 'CALL' ? 'SUBROUTINE CALL INVOCATION' : 'SUBROUTINE RETURN EXECUTION'
+                                          : isUnconditional
+                                          ? 'UNCONDITIONAL BRANCH TAKEN'
+                                          : meta.isConditionMet
+                                          ? 'CONDITION SATISFIED → BRANCH TAKEN!'
+                                          : 'CONDITION NOT MET → FALL-THROUGH!'}
+                                      </span>
+                                    </div>
+                                    <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                                      {meta.isConditionMet ? meta.trueExplanation : meta.falseExplanation}
+                                    </p>
+                                  </div>
+
+                                  <div className="shrink-0 bg-white p-2.5 rounded-lg border border-slate-200/80 space-y-1 text-center font-mono min-w-[140px]">
+                                    <span className="text-[10px] uppercase font-bold text-slate-500 block">Next Target IP</span>
+                                    <span className={`text-sm font-extrabold ${meta.isConditionMet ? 'text-emerald-700' : 'text-slate-700'}`}>
+                                      {meta.isConditionMet ? meta.targetAddr : '0102H (IP + 2)'}
+                                    </span>
+                                    <span className="text-[9px] text-slate-500 block">
+                                      {meta.isConditionMet ? 'Jumps to Target' : 'Sequential Next'}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Two Column Grid: Assembly Context & Displacement Calculation */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 font-sans">
+                                {/* Assembly Usage Snippet */}
+                                <div className="bg-white p-3.5 rounded-xl border border-indigo-200 shadow-2xs space-y-2">
+                                  <div className="flex justify-between items-center border-b border-indigo-100 pb-2 font-mono">
+                                    <span className="font-bold text-xs sm:text-sm text-indigo-950">
+                                      Typical Assembly Pattern:
+                                    </span>
+                                    <span className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200 font-bold">
+                                      8086 MASM / TASM
+                                    </span>
+                                  </div>
+                                  <pre className="bg-slate-900 text-emerald-300 p-3 rounded-lg text-xs font-mono overflow-x-auto leading-relaxed border border-slate-800">
+                                    {meta.assemblySnippet}
+                                  </pre>
+                                  <p className="text-xs text-slate-600 font-sans leading-relaxed">
+                                    <strong className="text-indigo-900">Preceding Context:</strong> {meta.typicalPredecessor} sets flags, and <strong className="text-indigo-900">{branchMnemonic}</strong> evaluates them.
+                                  </p>
+                                </div>
+
+                                {/* Target Offset & Displacement Math */}
+                                <div className="bg-white p-3.5 rounded-xl border border-indigo-200 shadow-2xs space-y-2">
+                                  <div className="flex justify-between items-center border-b border-indigo-100 pb-2 font-mono">
+                                    <span className="font-bold text-xs sm:text-sm text-indigo-950">
+                                      Target & Hardware Mechanics:
+                                    </span>
+                                    <span className="text-[10px] bg-indigo-50 text-indigo-800 px-2 py-0.5 rounded border border-indigo-200 font-bold">
+                                      Displacement Math
+                                    </span>
+                                  </div>
+                                  <div className="space-y-1.5 text-xs text-slate-700 font-sans">
+                                    <div className="bg-indigo-50/70 p-2.5 rounded border border-indigo-150 font-mono text-[11px] space-y-1 text-indigo-950">
+                                      <div className="flex justify-between">
+                                        <span>Current IP (Base):</span>
+                                        <span className="font-bold">0100H</span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span>Instruction Length:</span>
+                                        <span className="font-bold">2 Bytes</span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span>Sequential Next IP:</span>
+                                        <span className="font-bold text-slate-600">0102H</span>
+                                      </div>
+                                      <div className="flex justify-between border-t border-indigo-200/80 pt-1 text-emerald-800 font-bold">
+                                        <span>Branch Target IP:</span>
+                                        <span>{meta.targetAddr} ({meta.targetOffset})</span>
+                                      </div>
+                                    </div>
+                                    <p className="text-xs text-slate-600 leading-relaxed pt-1">
+                                      💡 <strong className="text-indigo-950">Architecture Note:</strong> {meta.keyRule}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Branch Family Quick Reference Bar */}
+                              <div className="bg-indigo-100/70 p-3.5 rounded-xl border border-indigo-300 text-indigo-950 text-xs font-sans space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <span className="font-mono font-bold uppercase text-xs text-indigo-900 flex items-center gap-1.5">
+                                    <span>📚</span> 8086 Branch Instruction Reference Groups:
+                                  </span>
+                                  <span className="text-[11px] font-mono text-indigo-700">
+                                    Selected: <strong className="underline">{branchMnemonic}</strong>
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 font-mono text-[11px]">
+                                  <div className={`p-2 rounded border bg-white ${['JA', 'JAE', 'JB', 'JBE'].includes(branchMnemonic) ? 'border-amber-400 ring-2 ring-amber-300' : 'border-slate-200'}`}>
+                                    <span className="font-bold text-amber-900 block border-b border-slate-100 pb-0.5">Unsigned Magnitudes:</span>
+                                    <span className="text-slate-600">JA, JAE, JB, JBE (CF, ZF)</span>
+                                  </div>
+                                  <div className={`p-2 rounded border bg-white ${['JG', 'JGE', 'JL', 'JLE'].includes(branchMnemonic) ? 'border-purple-400 ring-2 ring-purple-300' : 'border-slate-200'}`}>
+                                    <span className="font-bold text-purple-900 block border-b border-slate-100 pb-0.5">Signed 2's Complement:</span>
+                                    <span className="text-slate-600">JG, JGE, JL, JLE (SF, OF, ZF)</span>
+                                  </div>
+                                  <div className={`p-2 rounded border bg-white ${['JE', 'JNE', 'JC', 'JO', 'JS', 'JP', 'JNP'].includes(branchMnemonic) ? 'border-emerald-400 ring-2 ring-emerald-300' : 'border-slate-200'}`}>
+                                    <span className="font-bold text-emerald-900 block border-b border-slate-100 pb-0.5">Flag Tests:</span>
+                                    <span className="text-slate-600">JE/JZ, JNE/JNZ, JC, JO, JS, JP</span>
+                                  </div>
+                                  <div className={`p-2 rounded border bg-white ${['JMP', 'CALL', 'RET'].includes(branchMnemonic) ? 'border-blue-400 ring-2 ring-blue-300' : 'border-slate-200'}`}>
+                                    <span className="font-bold text-blue-900 block border-b border-slate-100 pb-0.5">Unconditional & Stack:</span>
+                                    <span className="text-slate-600">JMP, CALL, RET</span>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
-
-                            <p className="text-xs sm:text-base text-slate-800 leading-relaxed font-sans">
-                              Branch instructions alter the sequential program execution flow by modifying the Instruction Pointer (<code className="font-mono font-bold bg-slate-100 px-1 rounded">IP</code>) and optionally the Code Segment (<code className="font-mono font-bold bg-slate-100 px-1 rounded">CS</code>). They are divided into <strong>Unconditional Transfers</strong> (JMP, CALL, RET) and <strong>Conditional Transfers</strong> (JZ, JNZ, JA, JB, JG, JL) based on 8086 status flags.
-                            </p>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 font-sans">
-                              {/* Card 1: JMP */}
-                              <div className="bg-white p-3.5 rounded-lg border border-indigo-200 shadow-2xs space-y-2">
-                                <div className="flex justify-between items-center border-b border-indigo-100 pb-2 font-mono">
-                                  <span className="font-extrabold text-indigo-950 text-sm sm:text-base">JMP Target</span>
-                                  <span className="text-xs bg-indigo-100 text-indigo-800 px-2.5 py-0.5 rounded border border-indigo-200 font-bold uppercase">Unconditional Jump</span>
-                                </div>
-                                <p className="text-slate-800 text-xs sm:text-sm leading-relaxed">
-                                  Unconditionally loads <code className="font-mono font-bold">IP</code> (and <code className="font-mono font-bold">CS</code> if Far jump) with target address without inspecting flags.
-                                </p>
-                                <div className="bg-indigo-50/80 p-2 rounded border border-indigo-200/80 font-mono text-xs sm:text-sm text-indigo-950">
-                                  <span className="font-bold text-indigo-900">Example:</span> <code className="font-bold text-indigo-900">JMP 0150H</code>
-                                </div>
-                                <p className="text-xs sm:text-sm font-semibold text-indigo-900 flex items-center gap-1.5 pt-0.5 font-sans">
-                                  <span>👉</span> <strong>JMP = “Directly change IP without checking flags.”</strong>
-                                </p>
-                              </div>
-
-                              {/* Card 2: JZ / JNZ */}
-                              <div className="bg-white p-3.5 rounded-lg border border-emerald-200 shadow-2xs space-y-2">
-                                <div className="flex justify-between items-center border-b border-emerald-100 pb-2 font-mono">
-                                  <span className="font-extrabold text-emerald-950 text-sm sm:text-base">JZ / JNZ Target</span>
-                                  <span className="text-xs bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded border border-emerald-200 font-bold uppercase">Zero Flag Branch</span>
-                                </div>
-                                <p className="text-slate-800 text-xs sm:text-sm leading-relaxed">
-                                  <code className="font-mono font-bold">JZ / JE</code> jumps if <code className="font-mono font-bold">ZF = 1</code> (result zero or equal). <code className="font-mono font-bold">JNZ / JNE</code> jumps if <code className="font-mono font-bold">ZF = 0</code>.
-                                </p>
-                                <div className="bg-emerald-50/80 p-2 rounded border border-emerald-200/80 font-mono text-xs sm:text-sm text-emerald-950">
-                                  <span className="font-bold text-emerald-900">Example:</span> <code className="font-bold text-emerald-900">CMP AX, BX</code> → <code className="font-bold text-emerald-900">JE EQUAL_LABEL</code>
-                                </div>
-                                <p className="text-xs sm:text-sm font-semibold text-emerald-900 flex items-center gap-1.5 pt-0.5 font-sans">
-                                  <span>👉</span> <strong>JZ = “Branch if compare or ALU operation resulted in zero.”</strong>
-                                </p>
-                              </div>
-
-                              {/* Card 3: CALL & RET */}
-                              <div className="bg-white p-3.5 rounded-lg border border-blue-200 shadow-2xs space-y-2">
-                                <div className="flex justify-between items-center border-b border-blue-100 pb-2 font-mono">
-                                  <span className="font-extrabold text-blue-950 text-sm sm:text-base">CALL & RET</span>
-                                  <span className="text-xs bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded border border-blue-200 font-bold uppercase">Procedure Call</span>
-                                </div>
-                                <p className="text-slate-800 text-xs sm:text-sm leading-relaxed">
-                                  <code className="font-mono font-bold">CALL</code> pushes return address onto stack (<code className="font-mono font-bold">SS:SP</code>) and jumps to subroutine. <code className="font-mono font-bold">RET</code> pops offset back into <code className="font-mono font-bold">IP</code> to return.
-                                </p>
-                                <div className="bg-blue-50/80 p-2 rounded border border-blue-200/80 font-mono text-xs sm:text-sm text-blue-950">
-                                  <span className="font-bold text-blue-900">Example:</span> <code className="font-bold text-blue-900">CALL MY_PROC</code> ... <code className="font-bold text-blue-900">RET</code>
-                                </div>
-                                <p className="text-xs sm:text-sm font-semibold text-blue-900 flex items-center gap-1.5 pt-0.5 font-sans">
-                                  <span>👉</span> <strong>CALL/RET = “Save return address on stack, jump to function, then return.”</strong>
-                                </p>
-                              </div>
-
-                              {/* Card 4: LOOP Target */}
-                              <div className="bg-white p-3.5 rounded-lg border border-purple-200 shadow-2xs space-y-2">
-                                <div className="flex justify-between items-center border-b border-purple-100 pb-2 font-mono">
-                                  <span className="font-extrabold text-purple-950 text-sm sm:text-base">LOOP Target</span>
-                                  <span className="text-xs bg-purple-100 text-purple-800 px-2.5 py-0.5 rounded border border-purple-200 font-bold uppercase">Hardware Loop</span>
-                                </div>
-                                <p className="text-slate-800 text-xs sm:text-sm leading-relaxed">
-                                  Automatically decrements <code className="font-mono font-bold">CX ← CX - 1</code> and branches to target label if <code className="font-mono font-bold">CX ≠ 0</code>. Does not affect status flags.
-                                </p>
-                                <div className="bg-purple-50/80 p-2 rounded border border-purple-200/80 font-mono text-xs sm:text-sm text-purple-950">
-                                  <span className="font-bold text-purple-900">Example:</span> <code className="font-bold text-purple-900">MOV CX, 5</code> → <code className="font-bold text-purple-900">LOOP_LABEL</code>
-                                </div>
-                                <p className="text-xs sm:text-sm font-semibold text-purple-900 flex items-center gap-1.5 pt-0.5 font-sans">
-                                  <span>👉</span> <strong>LOOP = “Decrement CX and jump back if CX hasn't reached zero.”</strong>
-                                </p>
-                              </div>
-                            </div>
-
-                            {/* Branch Flags Rules Banner */}
-                            <div className="bg-indigo-100/70 p-3.5 rounded-lg border border-indigo-300 text-indigo-950 text-xs sm:text-sm font-sans space-y-1.5">
-                              <span className="font-mono font-bold uppercase text-xs sm:text-sm block text-indigo-900">
-                                💡 Key Branching & Jump Rules:
-                              </span>
-                              <p className="leading-relaxed text-xs sm:text-sm">
-                                1. <strong>Unsigned Comparisons:</strong> Use <strong className="font-mono">JA</strong> (Above, CF=0 & ZF=0), <strong className="font-mono">JAE</strong> (CF=0), <strong className="font-mono">JB</strong> (Below, CF=1), <strong className="font-mono">JBE</strong> (CF=1 or ZF=1).<br />
-                                2. <strong>Signed Comparisons:</strong> Use <strong className="font-mono">JG</strong> (Greater), <strong className="font-mono">JGE</strong> (Greater/Equal), <strong className="font-mono">JL</strong> (Less), <strong className="font-mono">JLE</strong> (Less/Equal) based on SF and OF flags.<br />
-                                3. All 8086 conditional jumps are <strong>Short Jumps</strong> with a relative displacement of -128 to +127 bytes.
-                              </p>
-                            </div>
-                          </div>
-                        )}
+                          );
+                        })()}
                       </div>
                     )}
                   </div>
@@ -4343,16 +4792,16 @@ POP DX         ; Reads 1234H into DX, SP ← SP + 2 (FFFE)`}
                           ? <span>NOT is a <strong>unary instruction</strong> operating solely on <strong>AL Register</strong> ({byteHexFormat(aluValA)}). Moving the slider inverts all 8 bits (1's complement).</span>
                           : isNegOp
                           ? <span>NEG is a <strong>unary instruction</strong> operating solely on <strong>AL Register</strong> ({byteHexFormat(aluValA)}). Moving the slider computes 2's complement negation (0 - AL) and updates status flags.</span>
-                          : <span>Operand A is locked to <strong className="font-mono text-indigo-700 bg-white px-1.5 py-0.5 rounded border border-indigo-200">AL Register</strong> ({byteHexFormat(aluValA)}). Moving either slider updates CPU Registers & ALU Execution in real time.</span>}
+                          : <span>Destination is locked to <strong className="font-mono text-indigo-700 bg-white px-1.5 py-0.5 rounded border border-indigo-200">AL Register</strong> ({byteHexFormat(aluValA)}). Moving either slider updates CPU Registers & ALU Execution in real time.</span>}
                       </span>
                     </div>
 
                     <div className={isUnaryOp ? "grid grid-cols-1 gap-4" : "grid grid-cols-1 md:grid-cols-2 gap-4"}>
-                      {/* Operand A */}
+                      {/* Destination (AL) */}
                       <div className="space-y-1.5 bg-indigo-50/50 p-3 rounded-xl border border-indigo-150">
                         <div className="flex justify-between items-center text-indigo-950 font-bold">
                           <span className="flex items-center gap-1.5">
-                            {isUnaryOp ? 'Single Operand (AL Register):' : 'Operand A (AL Register):'}
+                            {isUnaryOp ? 'Single Operand (AL Register):' : 'Destination (AL Register):'}
                             <span className="text-[9px] font-mono text-indigo-700 bg-indigo-100/80 px-1.5 py-0.5 rounded border border-indigo-200 uppercase font-extrabold">
                               AX Low Byte
                             </span>
@@ -4380,12 +4829,12 @@ POP DX         ; Reads 1234H into DX, SP ← SP + 2 (FFFE)`}
                         </div>
                       </div>
 
-                      {/* Operand B (Hidden for Unary Ops) */}
+                      {/* Source (Hidden for Unary Ops) */}
                       {!isUnaryOp && (
                         <div className="space-y-1.5 bg-sky-50/50 p-3 rounded-xl border border-sky-150">
                           <div className="flex justify-between items-center text-sky-950 font-bold">
                             <span className="flex items-center gap-1.5">
-                              Operand B (BL / Imm):
+                              Source (BL / Imm):
                               <span className="text-[9px] font-mono text-sky-700 bg-sky-100/80 px-1.5 py-0.5 rounded border border-sky-200 uppercase font-extrabold">
                                 {activeInstruction.opcode.includes('BL') ? `BL Register (${byteHexFormat(aluValB)})` : `Immediate ${byteHexFormat(aluValB)}`}
                               </span>
@@ -4424,14 +4873,14 @@ POP DX         ; Reads 1234H into DX, SP ← SP + 2 (FFFE)`}
 
                     <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1 text-center font-mono">
                       <div className="flex justify-between items-center text-slate-600 text-[11px]">
-                        <span>Operand A:</span>
+                        <span>Destination (AL):</span>
                         <span className="text-indigo-700 font-extrabold">{(aluValA & 0xFF).toString(2).padStart(8, '0')}</span>
                         <span className="text-slate-800 font-bold">{byteHexFormat(aluValA)}</span>
                       </div>
 
                       {!isUnaryOp ? (
                         <div className="flex justify-between items-center text-slate-600 text-[11px]">
-                          <span>Op ({aluOp}):</span>
+                          <span>Source & Op ({aluOp}):</span>
                           <span className="text-amber-700 font-extrabold">{aluOp === 'ADD' ? '+' : aluOp === 'SUB' ? '-' : aluOp === 'AND' ? '&' : aluOp === 'OR' ? '|' : aluOp === 'XOR' ? '^' : aluOp === 'SHL' ? '<< 1' : '>> 1'}</span>
                           <span className="text-slate-800 font-bold">{(aluValB & 0xFF).toString(2).padStart(8, '0')}</span>
                         </div>

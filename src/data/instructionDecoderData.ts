@@ -3975,20 +3975,54 @@ export function getGeneralExplanation(opcode: string, fallbackDesc?: string): Ge
         ]
       };
     case 'AND':
-    case 'OR':
-    case 'XOR':
-    case 'TEST':
       return {
-        generalSyntax: `${mnemonic} Destination, Source`,
-        whatItDoes: mnemonic === 'TEST' 
-          ? 'Performs bitwise logical AND between Destination and Source to update flags without modifying operands.' 
-          : `Performs bitwise logical ${mnemonic} operation between Destination and Source (Destination = Destination ${mnemonic} Source).`,
+        generalSyntax: 'AND Destination, Source',
+        whatItDoes: 'Performs bitwise logical AND operation between Destination and Source (Destination = Destination AND Source). Each bit in Destination is 1 only if both corresponding bits in Destination and Source are 1.',
         flagsAffected: 'CF=0, OF=0 (Cleared); ZF, SF, PF updated according to result; AF undefined',
         flagsBadgeColor: 'amber',
         rules: [
-          'Clears Carry Flag (CF=0) and Overflow Flag (OF=0) automatically.',
-          'XOR reg, reg is a common 8086 pattern to clear a register to 0 in 2 bytes.',
-          'TEST is commonly used to check if specific bits are set (e.g. TEST AL, 01H).'
+          'Bit Masking: Commonly used to clear specific bits to 0 while preserving other bits (e.g., AND AL, 0FH extracts the lower 4-bit nibble).',
+          'Flags: Automatically clears Carry Flag (CF=0) and Overflow Flag (OF=0); updates Zero Flag (ZF), Sign Flag (SF), and Parity Flag (PF) according to result.',
+          'Operand Constraints: Operands must be of matching size (both 8-bit or both 16-bit); Destination cannot be an immediate value; memory-to-memory operations are not permitted.'
+        ]
+      };
+    case 'OR':
+      return {
+        generalSyntax: 'OR Destination, Source',
+        whatItDoes: 'Performs bitwise logical OR operation between Destination and Source (Destination = Destination OR Source). Each bit in Destination is 1 if either or both corresponding bits in Destination and Source are 1.',
+        flagsAffected: 'CF=0, OF=0 (Cleared); ZF, SF, PF updated according to result; AF undefined',
+        flagsBadgeColor: 'amber',
+        rules: [
+          'Bit Setting (Masking): Commonly used to force/set specific bits to 1 without altering remaining bits (e.g., OR AL, 08H sets bit 3 to 1).',
+          'Zero & Sign Testing: Executing OR reg, reg (e.g., OR AX, AX) is a standard 8086 pattern to test whether a register is zero or negative and update ZF and SF without modifying its content.',
+          'Flags: Automatically clears Carry Flag (CF=0) and Overflow Flag (OF=0); updates ZF, SF, and PF according to result; AF is undefined.',
+          'Operand Constraints: Operands must match in size (both 8-bit or both 16-bit); Destination cannot be immediate data or memory-to-memory.'
+        ]
+      };
+    case 'XOR':
+      return {
+        generalSyntax: 'XOR Destination, Source',
+        whatItDoes: 'Performs bitwise exclusive-OR (XOR) operation between Destination and Source (Destination = Destination XOR Source). Each bit in Destination is 1 if the corresponding bits in Destination and Source are different (one is 1, one is 0).',
+        flagsAffected: 'CF=0, OF=0 (Cleared); ZF, SF, PF updated according to result; AF undefined',
+        flagsBadgeColor: 'amber',
+        rules: [
+          'Clearing Registers: XOR reg, reg (e.g., XOR AX, AX) is the standard, fast 8086 assembly idiom to clear a register to 0000H in 2 bytes (faster and smaller than MOV AX, 0).',
+          'Bit Inversion / Toggling: Commonly used to flip/toggle selected bits (e.g., XOR AL, 80H toggles bit 7 / sign bit).',
+          'Flags: Automatically clears Carry Flag (CF=0) and Overflow Flag (OF=0); sets ZF=1 when used as XOR reg, reg.',
+          'Self-Inverse Property: XORing a value with the same key twice restores the original value (fundamental in simple encryption and graphics).'
+        ]
+      };
+    case 'TEST':
+      return {
+        generalSyntax: 'TEST Destination, Source',
+        whatItDoes: 'Performs a non-destructive bitwise logical AND between Destination and Source (Destination AND Source). Updates status flags (ZF, SF, PF) according to the result, but leaves both Destination and Source operands unchanged.',
+        flagsAffected: 'CF=0, OF=0 (Cleared); ZF, SF, PF updated according to result; AF undefined',
+        flagsBadgeColor: 'amber',
+        rules: [
+          'Non-Destructive Testing: Evaluates bit status without overwriting the Destination register or memory content.',
+          'Bit Testing Idiom: Frequently used before conditional jumps to test if specific bits or flags are set (e.g., TEST AL, 01H followed by JNZ BitIsSet).',
+          'Flags: Always clears Carry Flag (CF=0) and Overflow Flag (OF=0); sets ZF=1 if no common bits are 1 (i.e., result is zero).',
+          'Difference vs AND: AND updates Destination operand with the result, whereas TEST discards the result and only updates the flags.'
         ]
       };
     case 'NOT':
@@ -4172,37 +4206,220 @@ export function getGeneralExplanation(opcode: string, fallbackDesc?: string): Ge
         ]
       };
     case 'JMP':
-    case 'CALL':
-    case 'RET':
-    case 'JA':
-    case 'JAE':
-    case 'JB':
-    case 'JBE':
-    case 'JE':
-    case 'JNE':
-    case 'JG':
-    case 'JGE':
-    case 'JL':
-    case 'JLE':
-    case 'JC':
-    case 'JO':
-    case 'JS':
-    case 'JNP':
-    case 'JP':
       return {
-        generalSyntax: mnemonic === 'RET' ? 'RET' : `${mnemonic} Target`,
-        whatItDoes: mnemonic === 'JMP'
-          ? 'Unconditionally transfers execution control to the target instruction address.'
-          : mnemonic === 'CALL'
-          ? 'Pushes current Instruction Pointer (IP) onto stack and transfers control to subroutine target address.'
-          : mnemonic === 'RET'
-          ? 'Pops saved return address from stack into Instruction Pointer (IP) to return from subroutine.'
-          : `Conditionally branches to target address if specified processor flags satisfy the condition for ${mnemonic}.`,
-        flagsAffected: 'None (Flags remain unchanged during branching)',
+        generalSyntax: 'JMP Target',
+        whatItDoes: 'Unconditionally transfers execution control directly to the target address by loading a new offset into the Instruction Pointer (IP) (and new Segment into CS for Far jumps). Does not inspect or modify any status flags.',
+        flagsAffected: 'None (Flags remain unchanged during unconditional jump)',
         flagsBadgeColor: 'emerald',
         rules: [
-          'Conditional jumps evaluate status flags set by previous instructions (e.g. CMP).',
-          'Short jumps use an 8-bit signed relative displacement (-128 to +127 bytes).'
+          'No condition is tested; branching occurs unconditionally on every execution.',
+          'Short Jump: 8-bit displacement (-128 to +127 bytes); Near Jump: 16-bit displacement (-32768 to +32767 bytes) within same segment; Far Jump: 32-bit pointer (CS:IP) across code segments.',
+          'Can jump directly to immediate address (JMP 0150H), register content (JMP AX), or memory pointer (JMP [BX]).'
+        ]
+      };
+    case 'JA':
+      return {
+        generalSyntax: 'JA Target (Jump if Above / Not Below or Equal)',
+        whatItDoes: 'Performs an unsigned conditional branch to Target if the first operand was strictly greater than the second operand (Destination > Source). Condition tested: CF = 0 AND ZF = 0.',
+        flagsAffected: 'None (Reads CF & ZF; flags remain unmodified)',
+        flagsBadgeColor: 'emerald',
+        rules: [
+          'Evaluates unsigned comparisons (magnitudes 0 to 255 for 8-bit, 0 to 65535 for 16-bit).',
+          'Condition Met (CF=0 and ZF=0): Execution branches to Target (IP ← Target address).',
+          'Condition Failed (CF=1 or ZF=1): Execution continues sequentially to the next instruction.',
+          'Always preceded by CMP or arithmetic operation comparing two unsigned numbers.'
+        ]
+      };
+    case 'JAE':
+      return {
+        generalSyntax: 'JAE Target (Jump if Above or Equal / Not Below)',
+        whatItDoes: 'Performs an unsigned conditional branch to Target if the first operand was greater than or equal to the second operand (Destination ≥ Source). Condition tested: CF = 0 (No carry/borrow).',
+        flagsAffected: 'None (Reads CF; flags remain unmodified)',
+        flagsBadgeColor: 'emerald',
+        rules: [
+          'Branches if no borrow was generated during subtraction or compare (CF = 0).',
+          'Equivalent to JNB (Jump if Not Below) and JNC (Jump if No Carry).',
+          'Short jump displacement range: -128 to +127 bytes from next instruction.'
+        ]
+      };
+    case 'JB':
+      return {
+        generalSyntax: 'JB Target (Jump if Below / Not Above or Equal)',
+        whatItDoes: 'Performs an unsigned conditional branch to Target if the first operand was strictly less than the second operand (Destination < Source). Condition tested: CF = 1 (Carry/borrow generated).',
+        flagsAffected: 'None (Reads CF; flags remain unmodified)',
+        flagsBadgeColor: 'emerald',
+        rules: [
+          'Branches if a borrow was generated (CF = 1) during unsigned comparison.',
+          'Equivalent to JNAE (Jump if Not Above or Equal) and JC (Jump if Carry).',
+          'Used after CMP Destination, Source to detect when Destination is smaller than Source.'
+        ]
+      };
+    case 'JBE':
+      return {
+        generalSyntax: 'JBE Target (Jump if Below or Equal / Not Above)',
+        whatItDoes: 'Performs an unsigned conditional branch to Target if the first operand was less than or equal to the second operand (Destination ≤ Source). Condition tested: CF = 1 OR ZF = 1.',
+        flagsAffected: 'None (Reads CF & ZF; flags remain unmodified)',
+        flagsBadgeColor: 'emerald',
+        rules: [
+          'Branches if either borrow occurred (CF=1) or operands were identical (ZF=1).',
+          'Equivalent to JNA (Jump if Not Above).',
+          'Short jump displacement range: -128 to +127 bytes.'
+        ]
+      };
+    case 'JE':
+      return {
+        generalSyntax: 'JE / JZ Target (Jump if Equal / Jump if Zero)',
+        whatItDoes: 'Performs a conditional branch to Target if the Zero Flag is set (ZF = 1). Indicates operands were equal after CMP, or previous arithmetic/logical operation produced zero.',
+        flagsAffected: 'None (Reads ZF; flags remain unmodified)',
+        flagsBadgeColor: 'emerald',
+        rules: [
+          'Condition Met (ZF=1): Jumps to Target (Destination equals Source or ALU result = 0).',
+          'Condition Failed (ZF=0): Falls through to next sequential instruction.',
+          'Works identically for both signed and unsigned comparisons.'
+        ]
+      };
+    case 'JNE':
+      return {
+        generalSyntax: 'JNE / JNZ Target (Jump if Not Equal / Jump if Not Zero)',
+        whatItDoes: 'Performs a conditional branch to Target if the Zero Flag is clear (ZF = 0). Indicates operands were not equal after CMP, or previous operation produced a non-zero result.',
+        flagsAffected: 'None (Reads ZF; flags remain unmodified)',
+        flagsBadgeColor: 'emerald',
+        rules: [
+          'Condition Met (ZF=0): Jumps to Target (Destination differs from Source or result ≠ 0).',
+          'Condition Failed (ZF=1): Falls through to next sequential instruction.',
+          'Standard loop and decision test in 8086 assembly.'
+        ]
+      };
+    case 'JG':
+      return {
+        generalSyntax: 'JG Target (Jump if Greater / Not Less or Equal)',
+        whatItDoes: 'Performs a signed conditional branch to Target if Destination is strictly greater than Source in 2’s complement representation. Condition tested: ZF = 0 AND (SF == OF).',
+        flagsAffected: 'None (Reads ZF, SF & OF; flags remain unmodified)',
+        flagsBadgeColor: 'emerald',
+        rules: [
+          'Used for signed comparisons (values -128 to +127 for byte, -32768 to +32767 for word).',
+          'Requires SF = OF (no sign distortion or properly accounted overflow) AND ZF = 0 (not equal).',
+          'Equivalent to JNLE (Jump if Not Less or Equal).'
+        ]
+      };
+    case 'JGE':
+      return {
+        generalSyntax: 'JGE Target (Jump if Greater or Equal / Not Less)',
+        whatItDoes: 'Performs a signed conditional branch to Target if Destination is greater than or equal to Source in 2’s complement representation. Condition tested: SF == OF.',
+        flagsAffected: 'None (Reads SF & OF; flags remain unmodified)',
+        flagsBadgeColor: 'emerald',
+        rules: [
+          'Branches when Sign Flag equals Overflow Flag (SF = OF).',
+          'Equivalent to JNL (Jump if Not Less).',
+          'Handles signed integers correctly even when 2’s complement overflow occurs.'
+        ]
+      };
+    case 'JL':
+      return {
+        generalSyntax: 'JL Target (Jump if Less / Not Greater or Equal)',
+        whatItDoes: 'Performs a signed conditional branch to Target if Destination is strictly less than Source in 2’s complement representation. Condition tested: SF ≠ OF.',
+        flagsAffected: 'None (Reads SF & OF; flags remain unmodified)',
+        flagsBadgeColor: 'emerald',
+        rules: [
+          'Branches when Sign Flag differs from Overflow Flag (SF ≠ OF).',
+          'Equivalent to JNGE (Jump if Not Greater or Equal).',
+          'Used after CMP to branch when signed Destination < Source.'
+        ]
+      };
+    case 'JLE':
+      return {
+        generalSyntax: 'JLE Target (Jump if Less or Equal / Not Greater)',
+        whatItDoes: 'Performs a signed conditional branch to Target if Destination is less than or equal to Source in 2’s complement representation. Condition tested: ZF = 1 OR (SF ≠ OF).',
+        flagsAffected: 'None (Reads ZF, SF & OF; flags remain unmodified)',
+        flagsBadgeColor: 'emerald',
+        rules: [
+          'Branches if either result is zero (ZF=1) or signed Destination < Source (SF ≠ OF).',
+          'Equivalent to JNG (Jump if Not Greater).',
+          'Signed short jump relative displacement: -128 to +127 bytes.'
+        ]
+      };
+    case 'JC':
+      return {
+        generalSyntax: 'JC Target (Jump if Carry)',
+        whatItDoes: 'Branches to Target if the Carry Flag is set (CF = 1). Frequently used to check arithmetic carry/borrow or error conditions from BIOS/DOS interrupts.',
+        flagsAffected: 'None (Reads CF; flags remain unmodified)',
+        flagsBadgeColor: 'emerald',
+        rules: [
+          'Condition tested: CF = 1.',
+          'Used after multi-byte addition/subtraction, bit shifts (SHL/SHR), or interrupt calls.',
+          'Opposite instruction is JNC (Jump if No Carry, CF = 0).'
+        ]
+      };
+    case 'JO':
+      return {
+        generalSyntax: 'JO Target (Jump if Overflow)',
+        whatItDoes: 'Branches to Target if the Overflow Flag is set (OF = 1), indicating that a signed arithmetic operation exceeded the capacity of the destination operand.',
+        flagsAffected: 'None (Reads OF; flags remain unmodified)',
+        flagsBadgeColor: 'emerald',
+        rules: [
+          'Condition tested: OF = 1.',
+          'Crucial for detecting 2’s complement arithmetic overflow exceptions.',
+          'Opposite instruction is JNO (Jump if No Overflow, OF = 0).'
+        ]
+      };
+    case 'JS':
+      return {
+        generalSyntax: 'JS Target (Jump if Sign / Negative)',
+        whatItDoes: 'Branches to Target if the Sign Flag is set (SF = 1), indicating that the most significant bit (MSB) of the result is 1 (negative in signed representation).',
+        flagsAffected: 'None (Reads SF; flags remain unmodified)',
+        flagsBadgeColor: 'emerald',
+        rules: [
+          'Condition tested: SF = 1.',
+          'Used to test if a number or register MSB is negative.',
+          'Opposite instruction is JNS (Jump if No Sign / Positive, SF = 0).'
+        ]
+      };
+    case 'JP':
+      return {
+        generalSyntax: 'JP / JPE Target (Jump if Parity Even)',
+        whatItDoes: 'Branches to Target if the Parity Flag is set (PF = 1), indicating that the lowest byte of the result contains an even number of 1-bits.',
+        flagsAffected: 'None (Reads PF; flags remain unmodified)',
+        flagsBadgeColor: 'emerald',
+        rules: [
+          'Condition tested: PF = 1.',
+          'Common in serial communication and parity checking routines.',
+          'Opposite instruction is JNP / JPO (Jump if No Parity / Parity Odd, PF = 0).'
+        ]
+      };
+    case 'JNP':
+      return {
+        generalSyntax: 'JNP / JPO Target (Jump if No Parity / Parity Odd)',
+        whatItDoes: 'Branches to Target if the Parity Flag is clear (PF = 0), indicating that the lowest byte of the result contains an odd number of 1-bits.',
+        flagsAffected: 'None (Reads PF; flags remain unmodified)',
+        flagsBadgeColor: 'emerald',
+        rules: [
+          'Condition tested: PF = 0.',
+          'Used in communication protocol data validation.',
+          'Opposite instruction is JP / JPE (PF = 1).'
+        ]
+      };
+    case 'CALL':
+      return {
+        generalSyntax: 'CALL Target_Procedure',
+        whatItDoes: 'Pushes the return address (the address of the instruction immediately following the CALL) onto the stack (decrements SP by 2 and writes IP) and loads IP with the target procedure address.',
+        flagsAffected: 'None (Stack operation only; status flags unaffected)',
+        flagsBadgeColor: 'emerald',
+        rules: [
+          'Near Call (same segment): Pushes 16-bit IP onto stack (SP ← SP - 2, [SS:SP] ← IP) and sets IP ← Target.',
+          'Far Call (different segment): Pushes CS then IP onto stack (SP ← SP - 4) and loads new CS:IP.',
+          'Every CALL must have a corresponding RET instruction in the subroutine to pop the saved return address.'
+        ]
+      };
+    case 'RET':
+      return {
+        generalSyntax: 'RET [optional_pop_bytes]',
+        whatItDoes: 'Pops the 16-bit return address from the top of the stack ([SS:SP]) into the Instruction Pointer (IP) and increments SP by 2, returning execution to the instruction immediately following the original CALL.',
+        flagsAffected: 'None (Stack operation only; status flags unaffected)',
+        flagsBadgeColor: 'emerald',
+        rules: [
+          'Near Return: IP ← [SS:SP], SP ← SP + 2.',
+          'Far Return (RETF): IP ← [SS:SP], CS ← [SS:SP+2], SP ← SP + 4.',
+          'RET n: Pops return address and additionally adds immediate n to SP to discard passed function parameters.'
         ]
       };
     case 'CBW':
