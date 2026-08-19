@@ -1,10 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Database, Cpu, Layers, ArrowRight, CheckCircle2, ShieldAlert, CpuIcon, Binary } from 'lucide-react';
+import MemorySchematicDiagram from './MemorySchematicDiagram';
 
-export default function MemoryInterfacingSimulator() {
-  const [activeTab, setActiveTab] = useState<'hierarchy' | 'types' | 'bank' | 'decoder' | 'map'>('hierarchy');
+export type MemoryInterfacingTab = 'hierarchy' | 'types' | 'bank' | 'decoder' | 'map' | 'schematic';
+
+interface MemoryInterfacingSimulatorProps {
+  initialTab?: MemoryInterfacingTab;
+  allowedTabs?: MemoryInterfacingTab[];
+}
+
+export default function MemoryInterfacingSimulator({
+  initialTab = 'hierarchy',
+  allowedTabs,
+}: MemoryInterfacingSimulatorProps) {
+  const [activeTab, setActiveTab] = useState<MemoryInterfacingTab>(initialTab);
   const [selectedHierarchyLevel, setSelectedHierarchyLevel] = useState<number>(0);
   const [selectedMemoryType, setSelectedMemoryType] = useState<string>('sram');
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   // Bank Selection State
   const [addressHex, setAddressHex] = useState<string>('00100');
@@ -204,6 +221,45 @@ export default function MemoryInterfacingSimulator() {
   const decoderSelectIndex = (a19 << 2) | (a18 << 1) | a17;
   const outputs = Array.from({ length: 8 }, (_, idx) => (decoderEnabled && idx === decoderSelectIndex) ? 0 : 1);
 
+  const tabMeta: Record<MemoryInterfacingTab, { label: string; title: string; subtitle: string }> = {
+    hierarchy: {
+      label: 'Memory Hierarchy',
+      title: 'Memory Hierarchy & System Storage Pyramid',
+      subtitle: 'Registers (0 Wait State) → Cache SRAM → Main DRAM → Boot ROM → Secondary Storage'
+    },
+    types: {
+      label: 'RAM & ROM Types',
+      title: 'Semiconductor Memory Technologies & Cell Architectures',
+      subtitle: 'SRAM (6T Flip-Flops) • DRAM (1T1C + Refresh) • EPROM (UV Erase) • EEPROM • Flash'
+    },
+    bank: {
+      label: 'Even/Odd Banks',
+      title: '8086 16-Bit Memory Bank Interfacing (BHE# & A0)',
+      subtitle: 'Even Bank (D0–D7 / A0=0) • Odd Bank (D8–D15 / BHE#=0) • Aligned vs. Misaligned Transfers'
+    },
+    decoder: {
+      label: '74LS138 Decoder',
+      title: '74LS138 3-to-8 Address Decoder & Chip Select Generator',
+      subtitle: 'Decodes High-Order Address Lines (A17–A19) • Active-Low Chip Select (CS0#–CS7#)'
+    },
+    map: {
+      label: '1 MB Memory Map',
+      title: '8086 1 MB Physical Memory Map Design',
+      subtitle: 'IVT at 00000H–003FFH • RAM at Lower Space • Reset Boot ROM at FFFF0H–FFFFFH'
+    },
+    schematic: {
+      label: 'Schematic Circuit 📐',
+      title: '8086 Complete Memory Interfacing Circuit Schematic',
+      subtitle: 'Minimum Mode 8086 • 3× 74LS373 Latches • 74LS138 Decoder • 2× 74LS245 Buffers • Even/Odd Banks'
+    }
+  };
+
+  const displayedTabs = allowedTabs && allowedTabs.length > 0
+    ? allowedTabs
+    : (['schematic', 'bank', 'decoder', 'map', 'types', 'hierarchy'] as MemoryInterfacingTab[]);
+
+  const currentMeta = tabMeta[activeTab] || tabMeta.hierarchy;
+
   return (
     <div className="bg-white text-slate-800 p-4 md:p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4 text-xs font-sans">
       {/* Top Header */}
@@ -213,54 +269,32 @@ export default function MemoryInterfacingSimulator() {
             <Database className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="font-bold text-sm text-slate-900">Semiconductor Memory Interfacing & Architecture</h3>
-            <p className="text-[11px] text-slate-500">Memory Hierarchy, RAM vs ROM Technologies, Bank Selection & Address Decoding</p>
+            <h3 className="font-bold text-sm text-slate-900">{currentMeta.title}</h3>
+            <p className="text-[11px] text-slate-500">{currentMeta.subtitle}</p>
           </div>
         </div>
 
-        {/* Tab Switcher */}
-        <div className="flex flex-wrap bg-slate-100 p-1 rounded-xl border border-slate-200 gap-1">
-          <button
-            onClick={() => setActiveTab('hierarchy')}
-            className={`px-2.5 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-              activeTab === 'hierarchy' ? 'bg-white text-indigo-700 shadow-xs font-bold border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Memory Hierarchy
-          </button>
-          <button
-            onClick={() => setActiveTab('types')}
-            className={`px-2.5 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-              activeTab === 'types' ? 'bg-white text-indigo-700 shadow-xs font-bold border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            RAM & ROM Types
-          </button>
-          <button
-            onClick={() => setActiveTab('bank')}
-            className={`px-2.5 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-              activeTab === 'bank' ? 'bg-white text-indigo-700 shadow-xs font-bold border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Even/Odd Banks
-          </button>
-          <button
-            onClick={() => setActiveTab('decoder')}
-            className={`px-2.5 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-              activeTab === 'decoder' ? 'bg-white text-indigo-700 shadow-xs font-bold border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            74LS138 Decoder
-          </button>
-          <button
-            onClick={() => setActiveTab('map')}
-            className={`px-2.5 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-              activeTab === 'map' ? 'bg-white text-indigo-700 shadow-xs font-bold border border-slate-200/80' : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            1 MB Memory Map
-          </button>
-        </div>
+        {/* Tab Switcher (Only shown if more than 1 tab is allowed) */}
+        {displayedTabs.length > 1 && (
+          <div className="flex flex-wrap bg-slate-100 p-1 rounded-xl border border-slate-200 gap-1">
+            {displayedTabs.map((tabKey) => {
+              const isSelected = activeTab === tabKey;
+              return (
+                <button
+                  key={tabKey}
+                  onClick={() => setActiveTab(tabKey)}
+                  className={`px-2.5 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-white text-indigo-700 shadow-xs font-bold border border-slate-200/80'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  {tabMeta[tabKey].label}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* TAB: Memory Hierarchy */}
@@ -673,6 +707,11 @@ export default function MemoryInterfacingSimulator() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* TAB: Complete Schematic Circuit */}
+      {activeTab === 'schematic' && (
+        <MemorySchematicDiagram />
       )}
     </div>
   );

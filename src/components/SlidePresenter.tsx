@@ -433,22 +433,61 @@ export default function SlidePresenter({
       case 'assembler-outputs':
         component = <AssemblerOutputsSimulator />;
         break;
-      case 'memory-interfacing':
-        component = <MemoryInterfacingSimulator />;
+      case 'memory-interfacing': {
+        let initialTab: 'hierarchy' | 'types' | 'bank' | 'decoder' | 'map' | 'schematic' = 'hierarchy';
+        let allowedTabs: ('hierarchy' | 'types' | 'bank' | 'decoder' | 'map' | 'schematic')[] | undefined = undefined;
+
+        if (slide.id === 'm13-s1') {
+          initialTab = 'hierarchy';
+          allowedTabs = ['hierarchy'];
+        } else if (slide.id === 'm13-s2') {
+          initialTab = 'types';
+          allowedTabs = ['types'];
+        } else if (slide.id === 'm13-s3') {
+          initialTab = 'bank';
+          allowedTabs = ['bank', 'decoder'];
+        } else if (slide.id === 'm13-s4') {
+          initialTab = 'map';
+          allowedTabs = ['map', 'decoder'];
+        } else if (slide.id === 'm13-s5') {
+          initialTab = 'schematic';
+          allowedTabs = ['schematic', 'bank', 'decoder', 'map'];
+        }
+
+        component = <MemoryInterfacingSimulator initialTab={initialTab} allowedTabs={allowedTabs} />;
         break;
-      case 'ppi-8255':
-        component = <PPI8255Simulator />;
+      }
+      case 'ppi-8255': {
+        let initialTab: 'diagram' | 'pins' | 'architecture' | 'iomode' | 'bsr' | 'registers' = 'diagram';
+        let allowedTabs: ('diagram' | 'pins' | 'architecture' | 'iomode' | 'bsr' | 'registers')[] | undefined = undefined;
+
+        if (slide.id === 'm14-s1') {
+          initialTab = 'diagram';
+          allowedTabs = ['diagram', 'pins', 'architecture'];
+        } else if (slide.id === 'm14-s2') {
+          initialTab = 'iomode';
+          allowedTabs = ['iomode', 'bsr', 'registers'];
+        }
+
+        component = <PPI8255Simulator initialTab={initialTab} allowedTabs={allowedTabs} />;
         break;
+      }
       case 'peripheral-interfacing': {
-        let mode: 'circuit' | 'stepper' | 'stepper-code' | 'display' | 'keypad' | 'traffic' | 'alp' = 'circuit';
-        let allowedTabs: ('circuit' | 'stepper' | 'stepper-code' | 'display' | 'keypad' | 'traffic' | 'alp')[] | undefined = undefined;
+        let mode: 'schematic' | 'circuit' | 'stepper' | 'stepper-code' | 'display-circuit' | 'display' | 'display-code' | 'keypad-circuit' | 'keypad' | 'keypad-code' | 'traffic' | 'alp' = 'schematic';
+        let allowedTabs: ('schematic' | 'circuit' | 'stepper' | 'stepper-code' | 'display-circuit' | 'display' | 'display-code' | 'keypad-circuit' | 'keypad' | 'keypad-code' | 'traffic' | 'alp')[] | undefined = undefined;
 
         if (slide.id === 'm15-s1') {
-          mode = 'circuit';
-          allowedTabs = ['circuit', 'stepper', 'stepper-code'];
+          mode = 'schematic';
+          allowedTabs = ['schematic', 'circuit', 'stepper', 'stepper-code'];
         }
-        else if (slide.id === 'm15-s2') mode = 'display';
-        else if (slide.id === 'm15-s3') mode = 'keypad';
+        else if (slide.id === 'm15-s2') {
+          mode = 'display-circuit';
+          allowedTabs = ['display-circuit', 'display', 'display-code'];
+        }
+        else if (slide.id === 'm15-s3') {
+          mode = 'keypad-circuit';
+          allowedTabs = ['keypad-circuit', 'keypad', 'keypad-code'];
+        }
         else if (slide.id === 'm15-s4') mode = 'traffic';
         else if (slide.id === 'm15-s5') mode = 'alp';
 
