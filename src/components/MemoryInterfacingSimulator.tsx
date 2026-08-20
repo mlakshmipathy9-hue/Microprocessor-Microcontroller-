@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Database, Cpu, Layers, ArrowRight, CheckCircle2, ShieldAlert, CpuIcon, Binary } from 'lucide-react';
+import { Database, Cpu, Layers, ArrowRight, CheckCircle2, ShieldAlert, CpuIcon, Binary, HelpCircle, Lightbulb, Compass, BookOpen } from 'lucide-react';
 import MemorySchematicDiagram from './MemorySchematicDiagram';
+import RAM32KInterfacingDesign from './RAM32KInterfacingDesign';
+import RAMROMInterfacingDesign from './RAMROMInterfacingDesign';
 
-export type MemoryInterfacingTab = 'hierarchy' | 'types' | 'bank' | 'decoder' | 'map' | 'schematic';
+export type MemoryInterfacingTab = 'hierarchy' | 'types' | 'bank' | 'decoder' | 'map' | 'schematic' | 'ram32k-design' | 'ram-rom-design';
 
 interface MemoryInterfacingSimulatorProps {
   initialTab?: MemoryInterfacingTab;
@@ -251,12 +253,22 @@ export default function MemoryInterfacingSimulator({
       label: 'Schematic Circuit 📐',
       title: '8086 Complete Memory Interfacing Circuit Schematic',
       subtitle: 'Minimum Mode 8086 • 3× 74LS373 Latches • 74LS138 Decoder • 2× 74LS245 Buffers • Even/Odd Banks'
+    },
+    'ram32k-design': {
+      label: '32 KB RAM Design (Q1) 💡',
+      title: '32 KB RAM Interfacing with 8086 (Absolute Decoding)',
+      subtitle: 'Q.1: 32 KB RAM Design • Even/Odd Banks • Address Line Budget • Binary Decoding Table • Full Schematic'
+    },
+    'ram-rom-design': {
+      label: 'RAM + ROM Interfacing (Q2) ⚡',
+      title: '32 KB RAM + 32 KB ROM Dual Memory Interfacing with 8086',
+      subtitle: 'Q.2: Dual Memory Interfacing • 4 Chips (2× RAM + 2× ROM) • Dual Decoders • Full Live Simulation'
     }
   };
 
   const displayedTabs = allowedTabs && allowedTabs.length > 0
     ? allowedTabs
-    : (['schematic', 'bank', 'decoder', 'map', 'types', 'hierarchy'] as MemoryInterfacingTab[]);
+    : (['schematic', 'ram32k-design', 'bank', 'decoder', 'map', 'types', 'hierarchy'] as MemoryInterfacingTab[]);
 
   const currentMeta = tabMeta[activeTab] || tabMeta.hierarchy;
 
@@ -662,48 +674,198 @@ export default function MemoryInterfacingSimulator({
         </div>
       )}
 
-      {/* TAB 3: RAM & ROM 1MB Map */}
+      {/* TAB 3: RAM & ROM 1MB Map & Address Decoding */}
       {activeTab === 'map' && (
-        <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
-          <div className="text-indigo-950 font-bold text-[11px] uppercase tracking-wider">
-            8086 1 MB Physical Memory Map Architecture
+        <div className="space-y-4">
+          {/* Top Banner: Concept Link */}
+          <div className="bg-gradient-to-r from-indigo-900 to-purple-900 text-white p-4 rounded-xl shadow-xs">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="bg-indigo-700/60 text-indigo-200 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">
+                  Architecture &amp; Decoding Foundation
+                </span>
+                <h3 className="text-sm font-bold mt-1 text-white">
+                  8086 1 MB Physical Memory Organization &amp; Address Decoding Logic
+                </h3>
+                <p className="text-xs text-indigo-200 mt-0.5">
+                  How the 8086 partitions 1 MB (2^20 bytes = 1,048,576 bytes) and uses high-order address lines A15–A19 to select memory chips.
+                </p>
+              </div>
+            </div>
           </div>
 
-          <div className="space-y-2 font-mono text-[11px]">
-            {/* Top ROM */}
-            <div className="bg-amber-50 border border-amber-300 p-2.5 rounded-lg flex items-center justify-between text-amber-950">
-              <div className="flex items-center gap-2">
-                <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
-                <div>
-                  <strong className="text-amber-900">System EPROM / ROM (Boot Firmware)</strong>
-                  <p className="text-[10px] text-amber-800 font-sans">8086 starts execution at FFFF0H upon hardware RESET!</p>
-                </div>
-              </div>
-              <span className="bg-amber-100 text-amber-900 border border-amber-200 font-bold px-2 py-1 rounded text-[10px]">FFFF0H – FFFFFH</span>
+          {/* 1 MB Memory Map Architecture Breakdown */}
+          <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-indigo-950 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
+                <Layers className="w-4 h-4 text-indigo-600" />
+                1 MB Physical Address Space Allocation
+              </span>
+              <span className="text-[10px] bg-slate-100 text-slate-700 font-mono px-2 py-0.5 rounded font-bold">
+                Total Range: 00000H – FFFFFH
+              </span>
             </div>
 
-            {/* General User RAM */}
-            <div className="bg-indigo-50 border border-indigo-200 p-2.5 rounded-lg flex items-center justify-between text-indigo-950">
-              <div className="flex items-center gap-2">
-                <Database className="w-4 h-4 text-indigo-600 shrink-0" />
-                <div>
-                  <strong className="text-indigo-900">SRAM / DRAM Main Memory Space</strong>
-                  <p className="text-[10px] text-slate-600 font-sans">Code Segment, Data Segment, Stack Segment &amp; Extra Segment storage.</p>
+            <div className="space-y-2.5 font-mono text-[11px]">
+              {/* Top ROM */}
+              <div className="bg-amber-50/80 border-2 border-amber-300 p-3 rounded-lg flex items-center justify-between text-amber-950 hover:bg-amber-50 transition-all">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-amber-200/70 rounded-md">
+                    <ShieldAlert className="w-5 h-5 text-amber-700 shrink-0" />
+                  </div>
+                  <div>
+                    <strong className="text-amber-950 text-xs">Top Space: System EPROM / ROM (Reset Boot Firmware)</strong>
+                    <p className="text-[10.5px] text-amber-900 font-sans mt-0.5">
+                      <strong>Why placed here?</strong> When 8086 is reset, <code>CS = FFFFH</code> and <code>IP = 0000H</code> &rarr; execution starts at <strong>FFFF0H</strong>!
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <span className="bg-amber-200 text-amber-950 border border-amber-300 font-bold px-2.5 py-1 rounded text-[11px] block">
+                    FFFF0H – FFFFFH
+                  </span>
+                  <span className="text-[9px] text-amber-800 font-sans">Boot Vector Space</span>
                 </div>
               </div>
-              <span className="bg-indigo-100 text-indigo-900 border border-indigo-200 font-bold px-2 py-1 rounded text-[10px]">00400H – FFFEFH</span>
+
+              {/* General User RAM */}
+              <div className="bg-indigo-50/80 border-2 border-indigo-300 p-3 rounded-lg flex items-center justify-between text-indigo-950 hover:bg-indigo-50 transition-all">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-indigo-200/70 rounded-md">
+                    <Database className="w-5 h-5 text-indigo-700 shrink-0" />
+                  </div>
+                  <div>
+                    <strong className="text-indigo-950 text-xs">Middle/Lower Space: SRAM / DRAM User &amp; System Memory</strong>
+                    <p className="text-[10.5px] text-indigo-900 font-sans mt-0.5">
+                      Allocated for Code Segment (CS), Data Segment (DS), Stack Segment (SS), Extra Segment (ES), and OS buffers.
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <span className="bg-indigo-200 text-indigo-950 border border-indigo-300 font-bold px-2.5 py-1 rounded text-[11px] block">
+                    00400H – FFFEFH
+                  </span>
+                  <span className="text-[9px] text-indigo-800 font-sans">Read/Write RAM Area</span>
+                </div>
+              </div>
+
+              {/* IVT Table at Bottom */}
+              <div className="bg-emerald-50/80 border-2 border-emerald-300 p-3 rounded-lg flex items-center justify-between text-emerald-950 hover:bg-emerald-50 transition-all">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-emerald-200/70 rounded-md">
+                    <Cpu className="w-5 h-5 text-emerald-700 shrink-0" />
+                  </div>
+                  <div>
+                    <strong className="text-emerald-950 text-xs">Bottom 1 KB: Interrupt Vector Table (IVT)</strong>
+                    <p className="text-[10.5px] text-emerald-900 font-sans mt-0.5">
+                      Holds 256 Interrupt Pointers (Type 0 to 255), 4 bytes each (IP:CS) pointing to Interrupt Service Routines (ISRs).
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <span className="bg-emerald-200 text-emerald-950 border border-emerald-300 font-bold px-2.5 py-1 rounded text-[11px] block">
+                    00000H – 003FFH
+                  </span>
+                  <span className="text-[9px] text-emerald-800 font-sans">Dedicated 1 KB IVT</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Interactive Bridge & Clarifications: Connecting Slide 4 (Theory) to Slide 5 (Circuit Design Problem) */}
+          <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50 p-4 rounded-xl border border-indigo-200 shadow-2xs space-y-4">
+            <div className="flex items-center gap-2.5">
+              <span className="p-2 bg-indigo-600 text-white rounded-lg shadow-xs">
+                <Lightbulb className="w-5 h-5" />
+              </span>
+              <div>
+                <h4 className="font-bold text-xs text-indigo-950">
+                  Key Conceptual Link &amp; Architecture Clarifications
+                </h4>
+                <p className="text-[11px] text-slate-600">
+                  How the 1 MB memory organization rules directly govern the 32 KB RAM Interfacing Problem:
+                </p>
+              </div>
             </div>
 
-            {/* IVT Table at Bottom */}
-            <div className="bg-emerald-50 border border-emerald-200 p-2.5 rounded-lg flex items-center justify-between text-emerald-950">
-              <div className="flex items-center gap-2">
-                <Cpu className="w-4 h-4 text-emerald-600 shrink-0" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+              {/* Clarification 1: 32 KB RAM Placement in the Map */}
+              <div className="bg-white p-3.5 rounded-xl border border-indigo-200 shadow-xs space-y-2 flex flex-col justify-between">
                 <div>
-                  <strong className="text-emerald-900">Interrupt Vector Table (IVT - 1 KB)</strong>
-                  <p className="text-[10px] text-slate-600 font-sans">Holds 256 interrupt pointer vectors (4 bytes each for CS:IP ISR locations).</p>
+                  <div className="flex items-center gap-1.5 text-indigo-900 font-bold mb-1">
+                    <Database className="w-4 h-4 text-indigo-600 shrink-0" />
+                    <span>1. Where does the 32 KB RAM sit?</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 leading-relaxed">
+                    The 32 KB RAM chip (<code>00000H – 07FFFH</code>) sits at the <strong>very bottom</strong> of the 1 MB space and spans two areas:
+                  </p>
+                  <ul className="mt-2 space-y-1.5 text-[10.5px] text-slate-700">
+                    <li className="flex items-start gap-1 bg-emerald-50 p-1.5 rounded border border-emerald-200">
+                      <span className="font-bold text-emerald-800 shrink-0">• 00000H–003FFH (1 KB):</span>
+                      <span>Interrupt Vector Table (IVT) holding 256 vector pointers.</span>
+                    </li>
+                    <li className="flex items-start gap-1 bg-indigo-50 p-1.5 rounded border border-indigo-200">
+                      <span className="font-bold text-indigo-800 shrink-0">• 00400H–07FFFH (31 KB):</span>
+                      <span>User &amp; OS RAM holding <strong>CS, DS, SS, ES</strong> segments (Code, Variables, Stack).</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className="text-[10px] text-indigo-700 bg-indigo-50/70 px-2 py-1 rounded font-medium">
+                  &bull; Stack (SS) &amp; Data (DS) MUST be in RAM to allow writes!
                 </div>
               </div>
-              <span className="bg-emerald-100 text-emerald-900 border border-emerald-200 font-bold px-2 py-1 rounded text-[10px]">00000H – 003FFH</span>
+
+              {/* Clarification 2: Accessing 00100H (IVT vs User Access) */}
+              <div className="bg-white p-3.5 rounded-xl border border-purple-200 shadow-xs space-y-2 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-1.5 text-purple-900 font-bold mb-1">
+                    <Cpu className="w-4 h-4 text-purple-600 shrink-0" />
+                    <span>2. Accessing Address 00100H?</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 leading-relaxed">
+                    <code>00100H</code> (decimal 256) falls strictly inside the <strong>1 KB IVT</strong> (256 / 4 = Type 64 / INT 40H):
+                  </p>
+                  <ul className="mt-2 space-y-1.5 text-[10.5px] text-slate-700">
+                    <li className="flex items-start gap-1 bg-purple-50 p-1.5 rounded border border-purple-200">
+                      <span className="font-bold text-purple-800 shrink-0">&bull; Hardware Bus:</span>
+                      <span>Treats it as a standard memory read/write cycle (A15–A19 = 0 &rarr; CS# = 0, Even bank enabled).</span>
+                    </li>
+                    <li className="flex items-start gap-1 bg-amber-50 p-1.5 rounded border border-amber-200">
+                      <span className="font-bold text-amber-800 shrink-0">&bull; 8086 CPU:</span>
+                      <span>On <code>INT 64</code>, fetches IP &amp; CS. On user <code>MOV</code>, updates the ISR pointer vector.</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className="text-[10px] text-purple-700 bg-purple-50/70 px-2 py-1 rounded font-medium">
+                  &bull; Safe User Program RAM starts above IVT at <code>00400H</code>.
+                </div>
+              </div>
+
+              {/* Clarification 3: Maximum RAM & ROM limits */}
+              <div className="bg-white p-3.5 rounded-xl border border-amber-200 shadow-xs space-y-2 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-1.5 text-amber-900 font-bold mb-1">
+                    <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>3. Max RAM &amp; ROM Limits?</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 leading-relaxed">
+                    With 20 address lines (A0–A19), total memory is capped at <strong>1 MB (1,024 KB)</strong>:
+                  </p>
+                  <ul className="mt-2 space-y-1.5 text-[10.5px] text-slate-700">
+                    <li className="flex items-start gap-1 bg-slate-50 p-1.5 rounded border border-slate-200">
+                      <span className="font-bold text-slate-800 shrink-0">&bull; Golden Rule 1:</span>
+                      <span><strong>RAM starts at 00000H</strong> (to host the 1 KB IVT, Stack, and Data variables).</span>
+                    </li>
+                    <li className="flex items-start gap-1 bg-slate-50 p-1.5 rounded border border-slate-200">
+                      <span className="font-bold text-slate-800 shrink-0">&bull; Golden Rule 2:</span>
+                      <span><strong>ROM ends at FFFFFH</strong> (to hold the Reset Vector at <code>FFFF0H</code>).</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className="text-[10px] text-amber-800 bg-amber-50/70 px-2 py-1 rounded font-medium">
+                  &bull; RAM Size + ROM Size &le; 1 MB (e.g. 960 KB RAM + 64 KB ROM).
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -712,6 +874,16 @@ export default function MemoryInterfacingSimulator({
       {/* TAB: Complete Schematic Circuit */}
       {activeTab === 'schematic' && (
         <MemorySchematicDiagram />
+      )}
+
+      {/* TAB: 32 KB RAM Interfacing Design (Absolute Decoding) */}
+      {activeTab === 'ram32k-design' && (
+        <RAM32KInterfacingDesign />
+      )}
+
+      {/* TAB: RAM + ROM Interfacing Design (Q2) */}
+      {activeTab === 'ram-rom-design' && (
+        <RAMROMInterfacingDesign />
       )}
     </div>
   );

@@ -2963,7 +2963,7 @@ export default function InstructionDecoderSimulator({
                                       8086 MASM / TASM
                                     </span>
                                   </div>
-                                  <pre className="bg-slate-900 text-emerald-300 p-3 rounded-lg text-xs font-mono overflow-x-auto leading-relaxed border border-slate-800">
+                                  <pre className="bg-slate-50 text-indigo-950 p-3 rounded-lg text-xs font-mono overflow-x-auto leading-relaxed border border-slate-200">
                                     {meta.assemblySnippet}
                                   </pre>
                                   <p className="text-xs text-slate-600 font-sans leading-relaxed">
@@ -3760,15 +3760,15 @@ POP DX         ; Reads 1234H into DX, SP ← SP + 2 (FFFE)`}
                         /* Beautiful Seven-Segment LED Graphic */
                         <SevenSegmentDisplay hexValue={xlatTable[regs.AX & 0xFF] ?? 0} />
                       ) : xlatScenario === 'ascii_num' || xlatScenario === 'ascii_case' ? (
-                        /* Glowing CRT ASCII Character Box */
-                        <div className="flex flex-col items-center justify-center bg-slate-900 border border-emerald-500/30 w-24 h-24 rounded-xl shadow-xs">
-                          <span className="text-[9px] font-mono font-bold text-emerald-500/60 uppercase tracking-widest leading-none mb-2">
-                            CRT TERM
+                        /* Clean Light ASCII Character Display Box */
+                        <div className="flex flex-col items-center justify-center bg-emerald-50/80 border border-emerald-300 w-24 h-24 rounded-xl shadow-xs">
+                          <span className="text-[9px] font-mono font-bold text-emerald-800 uppercase tracking-widest leading-none mb-2">
+                            DISPLAY CHAR
                           </span>
-                          <span className="text-3xl font-mono font-extrabold text-emerald-400 animate-pulse drop-shadow-[0_0_8px_rgba(52,211,153,0.4)]">
+                          <span className="text-3xl font-mono font-extrabold text-emerald-700">
                             {String.fromCharCode(xlatTable[regs.AX & 0xFF] ?? 32)}
                           </span>
-                          <span className="text-[9px] font-mono text-emerald-500/60 mt-2">
+                          <span className="text-[9px] font-mono font-bold text-emerald-800 mt-2">
                             ASCII: {byteHexFormat(xlatTable[regs.AX & 0xFF] ?? 0)}
                           </span>
                         </div>
@@ -4358,43 +4358,43 @@ POP DX         ; Reads 1234H into DX, SP ← SP + 2 (FFFE)`}
                   </div>
 
                   {/* Dynamic Instruction Syntax & Format Banner */}
-                  <div className="bg-slate-900 text-slate-100 p-3.5 rounded-xl border border-slate-800 font-mono text-xs space-y-2">
-                    <div className="flex justify-between items-center border-b border-slate-800 pb-1.5 flex-wrap gap-2">
-                      <span className="text-[11px] font-extrabold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
-                        <Code2 className="w-3.5 h-3.5 text-indigo-400" />
+                  <div className="bg-gradient-to-br from-indigo-50/80 via-white to-blue-50/70 text-slate-800 p-3.5 sm:p-4 rounded-xl border border-indigo-200/80 font-mono text-xs space-y-2.5 shadow-2xs">
+                    <div className="flex justify-between items-center border-b border-indigo-150 pb-1.5 flex-wrap gap-2">
+                      <span className="text-[11px] font-extrabold text-indigo-900 uppercase tracking-wider flex items-center gap-1.5">
+                        <Code2 className="w-3.5 h-3.5 text-indigo-600" />
                         Simulated 8086 Instruction Syntax & Format:
                       </span>
-                      <span className="text-[10px] bg-indigo-900/80 text-indigo-200 px-2 py-0.5 rounded border border-indigo-700 font-bold">
+                      <span className="text-[10px] bg-white text-indigo-900 px-2 py-0.5 rounded border border-indigo-200 font-bold shadow-2xs">
                         {curBranchInfo.format}
                       </span>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
                       {/* Selected Branch Instruction Syntax */}
-                      <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700 space-y-1">
-                        <span className="text-[10px] text-slate-400 block font-bold uppercase">1. Branch / Loop Instruction Syntax:</span>
-                        <div className="text-sm font-black text-amber-300">
+                      <div className="bg-white p-2.5 sm:p-3 rounded-lg border border-indigo-150 space-y-1 shadow-2xs">
+                        <span className="text-[10px] text-slate-500 block font-bold uppercase">1. Branch / Loop Instruction Syntax:</span>
+                        <div className="text-sm font-black text-indigo-950">
                           <code>{curBranchInfo.syntax}</code>
                           {curBranchInfo.alternateSyntax && (
-                            <span className="text-xs text-slate-400 font-normal block pt-0.5">
-                              Alt: <code className="text-amber-200">{curBranchInfo.alternateSyntax}</code>
+                            <span className="text-xs text-slate-500 font-normal block pt-0.5">
+                              Alt: <code className="text-indigo-800">{curBranchInfo.alternateSyntax}</code>
                             </span>
                           )}
                         </div>
-                        <div className="text-[10px] text-slate-400 font-sans pt-1">
-                          <strong>Opcode:</strong> <code className="text-indigo-300 font-mono">{curBranchInfo.opcode}</code> | <strong>Action:</strong> <code className="text-amber-200 font-mono">{curBranchInfo.action}</code>
+                        <div className="text-[10px] text-slate-600 font-sans pt-1">
+                          <strong>Opcode:</strong> <code className="text-indigo-700 font-mono">{curBranchInfo.opcode}</code> | <strong>Action:</strong> <code className="text-amber-800 font-mono">{curBranchInfo.action}</code>
                         </div>
                       </div>
 
                       {/* Preceding Compare Instruction Syntax */}
-                      <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700 space-y-1">
-                        <span className="text-[10px] text-slate-400 block font-bold uppercase">2. Preceding Comparison Instruction:</span>
-                        <div className="text-sm font-black text-emerald-300">
+                      <div className="bg-white p-2.5 sm:p-3 rounded-lg border border-indigo-150 space-y-1 shadow-2xs">
+                        <span className="text-[10px] text-slate-500 block font-bold uppercase">2. Preceding Comparison Instruction:</span>
+                        <div className="text-sm font-black text-emerald-800">
                           <code>CMP AX, BX</code>
                         </div>
-                        <div className="text-[10px] text-slate-400 font-sans pt-1">
-                          <strong>Syntax:</strong> <code className="text-emerald-200 font-mono">CMP destination, source</code> | <strong>Opcode:</strong> <code className="text-indigo-300 font-mono">38H / 39H / 3BH</code><br />
-                          Computes <code className="text-emerald-300 font-mono">AX - BX</code> to update status flags (ZF, CF, SF, OF) without altering operands.
+                        <div className="text-[10px] text-slate-600 font-sans pt-1">
+                          <strong>Syntax:</strong> <code className="text-emerald-700 font-mono">CMP destination, source</code> | <strong>Opcode:</strong> <code className="text-indigo-700 font-mono">38H / 39H / 3BH</code><br />
+                          Computes <code className="text-emerald-800 font-mono">AX - BX</code> to update status flags (ZF, CF, SF, OF) without altering operands.
                         </div>
                       </div>
                     </div>
@@ -4447,30 +4447,30 @@ POP DX         ; Reads 1234H into DX, SP ← SP + 2 (FFFE)`}
                   </div>
 
                   {/* Step 4: Disassembly Flow Highlights */}
-                  <div className="bg-slate-900 text-slate-100 p-4 rounded-xl font-mono text-xs space-y-2 border border-slate-800">
-                    <span className="text-slate-400 text-[10px] uppercase tracking-wider font-bold block border-b border-slate-800 pb-1">
+                  <div className="bg-slate-50/90 text-slate-800 p-4 rounded-xl font-mono text-xs space-y-2 border border-slate-200 shadow-2xs">
+                    <span className="text-slate-700 text-[10px] uppercase tracking-wider font-bold block border-b border-slate-200 pb-1">
                       8086 Assembly Program Execution Visualizer:
                     </span>
                     <div className="space-y-1">
-                      <div className="p-1.5 rounded bg-slate-800/60 text-slate-300 flex justify-between">
+                      <div className="p-1.5 rounded bg-white text-slate-700 border border-slate-200 flex justify-between">
                         <span>0100H: CMP AX, BX</span>
                         <span className="text-slate-500">; AX={a}, BX={b}</span>
                       </div>
                       <div className={`p-1.5 rounded flex justify-between font-bold ${
-                        isTaken ? 'bg-emerald-900/80 text-emerald-200 border border-emerald-500/50' : 'bg-rose-900/80 text-rose-200 border border-rose-500/50'
+                        isTaken ? 'bg-emerald-50 text-emerald-900 border border-emerald-300' : 'bg-rose-50 text-rose-900 border border-rose-300'
                       }`}>
                         <span>0102H: {branchJumpCond} TARGET_LABEL</span>
                         <span>{isTaken ? '➜ TAKEN → Jump to 0150H' : '➜ NOT TAKEN → Fall through'}</span>
                       </div>
                       <div className={`p-1.5 rounded flex justify-between ${
-                        !isTaken ? 'bg-amber-900/60 text-amber-200 font-bold border border-amber-500/40' : 'text-slate-600 line-through opacity-50'
+                        !isTaken ? 'bg-amber-50 text-amber-900 font-bold border border-amber-300' : 'text-slate-400 line-through opacity-60'
                       }`}>
                         <span>0104H: MOV CX, 0001H</span>
                         <span>{!isTaken ? '➜ Executed next' : '; Skipped due to jump'}</span>
                       </div>
-                      <div className="text-slate-600 px-1.5 py-0.5">...</div>
+                      <div className="text-slate-400 px-1.5 py-0.5">...</div>
                       <div className={`p-1.5 rounded flex justify-between ${
-                        isTaken ? 'bg-emerald-900/80 text-emerald-200 font-bold border border-emerald-500/50' : 'text-slate-600'
+                        isTaken ? 'bg-emerald-50 text-emerald-900 font-bold border border-emerald-300' : 'text-slate-500'
                       }`}>
                         <span>0150H: TARGET_LABEL: NOP</span>
                         <span>{isTaken ? '➜ Branch Target Reached' : '; Not jumped to'}</span>
@@ -5243,40 +5243,40 @@ POP DX         ; Reads 1234H into DX, SP ← SP + 2 (FFFE)`}
                   </div>
 
                   {/* Dynamic String & Port Instruction Syntax & Format Banner */}
-                  <div className="bg-slate-900 text-slate-100 p-3.5 rounded-xl border border-slate-800 font-mono text-xs space-y-2">
-                    <div className="flex justify-between items-center border-b border-slate-800 pb-1.5 flex-wrap gap-2">
-                      <span className="text-[11px] font-extrabold text-teal-400 uppercase tracking-wider flex items-center gap-1.5">
-                        <Code2 className="w-3.5 h-3.5 text-teal-400" />
+                  <div className="bg-gradient-to-br from-teal-50/80 via-white to-cyan-50/70 text-slate-800 p-3.5 sm:p-4 rounded-xl border border-teal-200/80 font-mono text-xs space-y-2.5 shadow-2xs">
+                    <div className="flex justify-between items-center border-b border-teal-150 pb-1.5 flex-wrap gap-2">
+                      <span className="text-[11px] font-extrabold text-teal-900 uppercase tracking-wider flex items-center gap-1.5">
+                        <Code2 className="w-3.5 h-3.5 text-teal-600" />
                         Simulated 8086 Instruction Syntax & Format:
                       </span>
-                      <span className="text-[10px] bg-teal-900/80 text-teal-200 px-2 py-0.5 rounded border border-teal-700 font-bold">
+                      <span className="text-[10px] bg-white text-teal-900 px-2 py-0.5 rounded border border-teal-200 font-bold shadow-2xs">
                         {curStringInfo.format}
                       </span>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
                       {/* Assembly Syntax & Opcodes */}
-                      <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700 space-y-1">
-                        <span className="text-[10px] text-slate-400 block font-bold uppercase">Assembly Syntax & Variants:</span>
-                        <div className="text-sm font-black text-amber-300">
+                      <div className="bg-white p-2.5 sm:p-3 rounded-lg border border-teal-150 space-y-1 shadow-2xs">
+                        <span className="text-[10px] text-slate-500 block font-bold uppercase">Assembly Syntax & Variants:</span>
+                        <div className="text-sm font-black text-teal-950">
                           <code>{curStringInfo.syntax}</code>
                           {curStringInfo.alternateSyntax && (
-                            <span className="text-xs text-slate-400 font-normal block pt-0.5">
-                              Variants / Prefixes: <code className="text-amber-200">{curStringInfo.alternateSyntax}</code>
+                            <span className="text-xs text-slate-500 font-normal block pt-0.5">
+                              Variants / Prefixes: <code className="text-teal-800">{curStringInfo.alternateSyntax}</code>
                             </span>
                           )}
                         </div>
-                        <div className="text-[10px] text-slate-400 font-sans pt-1">
-                          <strong>Opcode Encoding:</strong> <code className="text-teal-300 font-mono">{curStringInfo.opcode}</code>
+                        <div className="text-[10px] text-slate-600 font-sans pt-1">
+                          <strong>Opcode Encoding:</strong> <code className="text-teal-700 font-mono">{curStringInfo.opcode}</code>
                         </div>
                       </div>
 
                       {/* Operands & Action */}
-                      <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700 space-y-1">
-                        <span className="text-[10px] text-slate-400 block font-bold uppercase">Operands & CPU Execution:</span>
-                        <div className="text-xs text-slate-300 font-sans leading-snug">
+                      <div className="bg-white p-2.5 sm:p-3 rounded-lg border border-teal-150 space-y-1 shadow-2xs">
+                        <span className="text-[10px] text-slate-500 block font-bold uppercase">Operands & CPU Execution:</span>
+                        <div className="text-xs text-slate-700 font-sans leading-snug">
                           <strong>Operands:</strong> {curStringInfo.operands}<br />
-                          <strong>Action:</strong> <code className="text-emerald-300 font-mono">{curStringInfo.action}</code><br />
+                          <strong>Action:</strong> <code className="text-emerald-700 font-mono">{curStringInfo.action}</code><br />
                           <strong>Flags:</strong> {curStringInfo.flagsAffected}
                         </div>
                       </div>
@@ -5354,12 +5354,12 @@ POP DX         ; Reads 1234H into DX, SP ← SP + 2 (FFFE)`}
                       </div>
 
                       {/* Live String Memory Buffers Graphic */}
-                      <div className="bg-slate-900 text-slate-100 p-4 rounded-xl border border-slate-800 space-y-4">
-                        <div className="flex justify-between items-center border-b border-slate-800 pb-2">
-                          <span className="text-xs font-bold text-teal-400 uppercase tracking-wider">
+                      <div className="bg-gradient-to-br from-slate-50 via-white to-teal-50/40 text-slate-800 p-4 rounded-xl border border-slate-200 shadow-2xs space-y-4">
+                        <div className="flex justify-between items-center border-b border-slate-200 pb-2">
+                          <span className="text-xs font-bold text-teal-900 uppercase tracking-wider">
                             Memory String Buffer Visualizer (DS:SI ➔ ES:DI)
                           </span>
-                          <span className="text-[10px] text-slate-400">
+                          <span className="text-[10px] text-slate-500 font-bold">
                             Current Step: {stringStepIndex} / {stringCx} (Remaining CX = {remainingCx})
                           </span>
                         </div>
@@ -5367,8 +5367,8 @@ POP DX         ; Reads 1234H into DX, SP ← SP + 2 (FFFE)`}
                         {/* Source RAM Buffer (DS:SI) */}
                         <div className="space-y-1.5">
                           <div className="flex justify-between items-center text-[11px] font-bold">
-                            <span className="text-sky-300">Source Memory Buffer [DS:0100H]:</span>
-                            <span className="text-sky-400">SI = 0x{siAddr.toString(16).toUpperCase().padStart(4, '0')}H</span>
+                            <span className="text-sky-900">Source Memory Buffer [DS:0100H]:</span>
+                            <span className="text-sky-700 font-mono">SI = 0x{siAddr.toString(16).toUpperCase().padStart(4, '0')}H</span>
                           </div>
                           <div className="grid grid-cols-8 gap-2 text-center text-xs font-bold">
                             {sourceBuffer.slice(0, 8).map((ch, idx) => {
@@ -5380,15 +5380,15 @@ POP DX         ; Reads 1234H into DX, SP ← SP + 2 (FFFE)`}
                                   key={`src-${idx}`}
                                   className={`p-2 rounded-lg border flex flex-col justify-between transition-all ${
                                     isCurrent
-                                      ? 'bg-sky-500/20 border-sky-400 text-sky-200 scale-105 shadow-md ring-2 ring-sky-400'
+                                      ? 'bg-sky-100 border-sky-500 text-sky-950 scale-105 shadow-sm ring-2 ring-sky-400'
                                       : isProcessed
-                                      ? 'bg-teal-900/40 border-teal-700/60 text-teal-300'
-                                      : 'bg-slate-800/80 border-slate-700 text-slate-400'
+                                      ? 'bg-teal-50 border-teal-300 text-teal-900'
+                                      : 'bg-white border-slate-200 text-slate-600'
                                   }`}
                                 >
-                                  <span className="text-[9px] text-slate-500">0x{cellAddr.toString(16).toUpperCase()}</span>
+                                  <span className="text-[9px] text-slate-400">0x{cellAddr.toString(16).toUpperCase()}</span>
                                   <span className="text-sm font-black py-0.5">{ch}</span>
-                                  {isCurrent && <span className="text-[9px] bg-sky-400 text-slate-950 font-black rounded">SI 📌</span>}
+                                  {isCurrent && <span className="text-[9px] bg-sky-500 text-white font-black rounded">SI 📌</span>}
                                 </div>
                               );
                             })}
@@ -5398,8 +5398,8 @@ POP DX         ; Reads 1234H into DX, SP ← SP + 2 (FFFE)`}
                         {/* Destination RAM Buffer (ES:DI) */}
                         <div className="space-y-1.5">
                           <div className="flex justify-between items-center text-[11px] font-bold">
-                            <span className="text-emerald-300">Destination Memory Buffer [ES:0200H]:</span>
-                            <span className="text-emerald-400">DI = 0x{diAddr.toString(16).toUpperCase().padStart(4, '0')}H</span>
+                            <span className="text-emerald-900">Destination Memory Buffer [ES:0200H]:</span>
+                            <span className="text-emerald-700 font-mono">DI = 0x{diAddr.toString(16).toUpperCase().padStart(4, '0')}H</span>
                           </div>
                           <div className="grid grid-cols-8 gap-2 text-center text-xs font-bold">
                             {sourceBuffer.slice(0, 8).map((ch, idx) => {
@@ -5415,15 +5415,15 @@ POP DX         ; Reads 1234H into DX, SP ← SP + 2 (FFFE)`}
                                   key={`dst-${idx}`}
                                   className={`p-2 rounded-lg border flex flex-col justify-between transition-all ${
                                     isCurrent
-                                      ? 'bg-emerald-500/20 border-emerald-400 text-emerald-200 scale-105 shadow-md ring-2 ring-emerald-400'
+                                      ? 'bg-emerald-100 border-emerald-500 text-emerald-950 scale-105 shadow-sm ring-2 ring-emerald-400'
                                       : isProcessed
-                                      ? 'bg-emerald-900/40 border-emerald-700/60 text-emerald-300'
-                                      : 'bg-slate-800/80 border-slate-700 text-slate-400'
+                                      ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
+                                      : 'bg-white border-slate-200 text-slate-600'
                                   }`}
                                 >
-                                  <span className="text-[9px] text-slate-500">0x{cellAddr.toString(16).toUpperCase()}</span>
+                                  <span className="text-[9px] text-slate-400">0x{cellAddr.toString(16).toUpperCase()}</span>
                                   <span className="text-sm font-black py-0.5">{displayVal}</span>
-                                  {isCurrent && <span className="text-[9px] bg-emerald-400 text-slate-950 font-black rounded">DI 📌</span>}
+                                  {isCurrent && <span className="text-[9px] bg-emerald-600 text-white font-black rounded">DI 📌</span>}
                                 </div>
                               );
                             })}
@@ -5488,27 +5488,27 @@ POP DX         ; Reads 1234H into DX, SP ← SP + 2 (FFFE)`}
                       </div>
 
                       {/* Hardware Bus Line Analyzer */}
-                      <div className="bg-slate-900 text-slate-100 p-4 rounded-xl border border-slate-800 space-y-3">
-                        <span className="text-xs font-bold text-rose-400 uppercase tracking-wider block border-b border-slate-800 pb-2">
+                      <div className="bg-gradient-to-br from-rose-50/60 via-white to-amber-50/60 text-slate-800 p-4 rounded-xl border border-rose-200/80 shadow-2xs space-y-3">
+                        <span className="text-xs font-bold text-rose-900 uppercase tracking-wider block border-b border-rose-200 pb-2">
                           ⚡ 8086 Hardware Peripheral Bus Strobe Analyzer:
                         </span>
 
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-center text-xs font-bold">
-                          <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700">
-                            <span className="text-[9px] text-slate-400 block uppercase">M/IO# Pin Signal</span>
-                            <span className="text-rose-400 font-black text-sm">0 (LOW = I/O)</span>
+                          <div className="bg-white p-2.5 rounded-lg border border-rose-200 shadow-2xs">
+                            <span className="text-[9px] text-slate-500 block uppercase">M/IO# Pin Signal</span>
+                            <span className="text-rose-700 font-black text-sm">0 (LOW = I/O)</span>
                           </div>
-                          <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700">
-                            <span className="text-[9px] text-slate-400 block uppercase">Control Strobe</span>
-                            <span className="text-amber-400 font-black text-sm">{stringActiveOp === 'IN' ? 'RD# Active Low' : 'WR# Active Low'}</span>
+                          <div className="bg-white p-2.5 rounded-lg border border-rose-200 shadow-2xs">
+                            <span className="text-[9px] text-slate-500 block uppercase">Control Strobe</span>
+                            <span className="text-amber-800 font-black text-sm">{stringActiveOp === 'IN' ? 'RD# Active Low' : 'WR# Active Low'}</span>
                           </div>
-                          <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700">
-                            <span className="text-[9px] text-slate-400 block uppercase">Address Bus (A0–A7)</span>
-                            <span className="text-emerald-400 font-black text-sm">0x{ioPort.toString(16).toUpperCase().padStart(2, '0')}H</span>
+                          <div className="bg-white p-2.5 rounded-lg border border-rose-200 shadow-2xs">
+                            <span className="text-[9px] text-slate-500 block uppercase">Address Bus (A0–A7)</span>
+                            <span className="text-emerald-800 font-black text-sm">0x{ioPort.toString(16).toUpperCase().padStart(2, '0')}H</span>
                           </div>
-                          <div className="bg-slate-800/80 p-2.5 rounded-lg border border-slate-700">
-                            <span className="text-[9px] text-slate-400 block uppercase">Data Bus (D0–D7)</span>
-                            <span className="text-sky-400 font-black text-sm">0x{ioDataByte.toString(16).toUpperCase().padStart(2, '0')}H</span>
+                          <div className="bg-white p-2.5 rounded-lg border border-rose-200 shadow-2xs">
+                            <span className="text-[9px] text-slate-500 block uppercase">Data Bus (D0–D7)</span>
+                            <span className="text-sky-800 font-black text-sm">0x{ioDataByte.toString(16).toUpperCase().padStart(2, '0')}H</span>
                           </div>
                         </div>
                       </div>
@@ -5579,12 +5579,12 @@ POP DX         ; Reads 1234H into DX, SP ← SP + 2 (FFFE)`}
   </div>
 
   {/* Mobile Sticky Floating Quick Execution Console */}
-  <div className="lg:hidden sticky bottom-3 z-40 bg-slate-900/95 backdrop-blur-md text-white p-3 rounded-2xl border border-slate-800 shadow-2xl flex items-center justify-between gap-3 font-mono mt-4">
+  <div className="lg:hidden sticky bottom-3 z-40 bg-white/95 backdrop-blur-md text-slate-800 p-3 rounded-2xl border border-slate-200 shadow-xl flex items-center justify-between gap-3 font-mono mt-4">
     <div className="flex items-center gap-2.5 overflow-hidden">
-      <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
       <div className="truncate">
-        <span className="text-[9px] text-slate-400 uppercase font-bold tracking-wider block">Active Inst</span>
-        <span className="text-xs font-bold text-emerald-400 truncate block">{displayOpcode}</span>
+        <span className="text-[9px] text-slate-500 uppercase font-bold tracking-wider block">Active Inst</span>
+        <span className="text-xs font-bold text-indigo-700 truncate block">{displayOpcode}</span>
       </div>
     </div>
 
@@ -5592,17 +5592,17 @@ POP DX         ; Reads 1234H into DX, SP ← SP + 2 (FFFE)`}
       <button
         onClick={handleExecute}
         disabled={executionState !== 'idle' && executionState !== 'done'}
-        className="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-45 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md active:scale-95 cursor-pointer font-sans"
+        className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-45 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md active:scale-95 cursor-pointer font-sans"
       >
         <Play className="w-3.5 h-3.5 fill-current" />
         <span>Run</span>
       </button>
       <button
         onClick={handleReset}
-        className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold flex items-center justify-center shadow-xs active:scale-95 cursor-pointer"
+        className="p-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl text-xs font-bold flex items-center justify-center shadow-xs active:scale-95 cursor-pointer"
         title="Reset CPU Registers"
       >
-        <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
+        <RefreshCw className="w-3.5 h-3.5 text-slate-600" />
       </button>
     </div>
   </div>

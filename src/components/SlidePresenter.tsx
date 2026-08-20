@@ -434,8 +434,8 @@ export default function SlidePresenter({
         component = <AssemblerOutputsSimulator />;
         break;
       case 'memory-interfacing': {
-        let initialTab: 'hierarchy' | 'types' | 'bank' | 'decoder' | 'map' | 'schematic' = 'hierarchy';
-        let allowedTabs: ('hierarchy' | 'types' | 'bank' | 'decoder' | 'map' | 'schematic')[] | undefined = undefined;
+        let initialTab: 'hierarchy' | 'types' | 'bank' | 'decoder' | 'map' | 'schematic' | 'ram32k-design' | 'ram-rom-design' = 'hierarchy';
+        let allowedTabs: ('hierarchy' | 'types' | 'bank' | 'decoder' | 'map' | 'schematic' | 'ram32k-design' | 'ram-rom-design')[] | undefined = undefined;
 
         if (slide.id === 'm13-s1') {
           initialTab = 'hierarchy';
@@ -448,37 +448,40 @@ export default function SlidePresenter({
           allowedTabs = ['bank', 'decoder'];
         } else if (slide.id === 'm13-s4') {
           initialTab = 'map';
-          allowedTabs = ['map', 'decoder'];
+          allowedTabs = ['map'];
         } else if (slide.id === 'm13-s5') {
-          initialTab = 'schematic';
-          allowedTabs = ['schematic', 'bank', 'decoder', 'map'];
+          initialTab = 'ram32k-design';
+          allowedTabs = ['ram32k-design'];
+        } else if (slide.id === 'm13-s6') {
+          initialTab = 'ram-rom-design';
+          allowedTabs = ['ram-rom-design'];
         }
 
         component = <MemoryInterfacingSimulator initialTab={initialTab} allowedTabs={allowedTabs} />;
         break;
       }
       case 'ppi-8255': {
-        let initialTab: 'diagram' | 'pins' | 'architecture' | 'iomode' | 'bsr' | 'registers' = 'diagram';
-        let allowedTabs: ('diagram' | 'pins' | 'architecture' | 'iomode' | 'bsr' | 'registers')[] | undefined = undefined;
+        let initialTab: 'diagram' | 'pins' | 'architecture' | 'modes' | 'iomode' | 'bsr' | 'registers' = 'diagram';
+        let allowedTabs: ('diagram' | 'pins' | 'architecture' | 'modes' | 'iomode' | 'bsr' | 'registers')[] | undefined = undefined;
 
         if (slide.id === 'm14-s1') {
           initialTab = 'diagram';
-          allowedTabs = ['diagram', 'pins', 'architecture'];
+          allowedTabs = ['diagram', 'pins'];
         } else if (slide.id === 'm14-s2') {
-          initialTab = 'iomode';
-          allowedTabs = ['iomode', 'bsr', 'registers'];
+          initialTab = 'modes';
+          allowedTabs = ['modes', 'iomode', 'bsr', 'registers'];
         }
 
         component = <PPI8255Simulator initialTab={initialTab} allowedTabs={allowedTabs} />;
         break;
       }
       case 'peripheral-interfacing': {
-        let mode: 'schematic' | 'circuit' | 'stepper' | 'stepper-code' | 'display-circuit' | 'display' | 'display-code' | 'keypad-circuit' | 'keypad' | 'keypad-code' | 'traffic' | 'alp' = 'schematic';
-        let allowedTabs: ('schematic' | 'circuit' | 'stepper' | 'stepper-code' | 'display-circuit' | 'display' | 'display-code' | 'keypad-circuit' | 'keypad' | 'keypad-code' | 'traffic' | 'alp')[] | undefined = undefined;
+        let mode: 'schematic' | 'circuit' | 'stepper-types' | 'stepper' | 'stepper-code' | 'display-circuit' | 'display' | 'display-code' | 'keypad-circuit' | 'keypad' | 'keypad-code' | 'traffic' | 'traffic-code' | 'alp' = 'schematic';
+        let allowedTabs: ('schematic' | 'circuit' | 'stepper-types' | 'stepper' | 'stepper-code' | 'display-circuit' | 'display' | 'display-code' | 'keypad-circuit' | 'keypad' | 'keypad-code' | 'traffic' | 'traffic-code' | 'alp')[] | undefined = undefined;
 
         if (slide.id === 'm15-s1') {
           mode = 'schematic';
-          allowedTabs = ['schematic', 'circuit', 'stepper', 'stepper-code'];
+          allowedTabs = ['schematic', 'circuit', 'stepper-types', 'stepper', 'stepper-code'];
         }
         else if (slide.id === 'm15-s2') {
           mode = 'display-circuit';
@@ -488,7 +491,10 @@ export default function SlidePresenter({
           mode = 'keypad-circuit';
           allowedTabs = ['keypad-circuit', 'keypad', 'keypad-code'];
         }
-        else if (slide.id === 'm15-s4') mode = 'traffic';
+        else if (slide.id === 'm15-s4') {
+          mode = 'traffic';
+          allowedTabs = ['traffic', 'traffic-code'];
+        }
         else if (slide.id === 'm15-s5') mode = 'alp';
 
         component = <PeripheralInterfacingSimulator initialTab={mode} allowedTabs={allowedTabs} />;

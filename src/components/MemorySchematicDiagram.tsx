@@ -15,15 +15,22 @@ import {
   ArrowRight,
   ShieldAlert,
   Binary,
-  Radio
+  Radio,
+  CircuitBoard
 } from 'lucide-react';
 
+const Overline = ({ children }: { children: React.ReactNode }) => (
+  <span className="overline decoration-current inline-block font-bold" style={{ textDecoration: 'overline' }}>
+    {children}
+  </span>
+);
+
 export type MemoryCycleScenario = 
+  | 'aligned-word-ram-write'
+  | 'aligned-word-ram-read'
   | 'even-byte-ram-read'
   | 'odd-byte-ram-read'
-  | 'aligned-word-ram-write'
-  | 'boot-eprom-read'
-  | 'misaligned-word-read';
+  | 'out-of-range-access';
 
 export interface MemorySchematicDiagramProps {
   initialScenario?: MemoryCycleScenario;
@@ -33,7 +40,7 @@ export default function MemorySchematicDiagram({
   initialScenario = 'aligned-word-ram-write'
 }: MemorySchematicDiagramProps) {
   const [zoomLevel, setZoomLevel] = useState<number>(1);
-  const [selectedChip, setSelectedChip] = useState<string | null>('u1');
+  const [selectedChip, setSelectedChip] = useState<string | null>('ram1');
   const [activeScenario, setActiveScenario] = useState<MemoryCycleScenario>(initialScenario);
   const [tState, setTState] = useState<1 | 2 | 3 | 4>(1);
   const [isAutoStepping, setIsAutoStepping] = useState<boolean>(true);
@@ -63,43 +70,43 @@ export default function MemorySchematicDiagram({
     isWord = customAccessType === 'word';
     isWrite = customOpType === 'write';
     scenarioTitle = `Custom Access at ${addressHex}H (${isWord ? '16-bit Word' : '8-bit Byte'} ${isWrite ? 'Write' : 'Read'})`;
-    scenarioDesc = `Simulating user-defined address ${addressHex}H on the 8086 system bus.`;
+    scenarioDesc = `Simulating user-defined address ${addressHex}H for the 32 KB RAM array (00000H–07FFFH).`;
   } else {
     switch (activeScenario) {
-      case 'even-byte-ram-read':
-        addressHex = '00100';
-        isWord = false;
-        isWrite = false;
-        scenarioTitle = '1. Even Byte SRAM Read (Address 00100H)';
-        scenarioDesc = '8086 reads 1 byte from Even RAM Bank via lower data bus D0–D7 (A0=0, BHE#=1, RD#=0, Y0#=0).';
-        break;
-      case 'odd-byte-ram-read':
-        addressHex = '00101';
-        isWord = false;
-        isWrite = false;
-        scenarioTitle = '2. Odd Byte SRAM Read (Address 00101H)';
-        scenarioDesc = '8086 reads 1 byte from Odd RAM Bank via upper data bus D8–D15 (A0=1, BHE#=0, RD#=0, Y0#=0).';
-        break;
       case 'aligned-word-ram-write':
         addressHex = '00200';
         isWord = true;
         isWrite = true;
-        scenarioTitle = '3. Aligned 16-Bit Word SRAM Write (Address 00200H)';
-        scenarioDesc = '8086 writes a full 16-bit word to BOTH Even & Odd RAM banks in a SINGLE bus cycle (A0=0, BHE#=0, WR#=0, Y0#=0).';
+        scenarioTitle = '1. Aligned 16-Bit Word RAM Write (Address 00200H)';
+        scenarioDesc = 'Writes a full 16-bit word simultaneously to BOTH Even (RAM_1) and Odd (RAM_2) 16 KB RAM chips in a single bus cycle (A0=0, BHE#=0, CS#=0, CE1#=0, CE2#=0, WR#=0, D0–D15).';
         break;
-      case 'boot-eprom-read':
-        addressHex = 'FFFF0';
+      case 'aligned-word-ram-read':
+        addressHex = '00100';
         isWord = true;
         isWrite = false;
-        scenarioTitle = '4. 8086 RESET Boot Vector Fetch from EPROM (Address FFFF0H)';
-        scenarioDesc = 'Upon RESET, 8086 fetches initial instruction word from EPROM banks at top of memory (A17–A19=111b, Y7#=0, RD#=0).';
+        scenarioTitle = '2. Aligned 16-Bit Word RAM Read (Address 00100H)';
+        scenarioDesc = 'Reads a 16-bit word from both 16 KB RAM banks simultaneously across D0–D15 in a single bus cycle (A0=0, BHE#=0, CS#=0, CE1#=0, CE2#=0, RD#=0).';
         break;
-      case 'misaligned-word-read':
-        addressHex = '00101';
+      case 'even-byte-ram-read':
+        addressHex = '00102';
+        isWord = false;
+        isWrite = false;
+        scenarioTitle = '3. Even Byte RAM Read (Address 00102H)';
+        scenarioDesc = 'Reads 1 byte from RAM_1 (Even Bank, D0–D7). RAM_2 (Odd Bank) is disabled (A0=0, BHE#=1, CE1#=0, CE2#=1, RD#=0).';
+        break;
+      case 'odd-byte-ram-read':
+        addressHex = '00103';
+        isWord = false;
+        isWrite = false;
+        scenarioTitle = '4. Odd Byte RAM Read (Address 00103H)';
+        scenarioDesc = 'Reads 1 byte from RAM_2 (Odd Bank, D8–D15). RAM_1 (Even Bank) is disabled (A0=1, BHE#=0, CE1#=1, CE2#=0, RD#=0).';
+        break;
+      case 'out-of-range-access':
+        addressHex = '08000';
         isWord = true;
         isWrite = false;
-        scenarioTitle = '5. Misaligned 16-Bit Word Access (Address 00101H)';
-        scenarioDesc = 'Word starts at odd address 00101H: Requires 2 sequential bus cycles (Cycle 1: Odd byte at 00101H; Cycle 2: Even byte at 00102H).';
+        scenarioTitle = '5. Out-of-Range Memory Access (Address 08000H - Beyond 32 KB)';
+        scenarioDesc = 'Address 08000H has A15=1. The Absolute NAND decoder detects address outside 00000H–07FFFH, outputting CS#=1 (Inactive). Both 16 KB RAM chips remain in Standby!';
         break;
     }
   }
@@ -111,18 +118,26 @@ export default function MemorySchematicDiagram({
   const a0 = isEvenAddress ? 0 : 1;
   const bhe = (isWord || !isEvenAddress) ? 0 : 1;
 
-  // High address lines for 74LS138 decoder
+  // High address lines for 32 KB Absolute Decoder (A15–A19)
   const a19 = (addrVal >> 19) & 1;
   const a18 = (addrVal >> 18) & 1;
   const a17 = (addrVal >> 17) & 1;
+  const a16 = (addrVal >> 16) & 1;
+  const a15 = (addrVal >> 15) & 1;
 
   // M/IO# signal (Memory = 1, I/O = 0 for 8086 Minimum Mode)
   const mio = 1;
 
-  // Decoder 74LS138: G1=M/IO# (1), G2A#=0, G2B#=0
-  const decoderSelect = (a19 << 2) | (a18 << 1) | a17;
-  const y0 = decoderSelect === 0 ? 0 : 1; // SRAM Range (00000H - 1FFFFH)
-  const y7 = decoderSelect === 7 ? 0 : 1; // EPROM Range (E0000H - FFFFFH)
+  // Absolute NAND Decoder: CS# = NOT( NOT A19 * NOT A18 * NOT A17 * NOT A16 * NOT A15 * M/IO# )
+  // For 00000H to 07FFFH, A19..A15 must all be 0, and M/IO# must be 1.
+  const isAddressInRange = (a19 === 0 && a18 === 0 && a17 === 0 && a16 === 0 && a15 === 0 && mio === 1);
+  const csBar = isAddressInRange ? 0 : 1; // Active LOW
+
+  // Bank qualification using OR gates (74LS32):
+  // CE1# = CS# OR A0
+  // CE2# = CS# OR BHE#
+  const ce1Bar = (csBar === 0 && a0 === 0) ? 0 : 1;
+  const ce2Bar = (csBar === 0 && bhe === 0) ? 0 : 1;
 
   // Bus Control Strobes based on T-State
   const ale = tState === 1 ? 1 : 0;
@@ -131,18 +146,16 @@ export default function MemorySchematicDiagram({
   const den = (tState >= 2 && tState <= 4) ? 0 : 1;
   const dtr = isWrite ? 1 : 0; // 1 = Transmit (Write), 0 = Receive (Read)
 
-  // Chip Enable conditions
-  const isSramTarget = y0 === 0;
-  const isEpromTarget = y7 === 0;
-
-  const evenSramActive = isSramTarget && (a0 === 0);
-  const oddSramActive = isSramTarget && (bhe === 0);
-  const evenEpromActive = isEpromTarget && (a0 === 0);
-  const oddEpromActive = isEpromTarget && (bhe === 0);
+  const ram1EvenActive = ce1Bar === 0;
+  const ram2OddActive = ce2Bar === 0;
 
   // Transceiver Active States
   const lowerTransceiverActive = (den === 0) && (a0 === 0 || isWord);
   const upperTransceiverActive = (den === 0) && (bhe === 0 || isWord);
+
+  // Address connected to RAM chips: A1–A14 (shifted by 1 bit, A0 used for bank select)
+  const chipAddrOffset = (addrVal >> 1) & 0x3FFF; // 14 bits (0..16383)
+  const chipAddrHex = chipAddrOffset.toString(16).padStart(4, '0').toUpperCase();
 
   const chipData: Record<string, { 
     title: string; 
@@ -154,229 +167,175 @@ export default function MemorySchematicDiagram({
     u1: {
       title: 'U1: Intel 8086 16-Bit Microprocessor',
       subtitle: 'Minimum Mode Master Controller (MN/MX# = +5V)',
-      desc: 'The central processing unit that executes memory bus cycles. In Minimum Mode (Pin 33 connected to +5V), it directly outputs bus control signals ALE, M/IO#, RD#, WR#, DEN#, and DT/R# without needing an external 8288 bus controller.',
+      desc: 'The central processing unit that executes memory bus cycles. In Minimum Mode (Pin 33 tied to +5V), it directly generates bus control signals ALE, M/IO#, RD#, WR#, DEN#, and DT/R# without needing an external 8288 bus controller.',
       techSpecs: [
-        { label: 'Clock Frequency', val: '5 MHz (Standard 8086) / 8 MHz (8086-2)' },
+        { label: 'Clock Frequency', val: '5 MHz / 8 MHz (Standard 8086)' },
         { label: 'Address Bus', val: '20-bit (A0–A19) addressing 1 MB space' },
-        { label: 'Data Bus', val: '16-bit multiplexed (AD0–AD15)' },
-        { label: 'Memory Banks', val: 'Even Bank (D0–D7) & Odd Bank (D8–D15)' }
+        { label: 'Multiplexed Bus', val: 'AD0–AD15 (Address in T1, Data in T2–T4)' },
+        { label: 'Target Memory', val: '32 KB RAM at 00000H–07FFFH' }
       ],
       pins: [
-        { pin: 'AD0–AD15 (Pins 16–2, 39)', role: 'Time-multiplexed Address (T1) and Data (T2–T4)', state: tState === 1 ? `Addr: ${addressHex}H` : (isWrite ? 'Data Out (CPU->Mem)' : 'Data In (Mem->CPU)') },
-        { pin: 'A16–A19 (Pins 35–38)', role: 'Time-multiplexed Upper Address and Status (S3–S6)', state: `${a19}${a18}${a17} (High bits for Decoder)` },
-        { pin: 'BHE#/S7 (Pin 34)', role: 'Bus High Enable (Active LOW for Odd Bank)', state: bhe === 0 ? '0 (LOW - Odd Bank ENABLED)' : '1 (HIGH - Odd Inactive)' },
+        { pin: 'AD0–AD15 (Pins 16–2, 39)', role: 'Time-multiplexed Address (T1) and Data (T2–T4)', state: tState === 1 ? `Addr: ${addressHex}H` : (isWrite ? 'Data Out (CPU->RAM)' : 'Data In (RAM->CPU)') },
+        { pin: 'A16–A19 (Pins 35–38)', role: 'Time-multiplexed Upper Address (to Decoder)', state: `A19..A15: ${a19}${a18}${a17}${a16}${a15}b` },
+        { pin: 'BHE#/S7 (Pin 34)', role: 'Bus High Enable (Active LOW for Odd Bank RAM_2)', state: bhe === 0 ? '0 (LOW - Odd Bank ENABLED)' : '1 (HIGH - Odd Bank Inactive)' },
         { pin: 'ALE (Pin 25)', role: 'Address Latch Enable strobe for 74LS373', state: ale === 1 ? '1 (PULSE HIGH in T1)' : '0 (LOW in T2–T4)' },
-        { pin: 'M/IO# (Pin 28)', role: 'Memory (HIGH) vs I/O (LOW) cycle selector', state: '1 (HIGH - Memory Cycle)' },
+        { pin: 'M/IO# (Pin 28)', role: 'Memory (HIGH) vs I/O (LOW) selector', state: '1 (HIGH - Memory Cycle)' },
         { pin: 'RD# (Pin 32)', role: 'Active-LOW Memory Read strobe', state: rd === 0 ? '0 (ACTIVE READ)' : '1 (IDLE)' },
         { pin: 'WR# (Pin 29)', role: 'Active-LOW Memory Write strobe', state: wr === 0 ? '0 (ACTIVE WRITE)' : '1 (IDLE)' },
-        { pin: 'DEN# (Pin 26)', role: 'Data Enable (Active LOW for 74LS245 Buffers)', state: den === 0 ? '0 (ACTIVE LOW)' : '1 (Tristate)' },
+        { pin: 'DEN# (Pin 26)', role: 'Data Enable (Active LOW for 74LS245 Transceivers)', state: den === 0 ? '0 (ACTIVE LOW)' : '1 (Tristate)' },
         { pin: 'DT/R# (Pin 27)', role: 'Data Transmit (1=Write) / Receive (0=Read)', state: dtr === 1 ? '1 (TRANSMIT)' : '0 (RECEIVE)' }
       ]
     },
-    u2a: {
-      title: 'U2A: 74LS373 Octal Transparent D-Latch (Lower Address)',
-      subtitle: 'Demultiplexes AD0–AD7 into Dedicated Address Lines A0–A7',
-      desc: 'During clock state T1, the 8086 drives the lower address byte on AD0–AD7 and pulses ALE HIGH. On the falling edge of ALE at the end of T1, U2A latches and holds stable address bits A0–A7 throughout T2, T3, and T4.',
+    u2: {
+      title: 'U2A, U2B, U2C: 3× 74LS373 Octal Latches',
+      subtitle: 'Demultiplexes AD0–AD15 & A16–A19/BHE# into Pure Address Lines',
+      desc: 'Latches the address lines during T1 on the falling edge of ALE. U2A produces A0–A7, U2B produces A8–A15, and U2C produces A16–A19 and BHE#. Holds stable addresses throughout T2, T3, and T4.',
       techSpecs: [
-        { label: 'Latch Type', val: '8-bit transparent D-type latch with 3-state outputs' },
-        { label: 'Propagation Delay', val: '~12 ns from LE to Q' },
-        { label: 'Output Drive', val: 'Sinks 24 mA on bus lines' }
+        { label: 'Latch Type', val: '8-bit transparent D-type latch (3 units used)' },
+        { label: 'Control Pin', val: 'Pin 11 (LE) driven by 8086 ALE; Pin 1 (OE#) grounded' },
+        { label: 'Memory Feeds', val: 'Latched A1–A14 wired to RAM address inputs A0–A13' }
       ],
       pins: [
-        { pin: 'LE (Pin 11)', role: 'Latch Enable driven by 8086 ALE (Pin 25)', state: ale === 1 ? '1 (TRANSPARENT)' : '0 (LATCHED)' },
-        { pin: 'OE# (Pin 1)', role: 'Output Enable tied permanently to GND (0V)', state: '0 (ALWAYS ACTIVE)' },
-        { pin: 'D0–D7 (Inputs)', role: 'Connected to 8086 multiplexed AD0–AD7', state: `AD0..AD7 from CPU` },
-        { pin: 'Q0–Q7 (Outputs)', role: 'Demultiplexed address lines A0–A7', state: `A0=${a0}, A1–A7 to Memory` }
+        { pin: 'LE (Pin 11)', role: 'Latch Enable driven by 8086 ALE', state: ale === 1 ? '1 (TRANSPARENT)' : '0 (LATCHED)' },
+        { pin: 'A0 (From U2A)', role: 'Even Bank enable line to OR Gate 1', state: a0 === 0 ? '0 (Even Address)' : '1 (Odd Address)' },
+        { pin: 'A1–A14 (U2A & U2B)', role: '14 Address Lines to RAM A0–A13', state: `${chipAddrHex}H (Offset within 16KB)` },
+        { pin: 'A15–A19 (U2B & U2C)', role: '5 High Address Lines to Absolute NAND Decoder', state: `${a19}${a18}${a17}${a16}${a15}b` },
+        { pin: 'BHE# (From U2C)', role: 'Odd Bank enable line to OR Gate 2', state: bhe === 0 ? '0 (LOW)' : '1 (HIGH)' }
       ]
     },
-    u2b: {
-      title: 'U2B: 74LS373 Octal Transparent D-Latch (Middle Address)',
-      subtitle: 'Demultiplexes AD8–AD15 into Dedicated Address Lines A8–A15',
-      desc: 'Latches address bits A8–A15 from multiplexed lines AD8–AD15 during T1 using ALE. Supplies address lines A8–A15 directly to the address inputs of all SRAM and EPROM chips.',
+    u3_dec: {
+      title: 'Absolute Address Decoder (Inverters + 6-Input NAND 74LS30)',
+      subtitle: 'Decodes A15–A19 & M/IO# for Exact 32 KB Block (00000H–07FFFH)',
+      desc: 'Performs absolute address decoding. Inverters invert A15, A16, A17, A18, A19. A 6-input NAND gate combines NOT(A19), NOT(A18), NOT(A17), NOT(A16), NOT(A15), and M/IO# to produce active-LOW Chip Select (CS# = 0) ONLY when addressing 00000H–07FFFH.',
       techSpecs: [
-        { label: 'Inputs', val: 'AD8–AD15 from 8086' },
-        { label: 'Outputs', val: 'Stable A8–A15 to memory array' },
-        { label: 'Control', val: 'LE driven by ALE, OE# grounded' }
+        { label: 'Logic Equation', val: 'CS# = NOT( NOT A19 • NOT A18 • NOT A17 • NOT A16 • NOT A15 • M/IO# )' },
+        { label: 'Address Range', val: '00000H to 07FFFH (Total 32,768 bytes)' },
+        { label: 'Foldback / Shadow', val: 'None (Absolute decoding eliminates all aliasing)' }
       ],
       pins: [
-        { pin: 'LE (Pin 11)', role: 'Driven by 8086 ALE', state: ale === 1 ? '1 (HIGH)' : '0 (LATCHED)' },
-        { pin: 'Q0–Q7 (Outputs)', role: 'A8–A15 to memory chips', state: `A8..A15 Active` }
+        { pin: 'A15–A19 Inputs', role: 'Upper address bits from 74LS373 Latches', state: `${a19}${a18}${a17}${a16}${a15}b (Inverted: ${1-a19}${1-a18}${1-a17}${1-a16}${1-a15}b)` },
+        { pin: 'M/IO# Input', role: 'Memory cycle enable (active HIGH)', state: '1 (HIGH)' },
+        { pin: 'CS# Output', role: 'Active-LOW Master Chip Select for 32 KB RAM array', state: csBar === 0 ? '0 (LOW - 32 KB RAM SELECTED)' : '1 (HIGH - INACTIVE)' }
       ]
     },
-    u2c: {
-      title: 'U2C: 74LS373 Octal Transparent D-Latch (Upper Address & BHE#)',
-      subtitle: 'Latches A16–A19 and BHE# to Provide Steady Decoder & Bank Signals',
-      desc: 'Latches the high-order address lines A16, A17, A18, A19 (multiplexed with status lines S3–S6) and BHE# (multiplexed with S7). Feeds A17–A19 into the 74LS138 decoder to select the target memory chip.',
+    u_or: {
+      title: 'Bank Qualification OR Gates (74LS32 Quad 2-Input OR)',
+      subtitle: 'Generates Independent Chip Enables CE1# (Even) and CE2# (Odd)',
+      desc: 'Combines master CS# with bank selection signals A0 and BHE#. Because inputs and outputs are active-LOW, the OR gate functions as an active-LOW AND qualifier.',
       techSpecs: [
-        { label: 'Inputs', val: 'A16/S3 – A19/S6, BHE#/S7' },
-        { label: 'Outputs', val: 'Latched A16–A19 (to Decoder) and latched BHE#' },
-        { label: 'Decoder Feeds', val: 'A17->A, A18->B, A19->C on 74LS138' }
+        { label: 'OR Gate 1', val: 'CE1# = CS# OR A0 (Enables Even Bank RAM_1 on D0–D7)' },
+        { label: 'OR Gate 2', val: 'CE2# = CS# OR BHE# (Enables Odd Bank RAM_2 on D8–D15)' },
+        { label: 'Word Transfer', val: 'When A0=0 & BHE#=0, BOTH CE1# and CE2# go LOW (0)' }
       ],
       pins: [
-        { pin: 'LE (Pin 11)', role: 'Driven by 8086 ALE', state: ale === 1 ? '1 (HIGH)' : '0 (LATCHED)' },
-        { pin: 'Latched BHE#', role: 'Odd memory bank select line', state: bhe === 0 ? '0 (LOW - ACTIVE)' : '1 (HIGH)' },
-        { pin: 'Latched A17–A19', role: 'Wired to 74LS138 inputs A, B, C', state: `${a19}${a18}${a17}b` }
+        { pin: 'OR Gate 1 Inputs', role: 'CS# and A0', state: `CS#=${csBar}, A0=${a0}` },
+        { pin: 'CE1# Output', role: 'Even Bank RAM_1 Chip Enable', state: ce1Bar === 0 ? '0 (LOW - ACTIVE)' : '1 (HIGH - DISABLED)' },
+        { pin: 'OR Gate 2 Inputs', role: 'CS# and BHE#', state: `CS#=${csBar}, BHE#=${bhe}` },
+        { pin: 'CE2# Output', role: 'Odd Bank RAM_2 Chip Enable', state: ce2Bar === 0 ? '0 (LOW - ACTIVE)' : '1 (HIGH - DISABLED)' }
       ]
     },
-    u3: {
-      title: 'U3: 74LS138 3-to-8 Line Address Decoder',
-      subtitle: 'High-Order Address Decoder & Chip Select (CS#) Generator',
-      desc: 'Decodes high-order address lines A17, A18, A19 to partition the 1 MB address space into 8 discrete 128 KB blocks. Generates active-low Chip Select outputs: Y0# selects SRAM (00000H–1FFFFH) and Y7# selects EPROM (E0000H–FFFFFH).',
+    u4: {
+      title: 'U4A & U4B: 2× 74LS245 Octal Bus Transceivers',
+      subtitle: 'Bidirectional Bus Buffers for Lower (D0–D7) & Upper (D8–D15) Data Buses',
+      desc: 'Isolates the 8086 multiplexed data bus and boosts current drive to RAM chips. U4A connects AD0–AD7 to RAM_1 D0–D7; U4B connects AD8–AD15 to RAM_2 D8–D15.',
       techSpecs: [
-        { label: 'Decoder Type', val: '3-to-8 binary decoder / demultiplexer' },
-        { label: 'Enable Pins', val: 'G1 (Active HIGH), G2A# & G2B# (Active LOW)' },
-        { label: 'Block Size', val: '128 KB per output pin (2^17 bytes)' }
+        { label: 'DIR (Pin 1)', val: 'Direction driven by DT/R# (1 = CPU->RAM Write, 0 = RAM->CPU Read)' },
+        { label: 'OE# (Pin 19)', val: 'Output Enable driven by 8086 DEN# (Active LOW)' }
       ],
       pins: [
-        { pin: 'A, B, C (Pins 1, 2, 3)', role: 'Select inputs wired to Latched A17, A18, A19', state: `C=${a19}, B=${a18}, A=${a17} (Index: ${decoderSelect})` },
-        { pin: 'G1 (Pin 6)', role: 'Active-HIGH enable driven by 8086 M/IO# (Pin 28)', state: '1 (HIGH - Memory enabled)' },
-        { pin: 'G2A#, G2B# (Pins 4, 5)', role: 'Active-LOW enables tied to GND (0V)', state: '0 (ENABLED)' },
-        { pin: 'Y0# (Pin 15)', role: 'Active-LOW CS for SRAM (00000H–1FFFFH)', state: y0 === 0 ? '0 (SELECTED / LOW)' : '1 (HIGH)' },
-        { pin: 'Y7# (Pin 7)', role: 'Active-LOW CS for EPROM (E0000H–FFFFFH)', state: y7 === 0 ? '0 (SELECTED / LOW)' : '1 (HIGH)' }
+        { pin: 'DIR (Pin 1)', role: 'Driven by 8086 DT/R#', state: dtr === 1 ? '1 (TRANSMIT / WRITE)' : '0 (RECEIVE / READ)' },
+        { pin: 'OE# (Pin 19)', role: 'Driven by 8086 DEN#', state: den === 0 ? '0 (BUFFERS ACTIVE)' : '1 (TRISTATE)' },
+        { pin: 'U4A (Lower Transceiver)', role: 'Buffers Even Data Byte (D0–D7)', state: lowerTransceiverActive ? 'Active Bus Driving' : 'High-Z' },
+        { pin: 'U4B (Upper Transceiver)', role: 'Buffers Odd Data Byte (D8–D15)', state: upperTransceiverActive ? 'Active Bus Driving' : 'High-Z' }
       ]
     },
-    u4a: {
-      title: 'U4A: 74LS245 Octal Bus Transceiver (Lower Data Bus D0–D7)',
-      subtitle: 'Bidirectional Buffer for Even Memory Bank',
-      desc: 'Buffers data flow between 8086 multiplexed AD0–AD7 and Even Memory Bank D0–D7. Isolates the CPU from capacitive bus loading and ensures adequate current drive during reads and writes.',
+    ram1: {
+      title: 'RAM 1: 16 KB Static RAM (Even Bank - 16 KB × 8, e.g. 62128)',
+      subtitle: 'Lower Byte RAM for Even Addresses: 00000H, 00002H, ... 07FFEH',
+      desc: 'Stores bytes located at even physical addresses. Selected when CS#=0 and A0=0 (CE1#=0). Data pins connected to lower bus D0–D7. Address inputs A0–A13 connect to system lines A1–A14.',
       techSpecs: [
-        { label: 'DIR (Pin 1)', val: 'Direction: 1 = Transmit (A->B, CPU to Mem), 0 = Receive (B->A, Mem to CPU)' },
-        { label: 'OE# (Pin 19)', val: 'Output Enable: Driven by 8086 DEN# (Active LOW)' }
+        { label: 'Capacity', val: '16,384 Bytes (16 KB × 8-bit SRAM)' },
+        { label: 'Address Inputs', val: '14 Address Lines: A0–A13 connected to latched A1–A14' },
+        { label: 'Data Bus', val: 'D0–D7 (Lower 8 bits of 16-bit bus)' },
+        { label: 'Address Range', val: '00000H to 07FFEH (Even byte locations)' },
+        { label: 'Chip Enable', val: 'CE1# = CS# OR A0 (Active LOW)' }
       ],
       pins: [
-        { pin: 'DIR (Pin 1)', role: 'Driven by 8086 DT/R# (Pin 27)', state: dtr === 1 ? '1 (TRANSMIT / WRITE)' : '0 (RECEIVE / READ)' },
-        { pin: 'OE# (Pin 19)', role: 'Driven by 8086 DEN# (Pin 26)', state: den === 0 ? '0 (BUFFER ACTIVE)' : '1 (TRISTATE)' },
-        { pin: 'A0–A7 (CPU side)', role: 'Wired to 8086 AD0–AD7', state: 'Lower byte bus' },
-        { pin: 'B0–B7 (Memory side)', role: 'Wired to Even Bank D0–D7', state: lowerTransceiverActive ? 'Passing Data' : 'High-Z' }
-      ]
-    },
-    u4b: {
-      title: 'U4B: 74LS245 Octal Bus Transceiver (Upper Data Bus D8–D15)',
-      subtitle: 'Bidirectional Buffer for Odd Memory Bank',
-      desc: 'Buffers data flow between 8086 multiplexed AD8–AD15 and Odd Memory Bank D8–D15. Activated whenever the 8086 performs a 16-bit word transfer or an 8-bit odd-byte transfer.',
-      techSpecs: [
-        { label: 'DIR (Pin 1)', val: 'Direction driven by DT/R#' },
-        { label: 'OE# (Pin 19)', val: 'Output Enable driven by DEN#' }
-      ],
-      pins: [
-        { pin: 'DIR (Pin 1)', role: 'Driven by 8086 DT/R#', state: dtr === 1 ? '1 (TRANSMIT)' : '0 (RECEIVE)' },
-        { pin: 'OE# (Pin 19)', role: 'Driven by 8086 DEN#', state: den === 0 ? '0 (BUFFER ACTIVE)' : '1 (TRISTATE)' },
-        { pin: 'B0–B7 (Memory side)', role: 'Wired to Odd Bank D8–D15', state: upperTransceiverActive ? 'Passing Data' : 'High-Z' }
-      ]
-    },
-    u5a: {
-      title: 'U5A: 62256 Static RAM (Even Bank - 32 KB × 8)',
-      subtitle: 'Lower Byte RAM for Even Addresses (00000H, 00002H, 00004H...)',
-      desc: 'Stores bytes located at even physical addresses. Selected when Y0#=0 and A0=0 (via OR gate). Data bus connected to D0–D7. OE# connects to 8086 RD#, WE# connects to 8086 WR#.',
-      techSpecs: [
-        { label: 'Capacity', val: '32,768 Bytes (32 KB × 8-bit)' },
-        { label: 'Data Bus', val: 'D0–D7 (Lower 8 bits)' },
-        { label: 'Address Inputs', val: 'A0–A14 connected to latched A1–A15' },
-        { label: 'Bank Selection', val: 'CE# = Y0# OR A0 (Active when both LOW)' }
-      ],
-      pins: [
-        { pin: 'CE# (Chip Enable)', role: 'Gated by Y0# and A0', state: evenSramActive ? '0 (CHIP SELECTED)' : '1 (DESELECTED)' },
-        { pin: 'OE# (Output Enable)', role: 'Connected to 8086 RD#', state: rd === 0 ? '0 (OUTPUT ENABLED)' : '1 (HIGH)' },
+        { pin: 'CE1# (Chip Enable)', role: 'Gated by CS# and A0 from OR Gate 1', state: ce1Bar === 0 ? '0 (CHIP SELECTED / ACTIVE)' : '1 (STANDBY / HIGH-Z)' },
+        { pin: 'OE# (Output Enable)', role: 'Connected to 8086 RD#', state: rd === 0 ? '0 (READ ENABLED)' : '1 (HIGH)' },
         { pin: 'WE# (Write Enable)', role: 'Connected to 8086 WR#', state: wr === 0 ? '0 (WRITE ENABLED)' : '1 (HIGH)' },
-        { pin: 'D0–D7', role: 'Lower byte data pins', state: evenSramActive ? (isWrite ? 'Write in progress' : 'Driving data out') : 'High-Z' }
+        { pin: 'A0–A13 (14 lines)', role: 'Connected to 8086 latched A1–A14', state: `${chipAddrHex}H` },
+        { pin: 'D0–D7 (Data Bus)', role: 'Connected to Transceiver U4A', state: ram1EvenActive ? (isWrite ? 'Writing Data In' : 'Driving Data Out') : 'High-Z' }
       ]
     },
-    u5b: {
-      title: 'U5B: 62256 Static RAM (Odd Bank - 32 KB × 8)',
-      subtitle: 'Upper Byte RAM for Odd Addresses (00001H, 00003H, 00005H...)',
-      desc: 'Stores bytes located at odd physical addresses. Selected when Y0#=0 and BHE#=0 (via OR gate). Data bus connected to D8–D15. Together with U5A, forms a 64 KB 16-bit word RAM array.',
+    ram2: {
+      title: 'RAM 2: 16 KB Static RAM (Odd Bank - 16 KB × 8, e.g. 62128)',
+      subtitle: 'Upper Byte RAM for Odd Addresses: 00001H, 00003H, ... 07FFFH',
+      desc: 'Stores bytes located at odd physical addresses. Selected when CS#=0 and BHE#=0 (CE2#=0). Data pins connected to upper bus D8–D15. Address inputs A0–A13 connect to system lines A1–A14.',
       techSpecs: [
-        { label: 'Capacity', val: '32,768 Bytes (32 KB × 8-bit)' },
-        { label: 'Data Bus', val: 'D8–D15 (Upper 8 bits)' },
-        { label: 'Address Inputs', val: 'A0–A14 connected to latched A1–A15' },
-        { label: 'Bank Selection', val: 'CE# = Y0# OR BHE# (Active when both LOW)' }
+        { label: 'Capacity', val: '16,384 Bytes (16 KB × 8-bit SRAM)' },
+        { label: 'Address Inputs', val: '14 Address Lines: A0–A13 connected to latched A1–A14' },
+        { label: 'Data Bus', val: 'D8–D15 (Upper 8 bits of 16-bit bus)' },
+        { label: 'Address Range', val: '00001H to 07FFFH (Odd byte locations)' },
+        { label: 'Chip Enable', val: 'CE2# = CS# OR BHE# (Active LOW)' }
       ],
       pins: [
-        { pin: 'CE# (Chip Enable)', role: 'Gated by Y0# and BHE#', state: oddSramActive ? '0 (CHIP SELECTED)' : '1 (DESELECTED)' },
-        { pin: 'OE# (Output Enable)', role: 'Connected to 8086 RD#', state: rd === 0 ? '0 (OUTPUT ENABLED)' : '1 (HIGH)' },
+        { pin: 'CE2# (Chip Enable)', role: 'Gated by CS# and BHE# from OR Gate 2', state: ce2Bar === 0 ? '0 (CHIP SELECTED / ACTIVE)' : '1 (STANDBY / HIGH-Z)' },
+        { pin: 'OE# (Output Enable)', role: 'Connected to 8086 RD#', state: rd === 0 ? '0 (READ ENABLED)' : '1 (HIGH)' },
         { pin: 'WE# (Write Enable)', role: 'Connected to 8086 WR#', state: wr === 0 ? '0 (WRITE ENABLED)' : '1 (HIGH)' },
-        { pin: 'D0–D7', role: 'Wired to Upper Data Bus D8–D15', state: oddSramActive ? (isWrite ? 'Write in progress' : 'Driving data out') : 'High-Z' }
-      ]
-    },
-    u6a: {
-      title: 'U6A: 27256 EPROM (Even Bank - 32 KB × 8)',
-      subtitle: 'Lower Byte Non-Volatile Boot ROM (Addresses ending at FFFFEH)',
-      desc: 'Contains lower bytes of the system boot firmware and BIOS routines. Selected when Y7#=0 and A0=0. Read-only device with OE# wired to 8086 RD# (no WE# pin).',
-      techSpecs: [
-        { label: 'Capacity', val: '32 KB × 8-bit UV-erasable EPROM' },
-        { label: 'Data Bus', val: 'D0–D7 (Lower byte)' },
-        { label: 'Location', val: 'Mapped at top of memory ending at FFFFFH' }
-      ],
-      pins: [
-        { pin: 'CE# (Chip Enable)', role: 'Gated by Y7# and A0', state: evenEpromActive ? '0 (CHIP SELECTED)' : '1 (DESELECTED)' },
-        { pin: 'OE# (Output Enable)', role: 'Connected to 8086 RD#', state: rd === 0 ? '0 (OUTPUT ENABLED)' : '1 (HIGH)' },
-        { pin: 'D0–D7', role: 'Wired to Lower Data Bus D0–D7', state: evenEpromActive ? 'Driving ROM code' : 'High-Z' }
-      ]
-    },
-    u6b: {
-      title: 'U6B: 27256 EPROM (Odd Bank - 32 KB × 8)',
-      subtitle: 'Upper Byte Non-Volatile Boot ROM (Addresses ending at FFFFFH)',
-      desc: 'Contains upper bytes of the system boot firmware. Selected when Y7#=0 and BHE#=0. Upon hardware RESET, the 8086 executes from FFFF0H, fetching code words simultaneously from U6A and U6B.',
-      techSpecs: [
-        { label: 'Capacity', val: '32 KB × 8-bit UV-erasable EPROM' },
-        { label: 'Data Bus', val: 'D8–D15 (Upper byte)' },
-        { label: 'Reset Vector', val: '8086 starts at FFFF0H from this chip array' }
-      ],
-      pins: [
-        { pin: 'CE# (Chip Enable)', role: 'Gated by Y7# and BHE#', state: oddEpromActive ? '0 (CHIP SELECTED)' : '1 (DESELECTED)' },
-        { pin: 'OE# (Output Enable)', role: 'Connected to 8086 RD#', state: rd === 0 ? '0 (OUTPUT ENABLED)' : '1 (HIGH)' },
-        { pin: 'D0–D7', role: 'Wired to Upper Data Bus D8–D15', state: oddEpromActive ? 'Driving ROM code' : 'High-Z' }
+        { pin: 'A0–A13 (14 lines)', role: 'Connected to 8086 latched A1–A14', state: `${chipAddrHex}H` },
+        { pin: 'D0–D7 (Data Bus)', role: 'Connected to Upper Transceiver U4B (D8–D15)', state: ram2OddActive ? (isWrite ? 'Writing Data In' : 'Driving Data Out') : 'High-Z' }
       ]
     }
   };
 
-  const currentChipInfo = selectedChip ? chipData[selectedChip] : chipData.u1;
+  const currentChipInfo = selectedChip ? chipData[selectedChip] : chipData.ram1;
 
   return (
-    <div className="bg-slate-900 text-slate-100 p-3 md:p-4 rounded-2xl border border-slate-800 shadow-xl space-y-4 font-sans select-none">
+    <div className="bg-white text-slate-800 p-3 md:p-4 rounded-2xl border border-slate-200 shadow-xs space-y-4 font-sans select-none">
       {/* Top Header & Interactive Scenario Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
         <div className="flex items-center gap-2.5">
-          <div className="p-2 bg-indigo-900/60 text-indigo-400 border border-indigo-700/50 rounded-xl shadow-inner">
-            <Cpu className="w-5 h-5" />
+          <div className="p-2 bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-xl shadow-xs">
+            <CircuitBoard className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-bold text-sm md:text-base text-white tracking-wide">
-                8086 Complete Memory Interfacing Schematic Circuit 📐💾
+              <h3 className="font-bold text-sm md:text-base text-slate-900 tracking-wide">
+                8086 32 KB RAM Interfacing Complete Circuit Schematic 📐💾
               </h3>
-              <span className="bg-indigo-950 text-indigo-300 border border-indigo-700/60 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold">
-                1 MB Address Space
+              <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold">
+                2 × 16 KB RAM (00000H–07FFFH)
               </span>
             </div>
-            <p className="text-xs text-slate-400">
-              Minimum Mode 8086 • 3× 74LS373 Latches • 74LS138 Decoder • 2× 74LS245 Transceivers • Even/Odd SRAM &amp; EPROM Banks
+            <p className="text-xs text-slate-500">
+              Continuation of Design Steps 1–5: Absolute NAND/OR Decoding • 3× 74LS373 Latches • 2× 74LS245 Transceivers • Even &amp; Odd 16 KB SRAM Banks
             </p>
           </div>
         </div>
 
         {/* Zoom & View Controls */}
-        <div className="flex items-center gap-1.5 bg-slate-800/80 p-1 rounded-xl border border-slate-700">
+        <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
           <button
             onClick={() => setZoomLevel((z) => Math.max(0.7, +(z - 0.1).toFixed(1)))}
-            className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-700/60 transition-all cursor-pointer"
+            className="p-1.5 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-white transition-all cursor-pointer shadow-2xs"
             title="Zoom Out"
           >
             <ZoomOut className="w-4 h-4" />
           </button>
-          <span className="text-[11px] font-mono font-bold text-indigo-300 px-1.5 min-w-[3rem] text-center">
+          <span className="text-[11px] font-mono font-bold text-indigo-700 px-1.5 min-w-[3rem] text-center">
             {Math.round(zoomLevel * 100)}%
           </span>
           <button
             onClick={() => setZoomLevel((z) => Math.min(1.5, +(z + 0.1).toFixed(1)))}
-            className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-700/60 transition-all cursor-pointer"
+            className="p-1.5 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-white transition-all cursor-pointer shadow-2xs"
             title="Zoom In"
           >
             <ZoomIn className="w-4 h-4" />
           </button>
           <button
             onClick={() => setZoomLevel(1)}
-            className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-700/60 transition-all cursor-pointer"
+            className="p-1.5 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-white transition-all cursor-pointer shadow-2xs"
             title="Reset Zoom"
           >
             <Maximize2 className="w-4 h-4" />
@@ -385,18 +344,18 @@ export default function MemorySchematicDiagram({
       </div>
 
       {/* Preset Scenarios Selector Strip */}
-      <div className="space-y-2 bg-slate-950/60 p-3 rounded-xl border border-slate-800/80">
+      <div className="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-            <Radio className="w-3.5 h-3.5 text-indigo-400" /> Select Memory Access Scenario / Test Case:
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+            <Radio className="w-3.5 h-3.5 text-indigo-600" /> Select 32 KB RAM Interfacing Test Scenario:
           </span>
           <div className="flex items-center gap-2">
-            <label className="text-[11px] text-slate-300 flex items-center gap-1.5 cursor-pointer">
+            <label className="text-[11px] text-slate-700 flex items-center gap-1.5 cursor-pointer">
               <input
                 type="checkbox"
                 checked={useCustomAddress}
                 onChange={(e) => setUseCustomAddress(e.target.checked)}
-                className="rounded border-slate-700 text-indigo-600 focus:ring-0 cursor-pointer"
+                className="rounded border-slate-300 text-indigo-600 focus:ring-0 cursor-pointer"
               />
               <span className="font-semibold">Custom Address Mode</span>
             </label>
@@ -406,11 +365,11 @@ export default function MemorySchematicDiagram({
         {!useCustomAddress ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
             {[
-              { id: 'aligned-word-ram-write', label: '16-bit Word SRAM Write', tag: '00200H (Both Banks)' },
-              { id: 'even-byte-ram-read', label: 'Even Byte SRAM Read', tag: '00100H (D0–D7)' },
-              { id: 'odd-byte-ram-read', label: 'Odd Byte SRAM Read', tag: '00101H (D8–D15)' },
-              { id: 'boot-eprom-read', label: '8086 RESET Boot EPROM', tag: 'FFFF0H (Vector)' },
-              { id: 'misaligned-word-read', label: 'Misaligned Word (2-Cycles)', tag: '00101H (Penalty)' }
+              { id: 'aligned-word-ram-write', label: '16-bit Word RAM Write', tag: '00200H (Both Banks)' },
+              { id: 'aligned-word-ram-read', label: '16-bit Word RAM Read', tag: '00100H (Both Banks)' },
+              { id: 'even-byte-ram-read', label: 'Even Byte RAM Read', tag: '00102H (RAM_1 Only)' },
+              { id: 'odd-byte-ram-read', label: 'Odd Byte RAM Read', tag: '00103H (RAM_2 Only)' },
+              { id: 'out-of-range-access', label: 'Out-of-Range (A15=1)', tag: '08000H (CS# Inactive)' }
             ].map((sc) => {
               const isSel = activeScenario === sc.id;
               return (
@@ -420,886 +379,636 @@ export default function MemorySchematicDiagram({
                     setActiveScenario(sc.id as MemoryCycleScenario);
                     setUseCustomAddress(false);
                   }}
-                  className={`p-2 rounded-xl text-left transition-all border cursor-pointer flex flex-col justify-between ${
+                  className={`p-2.5 rounded-xl text-left transition-all border cursor-pointer flex flex-col justify-between ${
                     isSel 
-                      ? 'bg-indigo-900/60 border-indigo-500 shadow-md shadow-indigo-950/50 text-white' 
-                      : 'bg-slate-900/80 border-slate-800 text-slate-300 hover:bg-slate-800/80 hover:text-white'
+                      ? 'bg-indigo-600 border-indigo-600 shadow-sm text-white' 
+                      : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900'
                   }`}
                 >
                   <div className="font-bold text-xs leading-tight mb-1">{sc.label}</div>
-                  <div className="text-[10px] font-mono text-indigo-300/90">{sc.tag}</div>
+                  <div className={`text-[10px] font-mono ${isSel ? 'text-indigo-100' : 'text-slate-500'}`}>{sc.tag}</div>
                 </button>
               );
             })}
           </div>
         ) : (
-          <div className="flex flex-wrap items-center gap-3 bg-slate-900 p-2.5 rounded-lg border border-slate-800">
+          <div className="flex flex-wrap items-center gap-3 bg-white p-2.5 rounded-lg border border-slate-200">
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-400 font-bold">20-bit Hex Address:</span>
+              <span className="text-xs text-slate-700 font-bold">20-bit Hex Address:</span>
               <input
                 type="text"
                 maxLength={5}
                 value={customHexAddress}
                 onChange={(e) => setCustomHexAddress(e.target.value.toUpperCase().replace(/[^0-9A-F]/g, ''))}
-                className="bg-slate-950 text-amber-300 font-mono font-bold text-sm px-2.5 py-1 rounded border border-slate-700 w-24 focus:outline-none focus:border-indigo-500 text-center uppercase"
+                className="bg-slate-50 text-indigo-950 font-mono font-bold text-sm px-2.5 py-1 rounded border border-slate-300 w-24 focus:outline-none focus:border-indigo-600 text-center uppercase"
                 placeholder="00100"
               />
               <span className="font-mono text-xs text-slate-500">H</span>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-400 font-bold">Transfer:</span>
+              <span className="text-xs text-slate-700 font-bold">Width:</span>
               <button
                 onClick={() => setCustomAccessType('byte')}
-                className={`px-2.5 py-1 rounded text-xs font-semibold cursor-pointer border ${
-                  customAccessType === 'byte' ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-800 text-slate-400 border-slate-700'
-                }`}
+                className={`px-2.5 py-1 rounded text-xs font-semibold cursor-pointer border ${customAccessType === 'byte' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-100 text-slate-700 border-slate-200'}`}
               >
-                8-Bit Byte
+                8-bit Byte
               </button>
               <button
                 onClick={() => setCustomAccessType('word')}
-                className={`px-2.5 py-1 rounded text-xs font-semibold cursor-pointer border ${
-                  customAccessType === 'word' ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-slate-800 text-slate-400 border-slate-700'
-                }`}
+                className={`px-2.5 py-1 rounded text-xs font-semibold cursor-pointer border ${customAccessType === 'word' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-100 text-slate-700 border-slate-200'}`}
               >
-                16-Bit Word
+                16-bit Word
               </button>
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-400 font-bold">Operation:</span>
+              <span className="text-xs text-slate-700 font-bold">Operation:</span>
               <button
                 onClick={() => setCustomOpType('read')}
-                className={`px-2.5 py-1 rounded text-xs font-semibold cursor-pointer border ${
-                  customOpType === 'read' ? 'bg-emerald-600 text-white border-emerald-500' : 'bg-slate-800 text-slate-400 border-slate-700'
-                }`}
+                className={`px-2.5 py-1 rounded text-xs font-semibold cursor-pointer border ${customOpType === 'read' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-100 text-slate-700 border-slate-200'}`}
               >
-                READ (RD#)
+                Read (RD#=0)
               </button>
               <button
                 onClick={() => setCustomOpType('write')}
-                className={`px-2.5 py-1 rounded text-xs font-semibold cursor-pointer border ${
-                  customOpType === 'write' ? 'bg-amber-600 text-white border-amber-500' : 'bg-slate-800 text-slate-400 border-slate-700'
-                }`}
+                className={`px-2.5 py-1 rounded text-xs font-semibold cursor-pointer border ${customOpType === 'write' ? 'bg-amber-600 text-white border-amber-600' : 'bg-slate-100 text-slate-700 border-slate-200'}`}
               >
-                WRITE (WR#)
+                Write (WR#=0)
               </button>
+            </div>
+
+            <div className="text-xs text-slate-500 font-mono ml-auto">
+              Range: {isAddressInRange ? <span className="text-emerald-700 font-bold">00000H–07FFFH (Valid 32 KB RAM)</span> : <span className="text-red-700 font-bold">Outside 32 KB (CS#=1 Disabled)</span>}
             </div>
           </div>
         )}
 
-        {/* Active Scenario Banner */}
-        <div className="flex items-start gap-2 bg-indigo-950/40 p-2.5 rounded-lg border border-indigo-800/40 text-xs">
-          <Info className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
-          <div className="text-slate-200">
-            <strong className="text-indigo-300">{scenarioTitle}: </strong>
-            {scenarioDesc}
+        {/* Live Scenario Description & Bus Status */}
+        <div className="bg-white p-2.5 rounded-lg border border-slate-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div className="space-y-0.5">
+            <div className="font-bold text-slate-900">{scenarioTitle}</div>
+            <p className="text-slate-600 text-[11px]">{scenarioDesc}</p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-1.5 font-mono text-[10px]">
+            <span className="bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-slate-700">
+              Addr: <strong className="text-slate-950">{addressHex}H</strong>
+            </span>
+            <span className={`px-2 py-0.5 rounded border ${isAddressInRange ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-red-50 text-red-800 border-red-300'}`}>
+              CS#: <strong>{csBar}</strong>
+            </span>
+            <span className={`px-2 py-0.5 rounded border ${ce1Bar === 0 ? 'bg-indigo-50 text-indigo-800 border-indigo-300' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
+              RAM_1 CE1#: <strong>{ce1Bar}</strong>
+            </span>
+            <span className={`px-2 py-0.5 rounded border ${ce2Bar === 0 ? 'bg-amber-50 text-amber-800 border-amber-300' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
+              RAM_2 CE2#: <strong>{ce2Bar}</strong>
+            </span>
+            <span className="bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-slate-700">
+              Offset A1–A14: <strong className="text-slate-900">{chipAddrHex}H</strong>
+            </span>
           </div>
         </div>
       </div>
 
-      {/* T-State Stepper & Real-Time Logic Probes Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-xs">
+      {/* T-State Stepper Controls */}
+      <div className="bg-indigo-50/60 p-2.5 rounded-xl border border-indigo-200 flex flex-wrap items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2">
-          <span className="font-bold text-slate-400 uppercase tracking-wider text-[11px]">8086 Bus Cycle:</span>
-          <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-800">
-            {[1, 2, 3, 4].map((stateNum) => {
-              const isCurrent = tState === stateNum;
-              return (
-                <button
-                  key={stateNum}
-                  onClick={() => {
-                    setTState(stateNum as 1 | 2 | 3 | 4);
-                    setIsAutoStepping(false);
-                  }}
-                  className={`px-2.5 py-1 rounded-md font-mono font-bold text-xs transition-all cursor-pointer ${
-                    isCurrent
-                      ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30'
-                      : 'text-slate-400 hover:text-white hover:bg-slate-800'
-                  }`}
-                >
-                  T{stateNum}
-                </button>
-              );
-            })}
+          <span className="font-bold text-indigo-950 flex items-center gap-1">
+            <Zap className="w-3.5 h-3.5 text-indigo-600" /> 8086 4-Clock Bus Cycle:
+          </span>
+          <div className="flex items-center gap-1">
+            {([1, 2, 3, 4] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => {
+                  setTState(t);
+                  setIsAutoStepping(false);
+                }}
+                className={`w-7 h-7 rounded-lg font-mono font-bold transition-all border cursor-pointer ${
+                  tState === t 
+                    ? 'bg-indigo-600 text-white border-indigo-700 shadow-sm scale-105' 
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                T{t}
+              </button>
+            ))}
           </div>
+          <span className="text-[11px] text-slate-600 font-medium ml-1">
+            {tState === 1 && '— T1: Address Driven on AD0–AD15; ALE Pulses HIGH (Latches A0–A19)'}
+            {tState === 2 && '— T2: Bus switches to Data; RD#/WR# & DEN# Asserted LOW'}
+            {tState === 3 && '— T3: RAM Chips decode & drive data / latch write data'}
+            {tState === 4 && '— T4: Cycle completes; Bus returns to Tri-state'}
+          </span>
+        </div>
 
+        <div className="flex items-center gap-2">
           <button
             onClick={() => setIsAutoStepping(!isAutoStepping)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold text-xs cursor-pointer transition-all ${
-              isAutoStepping
-                ? 'bg-amber-600/80 hover:bg-amber-500 text-white'
-                : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+            className={`flex items-center gap-1 px-3 py-1 rounded-lg font-semibold text-xs transition-all border cursor-pointer ${
+              isAutoStepping 
+                ? 'bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200' 
+                : 'bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200'
             }`}
           >
-            {isAutoStepping ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-            <span>{isAutoStepping ? 'Pause Cycle' : 'Auto Step'}</span>
+            {isAutoStepping ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+            {isAutoStepping ? 'Pause Clock' : 'Auto Clock (5 MHz)'}
           </button>
-        </div>
-
-        {/* Live Logic Probe Pills */}
-        <div className="flex flex-wrap items-center gap-1.5 font-mono text-[11px]">
-          <span className={`px-2 py-0.5 rounded border ${ale === 1 ? 'bg-amber-500/20 text-amber-300 border-amber-500/60 font-bold' : 'bg-slate-900 text-slate-500 border-slate-800'}`}>
-            ALE={ale}
-          </span>
-          <span className={`px-2 py-0.5 rounded border ${bhe === 0 ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/60 font-bold' : 'bg-slate-900 text-slate-500 border-slate-800'}`}>
-            BHE#={bhe}
-          </span>
-          <span className={`px-2 py-0.5 rounded border ${a0 === 0 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/60 font-bold' : 'bg-slate-900 text-slate-500 border-slate-800'}`}>
-            A0={a0}
-          </span>
-          <span className={`px-2 py-0.5 rounded border ${rd === 0 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/60 font-bold' : 'bg-slate-900 text-slate-500 border-slate-800'}`}>
-            RD#={rd}
-          </span>
-          <span className={`px-2 py-0.5 rounded border ${wr === 0 ? 'bg-amber-500/20 text-amber-300 border-amber-500/60 font-bold' : 'bg-slate-900 text-slate-500 border-slate-800'}`}>
-            WR#={wr}
-          </span>
-          <span className={`px-2 py-0.5 rounded border ${y0 === 0 ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/60 font-bold' : 'bg-slate-900 text-slate-500 border-slate-800'}`}>
-            Y0#(SRAM)={y0}
-          </span>
-          <span className={`px-2 py-0.5 rounded border ${y7 === 0 ? 'bg-purple-500/20 text-purple-300 border-purple-500/60 font-bold' : 'bg-slate-900 text-slate-500 border-slate-800'}`}>
-            Y7#(ROM)={y7}
-          </span>
+          <button
+            onClick={() => {
+              setTState(1);
+              setIsAutoStepping(true);
+            }}
+            className="p-1 text-slate-500 hover:text-slate-800 rounded hover:bg-white cursor-pointer"
+            title="Reset Cycle"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
 
-      {/* SCHEMATIC SVG CANVAS CONTAINER */}
-      <div className="relative w-full overflow-x-auto bg-slate-950/90 rounded-2xl border border-slate-800 p-2 scrollbar-thin">
-        <div 
-          style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top left', minWidth: '1560px' }}
-          className="transition-transform duration-200"
-        >
-          <svg
-            viewBox="0 0 1620 740"
-            className="w-full h-auto text-[11px] font-mono select-none"
-            style={{ minHeight: '700px' }}
+      {/* Full Schematic Circuit SVG (Vector Diagram) */}
+      <div 
+        className="w-full overflow-x-auto rounded-xl border border-slate-200 bg-white p-2 transition-all relative"
+        style={{ minHeight: '520px' }}
+      >
+        <div style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top left', width: `${100 / zoomLevel}%` }}>
+          <svg 
+            viewBox="0 0 1320 680" 
+            className="w-full h-auto font-mono text-[11px]"
+            style={{ minWidth: '1100px' }}
           >
             <defs>
-              {/* Bus Pattern and Markers */}
-              <marker id="arrow-indigo" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-                <path d="M 0 1 L 10 5 L 0 9 z" fill="#818cf8" />
-              </marker>
-              <marker id="arrow-emerald" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-                <path d="M 0 1 L 10 5 L 0 9 z" fill="#34d399" />
-              </marker>
-              <marker id="arrow-amber" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-                <path d="M 0 1 L 10 5 L 0 9 z" fill="#fbbf24" />
-              </marker>
-              <marker id="arrow-cyan" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-                <path d="M 0 1 L 10 5 L 0 9 z" fill="#22d3ee" />
-              </marker>
-              <marker id="arrow-rose" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-                <path d="M 0 1 L 10 5 L 0 9 z" fill="#f43f5e" />
-              </marker>
-
-              {/* IC Gradients */}
-              <linearGradient id="icGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#1e293b" />
-                <stop offset="100%" stopColor="#0f172a" />
-              </linearGradient>
-              <linearGradient id="icGradActive" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#312e81" />
-                <stop offset="100%" stopColor="#1e1b4b" />
-              </linearGradient>
+              <pattern id="grid-light" width="20" height="20" patternUnits="userSpaceOnUse">
+                <circle cx="1" cy="1" r="0.75" fill="#e2e8f0" />
+              </pattern>
+              {/* Bus trace glowing filters */}
+              <filter id="glow-indigo" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#6366f1" floodOpacity="0.4" />
+              </filter>
+              <filter id="glow-amber" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#f59e0b" floodOpacity="0.4" />
+              </filter>
+              <filter id="glow-emerald" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="0" stdDeviation="2" floodColor="#10b981" floodOpacity="0.4" />
+              </filter>
             </defs>
 
-            {/* Background Grid Lines */}
-            <g stroke="#334155" strokeWidth="0.5" strokeDasharray="4 8" opacity="0.4">
-              {Array.from({ length: 16 }).map((_, i) => (
-                <line key={`vg-${i}`} x1={i * 100} y1="0" x2={i * 100} y2="740" />
-              ))}
-              {Array.from({ length: 8 }).map((_, i) => (
-                <line key={`hg-${i}`} x1="0" y1={i * 100} x2="1620" y2={i * 100} />
-              ))}
-            </g>
+            {/* Background Grid */}
+            <rect x="0" y="0" width="1320" height="680" fill="url(#grid-light)" />
 
-            {/* ========================================================================= */}
-            {/* 1. MAIN INTERCONNECT TRACES & BUSES                                      */}
-            {/* ========================================================================= */}
+            {/* Circuit Boundary Frame */}
+            <rect x="10" y="10" width="1300" height="660" rx="14" fill="#fafbfc" stroke="#cbd5e1" strokeWidth="1.5" />
 
-            {/* AD0–AD7 Bus (8086 Pin to Latches U2A & Transceiver U4A) */}
-            <g>
-              <path
-                d="M 280 150 L 370 150"
-                stroke={ale === 1 ? '#fbbf24' : '#818cf8'}
-                strokeWidth={ale === 1 ? '4' : '3'}
-                fill="none"
-              />
-              <path
-                d="M 320 150 L 320 110 L 640 110"
-                stroke={lowerTransceiverActive ? '#34d399' : '#64748b'}
-                strokeWidth="2.5"
-                fill="none"
-              />
-              {/* Bus Label Badge */}
-              <rect x="290" y="138" width="65" height="18" rx="4" fill="#0f172a" stroke="#818cf8" strokeWidth="1" />
-              <text x="322" y="151" fill="#c7d2fe" fontSize="10" fontWeight="bold" textAnchor="middle">AD0–AD7</text>
-            </g>
-
-            {/* AD8–AD15 Bus (8086 to Latch U2B & Transceiver U4B) */}
-            <g>
-              <path
-                d="M 280 290 L 370 290"
-                stroke={ale === 1 ? '#fbbf24' : '#818cf8'}
-                strokeWidth={ale === 1 ? '4' : '3'}
-                fill="none"
-              />
-              <path
-                d="M 330 290 L 330 290 L 640 290"
-                stroke={upperTransceiverActive ? '#34d399' : '#64748b'}
-                strokeWidth="2.5"
-                fill="none"
-              />
-              <rect x="290" y="278" width="70" height="18" rx="4" fill="#0f172a" stroke="#818cf8" strokeWidth="1" />
-              <text x="325" y="291" fill="#c7d2fe" fontSize="10" fontWeight="bold" textAnchor="middle">AD8–AD15</text>
-            </g>
-
-            {/* A16–A19 & BHE# Bus (8086 to Latch U2C) */}
-            <g>
-              <path
-                d="M 280 470 L 370 470"
-                stroke={ale === 1 ? '#fbbf24' : '#a78bfa'}
-                strokeWidth="3"
-                fill="none"
-              />
-              <rect x="285" y="458" width="80" height="18" rx="4" fill="#0f172a" stroke="#a78bfa" strokeWidth="1" />
-              <text x="325" y="471" fill="#ddd6fe" fontSize="10" fontWeight="bold" textAnchor="middle">A16–A19,BHE#</text>
-            </g>
-
-            {/* ALE Line (Pin 25) to LE of all 3 Latches (U2A, U2B, U2C) */}
-            <g>
-              <path
-                d="M 280 520 L 350 520 L 350 200 L 370 200"
-                stroke={ale === 1 ? '#f59e0b' : '#475569'}
-                strokeWidth={ale === 1 ? '3.5' : '1.5'}
-                strokeDasharray={ale === 1 ? 'none' : '4 4'}
-                fill="none"
-              />
-              {/* Branch to U2B LE */}
-              <line x1="350" y1="340" x2="370" y2="340" stroke={ale === 1 ? '#f59e0b' : '#475569'} strokeWidth={ale === 1 ? '3.5' : '1.5'} />
-              {/* Branch to U2C LE */}
-              <line x1="350" y1="520" x2="370" y2="520" stroke={ale === 1 ? '#f59e0b' : '#475569'} strokeWidth={ale === 1 ? '3.5' : '1.5'} />
-              
-              <rect x="290" y="508" width="45" height="16" rx="4" fill="#0f172a" stroke="#f59e0b" strokeWidth="1" />
-              <text x="312" y="520" fill="#fde68a" fontSize="9" fontWeight="bold" textAnchor="middle">ALE (P25)</text>
-            </g>
-
-            {/* Demultiplexed High Address lines A17–A19 from U2C to 74LS138 Decoder U3 */}
-            <g>
-              <path
-                d="M 550 480 L 640 480"
-                stroke="#38bdf8"
-                strokeWidth="2.5"
-                fill="none"
-                markerEnd="url(#arrow-cyan)"
-              />
-              <rect x="560" y="468" width="70" height="18" rx="4" fill="#0f172a" stroke="#38bdf8" strokeWidth="1" />
-              <text x="595" y="481" fill="#bae6fd" fontSize="10" fontWeight="bold" textAnchor="middle">A17–A19</text>
-            </g>
-
-            {/* M/IO# line from 8086 (Pin 28) to 74LS138 G1 Enable */}
-            <g>
-              <path
-                d="M 280 560 L 620 560 L 620 530 L 640 530"
-                stroke="#22c55e"
-                strokeWidth="2"
-                fill="none"
-              />
-              <rect x="360" y="548" width="75" height="18" rx="4" fill="#0f172a" stroke="#22c55e" strokeWidth="1" />
-              <text x="397" y="561" fill="#bbf7d0" fontSize="10" fontWeight="bold" textAnchor="middle">M/IO# (P28)=1</text>
-            </g>
-
-            {/* Demultiplexed Address Bus A1–A15 from Latches to Memory Matrix */}
-            <g>
-              <path
-                d="M 550 150 L 590 150 L 590 30 L 980 30 L 980 120"
-                stroke="#38bdf8"
-                strokeWidth="3"
-                fill="none"
-              />
-              <line x1="550" y1="290" x2="590" y2="290" stroke="#38bdf8" strokeWidth="2" />
-              {/* Feeds to Even SRAM, Odd SRAM, Even EPROM, Odd EPROM */}
-              <line x1="980" y1="120" x2="1040" y2="120" stroke="#38bdf8" strokeWidth="2.5" markerEnd="url(#arrow-cyan)" />
-              <line x1="980" y1="120" x2="980" y2="420" stroke="#38bdf8" strokeWidth="2.5" />
-              <line x1="980" y1="420" x2="1040" y2="420" stroke="#38bdf8" strokeWidth="2.5" markerEnd="url(#arrow-cyan)" />
-              <path d="M 980 30 L 1300 30 L 1300 120 L 1330 120" stroke="#38bdf8" strokeWidth="2.5" fill="none" markerEnd="url(#arrow-cyan)" />
-              <path d="M 1300 120 L 1300 420 L 1330 420" stroke="#38bdf8" strokeWidth="2.5" fill="none" markerEnd="url(#arrow-cyan)" />
-
-              <rect x="730" y="20" width="130" height="20" rx="5" fill="#0f172a" stroke="#38bdf8" strokeWidth="1.5" />
-              <text x="795" y="34" fill="#7dd3fc" fontSize="11" fontWeight="bold" textAnchor="middle">Demux Address Bus A1–A15</text>
-            </g>
-
-            {/* Demultiplexed A0 and Latched BHE# to Bank OR gates */}
-            <g>
-              {/* A0 from U2A */}
-              <path
-                d="M 550 180 L 600 180 L 600 680 L 920 680 L 920 180 L 960 180"
-                stroke={a0 === 0 ? '#34d399' : '#64748b'}
-                strokeWidth="2"
-                fill="none"
-              />
-              <rect x="620" y="670" width="70" height="18" rx="4" fill="#0f172a" stroke="#34d399" strokeWidth="1" />
-              <text x="655" y="683" fill="#6ee7b7" fontSize="10" fontWeight="bold" textAnchor="middle">A0 (Even)</text>
-
-              {/* BHE# from U2C */}
-              <path
-                d="M 550 510 L 580 510 L 580 710 L 1260 710 L 1260 180 L 1280 180"
-                stroke={bhe === 0 ? '#818cf8' : '#64748b'}
-                strokeWidth="2"
-                fill="none"
-              />
-              <rect x="720" y="700" width="85" height="18" rx="4" fill="#0f172a" stroke="#818cf8" strokeWidth="1" />
-              <text x="762" y="713" fill="#c7d2fe" fontSize="10" fontWeight="bold" textAnchor="middle">BHE# (Odd Bank)</text>
-            </g>
-
-            {/* Chip Selects Y0# (SRAM) and Y7# (EPROM) from 74LS138 */}
-            <g>
-              {/* Y0# (Pin 15) to SRAM OR Gates */}
-              <path
-                d="M 820 490 L 890 490 L 890 160 L 960 160"
-                stroke={y0 === 0 ? '#22d3ee' : '#475569'}
-                strokeWidth={y0 === 0 ? '3' : '1.5'}
-                fill="none"
-              />
-              {/* Branch to Odd SRAM OR gate */}
-              <path
-                d="M 890 160 L 1240 160 L 1280 160"
-                stroke={y0 === 0 ? '#22d3ee' : '#475569'}
-                strokeWidth={y0 === 0 ? '3' : '1.5'}
-                fill="none"
-              />
-              <rect x="830" y="478" width="60" height="18" rx="4" fill="#0f172a" stroke="#22d3ee" strokeWidth="1" />
-              <text x="860" y="491" fill="#a5f3fc" fontSize="10" fontWeight="bold" textAnchor="middle">Y0#(SRAM)</text>
-
-              {/* Y7# (Pin 7) to EPROM OR Gates */}
-              <path
-                d="M 820 620 L 900 620 L 900 460 L 960 460"
-                stroke={y7 === 0 ? '#c084fc' : '#475569'}
-                strokeWidth={y7 === 0 ? '3' : '1.5'}
-                fill="none"
-              />
-              {/* Branch to Odd EPROM */}
-              <path
-                d="M 900 460 L 1240 460 L 1280 460"
-                stroke={y7 === 0 ? '#c084fc' : '#475569'}
-                strokeWidth={y7 === 0 ? '3' : '1.5'}
-                fill="none"
-              />
-              <rect x="830" y="608" width="65" height="18" rx="4" fill="#0f172a" stroke="#c084fc" strokeWidth="1" />
-              <text x="862" y="621" fill="#e9d5ff" fontSize="10" fontWeight="bold" textAnchor="middle">Y7#(EPROM)</text>
-            </g>
-
-            {/* Read Strobe RD# and Write Strobe WR# from 8086 */}
-            <g>
-              {/* RD# to OE# of SRAM & EPROM */}
-              <path
-                d="M 280 600 L 940 600 L 940 220 L 1040 220"
-                stroke={rd === 0 ? '#10b981' : '#475569'}
-                strokeWidth={rd === 0 ? '3' : '1.5'}
-                fill="none"
-              />
-              <line x1="940" y1="220" x2="1330" y2="220" stroke={rd === 0 ? '#10b981' : '#475569'} strokeWidth={rd === 0 ? '3' : '1.5'} />
-              <line x1="940" y1="520" x2="1040" y2="520" stroke={rd === 0 ? '#10b981' : '#475569'} strokeWidth={rd === 0 ? '3' : '1.5'} />
-              <line x1="940" y1="520" x2="1330" y2="520" stroke={rd === 0 ? '#10b981' : '#475569'} strokeWidth={rd === 0 ? '3' : '1.5'} />
-              <rect x="450" y="588" width="60" height="18" rx="4" fill="#0f172a" stroke="#10b981" strokeWidth="1" />
-              <text x="480" y="601" fill="#a7f3d0" fontSize="10" fontWeight="bold" textAnchor="middle">RD# (OE#)</text>
-
-              {/* WR# to WE# of SRAM */}
-              <path
-                d="M 280 640 L 930 640 L 930 250 L 1040 250"
-                stroke={wr === 0 ? '#f59e0b' : '#475569'}
-                strokeWidth={wr === 0 ? '3' : '1.5'}
-                fill="none"
-              />
-              <line x1="930" y1="250" x2="1330" y2="250" stroke={wr === 0 ? '#f59e0b' : '#475569'} strokeWidth={wr === 0 ? '3' : '1.5'} />
-              <rect x="520" y="628" width="60" height="18" rx="4" fill="#0f172a" stroke="#f59e0b" strokeWidth="1" />
-              <text x="550" y="641" fill="#fde68a" fontSize="10" fontWeight="bold" textAnchor="middle">WR# (WE#)</text>
-            </g>
-
-            {/* Data Buses D0–D7 (Lower) and D8–D15 (Upper) from Transceivers to Memory Arrays */}
-            <g>
-              {/* D0–D7 Lower Data Bus */}
-              <path
-                d="M 820 150 L 1040 150"
-                stroke={lowerTransceiverActive ? '#34d399' : '#64748b'}
-                strokeWidth={lowerTransceiverActive ? '3.5' : '2'}
-                fill="none"
-                markerEnd="url(#arrow-emerald)"
-              />
-              {/* Branch down to Even EPROM D0–D7 */}
-              <path
-                d="M 860 150 L 860 450 L 1040 450"
-                stroke={lowerTransceiverActive ? '#34d399' : '#64748b'}
-                strokeWidth={lowerTransceiverActive ? '3.5' : '2'}
-                fill="none"
-                markerEnd="url(#arrow-emerald)"
-              />
-              <rect x="880" y="138" width="65" height="18" rx="4" fill="#0f172a" stroke="#34d399" strokeWidth="1" />
-              <text x="912" y="151" fill="#a7f3d0" fontSize="10" fontWeight="bold" textAnchor="middle">D0–D7 Bus</text>
-
-              {/* D8–D15 Upper Data Bus */}
-              <path
-                d="M 820 290 L 1200 290 L 1200 150 L 1330 150"
-                stroke={upperTransceiverActive ? '#818cf8' : '#64748b'}
-                strokeWidth={upperTransceiverActive ? '3.5' : '2'}
-                fill="none"
-                markerEnd="url(#arrow-indigo)"
-              />
-              {/* Branch to Odd EPROM D8–D15 */}
-              <path
-                d="M 1200 290 L 1200 450 L 1330 450"
-                stroke={upperTransceiverActive ? '#818cf8' : '#64748b'}
-                strokeWidth={upperTransceiverActive ? '3.5' : '2'}
-                fill="none"
-                markerEnd="url(#arrow-indigo)"
-              />
-              <rect x="1220" y="138" width="75" height="18" rx="4" fill="#0f172a" stroke="#818cf8" strokeWidth="1" />
-              <text x="1257" y="151" fill="#c7d2fe" fontSize="10" fontWeight="bold" textAnchor="middle">D8–D15 Bus</text>
-            </g>
-
-            {/* ========================================================================= */}
-            {/* 2. CHIP BLOCKS & SYMBOLS                                                 */}
-            {/* ========================================================================= */}
-
-            {/* ----------------- U1: Intel 8086 MPU ----------------- */}
-            <g
+            {/* ========================================================================================= */}
+            {/* 1. INTEL 8086 MPU (MINIMUM MODE) */}
+            {/* ========================================================================================= */}
+            <g 
+              id="chip-8086"
               onClick={() => setSelectedChip('u1')}
               className="cursor-pointer group"
             >
-              <rect
-                x="50"
-                y="80"
-                width="230"
-                height="600"
-                rx="14"
-                fill={selectedChip === 'u1' ? 'url(#icGradActive)' : 'url(#icGrad)'}
-                stroke={selectedChip === 'u1' ? '#818cf8' : '#475569'}
-                strokeWidth={selectedChip === 'u1' ? '2.5' : '1.5'}
-                className="transition-all duration-150 group-hover:stroke-indigo-400"
+              <rect 
+                x="40" y="45" width="220" height="585" rx="10" 
+                fill={selectedChip === 'u1' ? '#f0fdf4' : '#ffffff'} 
+                stroke={selectedChip === 'u1' ? '#16a34a' : '#94a3b8'} 
+                strokeWidth={selectedChip === 'u1' ? 2.5 : 1.5}
+                filter="drop-shadow(0 2px 4px rgba(0,0,0,0.04))"
               />
-              {/* Chip Notch and Title */}
-              <path d="M 150 80 A 15 15 0 0 0 180 80" fill="none" stroke="#64748b" strokeWidth="2" />
-              <text x="165" y="115" fill="#ffffff" fontSize="13" fontWeight="bold" textAnchor="middle">INTEL 8086</text>
-              <text x="165" y="130" fill="#94a3b8" fontSize="10" textAnchor="middle">16-Bit Microprocessor</text>
-              <text x="165" y="143" fill="#38bdf8" fontSize="9" fontWeight="bold" textAnchor="middle">(Minimum Mode)</text>
-
-              {/* Left Pin Labels (Power & Ground Reference) */}
-              <text x="62" y="180" fill="#94a3b8" fontSize="10">VCC (+5V)</text>
-              <text x="62" y="210" fill="#94a3b8" fontSize="10">GND (0V)</text>
-              <text x="62" y="240" fill="#94a3b8" fontSize="10">CLK (5MHz)</text>
-              <text x="62" y="270" fill="#94a3b8" fontSize="10">RESET (P21)</text>
-              <text x="62" y="300" fill="#94a3b8" fontSize="10">READY (P22)</text>
-              <text x="62" y="330" fill="#38bdf8" fontSize="10" fontWeight="bold">MN/MX# (+5V)</text>
-              <text x="62" y="360" fill="#64748b" fontSize="10">INTR (P18)</text>
-              <text x="62" y="390" fill="#64748b" fontSize="10">NMI (P17)</text>
-              <text x="62" y="420" fill="#64748b" fontSize="10">TEST# (P23)</text>
-              <text x="62" y="450" fill="#64748b" fontSize="10">HOLD (P31)</text>
-
-              {/* Right Pin Labels (Buses & Strobes) */}
-              <text x="268" y="155" fill="#818cf8" fontSize="11" fontWeight="bold" textAnchor="end">AD0–AD7 (P16–9)</text>
-              <text x="268" y="295" fill="#818cf8" fontSize="11" fontWeight="bold" textAnchor="end">AD8–AD15 (P39–2)</text>
-              <text x="268" y="475" fill="#c084fc" fontSize="11" fontWeight="bold" textAnchor="end">A16–A19 (P35–38)</text>
-              <text x="268" y="525" fill="#f59e0b" fontSize="11" fontWeight="bold" textAnchor="end">ALE (P25)</text>
-              <text x="268" y="565" fill="#22c55e" fontSize="11" fontWeight="bold" textAnchor="end">M/IO# (P28)</text>
-              <text x="268" y="605" fill="#10b981" fontSize="11" fontWeight="bold" textAnchor="end">RD# (P32)</text>
-              <text x="268" y="645" fill="#f59e0b" fontSize="11" fontWeight="bold" textAnchor="end">WR# (P29)</text>
-              <text x="268" y="668" fill="#94a3b8" fontSize="10" textAnchor="end">DEN#(26) DT/R#(27)</text>
-            </g>
-
-            {/* ----------------- U2A: 74LS373 Latch 1 (AD0–AD7) ----------------- */}
-            <g
-              onClick={() => setSelectedChip('u2a')}
-              className="cursor-pointer group"
-            >
-              <rect
-                x="370"
-                y="90"
-                width="180"
-                height="120"
-                rx="10"
-                fill={selectedChip === 'u2a' ? 'url(#icGradActive)' : 'url(#icGrad)'}
-                stroke={selectedChip === 'u2a' ? '#818cf8' : '#475569'}
-                strokeWidth="2"
-                className="transition-all duration-150 group-hover:stroke-indigo-400"
-              />
-              <text x="460" y="115" fill="#ffffff" fontSize="11" fontWeight="bold" textAnchor="middle">U2A: 74LS373</text>
-              <text x="460" y="130" fill="#94a3b8" fontSize="9" textAnchor="middle">Octal Address Latch</text>
-              <text x="380" y="155" fill="#818cf8" fontSize="10">D0–D7</text>
-              <text x="540" y="155" fill="#38bdf8" fontSize="10" fontWeight="bold" textAnchor="end">A0–A7</text>
-              <text x="380" y="195" fill="#f59e0b" fontSize="9">LE (P11)</text>
-              <text x="540" y="195" fill="#64748b" fontSize="9" textAnchor="end">OE#=GND</text>
-            </g>
-
-            {/* ----------------- U2B: 74LS373 Latch 2 (AD8–AD15) ----------------- */}
-            <g
-              onClick={() => setSelectedChip('u2b')}
-              className="cursor-pointer group"
-            >
-              <rect
-                x="370"
-                y="230"
-                width="180"
-                height="120"
-                rx="10"
-                fill={selectedChip === 'u2b' ? 'url(#icGradActive)' : 'url(#icGrad)'}
-                stroke={selectedChip === 'u2b' ? '#818cf8' : '#475569'}
-                strokeWidth="2"
-                className="transition-all duration-150 group-hover:stroke-indigo-400"
-              />
-              <text x="460" y="255" fill="#ffffff" fontSize="11" fontWeight="bold" textAnchor="middle">U2B: 74LS373</text>
-              <text x="460" y="270" fill="#94a3b8" fontSize="9" textAnchor="middle">Octal Address Latch</text>
-              <text x="380" y="295" fill="#818cf8" fontSize="10">D8–D15</text>
-              <text x="540" y="295" fill="#38bdf8" fontSize="10" fontWeight="bold" textAnchor="end">A8–A15</text>
-              <text x="380" y="335" fill="#f59e0b" fontSize="9">LE (P11)</text>
-              <text x="540" y="335" fill="#64748b" fontSize="9" textAnchor="end">OE#=GND</text>
-            </g>
-
-            {/* ----------------- U2C: 74LS373 Latch 3 (A16–A19 & BHE#) ----------------- */}
-            <g
-              onClick={() => setSelectedChip('u2c')}
-              className="cursor-pointer group"
-            >
-              <rect
-                x="370"
-                y="410"
-                width="180"
-                height="130"
-                rx="10"
-                fill={selectedChip === 'u2c' ? 'url(#icGradActive)' : 'url(#icGrad)'}
-                stroke={selectedChip === 'u2c' ? '#818cf8' : '#475569'}
-                strokeWidth="2"
-                className="transition-all duration-150 group-hover:stroke-indigo-400"
-              />
-              <text x="460" y="435" fill="#ffffff" fontSize="11" fontWeight="bold" textAnchor="middle">U2C: 74LS373</text>
-              <text x="460" y="450" fill="#94a3b8" fontSize="9" textAnchor="middle">Upper Address &amp; BHE#</text>
-              <text x="380" y="475" fill="#c084fc" fontSize="10">A16–A19</text>
-              <text x="540" y="475" fill="#38bdf8" fontSize="10" fontWeight="bold" textAnchor="end">A16–A19</text>
-              <text x="380" y="505" fill="#818cf8" fontSize="10">BHE#/S7</text>
-              <text x="540" y="505" fill="#818cf8" fontSize="10" fontWeight="bold" textAnchor="end">BHE#</text>
-              <text x="380" y="530" fill="#f59e0b" fontSize="9">LE (P11)</text>
-            </g>
-
-            {/* ----------------- U3: 74LS138 Address Decoder ----------------- */}
-            <g
-              onClick={() => setSelectedChip('u3')}
-              className="cursor-pointer group"
-            >
-              <rect
-                x="640"
-                y="430"
-                width="180"
-                height="220"
-                rx="10"
-                fill={selectedChip === 'u3' ? 'url(#icGradActive)' : 'url(#icGrad)'}
-                stroke={selectedChip === 'u3' ? '#38bdf8' : '#475569'}
-                strokeWidth="2"
-                className="transition-all duration-150 group-hover:stroke-cyan-400"
-              />
-              <text x="730" y="455" fill="#ffffff" fontSize="12" fontWeight="bold" textAnchor="middle">U3: 74LS138</text>
-              <text x="730" y="470" fill="#94a3b8" fontSize="9" textAnchor="middle">3-to-8 Address Decoder</text>
-
-              {/* Decoder Inputs */}
-              <text x="650" y="495" fill="#38bdf8" fontSize="10">A (A17)</text>
-              <text x="650" y="515" fill="#38bdf8" fontSize="10">B (A18)</text>
-              <text x="650" y="535" fill="#38bdf8" fontSize="10">C (A19)</text>
-              <text x="650" y="565" fill="#22c55e" fontSize="10" fontWeight="bold">G1 (M/IO#=1)</text>
-              <text x="650" y="585" fill="#64748b" fontSize="9">G2A# (GND)</text>
-              <text x="650" y="605" fill="#64748b" fontSize="9">G2B# (GND)</text>
-
-              {/* Active-Low Outputs */}
-              <text x="810" y="495" fill={y0 === 0 ? '#22d3ee' : '#64748b'} fontSize="11" fontWeight="bold" textAnchor="end">Y0# (SRAM)</text>
-              <text x="810" y="525" fill="#475569" fontSize="9" textAnchor="end">Y1#–Y6#</text>
-              <text x="810" y="625" fill={y7 === 0 ? '#c084fc' : '#64748b'} fontSize="11" fontWeight="bold" textAnchor="end">Y7# (EPROM)</text>
-            </g>
-
-            {/* ----------------- U4A: 74LS245 Transceiver (D0–D7) ----------------- */}
-            <g
-              onClick={() => setSelectedChip('u4a')}
-              className="cursor-pointer group"
-            >
-              <rect
-                x="640"
-                y="90"
-                width="180"
-                height="110"
-                rx="10"
-                fill={selectedChip === 'u4a' ? 'url(#icGradActive)' : 'url(#icGrad)'}
-                stroke={lowerTransceiverActive ? '#34d399' : '#475569'}
-                strokeWidth="2"
-                className="transition-all duration-150 group-hover:stroke-emerald-400"
-              />
-              <text x="730" y="115" fill="#ffffff" fontSize="11" fontWeight="bold" textAnchor="middle">U4A: 74LS245</text>
-              <text x="730" y="130" fill="#94a3b8" fontSize="9" textAnchor="middle">Octal Transceiver (Lower)</text>
-              <text x="650" y="155" fill="#818cf8" fontSize="10">AD0–AD7</text>
-              <text x="810" y="155" fill="#34d399" fontSize="10" fontWeight="bold" textAnchor="end">D0–D7</text>
-              <text x="650" y="185" fill="#94a3b8" fontSize="9">DIR=DT/R#</text>
-              <text x="810" y="185" fill="#94a3b8" fontSize="9" textAnchor="end">OE#=DEN#</text>
-            </g>
-
-            {/* ----------------- U4B: 74LS245 Transceiver (D8–D15) ----------------- */}
-            <g
-              onClick={() => setSelectedChip('u4b')}
-              className="cursor-pointer group"
-            >
-              <rect
-                x="640"
-                y="230"
-                width="180"
-                height="110"
-                rx="10"
-                fill={selectedChip === 'u4b' ? 'url(#icGradActive)' : 'url(#icGrad)'}
-                stroke={upperTransceiverActive ? '#818cf8' : '#475569'}
-                strokeWidth="2"
-                className="transition-all duration-150 group-hover:stroke-indigo-400"
-              />
-              <text x="730" y="255" fill="#ffffff" fontSize="11" fontWeight="bold" textAnchor="middle">U4B: 74LS245</text>
-              <text x="730" y="270" fill="#94a3b8" fontSize="9" textAnchor="middle">Octal Transceiver (Upper)</text>
-              <text x="650" y="295" fill="#818cf8" fontSize="10">AD8–AD15</text>
-              <text x="810" y="295" fill="#818cf8" fontSize="10" fontWeight="bold" textAnchor="end">D8–D15</text>
-              <text x="650" y="325" fill="#94a3b8" fontSize="9">DIR=DT/R#</text>
-              <text x="810" y="325" fill="#94a3b8" fontSize="9" textAnchor="end">OE#=DEN#</text>
-            </g>
-
-            {/* ----------------- BANK OR GATES ----------------- */}
-            {/* Even SRAM OR Gate (Y0# OR A0) */}
-            <g transform="translate(960, 150)">
-              <rect x="0" y="0" width="45" height="40" rx="6" fill="#1e293b" stroke="#34d399" strokeWidth="1.5" />
-              <text x="22" y="24" fill="#a7f3d0" fontSize="10" fontWeight="bold" textAnchor="middle">OR</text>
-              <line x1="45" y1="20" x2="80" y2="20" stroke={evenSramActive ? '#34d399' : '#475569'} strokeWidth="2.5" markerEnd="url(#arrow-emerald)" />
-              {/* Bubble for active low */}
-              <circle cx="48" cy="20" r="3" fill="#0f172a" stroke="#34d399" strokeWidth="1" />
-            </g>
-
-            {/* Odd SRAM OR Gate (Y0# OR BHE#) */}
-            <g transform="translate(1275, 150)">
-              <rect x="0" y="0" width="45" height="40" rx="6" fill="#1e293b" stroke="#818cf8" strokeWidth="1.5" />
-              <text x="22" y="24" fill="#c7d2fe" fontSize="10" fontWeight="bold" textAnchor="middle">OR</text>
-              <line x1="45" y1="20" x2="55" y2="20" stroke={oddSramActive ? '#818cf8' : '#475569'} strokeWidth="2.5" markerEnd="url(#arrow-indigo)" />
-              <circle cx="48" cy="20" r="3" fill="#0f172a" stroke="#818cf8" strokeWidth="1" />
-            </g>
-
-            {/* Even EPROM OR Gate (Y7# OR A0) */}
-            <g transform="translate(960, 450)">
-              <rect x="0" y="0" width="45" height="40" rx="6" fill="#1e293b" stroke="#c084fc" strokeWidth="1.5" />
-              <text x="22" y="24" fill="#e9d5ff" fontSize="10" fontWeight="bold" textAnchor="middle">OR</text>
-              <line x1="45" y1="20" x2="80" y2="20" stroke={evenEpromActive ? '#c084fc' : '#475569'} strokeWidth="2.5" markerEnd="url(#arrow-indigo)" />
-              <circle cx="48" cy="20" r="3" fill="#0f172a" stroke="#c084fc" strokeWidth="1" />
-            </g>
-
-            {/* Odd EPROM OR Gate (Y7# OR BHE#) */}
-            <g transform="translate(1275, 450)">
-              <rect x="0" y="0" width="45" height="40" rx="6" fill="#1e293b" stroke="#c084fc" strokeWidth="1.5" />
-              <text x="22" y="24" fill="#e9d5ff" fontSize="10" fontWeight="bold" textAnchor="middle">OR</text>
-              <line x1="45" y1="20" x2="55" y2="20" stroke={oddEpromActive ? '#c084fc' : '#475569'} strokeWidth="2.5" markerEnd="url(#arrow-indigo)" />
-              <circle cx="48" cy="20" r="3" fill="#0f172a" stroke="#c084fc" strokeWidth="1" />
-            </g>
-
-            {/* ----------------- U5A: Even SRAM (62256, 32KB) ----------------- */}
-            <g
-              onClick={() => setSelectedChip('u5a')}
-              className="cursor-pointer group"
-            >
-              <rect
-                x="1040"
-                y="80"
-                width="220"
-                height="210"
-                rx="12"
-                fill={evenSramActive ? '#064e3b' : (selectedChip === 'u5a' ? 'url(#icGradActive)' : 'url(#icGrad)')}
-                stroke={evenSramActive ? '#34d399' : '#475569'}
-                strokeWidth={evenSramActive ? '3' : '1.5'}
-                className="transition-all duration-150 group-hover:stroke-emerald-400"
-              />
-              <text x="1150" y="105" fill="#ffffff" fontSize="12" fontWeight="bold" textAnchor="middle">U5A: SRAM 62256</text>
-              <text x="1150" y="120" fill="#a7f3d0" fontSize="10" fontWeight="bold" textAnchor="middle">EVEN BANK (32 KB × 8)</text>
-              <text x="1150" y="135" fill="#94a3b8" fontSize="9" textAnchor="middle">Range: 00000H–0FFFFH</text>
-
-              <text x="1050" y="155" fill="#34d399" fontSize="10" fontWeight="bold">D0–D7 (Data)</text>
-              <text x="1050" y="175" fill="#38bdf8" fontSize="10">A0–A14 (from A1–A15)</text>
-              <text x="1050" y="195" fill={evenSramActive ? '#6ee7b7' : '#94a3b8'} fontSize="10" fontWeight="bold">
-                CE# ({evenSramActive ? 'ACTIVE' : 'High'})
+              <rect x="40" y="45" width="220" height="38" rx="10" fill="#f8fafc" stroke="#e2e8f0" strokeWidth="1" />
+              <text x="150" y="65" textAnchor="middle" fill="#0f172a" fontWeight="bold" fontSize="13" fontFamily="sans-serif">
+                Intel 8086 MPU (U1)
               </text>
-              <text x="1050" y="225" fill="#10b981" fontSize="10">OE# (RD#)</text>
-              <text x="1050" y="255" fill="#f59e0b" fontSize="10">WE# (WR#)</text>
+              <text x="150" y="78" textAnchor="middle" fill="#15803d" fontSize="9.5" fontWeight="bold">
+                MIN MODE (MN/MX# = +5V)
+              </text>
 
-              <rect x="1050" y="265" width="200" height="18" rx="4" fill="#0f172a" stroke="#34d399" strokeWidth="1" />
-              <text x="1150" y="278" fill={evenSramActive ? '#6ee7b7' : '#64748b'} fontSize="9" fontWeight="bold" textAnchor="middle">
-                {evenSramActive ? '● BANK SELECTED (A0=0)' : '○ Bank Idle'}
+              {/* CPU Multiplexed Bus Pins */}
+              {/* AD0–AD7 */}
+              <text x="52" y="118" fill="#475569" fontSize="10">AD0–AD7 (Pins 16–9)</text>
+              <line x1="260" y1="115" x2="350" y2="115" stroke={tState === 1 ? '#6366f1' : '#94a3b8'} strokeWidth="2.5" />
+
+              {/* AD8–AD15 */}
+              <text x="52" y="198" fill="#475569" fontSize="10">AD8–AD15 (Pins 39, 2–8)</text>
+              <line x1="260" y1="195" x2="350" y2="195" stroke={tState === 1 ? '#6366f1' : '#94a3b8'} strokeWidth="2.5" />
+
+              {/* A16–A19 & BHE# */}
+              <text x="52" y="268" fill="#475569" fontSize="10">A16–A19 / S3–S6 (35–38)</text>
+              <text x="52" y="284" fill="#475569" fontSize="10">BHE# / S7 (Pin 34)</text>
+              <line x1="260" y1="275" x2="350" y2="275" stroke={tState === 1 ? '#a855f7' : '#94a3b8'} strokeWidth="2.5" />
+
+              {/* Control Strobes */}
+              {/* ALE (Pin 25) */}
+              <text x="52" y="334" fill="#9a3412" fontSize="10" fontWeight="bold">ALE (Pin 25)</text>
+              <circle cx="260" cy="330" r="3.5" fill={ale === 1 ? '#ea580c' : '#94a3b8'} />
+              <line x1="260" y1="330" x2="350" y2="330" stroke={ale === 1 ? '#ea580c' : '#cbd5e1'} strokeWidth={ale === 1 ? 2.5 : 1.5} />
+
+              {/* M/IO# (Pin 28) */}
+              <text x="52" y="384" fill="#15803d" fontSize="10" fontWeight="bold">M/IO# (Pin 28) = 1</text>
+              <circle cx="260" cy="380" r="3.5" fill="#15803d" />
+              <line x1="260" y1="380" x2="560" y2="380" stroke="#15803d" strokeWidth="2" />
+
+              {/* RD# (Pin 32) */}
+              <text x="52" y="474" fill="#0369a1" fontSize="10" fontWeight="bold">RD# (Pin 32)</text>
+              <circle cx="260" cy="470" r="3.5" fill={rd === 0 ? '#0284c7' : '#94a3b8'} />
+              <line x1="260" y1="470" x2="980" y2="470" stroke={rd === 0 ? '#0284c7' : '#cbd5e1'} strokeWidth={rd === 0 ? 2.5 : 1.5} />
+
+              {/* WR# (Pin 29) */}
+              <text x="52" y="514" fill="#b45309" fontSize="10" fontWeight="bold">WR# (Pin 29)</text>
+              <circle cx="260" cy="510" r="3.5" fill={wr === 0 ? '#d97706' : '#94a3b8'} />
+              <line x1="260" y1="510" x2="960" y2="510" stroke={wr === 0 ? '#d97706' : '#cbd5e1'} strokeWidth={wr === 0 ? 2.5 : 1.5} />
+
+              {/* DEN# (Pin 26) & DT/R# (Pin 27) */}
+              <text x="52" y="564" fill="#64748b" fontSize="10">DEN# (Pin 26)</text>
+              <line x1="260" y1="560" x2="600" y2="560" stroke={den === 0 ? '#6366f1' : '#cbd5e1'} strokeWidth="1.5" />
+              <text x="52" y="594" fill="#64748b" fontSize="10">DT/R# (Pin 27)</text>
+              <line x1="260" y1="590" x2="600" y2="590" stroke="#64748b" strokeWidth="1.5" />
+            </g>
+
+            {/* ========================================================================================= */}
+            {/* 2. 3× 74LS373 OCTAL LATCHES (U2A, U2B, U2C) */}
+            {/* ========================================================================================= */}
+            <g 
+              id="chip-74ls373"
+              onClick={() => setSelectedChip('u2')}
+              className="cursor-pointer group"
+            >
+              {/* U2A: AD0-AD7 -> A0-A7 */}
+              <rect 
+                x="350" y="80" width="160" height="70" rx="6" 
+                fill={selectedChip === 'u2' ? '#eef2ff' : '#ffffff'} 
+                stroke={selectedChip === 'u2' ? '#6366f1' : '#94a3b8'} 
+                strokeWidth="1.5"
+              />
+              <text x="430" y="98" textAnchor="middle" fill="#1e1b4b" fontWeight="bold" fontSize="10.5">U2A: 74LS373 (Low)</text>
+              <text x="358" y="118" fill="#475569" fontSize="9">AD0–AD7</text>
+              <text x="460" y="118" fill="#1e1b4b" fontSize="9" fontWeight="bold">A0–A7</text>
+              <text x="430" y="138" textAnchor="middle" fill="#ea580c" fontSize="8">LE = ALE, OE# = GND</text>
+
+              {/* U2B: AD8-AD15 -> A8-A15 */}
+              <rect 
+                x="350" y="160" width="160" height="70" rx="6" 
+                fill={selectedChip === 'u2' ? '#eef2ff' : '#ffffff'} 
+                stroke={selectedChip === 'u2' ? '#6366f1' : '#94a3b8'} 
+                strokeWidth="1.5"
+              />
+              <text x="430" y="178" textAnchor="middle" fill="#1e1b4b" fontWeight="bold" fontSize="10.5">U2B: 74LS373 (Mid)</text>
+              <text x="358" y="198" fill="#475569" fontSize="9">AD8–AD15</text>
+              <text x="458" y="198" fill="#1e1b4b" fontSize="9" fontWeight="bold">A8–A15</text>
+              <text x="430" y="218" textAnchor="middle" fill="#ea580c" fontSize="8">LE = ALE, OE# = GND</text>
+
+              {/* U2C: A16-A19 & BHE# */}
+              <rect 
+                x="350" y="240" width="160" height="70" rx="6" 
+                fill={selectedChip === 'u2' ? '#eef2ff' : '#ffffff'} 
+                stroke={selectedChip === 'u2' ? '#6366f1' : '#94a3b8'} 
+                strokeWidth="1.5"
+              />
+              <text x="430" y="258" textAnchor="middle" fill="#1e1b4b" fontWeight="bold" fontSize="10.5">U2C: 74LS373 (High)</text>
+              <text x="358" y="278" fill="#475569" fontSize="9">A16–A19, BHE#</text>
+              <text x="442" y="278" fill="#7e22ce" fontSize="8.5" fontWeight="bold">A16–A19, BHE#</text>
+              <text x="430" y="298" textAnchor="middle" fill="#ea580c" fontSize="8">LE = ALE, OE# = GND</text>
+
+              {/* ALE Distribution bus line */}
+              <line x1="350" y1="330" x2="350" y2="135" stroke={ale === 1 ? '#ea580c' : '#cbd5e1'} strokeWidth="2" strokeDasharray="3 3" />
+            </g>
+
+            {/* Latched Address Distribution Paths */}
+            {/* A0 path -> OR Gate 1 (Pin for Even Bank) */}
+            <path d="M 510 115 L 850 115 L 850 170 L 890 170" fill="none" stroke="#2563eb" strokeWidth="2" />
+            <text x="630" y="110" fill="#2563eb" fontSize="9.5" fontWeight="bold">A0 (Even Bank Enable)</text>
+
+            {/* A1–A14 Address Bus (14 lines) -> to both RAM1 and RAM2 Address inputs A0–A13 */}
+            <path d="M 510 135 L 530 135 L 530 35 L 1030 35" fill="none" stroke="#0f172a" strokeWidth="2.5" />
+            {/* Dropdown into RAM 1 address inputs */}
+            <path d="M 1030 35 L 1030 105" fill="none" stroke="#0f172a" strokeWidth="2" />
+            {/* Dropdown into RAM 2 address inputs */}
+            <path d="M 1020 35 L 1020 385 L 1030 385" fill="none" stroke="#0f172a" strokeWidth="2" />
+            <text x="545" y="28" fill="#0f172a" fontSize="10" fontWeight="bold">A1–A14 Latched Address Bus (14 lines) → Connected to RAM 1 &amp; RAM 2 A0–A13</text>
+
+            {/* BHE# path -> OR Gate 2 (Pin for Odd Bank) */}
+            <path d="M 510 295 L 850 295 L 850 260 L 890 260" fill="none" stroke="#7e22ce" strokeWidth="2" />
+            <text x="630" y="290" fill="#7e22ce" fontSize="9.5" fontWeight="bold">BHE# (Odd Bank Enable)</text>
+
+            {/* A15–A19 path -> Absolute NAND Decoder */}
+            <path d="M 510 205 L 535 205 L 535 460 L 560 460" fill="none" stroke="#7e22ce" strokeWidth="2" />
+            <path d="M 510 275 L 545 275 L 545 425 L 560 425" fill="none" stroke="#7e22ce" strokeWidth="2" />
+            <text x="515" y="340" fill="#7e22ce" fontSize="9.5" fontWeight="bold">A15–A19</text>
+
+            {/* ========================================================================================= */}
+            {/* 3. ABSOLUTE ADDRESS DECODER (INVERTERS + 6-INPUT NAND 74LS30) */}
+            {/* ========================================================================================= */}
+            <g 
+              id="chip-decoder"
+              onClick={() => setSelectedChip('u3_dec')}
+              className="cursor-pointer group"
+            >
+              <rect 
+                x="560" y="350" width="220" height="165" rx="8" 
+                fill={selectedChip === 'u3_dec' ? '#fdf4ff' : '#ffffff'} 
+                stroke={selectedChip === 'u3_dec' ? '#c026d3' : '#94a3b8'} 
+                strokeWidth={selectedChip === 'u3_dec' ? 2.5 : 1.5}
+                filter="drop-shadow(0 2px 4px rgba(0,0,0,0.04))"
+              />
+              <rect x="560" y="350" width="220" height="25" rx="8" fill="#fae8ff" stroke="#f0abfc" strokeWidth="1" />
+              <text x="670" y="367" textAnchor="middle" fill="#701a75" fontWeight="bold" fontSize="10.5">
+                Absolute Decoder (74LS30 + 74LS04)
+              </text>
+              <text x="670" y="387" textAnchor="middle" fill="#86198f" fontSize="8.5" fontWeight="bold">
+                Range: 00000H–07FFFH (32 KB RAM)
+              </text>
+
+              {/* Inverter indicators & Inputs */}
+              <text x="572" y="407" fill="#475569" fontSize="8.5">M/IO# (Pin 28) = 1</text>
+              <text x="572" y="425" fill="#701a75" fontSize="8.5">NOT A19 = {1 - a19}</text>
+              <text x="572" y="443" fill="#701a75" fontSize="8.5">NOT A18 = {1 - a18}</text>
+              <text x="572" y="461" fill="#701a75" fontSize="8.5">NOT A17 = {1 - a17}</text>
+              <text x="572" y="479" fill="#701a75" fontSize="8.5">NOT A16 = {1 - a16}</text>
+              <text x="572" y="497" fill="#701a75" fontSize="8.5">NOT A15 = {1 - a15}</text>
+
+              {/* Output CS# */}
+              <circle cx="780" cy="435" r="4" fill={csBar === 0 ? '#16a34a' : '#dc2626'} />
+              <text x="755" y="430" fill={csBar === 0 ? '#15803d' : '#b91c1c'} fontSize="10" fontWeight="bold">CS#</text>
+            </g>
+
+            {/* Master CS# Line distribution to Bank OR Gates */}
+            <path d="M 780 435 L 820 435 L 820 190 L 890 190" fill="none" stroke={csBar === 0 ? '#16a34a' : '#cbd5e1'} strokeWidth="2.5" />
+            <path d="M 820 240 L 890 240" fill="none" stroke={csBar === 0 ? '#16a34a' : '#cbd5e1'} strokeWidth="2.5" />
+            <text x="825" y="340" fill={csBar === 0 ? '#15803d' : '#64748b'} fontSize="9" fontWeight="bold">CS# (32 KB)</text>
+
+            {/* ========================================================================================= */}
+            {/* 4. BANK QUALIFICATION OR GATES (74LS32) */}
+            {/* ========================================================================================= */}
+            <g 
+              id="chip-or"
+              onClick={() => setSelectedChip('u_or')}
+              className="cursor-pointer group"
+            >
+              {/* OR Gate 1: CS# OR A0 -> CE1# (Even Bank) */}
+              <path 
+                d="M 890 160 Q 905 160 915 180 Q 905 200 890 200 Q 898 180 890 160 Z" 
+                fill={selectedChip === 'u_or' ? '#e0f2fe' : '#ffffff'} 
+                stroke={selectedChip === 'u_or' ? '#0284c7' : '#475569'} 
+                strokeWidth="1.8" 
+              />
+              <text x="900" y="183" fill="#0369a1" fontSize="7.5" fontWeight="bold">OR 1</text>
+              <text x="860" y="154" fill="#475569" fontSize="8.5">CS# + A0</text>
+              <line x1="915" y1="180" x2="1030" y2="180" stroke={ce1Bar === 0 ? '#16a34a' : '#cbd5e1'} strokeWidth="2.5" />
+              <text x="935" y="173" fill={ce1Bar === 0 ? '#15803d' : '#64748b'} fontSize="9" fontWeight="bold">
+                CE1# = {ce1Bar}
+              </text>
+
+              {/* OR Gate 2: CS# OR BHE# -> CE2# (Odd Bank) */}
+              <path 
+                d="M 890 230 Q 905 230 915 250 Q 905 270 890 270 Q 898 250 890 230 Z" 
+                fill={selectedChip === 'u_or' ? '#fef3c7' : '#ffffff'} 
+                stroke={selectedChip === 'u_or' ? '#d97706' : '#475569'} 
+                strokeWidth="1.8" 
+              />
+              <text x="900" y="253" fill="#b45309" fontSize="7.5" fontWeight="bold">OR 2</text>
+              <text x="855" y="285" fill="#475569" fontSize="8.5">CS# + BHE#</text>
+              {/* Route CE2# from OR2 down to RAM2 CE2# pin at y=450 */}
+              <path d="M 915 250 L 970 250 L 970 450 L 1030 450" fill="none" stroke={ce2Bar === 0 ? '#d97706' : '#cbd5e1'} strokeWidth="2.5" />
+              <text x="925" y="243" fill={ce2Bar === 0 ? '#b45309' : '#64748b'} fontSize="9" fontWeight="bold">
+                CE2# = {ce2Bar}
               </text>
             </g>
 
-            {/* ----------------- U5B: Odd SRAM (62256, 32KB) ----------------- */}
-            <g
-              onClick={() => setSelectedChip('u5b')}
+            {/* ========================================================================================= */}
+            {/* 5. 2× 74LS245 OCTAL DATA TRANSCEIVERS (U4A, U4B) */}
+            {/* ========================================================================================= */}
+            <g 
+              id="chip-74ls245"
+              onClick={() => setSelectedChip('u4')}
               className="cursor-pointer group"
             >
-              <rect
-                x="1330"
-                y="80"
-                width="220"
-                height="210"
-                rx="12"
-                fill={oddSramActive ? '#1e1b4b' : (selectedChip === 'u5b' ? 'url(#icGradActive)' : 'url(#icGrad)')}
-                stroke={oddSramActive ? '#818cf8' : '#475569'}
-                strokeWidth={oddSramActive ? '3' : '1.5'}
-                className="transition-all duration-150 group-hover:stroke-indigo-400"
+              {/* U4A: Lower Data Bus (AD0-AD7 -> D0-D7) */}
+              <rect 
+                x="600" y="535" width="170" height="42" rx="6" 
+                fill={selectedChip === 'u4' ? '#f8fafc' : '#ffffff'} 
+                stroke={selectedChip === 'u4' ? '#475569' : '#94a3b8'} 
+                strokeWidth="1.5"
               />
-              <text x="1440" y="105" fill="#ffffff" fontSize="12" fontWeight="bold" textAnchor="middle">U5B: SRAM 62256</text>
-              <text x="1440" y="120" fill="#c7d2fe" fontSize="10" fontWeight="bold" textAnchor="middle">ODD BANK (32 KB × 8)</text>
-              <text x="1440" y="135" fill="#94a3b8" fontSize="9" textAnchor="middle">Range: 00001H–0FFFFH</text>
+              <text x="685" y="550" textAnchor="middle" fill="#0f172a" fontWeight="bold" fontSize="9.5">U4A: 74LS245 (Lower)</text>
+              <text x="610" y="567" fill="#475569" fontSize="8">AD0–AD7</text>
+              <text x="725" y="567" fill="#2563eb" fontSize="8" fontWeight="bold">D0–D7</text>
 
-              <text x="1340" y="155" fill="#818cf8" fontSize="10" fontWeight="bold">D8–D15 (Data)</text>
-              <text x="1340" y="175" fill="#38bdf8" fontSize="10">A0–A14 (from A1–A15)</text>
-              <text x="1340" y="195" fill={oddSramActive ? '#a5b4fc' : '#94a3b8'} fontSize="10" fontWeight="bold">
-                CE# ({oddSramActive ? 'ACTIVE' : 'High'})
+              {/* U4B: Upper Data Bus (AD8-AD15 -> D8-D15) */}
+              <rect 
+                x="600" y="590" width="170" height="42" rx="6" 
+                fill={selectedChip === 'u4' ? '#f8fafc' : '#ffffff'} 
+                stroke={selectedChip === 'u4' ? '#475569' : '#94a3b8'} 
+                strokeWidth="1.5"
+              />
+              <text x="685" y="605" textAnchor="middle" fill="#0f172a" fontWeight="bold" fontSize="9.5">U4B: 74LS245 (Upper)</text>
+              <text x="610" y="622" fill="#475569" fontSize="8">AD8–AD15</text>
+              <text x="725" y="622" fill="#d97706" fontSize="8" fontWeight="bold">D8–D15</text>
+            </g>
+
+            {/* Data Bus Distribution Paths to RAM Chips */}
+            {/* D0–D7 -> RAM 1 (Even Bank) */}
+            <path d="M 770 556 L 990 556 L 990 135 L 1030 135" fill="none" stroke="#2563eb" strokeWidth="2.5" />
+            <text x="780" y="550" fill="#2563eb" fontSize="9" fontWeight="bold">D0–D7 (Even Byte Data Bus)</text>
+
+            {/* D8–D15 -> RAM 2 (Odd Bank) */}
+            <path d="M 770 611 L 1005 611 L 1005 415 L 1030 415" fill="none" stroke="#d97706" strokeWidth="2.5" />
+            <text x="780" y="605" fill="#d97706" fontSize="9" fontWeight="bold">D8–D15 (Odd Byte Data Bus)</text>
+
+            {/* RD# & WR# Bus taps to RAM 1 and RAM 2 */}
+            {/* RD# tap into RAM 1 (y=215) and RAM 2 (y=485) */}
+            <path d="M 980 470 L 980 215 L 1030 215" fill="none" stroke={rd === 0 ? '#0284c7' : '#cbd5e1'} strokeWidth={rd === 0 ? 2.5 : 1.5} />
+            <path d="M 980 470 L 980 485 L 1030 485" fill="none" stroke={rd === 0 ? '#0284c7' : '#cbd5e1'} strokeWidth={rd === 0 ? 2.5 : 1.5} />
+
+            {/* WR# tap into RAM 1 (y=250) and RAM 2 (y=520) */}
+            <path d="M 960 510 L 960 250 L 1030 250" fill="none" stroke={wr === 0 ? '#d97706' : '#cbd5e1'} strokeWidth={wr === 0 ? 2.5 : 1.5} />
+            <path d="M 960 510 L 960 520 L 1030 520" fill="none" stroke={wr === 0 ? '#d97706' : '#cbd5e1'} strokeWidth={wr === 0 ? 2.5 : 1.5} />
+
+            {/* ========================================================================================= */}
+            {/* 6. THE TWO 16 KB RAM MEMORY CHIPS (RAM 1: EVEN BANK & RAM 2: ODD BANK) */}
+            {/* ========================================================================================= */}
+            {/* RAM 1: 16 KB Even Bank SRAM (e.g. 62128) */}
+            <g 
+              id="chip-ram1"
+              onClick={() => setSelectedChip('ram1')}
+              className="cursor-pointer group"
+            >
+              <rect 
+                x="1030" y="48" width="250" height="240" rx="10" 
+                fill={selectedChip === 'ram1' ? '#eef2ff' : (ram1EvenActive ? '#f0fdf4' : '#ffffff')} 
+                stroke={selectedChip === 'ram1' ? '#4f46e5' : (ram1EvenActive ? '#16a34a' : '#94a3b8')} 
+                strokeWidth={selectedChip === 'ram1' || ram1EvenActive ? 2.5 : 1.5}
+                filter="drop-shadow(0 2px 6px rgba(0,0,0,0.05))"
+              />
+              <rect x="1030" y="48" width="250" height="34" rx="10" fill="#e0e7ff" stroke="#c7d2fe" strokeWidth="1" />
+              <text x="1155" y="66" textAnchor="middle" fill="#1e1b4b" fontWeight="bold" fontSize="11.5">
+                RAM 1: 16 KB SRAM (Even Bank)
               </text>
-              <text x="1340" y="225" fill="#10b981" fontSize="10">OE# (RD#)</text>
-              <text x="1340" y="255" fill="#f59e0b" fontSize="10">WE# (WR#)</text>
+              <text x="1155" y="78" textAnchor="middle" fill="#3730a3" fontSize="8.5">
+                62128 (16K × 8) • Range: 00000H–07FFEH
+              </text>
 
-              <rect x="1340" y="265" width="200" height="18" rx="4" fill="#0f172a" stroke="#818cf8" strokeWidth="1" />
-              <text x="1440" y="278" fill={oddSramActive ? '#a5b4fc' : '#64748b'} fontSize="9" fontWeight="bold" textAnchor="middle">
-                {oddSramActive ? '● BANK SELECTED (BHE#=0)' : '○ Bank Idle'}
+              {/* Status Badge */}
+              <rect 
+                x="1160" y="88" width="110" height="18" rx="4" 
+                fill={ram1EvenActive ? '#dcfce7' : '#f1f5f9'} 
+                stroke={ram1EvenActive ? '#86efac' : '#cbd5e1'} 
+              />
+              <text 
+                x="1215" y="100" textAnchor="middle" 
+                fill={ram1EvenActive ? '#15803d' : '#64748b'} 
+                fontSize="8.5" fontWeight="bold"
+              >
+                {ram1EvenActive ? '● ACTIVE (EVEN)' : '○ STANDBY'}
+              </text>
+
+              {/* RAM 1 Pin Labels */}
+              <text x="1042" y="108" fill="#475569" fontSize="9">A0–A13 (14 pins) ← A1–A14</text>
+              <text x="1042" y="139" fill="#2563eb" fontSize="9" fontWeight="bold">D0–D7 (Data Bus)</text>
+              <text x="1042" y="184" fill={ce1Bar === 0 ? '#15803d' : '#94a3b8'} fontSize="9" fontWeight="bold">
+                CE1# (Pin) = {ce1Bar}
+              </text>
+              <text x="1042" y="219" fill={rd === 0 ? '#0284c7' : '#94a3b8'} fontSize="9" fontWeight="bold">
+                OE# (Pin) = {rd} (RD#)
+              </text>
+              <text x="1042" y="254" fill={wr === 0 ? '#d97706' : '#94a3b8'} fontSize="9" fontWeight="bold">
+                WE# (Pin) = {wr} (WR#)
               </text>
             </g>
 
-            {/* ----------------- U6A: Even EPROM (27256, 32KB) ----------------- */}
-            <g
-              onClick={() => setSelectedChip('u6a')}
+            {/* RAM 2: 16 KB Odd Bank SRAM (e.g. 62128) */}
+            <g 
+              id="chip-ram2"
+              onClick={() => setSelectedChip('ram2')}
               className="cursor-pointer group"
             >
-              <rect
-                x="1040"
-                y="380"
-                width="220"
-                height="210"
-                rx="12"
-                fill={evenEpromActive ? '#581c87' : (selectedChip === 'u6a' ? 'url(#icGradActive)' : 'url(#icGrad)')}
-                stroke={evenEpromActive ? '#c084fc' : '#475569'}
-                strokeWidth={evenEpromActive ? '3' : '1.5'}
-                className="transition-all duration-150 group-hover:stroke-purple-400"
+              <rect 
+                x="1030" y="330" width="250" height="240" rx="10" 
+                fill={selectedChip === 'ram2' ? '#fffbeb' : (ram2OddActive ? '#fefce8' : '#ffffff')} 
+                stroke={selectedChip === 'ram2' ? '#d97706' : (ram2OddActive ? '#eab308' : '#94a3b8')} 
+                strokeWidth={selectedChip === 'ram2' || ram2OddActive ? 2.5 : 1.5}
+                filter="drop-shadow(0 2px 6px rgba(0,0,0,0.05))"
               />
-              <text x="1150" y="405" fill="#ffffff" fontSize="12" fontWeight="bold" textAnchor="middle">U6A: EPROM 27256</text>
-              <text x="1150" y="420" fill="#e9d5ff" fontSize="10" fontWeight="bold" textAnchor="middle">EVEN BOOT ROM (32 KB)</text>
-              <text x="1150" y="435" fill="#94a3b8" fontSize="9" textAnchor="middle">Top Space (FFFF0H Start)</text>
-
-              <text x="1050" y="455" fill="#34d399" fontSize="10" fontWeight="bold">D0–D7 (Data)</text>
-              <text x="1050" y="475" fill="#38bdf8" fontSize="10">A0–A14 (Address)</text>
-              <text x="1050" y="495" fill={evenEpromActive ? '#d8b4fe' : '#94a3b8'} fontSize="10" fontWeight="bold">
-                CE# ({evenEpromActive ? 'ACTIVE' : 'High'})
+              <rect x="1030" y="330" width="250" height="34" rx="10" fill="#fef3c7" stroke="#fde68a" strokeWidth="1" />
+              <text x="1155" y="348" textAnchor="middle" fill="#78350f" fontWeight="bold" fontSize="11.5">
+                RAM 2: 16 KB SRAM (Odd Bank)
               </text>
-              <text x="1050" y="525" fill="#10b981" fontSize="10">OE# (RD#)</text>
-              <text x="1050" y="555" fill="#64748b" fontSize="9">NO WE# (Read-Only)</text>
+              <text x="1155" y="360" textAnchor="middle" fill="#92400e" fontSize="8.5">
+                62128 (16K × 8) • Range: 00001H–07FFFH
+              </text>
 
-              <rect x="1050" y="565" width="200" height="18" rx="4" fill="#0f172a" stroke="#c084fc" strokeWidth="1" />
-              <text x="1150" y="578" fill={evenEpromActive ? '#d8b4fe' : '#64748b'} fontSize="9" fontWeight="bold" textAnchor="middle">
-                {evenEpromActive ? '● ROM SELECTED (A0=0)' : '○ ROM Idle'}
+              {/* Status Badge */}
+              <rect 
+                x="1160" y="370" width="110" height="18" rx="4" 
+                fill={ram2OddActive ? '#fef9c3' : '#f1f5f9'} 
+                stroke={ram2OddActive ? '#fde047' : '#cbd5e1'} 
+              />
+              <text 
+                x="1215" y="382" textAnchor="middle" 
+                fill={ram2OddActive ? '#854d0e' : '#64748b'} 
+                fontSize="8.5" fontWeight="bold"
+              >
+                {ram2OddActive ? '● ACTIVE (ODD)' : '○ STANDBY'}
+              </text>
+
+              {/* RAM 2 Pin Labels */}
+              <text x="1042" y="388" fill="#475569" fontSize="9">A0–A13 (14 pins) ← A1–A14</text>
+              <text x="1042" y="419" fill="#d97706" fontSize="9" fontWeight="bold">D8–D15 (Data Bus)</text>
+              <text x="1042" y="454" fill={ce2Bar === 0 ? '#b45309' : '#94a3b8'} fontSize="9" fontWeight="bold">
+                CE2# (Pin) = {ce2Bar}
+              </text>
+              <text x="1042" y="489" fill={rd === 0 ? '#0284c7' : '#94a3b8'} fontSize="9" fontWeight="bold">
+                OE# (Pin) = {rd} (RD#)
+              </text>
+              <text x="1042" y="524" fill={wr === 0 ? '#d97706' : '#94a3b8'} fontSize="9" fontWeight="bold">
+                WE# (Pin) = {wr} (WR#)
               </text>
             </g>
 
-            {/* ----------------- U6B: Odd EPROM (27256, 32KB) ----------------- */}
-            <g
-              onClick={() => setSelectedChip('u6b')}
-              className="cursor-pointer group"
-            >
-              <rect
-                x="1330"
-                y="380"
-                width="220"
-                height="210"
-                rx="12"
-                fill={oddEpromActive ? '#581c87' : (selectedChip === 'u6b' ? 'url(#icGradActive)' : 'url(#icGrad)')}
-                stroke={oddEpromActive ? '#c084fc' : '#475569'}
-                strokeWidth={oddEpromActive ? '3' : '1.5'}
-                className="transition-all duration-150 group-hover:stroke-purple-400"
-              />
-              <text x="1440" y="405" fill="#ffffff" fontSize="12" fontWeight="bold" textAnchor="middle">U6B: EPROM 27256</text>
-              <text x="1440" y="420" fill="#e9d5ff" fontSize="10" fontWeight="bold" textAnchor="middle">ODD BOOT ROM (32 KB)</text>
-              <text x="1440" y="435" fill="#94a3b8" fontSize="9" textAnchor="middle">Top Space (FFFF0H Start)</text>
-
-              <text x="1340" y="455" fill="#818cf8" fontSize="10" fontWeight="bold">D8–D15 (Data)</text>
-              <text x="1340" y="475" fill="#38bdf8" fontSize="10">A0–A14 (Address)</text>
-              <text x="1340" y="495" fill={oddEpromActive ? '#d8b4fe' : '#94a3b8'} fontSize="10" fontWeight="bold">
-                CE# ({oddEpromActive ? 'ACTIVE' : 'High'})
-              </text>
-              <text x="1340" y="525" fill="#10b981" fontSize="10">OE# (RD#)</text>
-              <text x="1340" y="555" fill="#64748b" fontSize="9">NO WE# (Read-Only)</text>
-
-              <rect x="1340" y="565" width="200" height="18" rx="4" fill="#0f172a" stroke="#c084fc" strokeWidth="1" />
-              <text x="1440" y="578" fill={oddEpromActive ? '#d8b4fe' : '#64748b'} fontSize="9" fontWeight="bold" textAnchor="middle">
-                {oddEpromActive ? '● ROM SELECTED (BHE#=0)' : '○ ROM Idle'}
-              </text>
+            {/* Bottom Legend */}
+            <g transform="translate(40, 642)">
+              <text x="0" y="15" fill="#475569" fontSize="10" fontWeight="bold">Schematic Legend:</text>
+              <circle cx="120" cy="12" r="4" fill="#2563eb" />
+              <text x="130" y="15" fill="#334155" fontSize="9.5">Address / Lower Data (D0–D7)</text>
+              <circle cx="310" cy="12" r="4" fill="#d97706" />
+              <text x="320" y="15" fill="#334155" fontSize="9.5">Upper Data (D8–D15)</text>
+              <circle cx="470" cy="12" r="4" fill="#16a34a" />
+              <text x="480" y="15" fill="#334155" fontSize="9.5">Active Low Chip Select (CS#/CE#)</text>
+              <circle cx="680" cy="12" r="4" fill="#ea580c" />
+              <text x="690" y="15" fill="#334155" fontSize="9.5">Control Strobes (ALE, RD#, WR#)</text>
             </g>
-
           </svg>
         </div>
       </div>
 
-      {/* SELECTED COMPONENT / IC TECHNICAL INSPECTOR PANEL */}
-      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+      {/* Chip Technical Inspector Panel */}
+      <div className="bg-slate-50 rounded-2xl border border-slate-200 p-3 md:p-4 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-indigo-900/60 rounded-lg text-indigo-400 border border-indigo-700/50">
-              <Database className="w-4 h-4" />
-            </div>
+            <span className="p-1.5 bg-indigo-100 text-indigo-700 rounded-lg">
+              <Layers className="w-4 h-4" />
+            </span>
             <div>
-              <h4 className="font-bold text-sm text-white">{currentChipInfo.title}</h4>
-              <p className="text-xs text-indigo-300">{currentChipInfo.subtitle}</p>
+              <h4 className="font-bold text-xs md:text-sm text-slate-900">{currentChipInfo.title}</h4>
+              <p className="text-[11px] text-slate-500">{currentChipInfo.subtitle}</p>
             </div>
           </div>
 
           {/* Chip Quick Selector Buttons */}
-          <div className="flex flex-wrap gap-1">
-            {Object.keys(chipData).map((cKey) => {
-              const isSel = (selectedChip || 'u1') === cKey;
-              return (
-                <button
-                  key={cKey}
-                  onClick={() => setSelectedChip(cKey)}
-                  className={`px-2 py-1 rounded text-[10px] font-mono font-bold transition-all cursor-pointer ${
-                    isSel
-                      ? 'bg-indigo-600 text-white shadow-sm'
-                      : 'bg-slate-900 text-slate-400 hover:bg-slate-800 hover:text-white'
-                  }`}
-                >
-                  {cKey.toUpperCase()}
-                </button>
-              );
-            })}
+          <div className="flex flex-wrap items-center gap-1 text-xs">
+            <span className="text-[11px] text-slate-500 font-semibold mr-1">Inspect IC:</span>
+            {[
+              { id: 'ram1', label: 'RAM 1 (Even 16KB)' },
+              { id: 'ram2', label: 'RAM 2 (Odd 16KB)' },
+              { id: 'u1', label: '8086 MPU' },
+              { id: 'u2', label: '74LS373 Latches' },
+              { id: 'u3_dec', label: 'NAND Decoder' },
+              { id: 'u_or', label: 'Bank OR Gates' },
+              { id: 'u4', label: '74LS245 Buffers' },
+            ].map((chip) => (
+              <button
+                key={chip.id}
+                onClick={() => setSelectedChip(chip.id)}
+                className={`px-2 py-1 rounded-lg font-semibold transition-all border cursor-pointer ${
+                  selectedChip === chip.id
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs'
+                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100 hover:text-slate-900'
+                }`}
+              >
+                {chip.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        <p className="text-xs text-slate-300 leading-relaxed">
-          {currentChipInfo.desc}
-        </p>
+        <p className="text-xs text-slate-600 leading-relaxed">{currentChipInfo.desc}</p>
 
-        {/* Technical Specifications Grid */}
-        {currentChipInfo.techSpecs && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {currentChipInfo.techSpecs.map((spec, sIdx) => (
-              <div key={sIdx} className="bg-slate-900 p-2 rounded-lg border border-slate-800">
-                <div className="text-[10px] text-slate-400 font-semibold">{spec.label}</div>
-                <div className="text-xs font-mono font-bold text-slate-100">{spec.val}</div>
-              </div>
-            ))}
+        {/* Technical Specs Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+          {currentChipInfo.techSpecs.map((spec, idx) => (
+            <div key={idx} className="bg-white p-2 rounded-xl border border-slate-200 space-y-0.5">
+              <div className="text-[10px] uppercase font-bold text-slate-400">{spec.label}</div>
+              <div className="font-semibold text-slate-800 text-[11px]">{spec.val}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Real-time Pin State Table */}
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+          <div className="bg-slate-100 px-3 py-1.5 border-b border-slate-200 flex items-center justify-between text-xs font-bold text-slate-700">
+            <span>Real-time Pin Logic &amp; Bus States (Clock State: T{tState})</span>
+            <span className="font-mono text-[10px] text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+              Live Evaluation
+            </span>
           </div>
-        )}
-
-        {/* Dynamic Real-Time Pin States Table */}
-        <div className="space-y-1.5">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-            Real-Time Pin Functions &amp; Logic States for Current Cycle:
-          </span>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-            {currentChipInfo.pins.map((p, pIdx) => (
-              <div key={pIdx} className="bg-slate-900 p-2 rounded-lg border border-slate-800/80 flex flex-col justify-between gap-1">
-                <div className="flex items-center justify-between gap-1">
-                  <span className="font-mono font-bold text-indigo-300 text-[11px]">{p.pin}</span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-950 font-mono text-amber-300 border border-slate-800 font-bold">
-                    {p.state}
-                  </span>
+          <div className="divide-y divide-slate-100 max-h-48 overflow-y-auto">
+            {currentChipInfo.pins.map((pin, idx) => (
+              <div key={idx} className="px-3 py-1.5 flex items-center justify-between text-xs hover:bg-slate-50">
+                <div className="font-mono font-bold text-slate-800 w-1/3 truncate">{pin.pin}</div>
+                <div className="text-slate-500 text-[11px] w-1/3 truncate">{pin.role}</div>
+                <div className="font-mono font-semibold text-indigo-900 text-right w-1/3 truncate">
+                  {pin.state}
                 </div>
-                <div className="text-[10px] text-slate-400">{p.role}</div>
               </div>
             ))}
           </div>

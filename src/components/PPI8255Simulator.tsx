@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Cpu, Sliders, CheckCircle2, Zap, ArrowRight, ToggleLeft, ToggleRight, Settings, Layers, Hash, Info, Eye } from 'lucide-react';
 import PPI8255ArchitectureDiagram from './PPI8255ArchitectureDiagram';
+import PPI8255ModesOfOperation from './PPI8255ModesOfOperation';
 
-export type PPI8255Tab = 'diagram' | 'pins' | 'architecture' | 'iomode' | 'bsr' | 'registers';
+export type PPI8255Tab = 'diagram' | 'pins' | 'architecture' | 'modes' | 'iomode' | 'bsr' | 'registers';
 
 interface PPI8255SimulatorProps {
   initialTab?: PPI8255Tab;
@@ -129,7 +130,7 @@ export default function PPI8255Simulator({
 
   const tabLabels: Record<PPI8255Tab, { label: string; title: string; subtitle: string }> = {
     diagram: {
-      label: 'Figure 1.3 Architecture 📐',
+      label: 'Architecture',
       title: 'Figure 1.3: Intel 8255 Internal Architecture Block Diagram',
       subtitle: '8-Bit Data Bus Buffer • Read/Write Control Logic • Group A & B Controllers • Ports A, B & C'
     },
@@ -139,9 +140,14 @@ export default function PPI8255Simulator({
       subtitle: 'Complete 40-Pin Package Layout • Ports A, B, C (24 I/O Pins) • Bus Control & Power Rails'
     },
     architecture: {
-      label: 'Block Architecture',
+      label: 'Functional Blocks',
       title: 'Intel 8255 PPI Internal Block Architecture',
       subtitle: 'Group A & Group B Control Units • 8-Bit Internal Data Bus Buffer • Read/Write Control Logic'
+    },
+    modes: {
+      label: 'Modes of Operation ⚙️',
+      title: 'Intel 8255 PPI Modes of Operation & Architecture',
+      subtitle: 'BSR Mode (D7=0) • Mode 0 (Basic I/O) • Mode 1 (Strobed Handshake) • Mode 2 (Bi-directional Bus)'
     },
     iomode: {
       label: 'I/O Control Word (Mode 0/1/2)',
@@ -875,6 +881,13 @@ export default function PPI8255Simulator({
       {/* ========================================================================= */}
       {activeTab === 'diagram' && (
         <PPI8255ArchitectureDiagram />
+      )}
+
+      {/* ========================================================================= */}
+      {/* TAB: MODES OF OPERATION                                                   */}
+      {/* ========================================================================= */}
+      {activeTab === 'modes' && (
+        <PPI8255ModesOfOperation />
       )}
     </div>
   );

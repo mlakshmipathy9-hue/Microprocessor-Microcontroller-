@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import StepperSchematicDiagram from './StepperSchematicDiagram';
+import StepperMotorTypesExplorer from './StepperMotorTypesExplorer';
 import { 
   Play, 
   Pause, 
@@ -24,14 +25,15 @@ import {
   Download,
   RefreshCw,
   SlidersHorizontal,
-  Compass
+  Compass,
+  Component
 } from 'lucide-react';
 
 interface PeripheralInterfacingSimulatorProps {
-  initialTab?: 'schematic' | 'circuit' | 'stepper' | 'stepper-code' | 'display-circuit' | 'display' | 'display-code' | 'keypad-circuit' | 'keypad' | 'keypad-code' | 'traffic' | 'alp';
-  mode?: 'schematic' | 'circuit' | 'stepper' | 'stepper-code' | 'display-circuit' | 'display' | 'display-code' | 'keypad-circuit' | 'keypad' | 'keypad-code' | 'traffic' | 'alp';
+  initialTab?: 'schematic' | 'circuit' | 'stepper-types' | 'stepper' | 'stepper-code' | 'display-circuit' | 'display' | 'display-code' | 'keypad-circuit' | 'keypad' | 'keypad-code' | 'traffic' | 'traffic-code' | 'alp';
+  mode?: 'schematic' | 'circuit' | 'stepper-types' | 'stepper' | 'stepper-code' | 'display-circuit' | 'display' | 'display-code' | 'keypad-circuit' | 'keypad' | 'keypad-code' | 'traffic' | 'traffic-code' | 'alp';
   showTabs?: boolean;
-  allowedTabs?: ('schematic' | 'circuit' | 'stepper' | 'stepper-code' | 'display-circuit' | 'display' | 'display-code' | 'keypad-circuit' | 'keypad' | 'keypad-code' | 'traffic' | 'alp')[];
+  allowedTabs?: ('schematic' | 'circuit' | 'stepper-types' | 'stepper' | 'stepper-code' | 'display-circuit' | 'display' | 'display-code' | 'keypad-circuit' | 'keypad' | 'keypad-code' | 'traffic' | 'traffic-code' | 'alp')[];
 }
 
 export default function PeripheralInterfacingSimulator({ 
@@ -40,7 +42,7 @@ export default function PeripheralInterfacingSimulator({
   showTabs = false,
   allowedTabs
 }: PeripheralInterfacingSimulatorProps) {
-  const [activeTab, setActiveTab] = useState<'schematic' | 'circuit' | 'stepper' | 'stepper-code' | 'display-circuit' | 'display' | 'display-code' | 'keypad-circuit' | 'keypad' | 'keypad-code' | 'traffic' | 'alp'>(mode || initialTab);
+  const [activeTab, setActiveTab] = useState<'schematic' | 'circuit' | 'stepper-types' | 'stepper' | 'stepper-code' | 'display-circuit' | 'display' | 'display-code' | 'keypad-circuit' | 'keypad' | 'keypad-code' | 'traffic' | 'traffic-code' | 'alp'>(mode || initialTab);
 
   useEffect(() => {
     if (mode) setActiveTab(mode);
@@ -103,6 +105,12 @@ export default function PeripheralInterfacingSimulator({
   // Traffic Light Controller State
   const [trafficRunning, setTrafficRunning] = useState<boolean>(false);
   const [trafficStateIndex, setTrafficStateIndex] = useState<number>(0);
+
+  // Traffic Light Dynamic ALP Generator State
+  const [trafficAlpPort, setTrafficAlpPort] = useState<'portA' | 'portB' | 'portC'>('portA');
+  const [trafficAlpMode, setTrafficAlpMode] = useState<'standard_4phase' | 'with_pedestrian' | 'night_flash' | 'emergency_override'>('standard_4phase');
+  const [trafficAlpTiming, setTrafficAlpTiming] = useState<'standard' | 'demo' | 'rapid'>('standard');
+  const [copiedTrafficAlp, setCopiedTrafficAlp] = useState<boolean>(false);
 
   // Selected ALP Program Tab
   const [selectedAlp, setSelectedAlp] = useState<'stepper' | 'seven-seg' | 'keypad' | 'traffic'>('stepper');
@@ -749,6 +757,188 @@ END MAIN                      ; End of assembly program`;
     URL.revokeObjectURL(url);
   };
 
+  // Traffic Light Controller Assembly Code Generator with Line-by-Line Comments
+  const generateTrafficAssemblyCode = () => {
+    const portAddr = trafficAlpPort === 'portA' ? portAAddr : trafficAlpPort === 'portB' ? portBAddr : portCAddr;
+    const isPedestrian = trafficAlpMode === 'with_pedestrian';
+    const isNightFlash = trafficAlpMode === 'night_flash';
+    const isEmergency = trafficAlpMode === 'emergency_override';
+
+    const timingLabel = trafficAlpTiming === 'standard' 
+      ? 'Standard Urban (~30s Green / 5s Yellow)' 
+      : trafficAlpTiming === 'demo'
+      ? 'Fast Demo (~5s Green / 2s Yellow)'
+      : 'Rapid Lab Simulation (~2s Green / 1s Yellow)';
+
+    const outerCountGreen = trafficAlpTiming === 'standard' ? '0FFFFH' : trafficAlpTiming === 'demo' ? '3FFFH' : '1FFFH';
+    const innerCountGreen = trafficAlpTiming === 'standard' ? '00FFH' : trafficAlpTiming === 'demo' ? '0030H' : '0010H';
+    const outerCountYellow = trafficAlpTiming === 'standard' ? '2FFFH' : trafficAlpTiming === 'demo' ? '0FFFH' : '07FFH';
+    const innerCountYellow = trafficAlpTiming === 'standard' ? '0030H' : trafficAlpTiming === 'demo' ? '0010H' : '0008H';
+
+    return `; =========================================================================
+; 8086 ASSEMBLY LANGUAGE PROGRAM (ALP): 4-WAY TRAFFIC LIGHT CONTROLLER
+; =========================================================================
+; Target Microprocessor : Intel 8086 (Minimum Mode, 5 MHz Clock)
+; Peripheral Interface  : Intel 8255 PPI (Programmable Peripheral Interface)
+; Output Data Port      : 8255 ${trafficAlpPort.toUpperCase()} (I/O Port Address: ${portAddr})
+; Control Register Port : 8255 Control Port (I/O Port Address: ${controlRegAddr})
+; Operating Mode        : ${trafficAlpMode.toUpperCase().replace('_', ' ')}
+; Timing Profile        : ${timingLabel}
+; -------------------------------------------------------------------------
+; 8255 PPI PORT BIT ASSIGNMENTS (${trafficAlpPort.toUpperCase()}):
+;   PA0 = North-South RED Lamp     (Active HIGH, Pin 4)
+;   PA1 = North-South YELLOW Lamp  (Active HIGH, Pin 3)
+;   PA2 = North-South GREEN Lamp   (Active HIGH, Pin 2)
+;   PA3 = East-West RED Lamp       (Active HIGH, Pin 1)
+;   PA4 = East-West YELLOW Lamp    (Active HIGH, Pin 40)
+;   PA5 = East-West GREEN Lamp     (Active HIGH, Pin 39)
+;   PA6, PA7 = Unused / Grounded   (Pins 38, 37)
+; =========================================================================
+
+.MODEL SMALL                  ; Small memory model (single code and data segment)
+.STACK 64                     ; Allocate 64 bytes of stack space for CALL / RET
+
+.DATA                         ; Begin initialized data segment
+  ; -----------------------------------------------------------------------
+  ; 4-Phase Traffic Signal Bit Pattern Array:
+  ;   Phase 1 (21H): NS Green (PA2=1) + EW Red (PA3=1) -> 00100001b = 21H
+  ;   Phase 2 (11H): NS Yellow (PA1=1) + EW Red (PA3=1) -> 00010001b = 11H
+  ;   Phase 3 (0CH): NS Red (PA0=1) + EW Green (PA5=1) -> 00001100b = 0CH
+  ;   Phase 4 (0AH): NS Red (PA0=1) + EW Yellow (PA4=1) -> 00001010b = 0AH
+  ; -----------------------------------------------------------------------
+  PHASE_CODES DB 21H, 11H, 0CH, 0AH   ; 4-Phase sequencing byte lookup table
+  NUM_PHASES  EQU 4                   ; 4 traffic phases per intersection cycle
+
+  PORT_DATA   EQU ${portAddr}         ; 8255 ${trafficAlpPort.toUpperCase()} Lamp Driver Output Address
+  PORT_CTRL   EQU ${controlRegAddr}   ; 8255 PPI Control Register Address
+  ${isPedestrian ? `PORT_SENSE  EQU ${portCAddr}         ; Port C used for Pedestrian Push-Button Senses\n  CTRL_BYTE   EQU 89H                 ; Mode 0: Port A=OUT, Port B=OUT, Port C=IN` : `CTRL_BYTE   EQU 80H                 ; Mode 0: All Ports (A, B, C) configured as OUTPUT`}
+
+.CODE                         ; Begin executable code segment
+MAIN PROC FAR                 ; Main program entry procedure
+  ; --- STEP 1: INITIALIZE DATA SEGMENT (DS) ---
+  MOV AX, @DATA               ; Load address of data segment into AX register
+  MOV DS, AX                  ; Point DS register to data segment base
+
+  ; --- STEP 2: CONFIGURE 8255 PPI IN MODE 0 ---
+  MOV DX, PORT_CTRL           ; Load DX with 8255 Control Port Address (${controlRegAddr})
+  MOV AL, CTRL_BYTE           ; Load Control Word byte (${isPedestrian ? '89H' : '80H'})
+  OUT DX, AL                  ; Send Control Word to 8255 Control Register
+
+  MOV DX, PORT_DATA           ; Point DX to 8255 Lamp Output Port (${portAddr})
+
+${isNightFlash ? `  ; --- NIGHT CAUTION MODE (CONTINUOUS YELLOW BLINK) ---
+NIGHT_LOOP:
+  MOV AL, 12H                 ; NS Yellow (PA1=1) + EW Yellow (PA4=1) -> 00010010b = 12H
+  OUT DX, AL                  ; Illuminate both Yellow warning lamps
+  CALL DELAY_YELLOW           ; Hold yellow lamps ON
+  MOV AL, 00H                 ; Turn all lamps OFF
+  OUT DX, AL                  ; Extinguish lamps
+  CALL DELAY_YELLOW           ; Hold yellow lamps OFF
+  JMP NIGHT_LOOP              ; Repeat flashing caution sequence indefinitely` : isEmergency ? `  ; --- EMERGENCY OVERRIDE CORRIDOR MODE ---
+EMERGENCY_LOCK:
+  MOV AL, 09H                 ; NS Red (PA0=1) + EW Red (PA3=1) -> All Stop: 00001001b = 09H
+  OUT DX, AL                  ; Command all directions to halt immediately
+  CALL DELAY_GREEN            ; Hold emergency all-red condition
+  MOV AL, 21H                 ; Grant Priority Corridor: NS Green (PA2=1) + EW Red (PA3=1)
+  OUT DX, AL                  ; Output Priority Green
+  CALL DELAY_GREEN            ; Hold priority green window
+  JMP EMERGENCY_LOCK          ; Loop emergency sequence` : `  ; --- STEP 3: MAIN 4-PHASE TRAFFIC SEQUENCER LOOP ---
+TRAFFIC_CYCLE:
+  ; === PHASE 1: NORTH-SOUTH GREEN & EAST-WEST RED ===
+  MOV AL, 21H                 ; PA2=1 (NS Green), PA3=1 (EW Red) -> 21H
+  OUT DX, AL                  ; Output to 8255 Port A -> Drive LED / Relay Drivers
+${isPedestrian ? `  CALL CHECK_PEDESTRIAN       ; Poll Pedestrian Request Pin during green phase\n` : ''}  CALL DELAY_GREEN            ; Hold NS Green for calibrated window (~${trafficAlpTiming === 'standard' ? '30s' : '5s'})
+
+  ; === PHASE 2: NORTH-SOUTH YELLOW & EAST-WEST RED ===
+  MOV AL, 11H                 ; PA1=1 (NS Yellow), PA3=1 (EW Red) -> 11H
+  OUT DX, AL                  ; Output transition yellow signal
+  CALL DELAY_YELLOW           ; Hold NS Yellow for cautionary clearance (~${trafficAlpTiming === 'standard' ? '5s' : '2s'})
+
+  ; === PHASE 3: NORTH-SOUTH RED & EAST-WEST GREEN ===
+  MOV AL, 0CH                 ; PA0=1 (NS Red), PA5=1 (EW Green) -> 0CH
+  OUT DX, AL                  ; Output EW Green signal
+${isPedestrian ? `  CALL CHECK_PEDESTRIAN       ; Poll Pedestrian Request Pin during green phase\n` : ''}  CALL DELAY_GREEN            ; Hold EW Green for calibrated window (~${trafficAlpTiming === 'standard' ? '30s' : '5s'})
+
+  ; === PHASE 4: NORTH-SOUTH RED & EAST-WEST YELLOW ===
+  MOV AL, 0AH                 ; PA0=1 (NS Red), PA4=1 (EW Yellow) -> 0AH
+  OUT DX, AL                  ; Output transition yellow signal
+  CALL DELAY_YELLOW           ; Hold EW Yellow for cautionary clearance (~${trafficAlpTiming === 'standard' ? '5s' : '2s'})
+
+  JMP TRAFFIC_CYCLE           ; Continuous cyclic state sequencing`}
+
+; =========================================================================
+; CALIBRATED SOFTWARE DELAY SUBROUTINES
+; =========================================================================
+DELAY_GREEN PROC NEAR
+  PUSH CX                     ; Preserve outer loop CX register onto stack
+  MOV CX, ${outerCountGreen}              ; Outer delay iteration counter
+G_OUTER:
+  PUSH CX                     ; Preserve outer counter
+  MOV CX, ${innerCountGreen}               ; Inner loop multiplier counter
+G_INNER:
+  LOOP G_INNER                ; Decrement inner counter (~2 clock cycles per loop)
+  POP CX                      ; Restore outer counter
+  LOOP G_OUTER                ; Decrement outer counter
+  POP CX                      ; Restore original CX from stack
+  RET                         ; Return to calling procedure
+DELAY_GREEN ENDP
+
+DELAY_YELLOW PROC NEAR
+  PUSH CX                     ; Preserve outer loop CX register onto stack
+  MOV CX, ${outerCountYellow}              ; Outer delay iteration counter
+Y_OUTER:
+  PUSH CX                     ; Preserve outer counter
+  MOV CX, ${innerCountYellow}               ; Inner loop multiplier counter
+Y_INNER:
+  LOOP Y_INNER                ; Decrement inner counter
+  POP CX                      ; Restore outer counter
+  LOOP Y_OUTER                ; Decrement outer counter
+  POP CX                      ; Restore original CX from stack
+  RET                         ; Return to calling procedure
+DELAY_YELLOW ENDP
+
+${isPedestrian ? `; -------------------------------------------------------------------------
+; Pedestrian Walk Button Sense Subroutine (Port C PC0 Sense)
+; -------------------------------------------------------------------------
+CHECK_PEDESTRIAN PROC NEAR
+  PUSH AX                     ; Save AX
+  PUSH DX                     ; Save DX
+  MOV DX, PORT_SENSE          ; Point DX to Port C input register
+  IN AL, DX                   ; Read Port C pins (PC0 = Pedestrian Pushbutton)
+  TEST AL, 01H                ; Check if PC0 is asserted HIGH
+  JZ NO_PEDESTRIAN            ; If 0, no pedestrian request detected
+  ; If pedestrian button pressed, execute safe transition
+  MOV DX, PORT_DATA           ; Point to Lamp Port
+  MOV AL, 09H                 ; NS Red + EW Red (All Stop for safe pedestrian crossing)
+  OUT DX, AL                  ; Flash all Red lamps
+  CALL DELAY_YELLOW           ; Hold pedestrian crossing interval
+NO_PEDESTRIAN:
+  POP DX                      ; Restore DX
+  POP AX                      ; Restore AX
+  RET                         ; Return to caller
+CHECK_PEDESTRIAN ENDP\n` : ''}MAIN ENDP                     ; End main procedure
+END MAIN                      ; End of assembly program`;
+  };
+
+  const handleCopyTrafficAlp = () => {
+    navigator.clipboard.writeText(generateTrafficAssemblyCode());
+    setCopiedTrafficAlp(true);
+    setTimeout(() => setCopiedTrafficAlp(false), 2000);
+  };
+
+  const handleDownloadTrafficAsm = () => {
+    const code = generateTrafficAssemblyCode();
+    const blob = new Blob([code], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `8086_Traffic_Light_${trafficAlpMode}_8255.asm`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   // Header content descriptors tailored to each peripheral
   const headers = {
     schematic: {
@@ -760,6 +950,11 @@ END MAIN                      ; End of assembly program`;
       icon: <Activity className="w-5 h-5" />,
       title: '8086 Interfacing Circuit Architecture & Bus Decoding',
       subtitle: '8086 CPU ↔ 74LS373 Latches ↔ 74LS138 Address Decoder (CS# = 80H) ↔ 8255 PPI ↔ ULN2003 Driver'
+    },
+    'stepper-types': {
+      icon: <Component className="w-5 h-5" />,
+      title: 'Types of Stepper Motors & Operating Principles',
+      subtitle: 'Variable Reluctance (VR) • Permanent Magnet (PM) • Hybrid (VR+PM) • Unipolar vs. Bipolar Drive Topologies'
     },
     stepper: {
       icon: <RotateCw className="w-5 h-5" />,
@@ -806,6 +1001,11 @@ END MAIN                      ; End of assembly program`;
       title: '8086 4-Way Traffic Light Controller Interfacing',
       subtitle: 'North-South & East-West Phase Sequencing • 8255 Port A Bit Assignments • State Machine Delays'
     },
+    'traffic-code': {
+      icon: <Code className="w-5 h-5" />,
+      title: '8086 Traffic Light Controller Assembly Language Program (ALP)',
+      subtitle: '4-Phase State Sequencer (21H, 11H, 0CH, 0AH) • 8255 Port A Bit Mapping • Nested Delay Subroutines'
+    },
     alp: {
       icon: <Code className="w-5 h-5" />,
       title: '8086 Assembly Language Programs (ALP) for Peripherals',
@@ -834,10 +1034,11 @@ END MAIN                      ; End of assembly program`;
         {/* Tab Switcher for Multi-tab modes (e.g. Slide 1 combined Circuit & Stepper Motor, Slide 2 7-Segment, Slide 3 Keypad) */}
         {((allowedTabs && allowedTabs.length > 1) || showTabs) && (
           <div className="flex flex-wrap bg-slate-100 p-1 rounded-xl border border-slate-200 gap-1 shadow-inner">
-            {(allowedTabs || ['schematic', 'circuit', 'stepper', 'display', 'keypad', 'traffic', 'alp']).map((tabKey) => {
+            {(allowedTabs || ['schematic', 'circuit', 'stepper', 'display', 'keypad', 'traffic', 'traffic-code', 'alp']).map((tabKey) => {
               const tabMeta: Record<string, { label: string; icon: React.ReactNode }> = {
                 schematic: { label: 'Proteus Circuit Diagram (Unipolar)', icon: <Layers className="w-3.5 h-3.5" /> },
                 circuit: { label: 'Circuit Blocks & Architecture', icon: <Activity className="w-3.5 h-3.5" /> },
+                'stepper-types': { label: 'Types of Stepper Motor', icon: <Component className="w-3.5 h-3.5" /> },
                 stepper: { label: 'Stepper Motor Simulator', icon: <RotateCw className="w-3.5 h-3.5" /> },
                 'stepper-code': { label: 'Stepper Motor ALP (Code)', icon: <Code className="w-3.5 h-3.5" /> },
                 'display-circuit': { label: 'Circuit Blocks & Architecture', icon: <Activity className="w-3.5 h-3.5" /> },
@@ -847,6 +1048,7 @@ END MAIN                      ; End of assembly program`;
                 keypad: { label: 'Keypad Simulator & Scanner', icon: <Grid className="w-3.5 h-3.5" /> },
                 'keypad-code': { label: 'Keypad ALP (Code)', icon: <Code className="w-3.5 h-3.5" /> },
                 traffic: { label: 'Traffic Light Controller', icon: <Timer className="w-3.5 h-3.5" /> },
+                'traffic-code': { label: 'Traffic Light ALP (Code)', icon: <Code className="w-3.5 h-3.5" /> },
                 alp: { label: 'Assembly Program (ALP)', icon: <Code className="w-3.5 h-3.5" /> },
               };
               const isSelected = activeTab === tabKey;
@@ -1214,6 +1416,11 @@ END MAIN                      ; End of assembly program`;
             </div>
           </div>
         </div>
+      )}
+
+      {/* TAB: TYPES OF STEPPER MOTORS (VR, PM, HYBRID, UNIPOLAR vs BIPOLAR) */}
+      {activeTab === 'stepper-types' && (
+        <StepperMotorTypesExplorer />
       )}
 
       {/* TAB 2: STEPPER MOTOR SIMULATOR */}
@@ -3522,6 +3729,214 @@ END MAIN                      ; End of assembly program`;
 
               <div className="p-2.5 bg-white rounded-lg border border-slate-200 text-[11px] text-slate-600">
                 Port A bits: <strong className="text-slate-800">PA0=NS Red, PA1=NS Yellow, PA2=NS Green, PA3=EW Red, PA4=EW Yellow, PA5=EW Green</strong>.
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB: 8086 TRAFFIC LIGHT CONTROLLER ASSEMBLY LANGUAGE PROGRAM (ALP) */}
+      {activeTab === 'traffic-code' && (
+        <div className="space-y-4">
+          {/* Traffic Light ALP Dynamic Parameter Configurator Bar */}
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-3 shadow-2xs">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+              <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                <SlidersHorizontal className="w-4 h-4 text-indigo-600" />
+                8086 Traffic Light Controller Parameter Configurator
+              </span>
+              <span className="text-[10px] text-slate-500 font-mono">
+                Base Address: {baseAddressHex}H | Control Port: {controlRegAddr}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+              {/* 1. Lamp Output Port */}
+              <div className="bg-white p-2.5 rounded-lg border border-slate-200 space-y-1 shadow-2xs">
+                <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider block">
+                  1. 8255 Lamp Output Port
+                </label>
+                <div className="grid grid-cols-3 gap-1">
+                  {[
+                    { id: 'portA', label: 'Port A (80H)' },
+                    { id: 'portB', label: 'Port B (82H)' },
+                    { id: 'portC', label: 'Port C (84H)' }
+                  ].map((p) => {
+                    const isSelected = trafficAlpPort === p.id;
+                    return (
+                      <button
+                        key={p.id}
+                        onClick={() => setTrafficAlpPort(p.id as any)}
+                        className={`py-1 px-1.5 rounded text-[10px] font-bold transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-indigo-600 text-white shadow-2xs'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        {p.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 2. Traffic Controller Routine */}
+              <div className="bg-white p-2.5 rounded-lg border border-slate-200 space-y-1 shadow-2xs">
+                <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider block">
+                  2. Traffic Controller Routine
+                </label>
+                <select
+                  value={trafficAlpMode}
+                  onChange={(e) => setTrafficAlpMode(e.target.value as any)}
+                  className="w-full text-[11px] font-medium bg-slate-50 border border-slate-200 rounded p-1 text-slate-800 focus:ring-1 focus:ring-indigo-500 cursor-pointer"
+                >
+                  <option value="standard_4phase">Standard 4-Phase (21H, 11H, 0CH, 0AH)</option>
+                  <option value="with_pedestrian">4-Phase with Pedestrian Walk Sense (Port C)</option>
+                  <option value="night_flash">Night Caution (Flashing Yellow 12H / 00H)</option>
+                  <option value="emergency_override">Emergency Priority Corridor (09H / 21H)</option>
+                </select>
+              </div>
+
+              {/* 3. Phase Delay Profile */}
+              <div className="bg-white p-2.5 rounded-lg border border-slate-200 space-y-1 shadow-2xs">
+                <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider block">
+                  3. Phase Delay Calibration
+                </label>
+                <div className="grid grid-cols-3 gap-1">
+                  {[
+                    { id: 'standard', label: 'Standard' },
+                    { id: 'demo', label: 'Demo (5s)' },
+                    { id: 'rapid', label: 'Rapid (2s)' }
+                  ].map((t) => {
+                    const isSelected = trafficAlpTiming === t.id;
+                    return (
+                      <button
+                        key={t.id}
+                        onClick={() => setTrafficAlpTiming(t.id as any)}
+                        className={`py-1 px-1.5 rounded text-[10px] font-bold transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-indigo-600 text-white shadow-2xs'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        {t.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Dynamic 8086 Assembly Language Source Code Box */}
+          <div className="bg-slate-900 text-slate-100 rounded-xl p-4 border border-slate-800 font-mono text-[11px] shadow-sm relative space-y-2">
+            <div className="flex flex-wrap items-center justify-between border-b border-slate-800 pb-2.5 gap-2">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+                <span className="font-bold text-slate-200 text-xs">
+                  8086_Traffic_Light_{trafficAlpMode}_8255.asm
+                </span>
+                <span className="bg-slate-800 text-indigo-400 text-[10px] px-2 py-0.5 rounded border border-slate-700 font-semibold">
+                  TASM / MASM Compatible
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleCopyTrafficAlp}
+                  className="flex items-center gap-1 bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded text-[11px] border border-slate-700 font-sans transition-all cursor-pointer shadow-xs active:scale-95"
+                >
+                  <Copy className="w-3 h-3 text-indigo-400" />
+                  <span>{copiedTrafficAlp ? 'Copied to Clipboard!' : 'Copy Code'}</span>
+                </button>
+                <button
+                  onClick={handleDownloadTrafficAsm}
+                  className="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-500 text-white px-2.5 py-1 rounded text-[11px] font-sans font-semibold transition-all cursor-pointer shadow-xs active:scale-95"
+                >
+                  <Download className="w-3 h-3" />
+                  <span>Download .ASM</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Code Body Container */}
+            <div className="overflow-x-auto max-h-[440px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900">
+              <pre className="text-slate-200 leading-relaxed font-mono whitespace-pre selection:bg-indigo-900 selection:text-indigo-100 text-[11px]">
+                {generateTrafficAssemblyCode()}
+              </pre>
+            </div>
+          </div>
+
+          {/* Detailed Engineering Notes & Hardware Theory Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 font-sans text-xs">
+            <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
+              <div className="flex items-center gap-1.5 border-b border-slate-100 pb-1">
+                <span className="p-1 bg-indigo-50 text-indigo-700 rounded">
+                  <Sliders className="w-3.5 h-3.5" />
+                </span>
+                <span className="font-bold text-slate-900">1. 8255 Mode 0 Config</span>
+              </div>
+              <p className="text-slate-600 leading-relaxed">
+                Control Word <code className="font-mono font-bold text-indigo-700 bg-slate-100 px-1 rounded">80H</code> (10000000b) sets all ports (A, B, C) in Mode 0 as simple outputs. The CPU writes directly to Port A (<code className="font-mono text-slate-800">80H</code>) to energize lamps.
+              </p>
+              <div className="font-mono text-[9px] text-slate-500 bg-slate-50 p-1 rounded">
+                • D7=1 (Mode Set)<br />
+                • Group A &amp; B in Mode 0<br />
+                • Port A, B, C = OUTPUT
+              </div>
+            </div>
+
+            <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
+              <div className="flex items-center gap-1.5 border-b border-slate-100 pb-1">
+                <span className="p-1 bg-emerald-50 text-emerald-700 rounded">
+                  <Zap className="w-3.5 h-3.5" />
+                </span>
+                <span className="font-bold text-slate-900">2. 4-Phase Bitmasks</span>
+              </div>
+              <p className="text-slate-600 leading-relaxed">
+                6 pins on Port A control both 3-aspect signal heads:
+                <br />
+                <code className="font-mono text-[10px] text-slate-800 font-bold">21H</code>: NS Green + EW Red<br />
+                <code className="font-mono text-[10px] text-slate-800 font-bold">11H</code>: NS Yellow + EW Red<br />
+                <code className="font-mono text-[10px] text-slate-800 font-bold">0CH</code>: NS Red + EW Green<br />
+                <code className="font-mono text-[10px] text-slate-800 font-bold">0AH</code>: NS Red + EW Yellow
+              </p>
+              <div className="font-mono text-[9px] text-slate-500 bg-slate-50 p-1 rounded">
+                • PA0–PA2: NS Signal Head<br />
+                • PA3–PA5: EW Signal Head
+              </div>
+            </div>
+
+            <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
+              <div className="flex items-center gap-1.5 border-b border-slate-100 pb-1">
+                <span className="p-1 bg-amber-50 text-amber-700 rounded">
+                  <Cpu className="w-3.5 h-3.5" />
+                </span>
+                <span className="font-bold text-slate-900">3. Driver Transistors / Relays</span>
+              </div>
+              <p className="text-slate-600 leading-relaxed">
+                8255 pins cannot supply high current (~2.5mA max source). Output pins drive NPN transistors (e.g. <strong className="text-slate-800">BC547 / 2N2222</strong>) or Darlington arrays (<strong className="text-slate-800">ULN2003A</strong>) or solid-state relays for 230V AC street lamps.
+              </p>
+              <div className="font-mono text-[9px] text-slate-500 bg-slate-50 p-1 rounded">
+                • V_drop = 0.7V (V_BE)<br />
+                • Current Gain (h_FE) &gt; 100<br />
+                • Optical Isolation for AC Mains
+              </div>
+            </div>
+
+            <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
+              <div className="flex items-center gap-1.5 border-b border-slate-100 pb-1">
+                <span className="p-1 bg-purple-50 text-purple-700 rounded">
+                  <Timer className="w-3.5 h-3.5" />
+                </span>
+                <span className="font-bold text-slate-900">4. Software Delay Loops</span>
+              </div>
+              <p className="text-slate-600 leading-relaxed">
+                Nested double-loop procedures (<code className="font-mono text-indigo-700">LOOP G_INNER</code>, <code className="font-mono text-indigo-700">LOOP G_OUTER</code>) count CPU clock states. At 5 MHz (<code className="font-mono text-slate-800">T = 0.2µs</code>), calibrating CX counts creates exact 30s green and 5s yellow windows.
+              </p>
+              <div className="font-mono text-[9px] text-slate-500 bg-slate-50 p-1 rounded">
+                • LOOP = 17 or 5 clock cycles<br />
+                • Total Cycles = Outer × Inner × Cycles<br />
+                • Delay = Cycles × 0.2 µs
               </div>
             </div>
           </div>

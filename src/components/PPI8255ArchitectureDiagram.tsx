@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layers, Zap, Info, CheckCircle2, Sliders, ArrowRight, Eye, RefreshCw } from 'lucide-react';
+import { Layers, Zap, Info, CheckCircle2, Sliders, ArrowRight, Eye, RefreshCw, Cpu, ShieldCheck } from 'lucide-react';
 
 interface PPI8255ArchitectureDiagramProps {
   onSelectBlock?: (blockId: string) => void;
@@ -161,9 +161,6 @@ export default function PPI8255ArchitectureDiagram({ onSelectBlock }: PPI8255Arc
           <div>
             <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
               Intel 8255 Internal Architecture Diagram
-              <span className="text-[10px] px-2 py-0.5 rounded-md bg-amber-100 text-amber-900 border border-amber-200 font-mono font-bold">
-                Figure 1.3
-              </span>
             </h3>
             <p className="text-[11px] text-slate-500">
               Clean architectural block diagram cropped to highlight core functional blocks &amp; signal interconnects
@@ -751,33 +748,6 @@ export default function PPI8255ArchitectureDiagram({ onSelectBlock }: PPI8255Arc
               />
               <text x="560" y="423" fontSize="10.5" fontWeight="bold" fill="#1E293B">I/O</text>
               <text x="560" y="436" fontSize="11" fontWeight="bold" fill="#1E293B">PB7 - PB0</text>
-
-              {/* ============================================================ */}
-              {/* BOTTOM FIGURE BADGE                                          */}
-              {/* ============================================================ */}
-              <g>
-                <rect
-                  x="300"
-                  y="490"
-                  width="160"
-                  height="26"
-                  fill="#E2E8F0"
-                  stroke="#64748B"
-                  strokeWidth="1.2"
-                  rx="3"
-                />
-                <text
-                  x="380"
-                  y="507"
-                  fontSize="12"
-                  fontWeight="bold"
-                  fill="#0F172A"
-                  textAnchor="middle"
-                  fontStyle="italic"
-                >
-                  Figure 1.3
-                </text>
-              </g>
             </svg>
           </div>
 
@@ -933,6 +903,156 @@ export default function PPI8255ArchitectureDiagram({ onSelectBlock }: PPI8255Arc
                   Power Supplies
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* USER'S POINT OF VIEW & ADDRESS LINES (A1, A0) SELECTION TABLE             */}
+      {/* ========================================================================= */}
+      <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-indigo-600 text-white rounded-lg">
+              <Cpu className="w-4 h-4" />
+            </div>
+            <div>
+              <h4 className="font-extrabold text-xs text-slate-900 uppercase tracking-wide">
+                3 Ports in 8255 from User's Point of View
+              </h4>
+              <p className="text-[11px] text-slate-500 font-medium">
+                Hardware mapping of Port A, Port B, Port C (Upper/Lower), and Address Lines A1, A0
+              </p>
+            </div>
+          </div>
+
+          <span className="px-2.5 py-1 rounded-full text-[10.5px] font-mono font-bold bg-amber-100 text-amber-900 border border-amber-300">
+            CS#: Active LOW (0)
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+          {/* Left: Port Overview (User's Perspective) */}
+          <div className="lg:col-span-6 bg-white p-3.5 rounded-xl border border-slate-200 space-y-3 flex flex-col justify-between">
+            <div className="space-y-2">
+              <h5 className="font-bold text-xs text-indigo-950 flex items-center gap-1.5">
+                <CheckCircle2 className="w-4 h-4 text-indigo-600 shrink-0" />
+                3 Ports Organization (24 Programmable I/O Lines):
+              </h5>
+              
+              <ul className="space-y-2 text-xs text-slate-700">
+                <li className="p-2.5 rounded-lg bg-emerald-50/70 border border-emerald-200 space-y-0.5">
+                  <div className="flex items-center justify-between">
+                    <strong className="text-emerald-950 font-bold">❖ Port A (PA0–PA7):</strong>
+                    <span className="text-[10px] font-mono font-bold text-emerald-800 bg-white px-1.5 py-0.5 rounded border border-emerald-200">8-Bit I/O</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600">
+                    Full 8-bit bidirectional data port supporting Mode 0 (Basic I/O), Mode 1 (Strobed I/O), or Mode 2 (Bidirectional Bus).
+                  </p>
+                </li>
+
+                <li className="p-2.5 rounded-lg bg-indigo-50/70 border border-indigo-200 space-y-0.5">
+                  <div className="flex items-center justify-between">
+                    <strong className="text-indigo-950 font-bold">❖ Port B (PB0–PB7):</strong>
+                    <span className="text-[10px] font-mono font-bold text-indigo-800 bg-white px-1.5 py-0.5 rounded border border-indigo-200">8-Bit I/O</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600">
+                    Full 8-bit data port supporting Mode 0 (Basic I/O) or Mode 1 (Strobed I/O).
+                  </p>
+                </li>
+
+                <li className="p-2.5 rounded-lg bg-amber-50/70 border border-amber-200 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <strong className="text-amber-950 font-bold">❖ Port C (PC0–PC7):</strong>
+                    <span className="text-[10px] font-mono font-bold text-amber-800 bg-white px-1.5 py-0.5 rounded border border-amber-200">2 × 4-Bit Ports</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600">
+                    Port C is composed of two independent 4-bit ports:
+                  </p>
+                  <div className="grid grid-cols-2 gap-1.5 text-[10.5px] pt-1">
+                    <div className="p-1.5 bg-white rounded border border-amber-200">
+                      <span className="font-bold text-amber-900 block font-mono">PC7–PC4 (PC Upper)</span>
+                      <span className="text-[10px] text-slate-500">Group A Handshake / I/O</span>
+                    </div>
+                    <div className="p-1.5 bg-white rounded border border-amber-200">
+                      <span className="font-bold text-amber-900 block font-mono">PC3–PC0 (PC Lower)</span>
+                      <span className="text-[10px] text-slate-500">Group B Handshake / I/O</span>
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <div className="p-2.5 bg-blue-50/80 rounded-lg border border-blue-200 text-[11px] text-blue-900 flex items-start gap-2">
+              <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+              <div>
+                <strong>CS (Chip Select):</strong> Enables or disables the 8255 IC. When <code className="font-mono font-bold text-blue-950">CS# = 0</code>, the 8255 is selected for CPU communication. When <code className="font-mono font-bold text-blue-950">CS# = 1</code>, the internal bus buffers are held in High-Z (tri-state).
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Address Lines A1, A0 Selection Table */}
+          <div className="lg:col-span-6 bg-white p-3.5 rounded-xl border border-slate-200 space-y-3 flex flex-col justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+                <h5 className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                  <Sliders className="w-3.5 h-3.5 text-indigo-600" />
+                  Address Lines A1, A0 Selection Table
+                </h5>
+                <span className="text-[10.5px] text-slate-500 font-mono font-semibold">
+                  Internal Register Decoding
+                </span>
+              </div>
+
+              <div className="overflow-x-auto rounded-lg border border-slate-200 shadow-2xs">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold text-[11px]">
+                      <th className="py-2.5 px-3 text-center w-16">A1</th>
+                      <th className="py-2.5 px-3 text-center w-16">A0</th>
+                      <th className="py-2.5 px-4 font-bold text-slate-900">Selected Port / Function</th>
+                      <th className="py-2.5 px-3 text-right">Data Transfer</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-mono text-[11.5px]">
+                    <tr className="hover:bg-emerald-50/50 transition-colors">
+                      <td className="py-2 px-3 text-center font-bold text-emerald-700 bg-emerald-50/40">0</td>
+                      <td className="py-2 px-3 text-center font-bold text-emerald-700 bg-emerald-50/40">0</td>
+                      <td className="py-2 px-4 font-sans font-bold text-emerald-950">Port A</td>
+                      <td className="py-2 px-3 text-right text-[10.5px] font-sans text-slate-600">8-Bit Data (D0–D7)</td>
+                    </tr>
+                    <tr className="hover:bg-indigo-50/50 transition-colors">
+                      <td className="py-2 px-3 text-center font-bold text-indigo-700 bg-indigo-50/40">0</td>
+                      <td className="py-2 px-3 text-center font-bold text-indigo-700 bg-indigo-50/40">1</td>
+                      <td className="py-2 px-4 font-sans font-bold text-indigo-950">Port B</td>
+                      <td className="py-2 px-3 text-right text-[10.5px] font-sans text-slate-600">8-Bit Data (D0–D7)</td>
+                    </tr>
+                    <tr className="hover:bg-amber-50/50 transition-colors">
+                      <td className="py-2 px-3 text-center font-bold text-amber-700 bg-amber-50/40">1</td>
+                      <td className="py-2 px-3 text-center font-bold text-amber-700 bg-amber-50/40">0</td>
+                      <td className="py-2 px-4 font-sans font-bold text-amber-950">Port C</td>
+                      <td className="py-2 px-3 text-right text-[10.5px] font-sans text-slate-600">8-Bit Data / Handshake</td>
+                    </tr>
+                    <tr className="hover:bg-purple-50/50 transition-colors bg-purple-50/30">
+                      <td className="py-2 px-3 text-center font-bold text-purple-700 bg-purple-100/50">1</td>
+                      <td className="py-2 px-3 text-center font-bold text-purple-700 bg-purple-100/50">1</td>
+                      <td className="py-2 px-4 font-sans font-bold text-purple-950">Control Port (Register)</td>
+                      <td className="py-2 px-3 text-right text-[10.5px] font-sans text-purple-800 font-bold">Write CW Only</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="p-2.5 bg-slate-100 rounded-lg text-[10.5px] text-slate-600 space-y-1">
+              <div className="font-bold text-slate-800 flex items-center gap-1">
+                <Info className="w-3.5 h-3.5 text-indigo-600" />
+                Interfacing with 8086 Microprocessor:
+              </div>
+              <p className="leading-relaxed">
+                In 8086 systems, 8255 pins <code className="font-mono font-bold text-slate-900">A1</code> and <code className="font-mono font-bold text-slate-900">A0</code> are connected directly to latched address lines (e.g. A2, A1 or A1, A0) to assign sequential contiguous I/O port addresses.
+              </p>
             </div>
           </div>
         </div>
