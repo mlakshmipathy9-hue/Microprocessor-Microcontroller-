@@ -131,7 +131,7 @@ export default function PPI8255Simulator({
   const tabLabels: Record<PPI8255Tab, { label: string; title: string; subtitle: string }> = {
     diagram: {
       label: 'Architecture',
-      title: 'Figure 1.3: Intel 8255 Internal Architecture Block Diagram',
+      title: 'Intel 8255 Internal Architecture Block Diagram',
       subtitle: '8-Bit Data Bus Buffer • Read/Write Control Logic • Group A & B Controllers • Ports A, B & C'
     },
     pins: {

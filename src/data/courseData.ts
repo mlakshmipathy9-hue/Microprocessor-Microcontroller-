@@ -1750,25 +1750,40 @@ export const courseData: Module[] = [
         moduleId: 'm16',
         interactiveType: 'analog-interfacing',
         points: [
-          'Need for A/D Conversion: Real-world sensors (temperature, pressure, light) produce continuous analog signals; ADCs convert these into digital binary values for 8086 processing.',
-          'ADC 0808 Features: 8-bit successive-approximation ADC with an internal 8-channel analog multiplexer, requiring no external zero/full-scale adjustment.',
-          'Control Signals for ADC 0808: ADD A, B, C (Channel Select), ALE (Address Latch Enable), START / SOC (Start of Conversion pulse), EOC (End of Conversion status signal), and OE (Output Enable to release tri-state outputs).',
-          'Conversion Steps in 8086 Program: 1. Output channel address and pulse ALE & START HIGH. 2. Monitor EOC pin until it goes HIGH (conversion complete). 3. Assert OE HIGH to read 8-bit digital output via 8255 Port A.',
-          'Resolution Calculation: Resolution = Vref / 2^n. For Vref = 5V and 8-bit ADC, resolution = 5V / 256 = 19.53 mV per LSB step.'
+          'Need for A/D Conversion: Real-world physical sensors (temperature thermocouples, RTDs, strain gauges, pressure transducers, light sensors) generate continuous analog voltages; ADCs convert these into discrete binary values for 8086 processing.',
+          'ADC 0808 Architecture: An 8-bit Successive Approximation Register (SAR) ADC with an integrated 8-channel analog multiplexer (IN0–IN7), internal clock divider, and tri-state latched output buffers.',
+          'Pin Functions & Control Signals: ADD A, B, C (3-bit channel address input), ALE (Address Latch Enable), START / SOC (Start of Conversion pulse), EOC (End of Conversion status signal), and OE (Output Enable to drive the 8-bit digital output onto the data bus).',
+          '8086–8255 Interfacing Procedure: 1. Output selected channel address (A/B/C) and pulse ALE & START HIGH. 2. Poll EOC status line (or connect EOC to INTR for interrupt-driven acquisition) until it transitions HIGH. 3. Assert OE HIGH to read the 8-bit digital output via 8255 Port A.',
+          'Interfacing Timing: Minimum START pulse width is 100 ns; EOC transitions LOW within 8 clock cycles of START, and returns HIGH when conversion finishes (approx. 100 µs at 640 kHz clock).'
         ]
       },
       {
         id: 'm16-s2',
-        title: '2. Digital-to-Analog Converter (DAC 0800) & Waveform Generation 📈',
+        title: '2. Characteristics & Specifications of ADC (Resolution, Speed, Errors, Linearity) 🎯',
         moduleTitle: 'Module 16: Analog Interfacing (A/D & D/A Converters)',
         moduleId: 'm16',
         interactiveType: 'analog-interfacing',
         points: [
-          'Need for D/A Conversion: Microprocessors produce digital outputs; DACs convert binary values into continuous analog voltages/currents to drive actuators, speakers, and motors.',
-          'DAC 0800 Architecture: High-speed 8-bit multiplying DAC utilizing an R-2R resistor ladder network to output proportional analog current (Iout).',
+          'Resolution (Step Size / 1 LSB): Smallest analog voltage change detectable as a 1-bit output transition. Calculated as V_LSB = Vref / 2^n. For 8-bit ADC with Vref = 5.0V, step size = 5V / 256 = 19.53 mV (0.390% full scale).',
+          'Quantization Error & Noise (eq): The fundamental, unavoidable rounding uncertainty during conversion, strictly bounded within ±½ LSB (±9.765 mV for 8-bit 5V). The RMS quantization noise power is given by (V_LSB)² / 12.',
+          'Conversion Time (Tc) & Sampling Rate (fs): Time required between START pulse and EOC asserting HIGH. For SAR ADC0808, Tc = 64 to 72 clock cycles (approx. 100 µs at 640 kHz), yielding a max sampling rate fs = 10 kSPS.',
+          'Nyquist-Shannon Sampling Criterion: To faithfully reconstruct an analog signal and prevent aliasing distortion, the sampling rate must be at least twice the maximum signal frequency (fs ≥ 2 f_max). For 10 kSPS, maximum signal bandwidth is 5 kHz.',
+          'Linearity & Static Errors (INL & DNL): Differential Non-Linearity (DNL) is the deviation of actual step width from ideal 1 LSB (if DNL < -1 LSB, missing codes occur). Integral Non-Linearity (INL) measures maximum deviation from the ideal straight transfer line (ADC0808: ±½ LSB).',
+          'Monotonicity, SNR & Dynamic Range: An ADC is monotonic if digital code never decreases as analog input rises (guaranteed when |DNL| ≤ 1 LSB). Theoretical Signal-to-Noise Ratio for ideal n-bit ADC is SNR = 6.02 × n + 1.76 dB (49.92 dB for 8-bit).'
+        ]
+      },
+      {
+        id: 'm16-s3',
+        title: '3. Digital-to-Analog Converter (DAC 0800) & Waveform Generation 📈',
+        moduleTitle: 'Module 16: Analog Interfacing (A/D & D/A Converters)',
+        moduleId: 'm16',
+        interactiveType: 'analog-interfacing',
+        points: [
+          'Need for D/A Conversion: Microprocessors produce digital outputs; DACs convert binary values into continuous analog voltages/currents to drive actuators, speakers, servos, and proportional control valves.',
+          'DAC 0800 Architecture: High-speed 8-bit multiplying DAC utilizing an internal R-2R resistor ladder network with complementary current outputs (Iout and Iout#) with fast 100 ns settling time.',
           'Current-to-Voltage Op-Amp Stage: An external Operational Amplifier (e.g. LM741) in transimpedance configuration converts DAC output current into output voltage Vout = Vref × (Digital Data / 256).',
-          'Square Wave Generation: 8086 outputs 00H to 8255 Port A, delays, then outputs FFH, creating a square wave.',
-          'Sawtooth & Triangular Wave Generation: Sawtooth is generated by continuously incrementing port value from 00H to FFH in a loop; Triangular wave increments from 00H to FFH and then decrements back to 00H.'
+          'Square Wave Generation: 8086 outputs 00H to 8255 Port A, executes a timed delay loop, then outputs FFH, repeating continuously to produce a square wave.',
+          'Sawtooth & Triangular Wave Generation: Sawtooth is generated by incrementing port value from 00H to FFH in a loop; Triangular wave increments from 00H to FFH and then decrements back to 00H with symmetrical delay intervals.'
         ]
       },
       {
@@ -1779,21 +1794,43 @@ export const courseData: Module[] = [
         interactiveType: 'quiz',
         quizQuestions: [
           {
-            question: 'What is the function of the EOC (End of Conversion) pin on the ADC 0808 chip during interfacing?',
+            question: 'What is the theoretical maximum quantization error for an n-bit ADC with step size (1 LSB)?',
             options: [
-              'It signals the 8086 processor that digital conversion is finished and data is ready',
-              'It turns off the internal clock generator',
-              'It selects channel 0 on the 8-channel multiplexer',
-              'It resets the internal registers to 00H'
+              '± 1 LSB',
+              '± ½ LSB',
+              '± 2 LSB',
+              '0 LSB (No quantization error in ideal ADCs)'
             ],
-            correctAnswer: 0,
-            explanation: 'The EOC pin goes LOW when conversion begins and transitions HIGH when conversion completes, signaling the 8086/8255 that valid digital data is ready to be read.'
+            correctAnswer: 1,
+            explanation: 'The maximum quantization error in an ideal linear ADC is ±½ LSB (half of one step size), representing the uncertainty between continuous voltage and the nearest discrete binary code.'
           },
           {
-            question: 'What is the voltage resolution of an 8-bit DAC with a reference voltage (Vref) of +5.0 Volts?',
+            question: 'What is the voltage resolution (1 LSB step size) of an 8-bit ADC with a reference voltage (Vref) of +5.0 Volts?',
             options: ['1.0 V', '19.53 mV', '50.0 mV', '0.195 V'],
             correctAnswer: 1,
             explanation: 'Resolution = Vref / 2^8 = 5.0 V / 256 ≈ 0.01953 V = 19.53 mV.'
+          },
+          {
+            question: 'What is the typical conversion time of the ADC 0808 (Successive Approximation ADC) when operated with a 640 kHz clock?',
+            options: [
+              '100 nanoseconds',
+              '100 microseconds (~100 µs)',
+              '100 milliseconds',
+              '1 microsecond'
+            ],
+            correctAnswer: 1,
+            explanation: 'The ADC 0808 requires 64 clock cycles for an 8-bit conversion. At 640 kHz, Conversion Time Tc = 64 / 640,000 = 100 µs.'
+          },
+          {
+            question: 'What condition causes a "Missing Code" in an Analog-to-Digital Converter?',
+            options: [
+              'Differential Non-Linearity (DNL) < -1 LSB',
+              'Integral Non-Linearity (INL) = 0 LSB',
+              'Reference voltage Vref is too high',
+              'End of Conversion (EOC) pin is tied to VCC'
+            ],
+            correctAnswer: 0,
+            explanation: 'If the Differential Non-Linearity (DNL) drops below -1 LSB, the step width becomes zero or negative, causing that digital code to never appear at the output (a missing code).'
           },
           {
             question: 'Which operational amplifier configuration is connected to the output pins of a DAC 0800 IC to produce a voltage output?',
@@ -2174,12 +2211,212 @@ export const courseData: Module[] = [
       },
       {
         id: 'm20-s14',
-        title: 'Exp 5: Block Data Transfer (Memory Copy & Management) 📦',
+        title: 'Exp 5A: Digital Clock Design using INT 21H Interrupt ⏰',
+        moduleTitle: 'Module 20: Lab Resources & Experiments Manual',
+        moduleId: 'm20',
+        points: [
+          '🎯 AIM & OBJECTIVE: Write an 8086 ALP to design and display a real-time digital clock on the console screen using MS-DOS INT 21H interrupt services (AH=2CH Get System Time, AH=02H Display Character, AH=09H Display String, and AH=06H/0BH Console Keystroke Detection).',
+          '💡 THEORY & CONCEPT: The real-time hardware clock in MS-DOS is accessed via software interrupt INT 21H with Function AH=2CH. The kernel returns binary values in registers: CH = Hours (00-23), CL = Minutes (00-59), DH = Seconds (00-59), and DL = Hundredths of a second (00-99). The binary bytes are unpacked into ASCII BCD digits using the AAM instruction (divide by 10) followed by adding 3030H, stored in memory as an ASCII string buffer "HH:MM:SS$", and rendered on console via INT 21H / AH=09H.'
+        ]
+      },
+      {
+        id: 'm20-s15',
+        title: 'Exp 5B: Digital Clock Design using DOS Interrupt Functions 🕒',
+        moduleTitle: 'Module 20: Lab Resources & Experiments Manual',
+        moduleId: 'm20',
+        points: [
+          '🎯 AIM & OBJECTIVE: Write an 8086 ALP to design a comprehensive digital clock with 12-hour/24-hour AM/PM format, system calendar date (DD/MM/YYYY), and screen positioning using DOS Interrupt Functions (INT 21H Functions 2CH, 2AH, 09H, and BIOS Video INT 10H Functions 02H, 06H).',
+          '💡 THEORY & CONCEPT: Digital clock systems integrate both DOS kernel services (INT 21H Function 2CH for Time, Function 2AH for Date: CX=Year, DH=Month, DL=Day) and BIOS Video Services (INT 10H Function 02H to position the cursor at row DH and column DL, and Function 06H to clear the screen window). 12-hour time conversion subtracts 12 from hours > 12 and appends "PM" or "AM" suffixes.'
+        ]
+      },
+      {
+        id: 'm20-s16',
+        title: 'Exp 5C: Digital Clock Design by Reading System Time ⏱️',
+        moduleTitle: 'Module 20: Lab Resources & Experiments Manual',
+        moduleId: 'm20',
+        points: [
+          '🎯 AIM & OBJECTIVE: Write an 8086 ALP to design an active continuous digital clock that reads system time at each second tick, filters duplicate refreshes via previous-second caching, and displays an animated ticking display until a user keystroke.',
+          '💡 THEORY & CONCEPT: Unconstrained polling loops cause severe console flickering. To achieve a smooth 1 Hz refresh, the ALP continuously reads system time via INT 21H AH=2CH and compares the newly read second register DH against a memory variable PREV_SEC. When DH ≠ PREV_SEC, the screen updates the time string, toggles the animated colon separator, updates PREV_SEC, and checks for keyboard interrupt via INT 21H AH=0BH.'
+        ]
+      },
+      {
+        id: 'm20-s17',
+        title: 'Exp 6A: Stepper Motor Interfacing – Clockwise Rotation & Variable Step-Size 🔄',
+        moduleTitle: 'Module 20: Lab Resources & Experiments Manual',
+        moduleId: 'm20',
+        points: [
+          '🎯 AIM & OBJECTIVE: Write an 8086 Assembly Language Program to interface a 4-phase stepper motor to the 8086 microprocessor via 8255 PPI and operate it in clockwise (CW) direction by choosing variable step-sizes and angles.',
+          '💡 THEORY & CONCEPT: A 4-phase unipolar stepper motor with a 1.8° step angle executes one complete 360° revolution in 200 discrete steps (N = Angle / 1.8°). In 2-phase full-step excitation mode, high magnetic torque is generated by energizing pairs of stator coils in sequence: 09H -> 0AH -> 06H -> 05H. The 8086 sends these nibbles to 8255 PPI Port A (00C0H) after writing 80H to CWR (00C6H). Software delay routines regulate stepping speed and rotor settling, while register CX holds the variable step count.'
+        ]
+      },
+      {
+        id: 'm20-s18',
+        title: 'Exp 6B: Stepper Motor Interfacing – Anti-Clockwise Rotation & Variable Step-Size 🔁',
+        moduleTitle: 'Module 20: Lab Resources & Experiments Manual',
+        moduleId: 'm20',
+        points: [
+          '🎯 AIM & OBJECTIVE: Write an 8086 Assembly Language Program to interface a 4-phase stepper motor to the 8086 microprocessor via 8255 PPI and operate it in anti-clockwise (CCW / counter-clockwise) direction by choosing variable step-sizes and angles.',
+          '💡 THEORY & CONCEPT: Anti-clockwise (CCW) rotation is achieved by inverting the sequence of 2-phase stator coil excitation codes: 05H -> 06H -> 0AH -> 09H. Reversing the progression of magnetic flux vectors pulls the rotor backward by 1.8° per step. Loading variable step counts (e.g., CX = 200 for 360° CCW, CX = 100 for 180° CCW, CX = 50 for 90° CCW) into CX ensures exact angular displacement control through 8255 Port A.'
+        ]
+      },
+      {
+        id: 'm20-s19',
+        title: 'Exp 7A: Interfacing ADC (Analog to Digital Converter) with 8086 🎛️',
+        moduleTitle: 'Module 20: Lab Resources & Experiments Manual',
+        moduleId: 'm20',
+        points: [
+          '🎯 AIM & OBJECTIVE: Write an 8086 Assembly Language Program to interface an 8-bit Successive Approximation Analog-to-Digital Converter (ADC 0808/0809) with 8086 via 8255 PPI, read an analog input voltage, and calculate the digital equivalent.',
+          '💡 THEORY & CONCEPT: ADC 0808 uses an 8-bit SAR (Successive Approximation Register) and 8-channel analog multiplexer. The 8086 interfaces to ADC 0808 using 8255 PPI in Mode 0 (Control Word 98H: Port A=Input, Port B=Output, PC_Upper=Input, PC_Lower=Output). The handshaking sequence consists of: (1) Outputting channel address on Port B, (2) Pulsing ALE and SOC on PC0, (3) Polling EOC on PC7 until HIGH (1), and (4) Asserting OE on PC2 to read the 8-bit digital output byte from Port A.'
+        ]
+      },
+      {
+        id: 'm20-s20',
+        title: 'Exp 7B: Interfacing DAC & Waveform Generation (Square, Triangular, Step) 📈',
+        moduleTitle: 'Module 20: Lab Resources & Experiments Manual',
+        moduleId: 'm20',
+        points: [
+          '🎯 AIM & OBJECTIVE: Write an 8086 Assembly Language Program to interface an 8-bit Digital-to-Analog Converter (DAC 0800) with 8086 via 8255 PPI and generate Square Wave, Triangular Wave, and Step (Staircase) signals.',
+          '💡 THEORY & CONCEPT: DAC 0800 utilizes an inverted R-2R ladder network producing complementary current outputs proportional to the 8-bit input word. An external operational amplifier (OP-07/LM741) in an inverting I-to-V configuration converts current to voltage: Vo = -Iout * Rf = Vref * (Rf / Rref) * (D / 256). By writing sequential digital patterns to 8255 Port A (CWR = 80H) with calibrated software delays, the 8086 synthesizes square waves (00H/FFH toggling), triangular waves (linear symmetric ramp up/down sweeps), and step signals (multi-level voltage plateaus).'
+        ]
+      },
+      {
+        id: 'm20-s21',
+        title: 'Exp 8: Block Data Transfer (Memory Copy & Management) 📦',
         moduleTitle: 'Module 20: Lab Resources & Experiments Manual',
         moduleId: 'm20',
         points: [
           '🎯 AIM & OBJECTIVE: Write an 8086 ALP to perform block data transfer of N bytes from a source memory offset to a destination memory offset.',
           '💡 THEORY & CONCEPT: High-speed block memory replication is performed using the MOVSB (Move String Byte) instruction with the REP prefix. Setting SI to the source offset, DI to the destination offset, CX to byte count, and clearing DF (CLD), REP MOVSB automatically transfers memory bytes from DS:SI to ES:DI in a single hardware cycle per byte.'
+        ]
+      },
+      {
+        id: 'm20-s22',
+        title: 'Exp 9A: 8051 Microcontroller – Arithmetic Operations (Addition & Subtraction) ➕➖',
+        moduleTitle: 'Module 20: Lab Resources & Experiments Manual',
+        moduleId: 'm20',
+        points: [
+          '🎯 AIM & OBJECTIVE: Write an Assembly Language Program (ALP) for the 8051 Microcontroller to perform 8-bit Arithmetic operations: Addition (ADD/ADDC) and Subtraction (SUBB) with carry/borrow propagation.',
+          '💡 THEORY & CONCEPT: 8051 8-bit arithmetic uses the Accumulator (A) and general-purpose registers (R0-R7) or direct RAM. ADD A, Rn computes A = A + Rn, updating Carry (CY), Auxiliary Carry (AC), and Overflow (OV) flags in PSW. Subtraction is performed via SUBB A, Rn (A = A - Rn - CY). Since 8051 lacks a borrow-free SUB instruction, the Carry flag MUST be explicitly cleared (CLR C) before subtraction.'
+        ]
+      },
+      {
+        id: 'm20-s23',
+        title: 'Exp 9B: 8051 Microcontroller – Arithmetic Operations (Multiplication & Division) ✖️➗',
+        moduleTitle: 'Module 20: Lab Resources & Experiments Manual',
+        moduleId: 'm20',
+        points: [
+          '🎯 AIM & OBJECTIVE: Write an Assembly Language Program (ALP) for the 8051 Microcontroller to perform 8-bit unsigned Multiplication (MUL AB) and Division (DIV AB).',
+          '💡 THEORY & CONCEPT: 8051 hardware multiplication (MUL AB) multiplies 8-bit operands in A and B, producing a 16-bit product stored as High Byte in B and Low Byte in A. The Overflow flag (OV) is set if the product > 255 (B ≠ 0). Hardware division (DIV AB) divides 8-bit dividend in A by 8-bit divisor in B, placing integer Quotient in A and Remainder in B. If divisor B = 00H, OV flag is set to signal divide-by-zero.'
+        ]
+      },
+      {
+        id: 'm20-s24',
+        title: 'Exp 9C: 8051 Microcontroller – Logical Operations (AND, OR, XOR, NOT) 🔀',
+        moduleTitle: 'Module 20: Lab Resources & Experiments Manual',
+        moduleId: 'm20',
+        points: [
+          '🎯 AIM & OBJECTIVE: Write an Assembly Language Program (ALP) for the 8051 Microcontroller to perform bitwise Logical operations: AND (ANL), OR (ORL), Exclusive-OR (XRL), and 1\'s Complement (CPL).',
+          '💡 THEORY & CONCEPT: 8051 bitwise logical instructions operate on 8-bit registers or direct RAM bytes. ANL A, Rn performs bitwise AND (used for bit masking/clearing). ORL A, Rn performs bitwise OR (used for bit setting). XRL A, Rn performs bitwise XOR (used for bit toggling and parity checking). CPL A inverts all 8 bits of the accumulator (1\'s complement).'
+        ]
+      },
+      {
+        id: 'm20-s25',
+        title: 'Exp 9D: 8051 Microcontroller – Programs related to Register Banks & Switching 🏦',
+        moduleTitle: 'Module 20: Lab Resources & Experiments Manual',
+        moduleId: 'm20',
+        points: [
+          '🎯 AIM & OBJECTIVE: Write an Assembly Language Program (ALP) for the 8051 Microcontroller to perform Register Bank Selection and Bank Switching using PSW bits RS1 and RS0.',
+          '💡 THEORY & CONCEPT: 8051 internal RAM contains 32 working registers organized into 4 independent banks (Bank 0: 00H-07H, Bank 1: 08H-0FH, Bank 2: 10H-17H, Bank 3: 18H-1FH). Active bank selection is controlled by bits RS1 (PSW.4) and RS0 (PSW.3) in the Program Status Word. Manipulating RS1 and RS0 via SETB and CLR instructions switches active registers instantaneously without pushing/popping registers during context switches or ISRs.'
+        ]
+      },
+      {
+        id: 'm20-s26',
+        title: 'Exp 10A: 8051 Timer 0 in Mode 1 – 25 ms Delay & Blink Port P0 Pins ⏱️💡',
+        moduleTitle: 'Module 20: Lab Resources & Experiments Manual',
+        moduleId: 'm20',
+        points: [
+          '🎯 AIM & OBJECTIVE: Write an Assembly Language Program to create a delay of 25 msec using Timer 0 in Mode 1 and blink all the pins of Port P0.',
+          '💡 THEORY & CONCEPT: Mode 1 configures Timer 0 as a 16-bit timer (TMOD = 01H) with a maximum count of 65,536. At 12 MHz (1 machine cycle = 1 μs), 25 ms requires 25,000 counts. The timer register is preloaded with 65,536 - 25,000 = 40,536 (9E58H: TH0 = 9EH, TL0 = 58H). Starting Timer 0 (SETB TR0) increments TL0/TH0 until overflow sets TF0 (TCON.5). The CPU clears TF0 and TR0 and inverts Port P0 (CPL P0) to blink all 8 LED pins every 25 ms.'
+        ]
+      },
+      {
+        id: 'm20-s27',
+        title: 'Exp 10B: 8051 Timer 1 in Mode 0 – 50 µs Delay & Blink Port P2 Pins ⚡💡',
+        moduleTitle: 'Module 20: Lab Resources & Experiments Manual',
+        moduleId: 'm20',
+        points: [
+          '🎯 AIM & OBJECTIVE: Write an Assembly Language Program to create a delay of 50 µsec using Timer 1 in Mode 0 and blink all the pins of Port P2.',
+          '💡 THEORY & CONCEPT: Mode 0 configures Timer 1 as a legacy 13-bit timer (TMOD = 00H, compatible with 8048), utilizing 8 bits of TH1 and the 5 lowest bits (D0-D4) of TL1 (max count = 8,192). For a 50 μs delay at 12 MHz (50 counts), the 13-bit initial count is 8,192 - 50 = 8,142 (1FCEH in 13-bit representation: TH1 = 0FEH, TL1 = 0EH). Starting Timer 1 (SETB TR1) counts to overflow (TF1 = 1), creating accurate high-frequency square wave toggles on Port P2.'
+        ]
+      },
+      {
+        id: 'm20-s28',
+        title: 'Exp 10C: 8051 Counter 0 in Mode 2 – 75 ms Delay Loop & Blink Port P1 Pins 🔄💡',
+        moduleTitle: 'Module 20: Lab Resources & Experiments Manual',
+        moduleId: 'm20',
+        points: [
+          '🎯 AIM & OBJECTIVE: Write an Assembly Language Program to create a delay of 75 msec using Counter/Timer 0 in Mode 2 (8-bit Auto-Reload) and blink all the pins of Port P1.',
+          '💡 THEORY & CONCEPT: Mode 2 configures Timer/Counter 0 as an 8-bit Auto-Reload register (TMOD = 02H / 06H). TL0 counts from the preset value in TH0 up to FFH; upon overflow, TF0 is asserted and TH0 is automatically reloaded into TL0 by hardware. With a base period of 250 μs (TH0 = 256 - 250 = 06H), repeating the hardware reload tick across a software register loop (300 iterations: 300 × 250 μs = 75,000 μs = 75 ms) generates a jitter-free 75 ms toggle rate on Port P1.'
+        ]
+      },
+      {
+        id: 'm20-s29',
+        title: 'Exp 10D: 8051 Counter 1 in Mode 1 – 80 µs Delay & Blink Port P3 Pins 🎯💡',
+        moduleTitle: 'Module 20: Lab Resources & Experiments Manual',
+        moduleId: 'm20',
+        points: [
+          '🎯 AIM & OBJECTIVE: Write an Assembly Language Program to create a delay of 80 µsec using Counter 1 in Mode 1 and blink all the pins of Port P3.',
+          '💡 THEORY & CONCEPT: Mode 1 configures Counter 1 in 16-bit counting mode (TMOD = 50H for external clock pulses on pin T1/P3.5, or 10H for internal machine cycles). For 80 μs (80 clock counts), the 16-bit preload value is 65,536 - 80 = 65,456 (FFB0H: TH1 = 0FFH, TL1 = 0B0H). Upon starting Counter 1 (SETB TR1), 80 external pulses/cycles trigger overflow (TF1 = 1), which inverts Port P3 (CPL P3) to generate precise pulse-train toggling.'
+        ]
+      },
+      {
+        id: 'm20-s30',
+        title: 'Exp 11A: 8051 UART Serial Transfer at 9600 Baud Rate 📡⚡',
+        moduleTitle: 'Module 20: Lab Resources & Experiments Manual',
+        moduleId: 'm20',
+        points: [
+          '🎯 AIM & OBJECTIVE: Write an 8051 Assembly Language Program to transfer a character serially with a baud rate of 9600 using UART.',
+          '💡 THEORY & CONCEPT: 8051 UART Mode 1 (8-bit UART, 1 start, 8 data, 1 stop bit) is enabled via SCON = 50H. Timer 1 in Mode 2 (8-bit auto-reload, TMOD = 20H) is configured as the baud rate generator with f_osc = 11.0592 MHz. For 9600 baud (with SMOD=0), TH1 is loaded with -3 = 0FDH (256 - 3 = 253D). Writing the character to SBUF initiates serial transmission; polling the TI flag (JNB TI, $) detects when transmission completes, after which TI is cleared (CLR TI).'
+        ]
+      },
+      {
+        id: 'm20-s31',
+        title: 'Exp 11B: 8051 UART Serial Transfer at 4800 Baud Rate 📡⚡',
+        moduleTitle: 'Module 20: Lab Resources & Experiments Manual',
+        moduleId: 'm20',
+        points: [
+          '🎯 AIM & OBJECTIVE: Write an 8051 Assembly Language Program to transfer a character serially with a baud rate of 4800 using UART.',
+          '💡 THEORY & CONCEPT: Mode 1 UART serial transfer operates at 4800 baud by loading Timer 1 Mode 2 auto-reload register TH1 with -6 = 0FAH (256 - 6 = 250D). With SCON = 50H (8-bit framing) and crystal frequency 11.0592 MHz, writing each character to SBUF serializes the 10-bit asynchronous frame onto the TXD pin (P3.1). The TI interrupt/status flag is monitored and cleared per byte.'
+        ]
+      },
+      {
+        id: 'm20-s32',
+        title: 'Exp 11C: 8051 UART Serial Transfer at 2400 Baud Rate 📡⚡',
+        moduleTitle: 'Module 20: Lab Resources & Experiments Manual',
+        moduleId: 'm20',
+        points: [
+          '🎯 AIM & OBJECTIVE: Write an 8051 Assembly Language Program to transfer a character serially with a baud rate of 2400 using UART.',
+          '💡 THEORY & CONCEPT: For 2400 baud UART serial transmission, Timer 1 in Mode 2 Auto-Reload (TMOD = 20H) divides the 28,800 Hz timer clock by 12. TH1 is loaded with -12 = 0F4H (256 - 12 = 244D). SCON = 50H establishes full-duplex 8-bit framing. Characters placed into SBUF are shifted out serially via TXD (P3.1) with hardware start and stop bit generation.'
+        ]
+      },
+      {
+        id: 'm20-s33',
+        title: 'Exp 12A: Interfacing 16x2 LCD with 8051 (8-Bit Mode) 📟✨',
+        moduleTitle: 'Module 20: Lab Resources & Experiments Manual',
+        moduleId: 'm20',
+        points: [
+          '🎯 AIM & OBJECTIVE: Develop and execute an 8051 Assembly Language Program to interface a 16×2 Alphanumeric LCD module to 8051 in 8-bit mode and display alphanumeric messages.',
+          '💡 THEORY & CONCEPT: A 16×2 LCD based on the HD44780 controller has 16 columns and 2 rows of 5×7 dot-matrix characters. In 8-bit mode, all 8 data lines (D0–D7) are connected to an 8051 parallel port (e.g., Port P1), with control lines RS (P2.0), RW (P2.1), and EN (P2.2). Control signals: RS=0 selects Command Register, RS=1 selects Data Register, RW=0 specifies Write operation. Latching is triggered by a HIGH-to-LOW pulse on the EN pin (min 450 ns pulse width). Initialization commands include 38H (2 lines, 5×7 matrix, 8-bit mode), 0EH (Display ON, cursor ON), 01H (Clear screen), 06H (Auto-increment cursor), and 80H / C0H (Set DDRAM address for Line 1 / Line 2).'
+        ]
+      },
+      {
+        id: 'm20-s34',
+        title: 'Exp 12B: Interfacing 16x2 LCD with 8051 in 4-Bit Mode 📟⚡',
+        moduleTitle: 'Module 20: Lab Resources & Experiments Manual',
+        moduleId: 'm20',
+        points: [
+          '🎯 AIM & OBJECTIVE: Develop and execute an 8051 Assembly Language Program to interface a 16×2 LCD to 8051 in 4-bit mode (saving 4 microcontroller I/O lines) and display custom text.',
+          '💡 THEORY & CONCEPT: 4-bit mode conserves precious microcontroller pins by using only 4 data lines (D4–D7 connected to P1.4–P1.7), leaving D0–D3 unconnected. Each 8-bit command or ASCII data byte is sent in two successive 4-bit nibbles (higher nibble first via SWAP/ANL, followed by the lower nibble), each latched with a HIGH-to-LOW EN strobe. Special initialization sequence (33H, 32H, 28H) synchronizes the HD44780 internal state machine into 4-bit mode, followed by 0EH (Display ON), 01H (Clear display), and 06H (Entry mode).'
         ]
       }
     ]

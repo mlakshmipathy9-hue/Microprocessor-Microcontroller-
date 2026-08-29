@@ -408,7 +408,7 @@ export default function IntroInterruptsSimulator() {
                       </div>
                     </div>
                     
-                    <p className="text-slate-600 text-sm leading-relaxed text-justify max-w-3xl">
+                    <p className="text-slate-600 text-sm leading-relaxed text-left max-w-3xl">
                       Just like a human coordinator, the 8086 CPU needs a way to handle sudden events—like a keystroke from a keyboard, a timer signal, or an arithmetic fault (like divide-by-zero)—without crashing or slowing down. Interrupts provide this precise system control mechanism.
                     </p>
                   </div>

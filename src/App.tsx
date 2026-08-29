@@ -790,6 +790,7 @@ export default function App() {
             activeLabId={activeLabId}
             fullScreenMode={fullScreenMode}
             onToggleFullScreen={handleToggleFullScreen}
+            onSelectSlide={handleSelectSlide}
           />
         </main>
       </div>

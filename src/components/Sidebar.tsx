@@ -375,13 +375,31 @@ export default function Sidebar({
                       exp_str2: { moduleId: 'm20', slideId: 'm20-s11' },
                       exp_str3: { moduleId: 'm20', slideId: 'm20-s12' },
                       exp_str4: { moduleId: 'm20', slideId: 'm20-s13' },
-                      exp5: { moduleId: 'm20', slideId: 'm20-s14' },
+                      exp_clock1: { moduleId: 'm20', slideId: 'm20-s14' },
+                      exp_clock2: { moduleId: 'm20', slideId: 'm20-s15' },
+                      exp_clock3: { moduleId: 'm20', slideId: 'm20-s16' },
+                      exp_stepper1: { moduleId: 'm20', slideId: 'm20-s17' },
+                      exp_stepper2: { moduleId: 'm20', slideId: 'm20-s18' },
+                      exp_adc: { moduleId: 'm20', slideId: 'm20-s19' },
+                      exp_dac: { moduleId: 'm20', slideId: 'm20-s20' },
+                      exp5: { moduleId: 'm20', slideId: 'm20-s21' },
+                      exp_8051_arith: { moduleId: 'm20', slideId: 'm20-s22' },
+                      exp_8051_muldiv: { moduleId: 'm20', slideId: 'm20-s23' },
+                      exp_8051_logic: { moduleId: 'm20', slideId: 'm20-s24' },
+                      exp_8051_regbanks: { moduleId: 'm20', slideId: 'm20-s25' },
+                      exp_8051_timer0_m1: { moduleId: 'm20', slideId: 'm20-s26' },
+                      exp_8051_timer1_m0: { moduleId: 'm20', slideId: 'm20-s27' },
+                      exp_8051_counter0_m2: { moduleId: 'm20', slideId: 'm20-s28' },
+                      exp_8051_counter1_m1: { moduleId: 'm20', slideId: 'm20-s29' },
+                      exp_8051_uart_9600: { moduleId: 'm20', slideId: 'm20-s30' },
+                      exp_8051_uart_4800: { moduleId: 'm20', slideId: 'm20-s31' },
+                      exp_8051_uart_2400: { moduleId: 'm20', slideId: 'm20-s32' },
                     };
 
                     const groupedLabs = [
                       {
                         title: "Lab Resources 1: Arithmetic Instructions",
-                        experiments: labExperiments.filter(e => typeof e.number === 'string' && e.number.startsWith('1'))
+                        experiments: labExperiments.filter(e => typeof e.number === 'string' && e.number.startsWith('1.'))
                       },
                       {
                         title: "Lab Resources 2: Bit Manipulation Instructions",
@@ -396,8 +414,32 @@ export default function Sidebar({
                         experiments: labExperiments.filter(e => typeof e.number === 'string' && e.number.startsWith('4'))
                       },
                       {
-                        title: "Lab Resources 5: Block Data Transfer",
-                        experiments: labExperiments.filter(e => e.number === '5')
+                        title: "Lab Resources 5: Digital Clock Design",
+                        experiments: labExperiments.filter(e => typeof e.number === 'string' && e.number.startsWith('5'))
+                      },
+                      {
+                        title: "Lab Resources 6: Stepper Motor Interfacing",
+                        experiments: labExperiments.filter(e => typeof e.number === 'string' && e.number.startsWith('6'))
+                      },
+                      {
+                        title: "Lab Resources 7: ADC & DAC Interfacing",
+                        experiments: labExperiments.filter(e => typeof e.number === 'string' && e.number.startsWith('7'))
+                      },
+                      {
+                        title: "Lab Resources 8: Block Data Transfer",
+                        experiments: labExperiments.filter(e => typeof e.number === 'string' && e.number.startsWith('8'))
+                      },
+                      {
+                        title: "Lab Resources 9: 8051 Arithmetic & Logical Instructions",
+                        experiments: labExperiments.filter(e => typeof e.number === 'string' && e.number.startsWith('9'))
+                      },
+                      {
+                        title: "Lab Resources 10: 8051 Timers & Counters Verification",
+                        experiments: labExperiments.filter(e => typeof e.number === 'string' && e.number.startsWith('10'))
+                      },
+                      {
+                        title: "Lab Resources 11: 8051 UART Serial Operation",
+                        experiments: labExperiments.filter(e => typeof e.number === 'string' && e.number.startsWith('11'))
                       }
                     ];
 
@@ -441,14 +483,11 @@ export default function Sidebar({
                                           <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 shrink-0 mt-1" />
                                         )}
                                       </div>
-                                      <p className={`text-[10px] leading-normal font-medium ${isCurrent ? 'text-indigo-900/80' : 'text-slate-500'}`}>
+                                      <p className={`text-[10px] leading-normal font-medium line-clamp-2 ${isCurrent ? 'text-indigo-900/80' : 'text-slate-500'}`}>
                                         {exp.aim}
                                       </p>
-                                      <div className="flex items-center justify-between mt-0.5 text-[9px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                                      <div className="flex items-center mt-0.5 text-[9px] font-mono font-bold uppercase tracking-wider text-slate-400">
                                         <span>B.Tech Syllabus Lab</span>
-                                        <span className="text-[8px] font-sans text-indigo-600 bg-indigo-100/50 px-1.5 py-0.5 rounded border border-indigo-100/30">
-                                          DIRECTIVE SANDBOX
-                                        </span>
                                       </div>
                                     </button>
                                   );

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import StepperSchematicDiagram from './StepperSchematicDiagram';
 import StepperMotorTypesExplorer from './StepperMotorTypesExplorer';
+import DisplaySchematicDiagram from './DisplaySchematicDiagram';
+import KeypadSchematicDiagram from './KeypadSchematicDiagram';
+import TrafficSchematicDiagram from './TrafficSchematicDiagram';
 import { 
   Play, 
   Pause, 
@@ -30,10 +33,10 @@ import {
 } from 'lucide-react';
 
 interface PeripheralInterfacingSimulatorProps {
-  initialTab?: 'schematic' | 'circuit' | 'stepper-types' | 'stepper' | 'stepper-code' | 'display-circuit' | 'display' | 'display-code' | 'keypad-circuit' | 'keypad' | 'keypad-code' | 'traffic' | 'traffic-code' | 'alp';
-  mode?: 'schematic' | 'circuit' | 'stepper-types' | 'stepper' | 'stepper-code' | 'display-circuit' | 'display' | 'display-code' | 'keypad-circuit' | 'keypad' | 'keypad-code' | 'traffic' | 'traffic-code' | 'alp';
+  initialTab?: 'schematic' | 'circuit' | 'stepper-types' | 'stepper' | 'stepper-code' | 'display-schematic' | 'display-circuit' | 'display' | 'display-code' | 'keypad-schematic' | 'keypad-circuit' | 'keypad' | 'keypad-code' | 'traffic-schematic' | 'traffic-circuit' | 'traffic' | 'traffic-code' | 'alp';
+  mode?: 'schematic' | 'circuit' | 'stepper-types' | 'stepper' | 'stepper-code' | 'display-schematic' | 'display-circuit' | 'display' | 'display-code' | 'keypad-schematic' | 'keypad-circuit' | 'keypad' | 'keypad-code' | 'traffic-schematic' | 'traffic-circuit' | 'traffic' | 'traffic-code' | 'alp';
   showTabs?: boolean;
-  allowedTabs?: ('schematic' | 'circuit' | 'stepper-types' | 'stepper' | 'stepper-code' | 'display-circuit' | 'display' | 'display-code' | 'keypad-circuit' | 'keypad' | 'keypad-code' | 'traffic' | 'traffic-code' | 'alp')[];
+  allowedTabs?: ('schematic' | 'circuit' | 'stepper-types' | 'stepper' | 'stepper-code' | 'display-schematic' | 'display-circuit' | 'display' | 'display-code' | 'keypad-schematic' | 'keypad-circuit' | 'keypad' | 'keypad-code' | 'traffic-schematic' | 'traffic-circuit' | 'traffic' | 'traffic-code' | 'alp')[];
 }
 
 export default function PeripheralInterfacingSimulator({ 
@@ -42,7 +45,7 @@ export default function PeripheralInterfacingSimulator({
   showTabs = false,
   allowedTabs
 }: PeripheralInterfacingSimulatorProps) {
-  const [activeTab, setActiveTab] = useState<'schematic' | 'circuit' | 'stepper-types' | 'stepper' | 'stepper-code' | 'display-circuit' | 'display' | 'display-code' | 'keypad-circuit' | 'keypad' | 'keypad-code' | 'traffic' | 'traffic-code' | 'alp'>(mode || initialTab);
+  const [activeTab, setActiveTab] = useState<'schematic' | 'circuit' | 'stepper-types' | 'stepper' | 'stepper-code' | 'display-schematic' | 'display-circuit' | 'display' | 'display-code' | 'keypad-schematic' | 'keypad-circuit' | 'keypad' | 'keypad-code' | 'traffic-schematic' | 'traffic-circuit' | 'traffic' | 'traffic-code' | 'alp'>(mode || initialTab);
 
   useEffect(() => {
     if (mode) setActiveTab(mode);
@@ -966,6 +969,11 @@ END MAIN                      ; End of assembly program`;
       title: '8086 Stepper Motor Assembly Language Program (ALP)',
       subtitle: 'Full-Step 2-Phase ON (03H, 06H, 0CH, 09H) • 8255 PPI Port A Interfacing & Delay Loop'
     },
+    'display-schematic': {
+      icon: <Layers className="w-5 h-5" />,
+      title: 'Circuit Diagram: 8086 and 7-Segment LED Display Interfacing',
+      subtitle: 'Proteus / EDA Schematic: 8086 (U1) ↔ 74LS373 (U2) ↔ 74LS138 (U3) ↔ 8255A PPI (U4) ↔ 330Ω Pack (RN1) ↔ 7-Seg LED'
+    },
     'display-circuit': {
       icon: <Activity className="w-5 h-5" />,
       title: '8086 Seven-Segment LED Display Interfacing Circuit & Architecture',
@@ -981,6 +989,11 @@ END MAIN                      ; End of assembly program`;
       title: '8086 Seven-Segment Display Assembly Language Program (ALP)',
       subtitle: 'Lookup Table & XLAT Instruction • Up/Down BCD Counters • 8255 PPI Initialization (80H) & Delay Routine'
     },
+    'keypad-schematic': {
+      icon: <Layers className="w-5 h-5" />,
+      title: 'Circuit Diagram: 8086 and 4x4 Matrix Keypad Interfacing',
+      subtitle: 'Proteus / EDA Schematic: 8086 (U1) ↔ 74LS373 (U2) ↔ 74LS138 (U3) ↔ 8255A PPI (U4) ↔ 10kΩ Pull-Ups (RP1) ↔ 4x4 Matrix'
+    },
     'keypad-circuit': {
       icon: <Activity className="w-5 h-5" />,
       title: '8086 4x4 Matrix Keypad Interfacing Circuit & Architecture',
@@ -995,6 +1008,16 @@ END MAIN                      ; End of assembly program`;
       icon: <Code className="w-5 h-5" />,
       title: '8086 4x4 Matrix Keypad Assembly Language Program (ALP)',
       subtitle: '8255 PPI Mode 0 Initialization (82H) • Row Grounding (0EH,0DH,0BH,07H) • 20ms Debounce Loop • Table Lookup'
+    },
+    'traffic-schematic': {
+      icon: <Layers className="w-5 h-5" />,
+      title: 'Circuit Diagram: 8086 and 4-Way Traffic Light Controller',
+      subtitle: 'Proteus / EDA Schematic: 8086 (U1) ↔ 74LS373 (U2) ↔ 74LS138 (U3) ↔ 8255A PPI (U4) ↔ 7407 Driver (U5) ↔ NS/EW Traffic Signal Heads'
+    },
+    'traffic-circuit': {
+      icon: <Activity className="w-5 h-5" />,
+      title: '8086 Traffic Light Controller Circuit Architecture & Signal Bus',
+      subtitle: '8086 CPU ↔ 74LS373 Latch ↔ 74LS138 Decoder (CS# = 80H) ↔ 8255 PPI (Port A) ↔ 7407 Buffers ↔ Traffic Signal Heads'
     },
     traffic: {
       icon: <Timer className="w-5 h-5" />,
@@ -1041,12 +1064,16 @@ END MAIN                      ; End of assembly program`;
                 'stepper-types': { label: 'Types of Stepper Motor', icon: <Component className="w-3.5 h-3.5" /> },
                 stepper: { label: 'Stepper Motor Simulator', icon: <RotateCw className="w-3.5 h-3.5" /> },
                 'stepper-code': { label: 'Stepper Motor ALP (Code)', icon: <Code className="w-3.5 h-3.5" /> },
+                'display-schematic': { label: 'Proteus Circuit Diagram (7-Segment)', icon: <Layers className="w-3.5 h-3.5" /> },
                 'display-circuit': { label: 'Circuit Blocks & Architecture', icon: <Activity className="w-3.5 h-3.5" /> },
                 display: { label: '7-Segment Simulator & Decoder', icon: <Lightbulb className="w-3.5 h-3.5" /> },
                 'display-code': { label: '7-Segment ALP (Code)', icon: <Code className="w-3.5 h-3.5" /> },
+                'keypad-schematic': { label: 'Proteus Circuit Diagram (4x4 Keypad)', icon: <Layers className="w-3.5 h-3.5" /> },
                 'keypad-circuit': { label: 'Circuit Blocks & Architecture', icon: <Activity className="w-3.5 h-3.5" /> },
                 keypad: { label: 'Keypad Simulator & Scanner', icon: <Grid className="w-3.5 h-3.5" /> },
                 'keypad-code': { label: 'Keypad ALP (Code)', icon: <Code className="w-3.5 h-3.5" /> },
+                'traffic-schematic': { label: 'Proteus Circuit Diagram (Traffic)', icon: <Layers className="w-3.5 h-3.5" /> },
+                'traffic-circuit': { label: 'Circuit Blocks & Architecture', icon: <Activity className="w-3.5 h-3.5" /> },
                 traffic: { label: 'Traffic Light Controller', icon: <Timer className="w-3.5 h-3.5" /> },
                 'traffic-code': { label: 'Traffic Light ALP (Code)', icon: <Code className="w-3.5 h-3.5" /> },
                 alp: { label: 'Assembly Program (ALP)', icon: <Code className="w-3.5 h-3.5" /> },
@@ -1941,6 +1968,15 @@ END MAIN                      ; End of assembly program`;
         </div>
       )}
 
+      {/* TAB: PROTEUS SCHEMATIC CIRCUIT DIAGRAM (7-Segment LED Display) */}
+      {activeTab === 'display-schematic' && (
+        <DisplaySchematicDiagram 
+          initialDigit={digitHex} 
+          initialType={displayType} 
+          initialMode={segCircuitMode} 
+        />
+      )}
+
       {/* TAB: 7-SEGMENT DISPLAY INTERFACING CIRCUIT ARCHITECTURE */}
       {activeTab === 'display-circuit' && (
         <div className="space-y-4">
@@ -2756,6 +2792,11 @@ END MAIN                      ; End of assembly program`;
             </div>
           </div>
         </div>
+      )}
+
+      {/* TAB: PROTEUS SCHEMATIC CIRCUIT DIAGRAM (4x4 Matrix Keypad) */}
+      {activeTab === 'keypad-schematic' && (
+        <KeypadSchematicDiagram />
       )}
 
       {/* TAB: 4x4 MATRIX KEYPAD INTERFACING CIRCUIT ARCHITECTURE */}
@@ -3628,6 +3669,300 @@ END MAIN                      ; End of assembly program`;
               <p className="text-slate-600 leading-relaxed">
                 Mechanical contacts chatter for 10–20 ms upon impact. The <code className="font-mono font-bold text-amber-700 bg-slate-100 px-1 rounded">DEBOUNCE_DELAY</code> subroutine prevents false multiple triggers. Waiting for key release (<code className="font-mono text-slate-800">CMP AL, 0FH</code>) enforces reliable single-action keystrokes.
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB: PROTEUS SCHEMATIC CIRCUIT DIAGRAM (4-Way Traffic Light Controller) */}
+      {activeTab === 'traffic-schematic' && (
+        <TrafficSchematicDiagram />
+      )}
+
+      {/* TAB: TRAFFIC LIGHT INTERFACING CIRCUIT ARCHITECTURE */}
+      {activeTab === 'traffic-circuit' && (
+        <div className="space-y-4">
+          {/* Interactive Hardware Signal Control Bar */}
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-2xs">
+            <div className="flex flex-wrap items-center gap-3">
+              <div>
+                <label className="text-[9px] text-slate-500 block font-bold uppercase tracking-wider mb-1">
+                  Active Traffic Phase:
+                </label>
+                <div className="flex bg-white rounded-lg border border-slate-200 p-0.5 shadow-2xs">
+                  {trafficStates.map((st, idx) => (
+                    <button
+                      key={st.name}
+                      onClick={() => setTrafficStateIndex(idx)}
+                      className={`px-2 py-1 rounded-md font-bold text-[10px] cursor-pointer transition-all ${
+                        trafficStateIndex === idx
+                          ? 'bg-indigo-600 text-white shadow-2xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      P{idx + 1}: {st.name.split(' ')[0]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Animation Toggle & Active Output Code */}
+            <div className="flex items-center gap-2">
+              <div className="bg-white px-3 py-1.5 rounded-lg border border-slate-200 font-mono text-[11px] shadow-2xs flex items-center gap-2">
+                <span className="text-slate-500">8255 Port A (80H):</span>
+                <span className="text-emerald-700 font-extrabold text-xs">
+                  {trafficStates[trafficStateIndex].portA}
+                </span>
+                <span className="text-slate-400 text-[10px]">
+                  ({(parseInt(trafficStates[trafficStateIndex].portA.replace('H', ''), 16) || 0).toString(2).padStart(8, '0')}b)
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Interactive Hardware Block Diagram Canvas (Clean Light SVG) */}
+          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 overflow-x-auto shadow-inner">
+            <div className="min-w-[920px] flex items-stretch justify-between gap-2.5 text-[11px]">
+              
+              {/* BLOCK 1: 8086 Microprocessor */}
+              <div className="w-44 bg-white border-2 border-indigo-200 rounded-xl p-3 shadow-xs flex flex-col justify-between space-y-2">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+                  <span className="font-extrabold text-indigo-700 font-mono text-xs">8086 CPU</span>
+                  <span className="px-1.5 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[9px] font-bold">5 MHz</span>
+                </div>
+                <div className="space-y-1 font-mono text-[10px]">
+                  <div className="flex justify-between items-center py-0.5 px-1 bg-slate-50 rounded">
+                    <span className="text-slate-600">AD0–AD15</span>
+                    <span className="text-indigo-600 font-bold">Mux Bus</span>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5 px-1 bg-slate-50 rounded">
+                    <span className="text-slate-600">ALE</span>
+                    <span className="text-emerald-600 font-bold">Latch En</span>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5 px-1 bg-slate-50 rounded">
+                    <span className="text-slate-600">M/IO#, WR#</span>
+                    <span className="text-amber-600 font-bold">I/O Write</span>
+                  </div>
+                  <div className="flex justify-between items-center py-0.5 px-1 bg-indigo-50/70 rounded">
+                    <span className="text-indigo-900 font-bold">Instruction:</span>
+                    <span className="text-indigo-700 font-bold">OUT 80H, AL</span>
+                  </div>
+                </div>
+                <div className="pt-1 text-[9px] text-slate-400 border-t border-slate-100 text-center font-mono">
+                  State Sequencer
+                </div>
+              </div>
+
+              {/* ARROW 1: Bus Demux */}
+              <div className="flex flex-col items-center justify-center space-y-1 px-1">
+                <span className="text-[9px] font-mono text-indigo-600 font-bold">ALE / Demux</span>
+                <div className="w-7 h-0.5 bg-indigo-300 relative">
+                  <ArrowRight className="w-3.5 h-3.5 text-indigo-500 absolute -right-2 -top-1.5" />
+                </div>
+                <span className="text-[9px] font-mono text-slate-400">74LS373</span>
+              </div>
+
+              {/* BLOCK 2: 74LS138 Address Decoder */}
+              <div className="w-40 bg-white border border-slate-200 rounded-xl p-3 shadow-xs flex flex-col justify-between space-y-2">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+                  <span className="font-bold text-slate-800 font-mono text-xs">74LS138</span>
+                  <span className="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[9px] font-bold">Decoder</span>
+                </div>
+                <div className="space-y-1 font-mono text-[10px]">
+                  <div className="text-slate-600">Inputs: <strong className="text-slate-800">A2, A3, A4</strong></div>
+                  <div className="text-slate-600">Enables: <strong className="text-slate-800">M/IO#, G1</strong></div>
+                  <div className="py-1 px-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded text-[10px] font-bold flex justify-between">
+                    <span>Y0# (CS#)</span>
+                    <span>0 (Active)</span>
+                  </div>
+                  <div className="text-slate-500 text-[9px]">A1=0, A0=0 → Port A</div>
+                </div>
+                <div className="text-[9px] text-slate-500 border-t border-slate-100 pt-1 text-center">
+                  Base Port: 80H
+                </div>
+              </div>
+
+              {/* ARROW 2: Chip Select & Bus */}
+              <div className="flex flex-col items-center justify-center space-y-1 px-1">
+                <span className="text-[9px] font-mono text-emerald-600 font-bold">CS#, A0, A1</span>
+                <div className="w-7 h-0.5 bg-emerald-400 relative">
+                  <ArrowRight className="w-3.5 h-3.5 text-emerald-600 absolute -right-2 -top-1.5" />
+                </div>
+                <span className="text-[9px] font-mono text-slate-400">D0–D7 Bus</span>
+              </div>
+
+              {/* BLOCK 3: Intel 8255 PPI */}
+              <div className="w-48 bg-white border-2 border-indigo-300 rounded-xl p-3 shadow-xs flex flex-col justify-between space-y-2">
+                <div className="flex items-center justify-between border-b border-indigo-100 pb-1.5">
+                  <span className="font-extrabold text-indigo-800 font-mono text-xs">Intel 8255 PPI</span>
+                  <span className="px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded text-[9px] font-bold">Mode 0 (80H)</span>
+                </div>
+                <div className="space-y-1.5 font-mono text-[10px]">
+                  <div className="p-1.5 bg-indigo-50/70 rounded border border-indigo-100 flex items-center justify-between">
+                    <span className="text-indigo-900 font-bold">Port A (80H)</span>
+                    <span className="text-emerald-700 font-bold">{trafficStates[trafficStateIndex].portA}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1 text-[9px]">
+                    <div className="p-1 bg-slate-50 rounded border border-slate-200">
+                      <span className="text-slate-500 block">PA0–PA2:</span>
+                      <span className="font-bold text-slate-800">NS (R,Y,G)</span>
+                    </div>
+                    <div className="p-1 bg-slate-50 rounded border border-slate-200">
+                      <span className="text-slate-500 block">PA3–PA5:</span>
+                      <span className="font-bold text-slate-800">EW (R,Y,G)</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-[9px] text-indigo-600 font-bold text-center border-t border-slate-100 pt-1 font-mono">
+                  Control Word: 80H
+                </div>
+              </div>
+
+              {/* ARROW 3: Driver Lines */}
+              <div className="flex flex-col items-center justify-center space-y-1 px-1">
+                <span className="text-[9px] font-mono text-indigo-600 font-bold">PA0–PA5</span>
+                <div className="w-7 h-0.5 bg-indigo-400 relative">
+                  <ArrowRight className="w-3.5 h-3.5 text-indigo-600 absolute -right-2 -top-1.5" />
+                </div>
+                <span className="text-[9px] font-mono text-slate-400">Logic Levels</span>
+              </div>
+
+              {/* BLOCK 4: 7407 Buffer / Driver IC */}
+              <div className="w-44 bg-white border border-slate-200 rounded-xl p-3 shadow-xs flex flex-col justify-between space-y-2">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+                  <span className="font-bold text-slate-800 font-mono text-xs">7407 Buffer / Driver</span>
+                  <span className="px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded text-[9px] font-bold">Hex OC</span>
+                </div>
+                <div className="space-y-1 font-mono text-[9px]">
+                  <div className="p-1 bg-slate-50 rounded border border-slate-200 text-slate-600">
+                    <div>Open-Collector Sinking</div>
+                    <div className="text-emerald-700 font-bold">I_SINK up to 40mA</div>
+                  </div>
+                  <div className="p-1 bg-slate-50 rounded border border-slate-200 text-slate-500 text-[8.5px]">
+                    330Ω Series Resistors to +5V
+                  </div>
+                </div>
+                <div className="text-[9px] text-amber-800 border-t border-slate-100 pt-1 text-center font-bold">
+                  Isolates & Boosts Current
+                </div>
+              </div>
+
+              {/* ARROW 4: Sinking Lines */}
+              <div className="flex flex-col items-center justify-center space-y-1 px-1">
+                <span className="text-[9px] font-mono text-amber-600 font-bold">Drive Lines</span>
+                <div className="w-7 h-0.5 bg-amber-400 relative">
+                  <ArrowRight className="w-3.5 h-3.5 text-amber-600 absolute -right-2 -top-1.5" />
+                </div>
+                <span className="text-[9px] font-mono text-slate-400">LED Anodes</span>
+              </div>
+
+              {/* BLOCK 5: 4-Way Traffic Signal Array */}
+              <div className="w-48 bg-white border-2 border-emerald-300 rounded-xl p-3 shadow-xs flex flex-col justify-between items-center text-center space-y-2">
+                <div className="w-full flex items-center justify-between border-b border-emerald-100 pb-1.5">
+                  <span className="font-extrabold text-emerald-800 font-mono text-xs">Traffic Signals</span>
+                  <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 rounded text-[9px] font-bold">4-Way Array</span>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-2 w-full">
+                  {/* North-South Head */}
+                  <div className="bg-slate-100 p-2 rounded-lg border border-slate-300 flex flex-col items-center gap-1">
+                    <span className="text-[9px] font-bold text-slate-700">North-South</span>
+                    <div className="flex gap-1">
+                      <div className={`w-3 h-3 rounded-full ${trafficStates[trafficStateIndex].ns === 'red' ? 'bg-red-500 shadow-sm' : 'bg-slate-300'}`} />
+                      <div className={`w-3 h-3 rounded-full ${trafficStates[trafficStateIndex].ns === 'yellow' ? 'bg-amber-400 shadow-sm' : 'bg-slate-300'}`} />
+                      <div className={`w-3 h-3 rounded-full ${trafficStates[trafficStateIndex].ns === 'green' ? 'bg-emerald-500 shadow-sm' : 'bg-slate-300'}`} />
+                    </div>
+                  </div>
+                  {/* East-West Head */}
+                  <div className="bg-slate-100 p-2 rounded-lg border border-slate-300 flex flex-col items-center gap-1">
+                    <span className="text-[9px] font-bold text-slate-700">East-West</span>
+                    <div className="flex gap-1">
+                      <div className={`w-3 h-3 rounded-full ${trafficStates[trafficStateIndex].ew === 'red' ? 'bg-red-500 shadow-sm' : 'bg-slate-300'}`} />
+                      <div className={`w-3 h-3 rounded-full ${trafficStates[trafficStateIndex].ew === 'yellow' ? 'bg-amber-400 shadow-sm' : 'bg-slate-300'}`} />
+                      <div className={`w-3 h-3 rounded-full ${trafficStates[trafficStateIndex].ew === 'green' ? 'bg-emerald-500 shadow-sm' : 'bg-slate-300'}`} />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-[9px] text-slate-500 font-sans">
+                  Active: {trafficStates[trafficStateIndex].name}
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          {/* 5 Comprehensive Hardware Interfacing Circuit Stage Breakdown Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-3 text-[11px]">
+            {/* Block 1 */}
+            <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
+              <div className="flex items-center gap-1.5 text-indigo-700 font-bold text-xs border-b border-slate-200 pb-1">
+                <Cpu className="w-3.5 h-3.5" />
+                <span>1. 8086 CPU</span>
+              </div>
+              <p className="text-slate-600 leading-relaxed text-[10.5px]">
+                Executes the sequential state machine logic in assembly language. Writes bit patterns to Port A using <code className="font-mono text-indigo-600 bg-white px-1 rounded">OUT 80H, AL</code> and invokes nested software delay routines to maintain accurate phase intervals.
+              </p>
+              <div className="font-mono text-[9px] text-slate-500 bg-white p-1 rounded border border-slate-100">
+                Pins: AD0-AD15, ALE, M/IO#, WR#
+              </div>
+            </div>
+
+            {/* Block 2 */}
+            <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
+              <div className="flex items-center gap-1.5 text-slate-800 font-bold text-xs border-b border-slate-200 pb-1">
+                <Layers className="w-3.5 h-3.5 text-indigo-600" />
+                <span>2. Demux & Decoder</span>
+              </div>
+              <p className="text-slate-600 leading-relaxed text-[10.5px]">
+                <strong>74LS373</strong> octal latch latches address lines A0–A15 on <code className="font-mono text-emerald-600 bg-white px-1 rounded">ALE</code>. <strong>74LS138</strong> 3-to-8 decoder asserts active-low chip select <code className="font-mono text-emerald-700 bg-white px-1 rounded">CS# = 80H</code> when A2–A7 match the base port address.
+              </p>
+              <div className="font-mono text-[9px] text-slate-500 bg-white p-1 rounded border border-slate-100">
+                Port A = 80H (A1=0, A0=0)
+              </div>
+            </div>
+
+            {/* Block 3 */}
+            <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
+              <div className="flex items-center gap-1.5 text-indigo-800 font-bold text-xs border-b border-slate-200 pb-1">
+                <Zap className="w-3.5 h-3.5 text-amber-500" />
+                <span>3. Intel 8255 PPI</span>
+              </div>
+              <p className="text-slate-600 leading-relaxed text-[10.5px]">
+                Configured in <strong>Mode 0 (Basic I/O)</strong> with Control Word <code className="font-mono text-indigo-700 bg-white px-1 rounded">80H</code>. <strong>Port A</strong> pins PA0–PA2 control North-South Red/Yellow/Green and PA3–PA5 control East-West Red/Yellow/Green.
+              </p>
+              <div className="font-mono text-[9px] text-slate-500 bg-white p-1 rounded border border-slate-100">
+                Control Reg = 86H (CW = 80H)
+              </div>
+            </div>
+
+            {/* Block 4 */}
+            <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
+              <div className="flex items-center gap-1.5 text-amber-800 font-bold text-xs border-b border-slate-200 pb-1">
+                <Activity className="w-3.5 h-3.5 text-amber-600" />
+                <span>4. 7407 Driver IC</span>
+              </div>
+              <p className="text-slate-600 leading-relaxed text-[10.5px]">
+                Hex buffer/driver with <strong>open-collector high-voltage outputs</strong> that sink up to 40mA per channel, protecting the sensitive 8255 PPI output pins and safely driving bright traffic signal LEDs.
+              </p>
+              <div className="font-mono text-[9px] text-slate-500 bg-white p-1 rounded border border-slate-100">
+                330Ω Series Current Limit
+              </div>
+            </div>
+
+            {/* Block 5 */}
+            <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
+              <div className="flex items-center gap-1.5 text-emerald-800 font-bold text-xs border-b border-slate-200 pb-1">
+                <Timer className="w-3.5 h-3.5 text-emerald-600" />
+                <span>5. Signal Sequences</span>
+              </div>
+              <p className="text-slate-600 leading-relaxed text-[10.5px]">
+                Standard 4-phase sequence: Phase 1 (<strong className="text-emerald-700">21H</strong>: NS Green, EW Red) → Phase 2 (<strong className="text-amber-600">11H</strong>: NS Yellow, EW Red) → Phase 3 (<strong className="text-indigo-700">0CH</strong>: NS Red, EW Green) → Phase 4 (<strong className="text-purple-700">0AH</strong>: NS Red, EW Yellow).
+              </p>
+              <div className="font-mono text-[9px] text-slate-500 bg-white p-1 rounded border border-slate-100">
+                Cycle Loop: P1→P2→P3→P4
+              </div>
             </div>
           </div>
         </div>

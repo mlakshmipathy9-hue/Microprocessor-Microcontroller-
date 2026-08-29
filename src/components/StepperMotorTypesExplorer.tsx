@@ -308,22 +308,54 @@ export default function StepperMotorTypesExplorer() {
 
               {/* Right: Working Principles & Formula */}
               <div className="lg:col-span-7 space-y-3">
-                <div className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-2 shadow-2xs">
+                <div className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-2.5 shadow-2xs">
                   <span className="text-[10px] font-bold text-blue-700 uppercase tracking-wider block">
                     VR Step Angle Formula &amp; Mathematical Calculation:
                   </span>
-                  <div className="bg-blue-50 p-2.5 rounded-lg border border-blue-200 font-mono text-[11px] text-blue-950 space-y-1">
-                    <div className="font-bold">
-                      Step Angle (β) = <span className="underline">|Ns - Nr|</span> × 360° &nbsp;=&nbsp; <span className="underline">360°</span>
+                  
+                  {/* General Theoretical Formula with Proper Fraction Alignment */}
+                  <div className="bg-blue-50/80 p-3 rounded-lg border border-blue-200 space-y-2.5">
+                    <div className="flex flex-wrap items-center gap-2 font-mono text-xs text-blue-950">
+                      <span className="font-bold">Step Angle (β)</span>
+                      <span className="font-bold text-slate-400">=</span>
+                      <div className="inline-flex flex-col items-center justify-center">
+                        <span className="border-b border-blue-900 px-1.5 pb-0.5 font-bold leading-none text-center">|N<sub>s</sub> − N<sub>r</sub>|</span>
+                        <span className="px-1.5 pt-0.5 font-bold leading-none text-center text-blue-900">N<sub>s</sub> × N<sub>r</sub></span>
+                      </div>
+                      <span className="font-bold">× 360°</span>
+                      <span className="font-bold text-slate-400 mx-1">=</span>
+                      <div className="inline-flex flex-col items-center justify-center">
+                        <span className="border-b border-blue-900 px-1.5 pb-0.5 font-bold leading-none text-center">360°</span>
+                        <span className="px-1.5 pt-0.5 font-bold leading-none text-center text-blue-900">m × N<sub>r</sub></span>
+                      </div>
                     </div>
-                    <div className="text-[10px] text-blue-800 font-normal pl-24">
-                      Ns × Nr &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; m × Nr
+
+                    <div className="text-[10px] text-slate-600 border-t border-blue-200/60 pt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                      <span className="font-semibold text-slate-500">Parameters:</span>
+                      <span><code className="font-bold text-blue-800">N<sub>s</sub> = 6</code> (stator poles)</span>
+                      <span><code className="font-bold text-blue-800">N<sub>r</sub> = 4</code> (rotor teeth)</span>
+                      <span><code className="font-bold text-blue-800">m = 3</code> (stator phases)</span>
                     </div>
-                    <div className="text-[10px] text-slate-600 pt-1">
-                      Where <code className="font-bold">Ns = 6</code> (stator poles), <code className="font-bold">Nr = 4</code> (rotor teeth), <code className="font-bold">m = 3</code> (phases):
-                    </div>
-                    <div className="font-bold text-indigo-700 bg-white p-1 rounded border border-blue-200 inline-block">
-                      β = ( |6 - 4| / (6 × 4) ) × 360° = (2 / 24) × 360° = 30° / step
+
+                    {/* Step-by-Step Substitution with Clean Math Alignment */}
+                    <div className="bg-white p-2.5 rounded-lg border border-blue-200 flex flex-wrap items-center gap-2 font-mono text-xs text-indigo-900 shadow-2xs">
+                      <span className="font-bold text-blue-700">β</span>
+                      <span className="text-slate-400">=</span>
+                      <div className="inline-flex flex-col items-center justify-center">
+                        <span className="border-b border-indigo-900 px-1.5 pb-0.5 font-bold leading-none">|6 − 4|</span>
+                        <span className="px-1.5 pt-0.5 leading-none text-indigo-800">6 × 4</span>
+                      </div>
+                      <span>× 360°</span>
+                      <span className="text-slate-400">=</span>
+                      <div className="inline-flex flex-col items-center justify-center">
+                        <span className="border-b border-indigo-900 px-1.5 pb-0.5 font-bold leading-none">2</span>
+                        <span className="px-1.5 pt-0.5 leading-none text-indigo-800">24</span>
+                      </div>
+                      <span>× 360°</span>
+                      <span className="text-slate-400">=</span>
+                      <span className="font-extrabold text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-300 text-xs shadow-2xs">
+                        30° / step
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -645,14 +677,20 @@ export default function StepperMotorTypesExplorer() {
       {/* INTERACTIVE STEP ANGLE (β) & SPEED (RPM) CALCULATOR                       */}
       {/* ========================================================================= */}
       <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-        <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2">
           <span className="font-bold text-xs text-indigo-950 uppercase flex items-center gap-1.5">
             <Gauge className="w-4 h-4 text-indigo-600" />
             Interactive Step Angle (β) &amp; Shaft Speed (RPM) Calculator
           </span>
-          <span className="text-[10px] text-slate-500 font-mono">
-            Formula: β = 360° / (m × Nr) &nbsp;|&nbsp; n = (β × f) / 6 RPM
-          </span>
+          <div className="flex items-center gap-3 text-[11px] font-mono text-slate-600 bg-white px-2.5 py-1 rounded-md border border-slate-200 shadow-2xs">
+            <span className="flex items-center gap-1">
+              <strong className="text-indigo-700">β</strong> = 360° / (m × N<sub>r</sub>)
+            </span>
+            <span className="text-slate-300">|</span>
+            <span className="flex items-center gap-1">
+              <strong className="text-amber-700">n</strong> = (β × f) / 6 RPM
+            </span>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-[11px]">

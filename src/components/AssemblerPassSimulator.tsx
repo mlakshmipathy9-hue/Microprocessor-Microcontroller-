@@ -594,7 +594,7 @@ export default function AssemblerPassSimulator() {
             <span className="text-[13px] font-bold text-indigo-700 uppercase tracking-widest block font-mono">
               Trace Explanation:
             </span>
-            <p className="text-[13px] text-indigo-950 font-sans leading-relaxed text-justify">
+            <p className="text-[13px] text-indigo-950 font-sans leading-relaxed text-left">
               {getStepExplanation()}
             </p>
           </div>

@@ -5549,7 +5549,7 @@ POP DX         ; Reads 1234H into DX, SP ← SP + 2 (FFFE)`}
                         <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                         [CPU CORE]: Instruction retirement successful
                       </p>
-                      <p className="text-slate-600 pl-4 leading-relaxed text-justify">{lastExplanation}</p>
+                      <p className="text-slate-600 pl-4 leading-relaxed text-left">{lastExplanation}</p>
                     </motion.div>
                   ) : executionState !== 'idle' ? (
                     <motion.div 

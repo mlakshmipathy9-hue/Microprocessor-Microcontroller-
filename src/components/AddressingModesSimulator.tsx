@@ -1060,7 +1060,7 @@ export default function AddressingModesSimulator() {
                 )}
               </div>
  
-              <p className="text-xs text-slate-600 leading-relaxed text-justify">{modeData.description}</p>
+              <p className="text-xs text-slate-600 leading-relaxed text-left">{modeData.description}</p>
  
               {/* Courseware Rules and slide constraints */}
               <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-2xl space-y-2.5">
@@ -1068,7 +1068,7 @@ export default function AddressingModesSimulator() {
                   <Info className="w-4 h-4 text-indigo-600" />
                   Technical Rulebook & Constraints:
                 </span>
-                <ul className="space-y-1.5 text-[13px] text-slate-700 pl-5 list-disc leading-relaxed text-justify">
+                <ul className="space-y-1.5 text-[13px] text-slate-700 pl-5 list-disc leading-relaxed text-left">
                   {modeData.rules.map((rule, rIdx) => (
                     <li key={rIdx}>{rule}</li>
                   ))}
@@ -1186,7 +1186,7 @@ export default function AddressingModesSimulator() {
  
               {/* Run Simulation Trigger */}
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-100 pt-4">
-                <p className="text-[10.5px] text-slate-500 text-justify max-w-md">
+                <p className="text-[10.5px] text-slate-500 text-left max-w-md">
                   Edit values in the <strong className="text-amber-700">Before</strong> box to try custom inputs, then press the simulator button to run the assembly cycle.
                 </p>
                 <div className="flex gap-2.5 w-full sm:w-auto">

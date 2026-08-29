@@ -31,6 +31,56 @@ function getVideoEmbed(url: string) {
   };
 }
 
+function SlidePointContent({ text }: { text: string }) {
+  if (text.includes('\n')) {
+    const lines = text.split('\n');
+    const firstLine = lines[0];
+    const rest = lines.slice(1).join('\n');
+    const isCode = rest.includes(';') || rest.includes('MOV ') || rest.includes('OUT ') || rest.includes('IN ') || rest.includes('DB ') || rest.includes('.MODEL');
+    
+    return (
+      <div className="flex-1 space-y-1.5 text-left">
+        {firstLine && (
+          <p className="text-slate-800 text-[13.5px] md:text-[14px] font-semibold leading-relaxed text-left">
+            {firstLine}
+          </p>
+        )}
+        {isCode ? (
+          <pre className="font-mono text-xs bg-slate-900 text-emerald-400 p-3 rounded-xl overflow-x-auto whitespace-pre leading-relaxed border border-slate-800 shadow-inner text-left">
+            {rest}
+          </pre>
+        ) : (
+          <div className="text-slate-700 text-[13px] md:text-[13.5px] space-y-1 pl-1 text-left">
+            {lines.slice(1).map((line, lIdx) => (
+              <p key={lIdx} className="leading-relaxed text-left">{line}</p>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  const colonIndex = text.indexOf(': ');
+  if (colonIndex > 0 && colonIndex <= 55) {
+    const label = text.slice(0, colonIndex + 1);
+    const content = text.slice(colonIndex + 1);
+    return (
+      <p className="text-slate-800 text-[13.5px] md:text-[14px] font-medium leading-relaxed text-left flex-1">
+        <strong className="font-bold text-slate-950 mr-1">{label}</strong>
+        <span className="text-slate-700">{content}</span>
+      </p>
+    );
+  }
+
+  return (
+    <p className="text-slate-800 text-[13.5px] md:text-[14px] font-medium leading-relaxed text-left flex-1">
+      {text}
+    </p>
+  );
+}
+
+import { Unit6LabManualPresenter } from './Unit6LabManualPresenter';
+
 // Import simulators lazily for code-splitting
 const EvolutionTimeline = React.lazy(() => import('./EvolutionTimeline'));
 const PinConfigurationSimulator = React.lazy(() => import('./PinConfigurationSimulator'));
@@ -82,6 +132,7 @@ interface SlidePresenterProps {
   activeLabId?: string;
   fullScreenMode?: boolean;
   onToggleFullScreen?: (enable?: boolean) => void;
+  onSelectSlide?: (moduleId: string, slideId: string, labId?: string) => void;
 }
 
 export default function SlidePresenter({
@@ -98,7 +149,8 @@ export default function SlidePresenter({
   showInteractive = false,
   activeLabId,
   fullScreenMode = false,
-  onToggleFullScreen
+  onToggleFullScreen,
+  onSelectSlide
 }: SlidePresenterProps) {
   // Quiz states
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number | null>>({});
@@ -476,33 +528,39 @@ export default function SlidePresenter({
         break;
       }
       case 'peripheral-interfacing': {
-        let mode: 'schematic' | 'circuit' | 'stepper-types' | 'stepper' | 'stepper-code' | 'display-circuit' | 'display' | 'display-code' | 'keypad-circuit' | 'keypad' | 'keypad-code' | 'traffic' | 'traffic-code' | 'alp' = 'schematic';
-        let allowedTabs: ('schematic' | 'circuit' | 'stepper-types' | 'stepper' | 'stepper-code' | 'display-circuit' | 'display' | 'display-code' | 'keypad-circuit' | 'keypad' | 'keypad-code' | 'traffic' | 'traffic-code' | 'alp')[] | undefined = undefined;
+        let mode: 'schematic' | 'circuit' | 'stepper-types' | 'stepper' | 'stepper-code' | 'display-schematic' | 'display-circuit' | 'display' | 'display-code' | 'keypad-schematic' | 'keypad-circuit' | 'keypad' | 'keypad-code' | 'traffic-schematic' | 'traffic-circuit' | 'traffic' | 'traffic-code' | 'alp' = 'schematic';
+        let allowedTabs: ('schematic' | 'circuit' | 'stepper-types' | 'stepper' | 'stepper-code' | 'display-schematic' | 'display-circuit' | 'display' | 'display-code' | 'keypad-schematic' | 'keypad-circuit' | 'keypad' | 'keypad-code' | 'traffic-schematic' | 'traffic-circuit' | 'traffic' | 'traffic-code' | 'alp')[] | undefined = undefined;
 
         if (slide.id === 'm15-s1') {
           mode = 'schematic';
           allowedTabs = ['schematic', 'circuit', 'stepper-types', 'stepper', 'stepper-code'];
         }
         else if (slide.id === 'm15-s2') {
-          mode = 'display-circuit';
-          allowedTabs = ['display-circuit', 'display', 'display-code'];
+          mode = 'display-schematic';
+          allowedTabs = ['display-schematic', 'display-circuit', 'display', 'display-code'];
         }
         else if (slide.id === 'm15-s3') {
-          mode = 'keypad-circuit';
-          allowedTabs = ['keypad-circuit', 'keypad', 'keypad-code'];
+          mode = 'keypad-schematic';
+          allowedTabs = ['keypad-schematic', 'keypad-circuit', 'keypad', 'keypad-code'];
         }
         else if (slide.id === 'm15-s4') {
-          mode = 'traffic';
-          allowedTabs = ['traffic', 'traffic-code'];
+          mode = 'traffic-schematic';
+          allowedTabs = ['traffic-schematic', 'traffic-circuit', 'traffic', 'traffic-code'];
         }
         else if (slide.id === 'm15-s5') mode = 'alp';
 
         component = <PeripheralInterfacingSimulator initialTab={mode} allowedTabs={allowedTabs} />;
         break;
       }
-      case 'analog-interfacing':
-        component = <AnalogInterfacingSimulator />;
+      case 'analog-interfacing': {
+        let initialTab: 'adc' | 'characteristics' | 'dac' = 'adc';
+        if (slide.id === 'm16-s1') initialTab = 'adc';
+        else if (slide.id === 'm16-s2') initialTab = 'characteristics';
+        else if (slide.id === 'm16-s3') initialTab = 'dac';
+
+        component = <AnalogInterfacingSimulator initialTab={initialTab} />;
         break;
+      }
       case 'interrupt-8259':
         component = <Interrupt8259Simulator />;
         break;
@@ -567,15 +625,60 @@ export default function SlidePresenter({
         fullScreenMode ? 'p-2 md:p-3 bg-white border-0' : 'p-3 md:p-5'
       }`}
     >
-      {/* Floating Full Screen Mode Minimal Quick Exit Icon */}
+      {/* Floating Full Screen Mode Controls & Hanging Left/Right Navigation Buttons */}
       {fullScreenMode && (
-        <button
-          onClick={() => onToggleFullScreen?.(false)}
-          className="absolute top-3 right-3 z-50 p-2 bg-slate-900/60 hover:bg-slate-900/90 text-slate-200 hover:text-white rounded-full transition-all border border-slate-700/50 opacity-50 hover:opacity-100 shadow-sm cursor-pointer"
-          title="Exit Full Screen Mode (or Double Tap)"
-        >
-          <Minimize2 className="w-4 h-4" />
-        </button>
+        <>
+          {/* Top-Right Exit Full Screen Button */}
+          <button
+            id="fullscreen-exit-button"
+            onClick={() => onToggleFullScreen?.(false)}
+            className="absolute top-3 right-3 z-50 px-3 py-1.5 bg-slate-900/80 hover:bg-slate-950 text-slate-200 hover:text-white rounded-full transition-all border border-slate-700/60 shadow-lg cursor-pointer flex items-center gap-1.5 text-xs font-semibold backdrop-blur-md hover:scale-105"
+            title="Exit Full Screen Mode (or press Esc / Double Tap)"
+          >
+            <Minimize2 className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">Exit Fullscreen</span>
+          </button>
+
+          {/* Hanging Left Button (Previous Slide) */}
+          <button
+            id="fullscreen-hanging-prev-button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!isFirst) onPrev();
+            }}
+            disabled={isFirst}
+            className={`absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-50 p-3 sm:p-4 rounded-full transition-all duration-200 border shadow-2xl flex items-center justify-center backdrop-blur-md cursor-pointer group ${
+              isFirst
+                ? 'opacity-20 cursor-not-allowed bg-slate-900/40 text-slate-500 border-slate-700/40'
+                : 'opacity-70 hover:opacity-100 bg-slate-900/85 hover:bg-indigo-600 text-white border-white/20 hover:border-indigo-400 hover:scale-110 active:scale-95 shadow-indigo-950/50'
+            }`}
+            title={isFirst ? 'First Slide' : 'Previous Slide (Left Arrow)'}
+            aria-label="Previous Slide"
+          >
+            <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6 transition-transform group-hover:-translate-x-0.5" />
+            <span className="sr-only">Previous Slide</span>
+          </button>
+
+          {/* Hanging Right Button (Next Slide) */}
+          <button
+            id="fullscreen-hanging-next-button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!isLast) onNext();
+            }}
+            disabled={isLast}
+            className={`absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-50 p-3 sm:p-4 rounded-full transition-all duration-200 border shadow-2xl flex items-center justify-center backdrop-blur-md cursor-pointer group ${
+              isLast
+                ? 'opacity-20 cursor-not-allowed bg-slate-900/40 text-slate-500 border-slate-700/40'
+                : 'opacity-70 hover:opacity-100 bg-slate-900/85 hover:bg-indigo-600 text-white border-white/20 hover:border-indigo-400 hover:scale-110 active:scale-95 shadow-indigo-950/50'
+            }`}
+            title={isLast ? 'Last Slide' : 'Next Slide (Right Arrow / Space)'}
+            aria-label="Next Slide"
+          >
+            <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6 transition-transform group-hover:translate-x-0.5" />
+            <span className="sr-only">Next Slide</span>
+          </button>
+        </>
       )}
 
       {/* Slide Content Arena */}
@@ -585,94 +688,16 @@ export default function SlidePresenter({
             {/* Text points (Standard Presentation Layout in a Bento Box) */}
             {(!slide.interactiveType || slide.moduleId === 'm20') && (
               slide.moduleId === 'm20' ? (
-                /* Unit VI Comprehensive Experiment Layout - AIM ONLY */
-                <div className="w-full max-w-full bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between xl:col-span-12 space-y-6">
-                  {!fullScreenMode && (
-                    <div className="space-y-4">
-                      <div className="flex flex-wrap items-center justify-between gap-2.5">
-                        <div className="flex items-center gap-2">
-                        </div>
-                        <span className="px-3 py-1 bg-indigo-50 text-indigo-800 border border-indigo-200 rounded-full text-xs font-bold font-mono">
-                          Experiment Aim
-                        </span>
-                      </div>
-
-                      <motion.h2
-                        key={slide.title}
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="font-display text-2xl md:text-3xl lg:text-3.5xl font-extrabold text-slate-900 tracking-tight leading-tight"
-                      >
-                        {slide.title}
-                      </motion.h2>
-
-                      <div className="h-1.5 w-24 bg-gradient-to-r from-indigo-600 via-sky-500 to-indigo-400 rounded-full shadow-xs"></div>
-                    </div>
-                  )}
-
-                  {/* Experiment Aim & Theory Cards */}
-                  <div className="w-full space-y-2.5">
-                    {slide.points && slide.points.map((pt, pIdx) => {
-                      const isTheory = pt.includes('THEORY') || pt.includes('CONCEPT') || pt.includes('💡');
-                      return (
-                        <div 
-                          key={pIdx} 
-                          className={`border rounded-2xl p-4 md:p-5 shadow-xs space-y-1.5 transition-all ${
-                            isTheory 
-                              ? 'bg-amber-50/70 border-amber-200/90 text-amber-950' 
-                              : 'bg-gradient-to-r from-indigo-50/90 via-sky-50/60 to-slate-50 border-indigo-200/90'
-                          }`}
-                        >
-                          <div className={`flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-wider ${
-                            isTheory ? 'text-amber-800' : 'text-indigo-700'
-                          }`}>
-                            {isTheory ? (
-                              <BookOpen className="w-4 h-4 text-amber-600" />
-                            ) : (
-                              <Target className="w-4 h-4 text-indigo-600" />
-                            )}
-                            {isTheory ? 'Theoretical Concept & Logic' : 'Experiment Objective'}
-                          </div>
-                          <p className="text-base sm:text-lg font-semibold text-slate-900 leading-relaxed">
-                            {pt}
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Embedded Interactive Interface for Unit 4 Experiments if present */}
-                  {slide.interactiveType && (
-                    <div className="pt-6 border-t border-slate-200/90 space-y-4">
-                      <div className="flex flex-wrap items-center justify-between gap-3 bg-gradient-to-r from-indigo-50/80 via-sky-50/40 to-slate-50 p-4 rounded-2xl border border-indigo-150">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2.5 rounded-xl bg-indigo-600 text-white shadow-xs">
-                            <Cpu className="w-5 h-5 text-white" />
-                          </div>
-                          <div>
-                            <span className="text-[11px] font-mono font-bold uppercase tracking-widest text-indigo-700 block">
-                              Interactive Lab Simulator
-                            </span>
-                            <h3 className="font-display font-bold text-base sm:text-lg text-slate-900">
-                              Multi-Precision Addition & Assembly Directive Interface
-                            </h3>
-                          </div>
-                        </div>
-                        <span className="px-3 py-1 bg-white border border-indigo-200 text-indigo-800 rounded-full text-xs font-mono font-bold shadow-2xs">
-                          Live Interactive Execution
-                        </span>
-                      </div>
-
-                      <div className="rounded-2xl border border-slate-200/90 overflow-hidden bg-slate-50 shadow-xs p-1">
-                        {renderInteractive(slide.interactiveType)}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-mono">
-                    <span>8086 Microprocessor Micro-Lab Manual</span>
-                    <span>Department of Computer Engineering</span>
-                  </div>
+                /* Unit VI Comprehensive Uniform University Lab Manual */
+                <div className="w-full max-w-full xl:col-span-12 min-h-0 flex-1">
+                  <Unit6LabManualPresenter
+                    key={slide.id}
+                    slideId={slide.id}
+                    slideTitle={slide.title}
+                    fullScreenMode={fullScreenMode}
+                    renderInteractive={renderInteractive}
+                    onNavigateExperiment={(targetSlideId) => onSelectSlide?.('m20', targetSlideId)}
+                  />
                 </div>
               ) : (
                 <div className="w-full max-w-full bg-white border border-slate-200/80 rounded-3xl p-3 md:p-4 lg:p-5 shadow-xs hover:shadow-md hover:border-indigo-150 transition-all duration-300 flex flex-col justify-between xl:col-span-12">
@@ -801,7 +826,7 @@ export default function SlidePresenter({
                           </div>
                         </div>
                       ) : (
-                        <div className={`grid grid-cols-1 ${['m2-s3', 'm3-s2', 'm3-s3', 'm3-s4', 'm4-s1', 'm4-s2', 'm4-s3', 'm8-s1', 'm8-s4', 'm8-s5', 'm9-s1', 'm10-s1', 'm10-s2', 'm10-s3', 'm10-s4', 'm11-s1', 'm12-s1'].includes(slide.id) || slide.moduleId === 'm1' ? 'grid-cols-1' : 'md:grid-cols-2'} gap-1.5 md:gap-2 pr-1`}>
+                        <div className={`grid grid-cols-1 ${['m2-s3', 'm3-s2', 'm3-s3', 'm3-s4', 'm4-s1', 'm4-s2', 'm4-s3', 'm8-s1', 'm8-s4', 'm8-s5', 'm9-s1', 'm10-s1', 'm10-s2', 'm10-s3', 'm10-s4', 'm11-s1', 'm12-s1'].includes(slide.id) || slide.moduleId === 'm1' ? 'grid-cols-1' : 'md:grid-cols-2'} gap-1.5 md:gap-2 pr-1 text-left`}>
                           {slide.points.map((pt, idx) => {
                             const isRevealed = !incrementalRevealEnabled || idx < revealedPointsCount;
                             if (!isRevealed) return null;
@@ -811,14 +836,12 @@ export default function SlidePresenter({
                                 initial={{ opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3, delay: idx * 0.03 }}
-                                className="flex gap-2 p-2 md:p-2.5 rounded-lg bg-slate-50/60 border border-slate-100 hover:bg-white hover:border-indigo-200 hover:shadow-2xs transition-all duration-200 group items-start cursor-default"
+                                className="flex gap-2.5 p-2.5 md:p-3 rounded-xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:border-indigo-200 hover:shadow-2xs transition-all duration-200 group items-start cursor-default text-left"
                               >
-                                <div className="flex items-center justify-center w-3.5 h-3.5 shrink-0 mt-0.5">
+                                <div className="flex items-center justify-center w-3.5 h-3.5 shrink-0 mt-1">
                                   <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 group-hover:scale-125 group-hover:bg-indigo-600 transition-all duration-200"></span>
                                 </div>
-                                <p className="text-slate-800 text-[13.5px] md:text-[14px] font-medium leading-snug text-justify flex-1">
-                                  {pt}
-                                </p>
+                                <SlidePointContent text={pt} />
                               </motion.div>
                             );
                           })}
@@ -1282,18 +1305,18 @@ export default function SlidePresenter({
                       </div>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
                       {slide.points.map((pt, idx) => (
                         <div 
                           key={idx} 
-                          className="flex gap-3.5 p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:border-indigo-100 hover:bg-slate-50 transition-all duration-200 items-start shadow-3xs"
+                          className="flex gap-3.5 p-4 rounded-2xl bg-slate-50 border border-slate-200 hover:border-indigo-200 hover:bg-white transition-all duration-200 items-start shadow-3xs text-left"
                         >
-                          <div className="flex items-center justify-center w-5 h-5 shrink-0 mt-1.5">
+                          <div className="flex items-center justify-center w-5 h-5 shrink-0 mt-1">
                             <span className="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
                           </div>
-                          <p className="text-slate-800 text-sm md:text-base font-semibold leading-relaxed text-justify flex-1 pt-0.5">
-                            {pt}
-                          </p>
+                          <div className="flex-1 text-left">
+                            <SlidePointContent text={pt} />
+                          </div>
                         </div>
                       ))}
                     </div>
