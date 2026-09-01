@@ -458,7 +458,7 @@ export const labBasicTheoryData: Record<string, BasicExperimentTheory> = {
       }
     ],
     mathematicalFormulation: {
-      formula: 'Total Comparisons = \\frac{N(N - 1)}{2}, \\quad \\text{Time Complexity: } O(N^2)',
+      formula: 'Total Comparisons = [N × (N - 1)] / 2,   Time Complexity = O(N²)',
       explanation: 'For an array of 5 elements, Bubble Sort performs (4 + 3 + 2 + 1) = 10 comparison steps to guarantee full ascending order.',
       steps: [
         'Outer Pass 1: Compare pairs (0,1), (1,2), (2,3), (3,4) → Largest element at end',
@@ -513,7 +513,7 @@ export const labBasicTheoryData: Record<string, BasicExperimentTheory> = {
       }
     ],
     mathematicalFormulation: {
-      formula: 'Length = Initial\\_CX - Final\\_CX - 1 = \\text{Offset}(\\text{\'\$\'}) - \\text{Offset}(\\text{Start})',
+      formula: 'Length = Initial_CX - Final_CX - 1 = Offset(\'$\') - Offset(Start String)',
       explanation: 'Dedicated 8086 microcode string instructions execute scanning loops in hardware significantly faster than software-based CMP loops.',
       steps: [
         'Load AL = \'$\' (24H sentinel), Load ES = DS, DI = Offset of String',
@@ -562,7 +562,7 @@ export const labBasicTheoryData: Record<string, BasicExperimentTheory> = {
       }
     ],
     mathematicalFormulation: {
-      formula: 'INT\\ 21H \\text{ with } AH = 09H \\implies \\text{Emit ASCII stream from } DS:[DX] \\text{ until } [DS:DX] == \'\$\' (24H)',
+      formula: 'INT 21H (AH = 09H) → Emit ASCII byte stream from DS:[DX] until \'$\' (24H) is reached',
       explanation: 'Software interrupts push FLAGS, CS, and IP onto the stack and transfer CPU control to the vector table address at 0000:0084H.',
       steps: [
         'Load DS with @DATA segment address',
@@ -611,7 +611,7 @@ export const labBasicTheoryData: Record<string, BasicExperimentTheory> = {
       }
     ],
     mathematicalFormulation: {
-      formula: 'STR1 == STR2 \\iff \\forall i \\in [0, N-1]: STR1[i] == STR2[i] \\implies ZF = 1 \\text{ upon loop exit}',
+      formula: 'STR1 == STR2 ⟺ For all i ∈ [0, N-1]: STR1[i] == STR2[i] → ZF = 1 upon loop exit',
       explanation: 'Early exit optimization: `REPE CMPSB` aborts at the first non-matching byte, providing O(1) best-case and O(N) worst-case comparison time.',
       steps: [
         'Set SI = Offset(STR1), DI = Offset(STR2), CX = Length of Strings',
@@ -661,7 +661,7 @@ export const labBasicTheoryData: Record<string, BasicExperimentTheory> = {
       }
     ],
     mathematicalFormulation: {
-      formula: '\\text{IsPalindrome}(S) \\iff \\forall i \\in \\left[0, \\left\\lfloor \\frac{N}{2} \\right\\rfloor\\right]: S[i] == S[N - 1 - i]',
+      formula: 'IsPalindrome(S) ⟺ For all i ∈ [0, ⌊N / 2⌋]: S[i] == S[N - 1 - i]',
       explanation: 'Symmetry requires exact character match between the mirror reflections about the string\'s center axis.',
       steps: [
         'Compute or load String Length N',
@@ -717,7 +717,7 @@ export const labBasicTheoryData: Record<string, BasicExperimentTheory> = {
       }
     ],
     mathematicalFormulation: {
-      formula: '\\text{Digit}_{\\text{Tens}} = \\left\\lfloor \\frac{\\text{Val}}{10} \\right\\rfloor + 30\\text{H}, \\quad \\text{Digit}_{\\text{Units}} = (\\text{Val} \\bmod 10) + 30\\text{H}',
+      formula: 'Digit_Tens = ⌊Val / 10⌋ + 30H (ASCII),   Digit_Units = (Val mod 10) + 30H (ASCII)',
       explanation: 'Unpacking an 8-bit binary integer into decimal digits for ASCII display requires modulus and division by 10.',
       steps: [
         'Load AH = 2CH, execute INT 21H to retrieve system time in CH, CL, DH, DL',
@@ -776,7 +776,7 @@ export const labBasicTheoryData: Record<string, BasicExperimentTheory> = {
       }
     ],
     mathematicalFormulation: {
-      formula: '\\text{Linear VRAM Offset} = (\\text{Row} \\times 80 + \\text{Col}) \\times 2, \\quad \\Delta T = T_{\\text{curr}} - T_{\\text{prev}} \\ge 1 \\text{ sec}',
+      formula: 'Linear VRAM Offset = (Row × 80 + Col) × 2,   ΔT = T_current - T_previous ≥ 1.0 sec',
       explanation: 'Video text buffer address resolution combined with single-second discrete sampling ensures minimal CPU overhead.',
       steps: [
         'Position cursor at center of display (Row 12, Column 35) via INT 10H / AH=02H',
@@ -834,7 +834,7 @@ export const labBasicTheoryData: Record<string, BasicExperimentTheory> = {
       }
     ],
     mathematicalFormulation: {
-      formula: '\\text{Total Sec} = \\left\\lfloor \\frac{\\text{Ticks} \\times 10}{182} \\right\\rfloor, \\quad \\text{Hours} = \\left\\lfloor \\frac{\\text{Ticks}}{65543} \\right\\rfloor, \\quad \\text{Min} = \\left\\lfloor \\frac{\\text{Ticks} \\bmod 65543}{1092} \\right\\rfloor',
+      formula: 'Total Sec = ⌊(Ticks × 10) / 182⌋,   Hours = ⌊Ticks / 65543⌋,   Min = ⌊(Ticks mod 65543) / 1092⌋',
       explanation: 'Mathematical derivation of standard time units from 18.2065 Hz hardware timer tick counts.',
       steps: [
         'Execute INT 1AH / AH=00H to read 32-bit tick count into CX:DX',
@@ -899,7 +899,7 @@ export const labBasicTheoryData: Record<string, BasicExperimentTheory> = {
     ],
     mathematicalFormulation: {
       formula:
-        '\\theta_s = \\frac{360^\\circ}{\\text{Phases} \\times \\text{Rotor Teeth}} = \\frac{360^\\circ}{4 \\times 50} = 1.8^\\circ, \\quad N = \\frac{\\theta_{\\text{target}}}{1.8^\\circ}, \\quad \\text{Speed (RPM)} = \\frac{f_{\\text{step}} \\times 60}{200}',
+        'Step Angle θs = 360° / (Phases × Rotor Teeth) = 360° / (4 × 50) = 1.8°,   Steps N = θ_target / 1.8°,   Speed (RPM) = (f_step × 60) / 200',
       explanation:
         'The step angle θs is a fixed physical property of the motor. The total angular displacement θ is purely a function of pulse count N, allowing accurate open-loop position control without positional feedback encoders.',
       steps: [
@@ -968,7 +968,7 @@ export const labBasicTheoryData: Record<string, BasicExperimentTheory> = {
     ],
     mathematicalFormulation: {
       formula:
-        '\\theta_{\\text{CCW}} = - (N \\times \\theta_s) = - (N \\times 1.8^\\circ), \\quad N = \\frac{|\\theta_{\\text{target}}|}{1.8^\\circ}, \\quad C = \\frac{N}{4} \\text{ Commutation Cycles}',
+        'θ_CCW = -(N × θs) = -(N × 1.8°),   Total Steps N = |θ_target| / 1.8°,   Commutation Cycles C = N / 4',
       explanation:
         'Reversing the lookup table indices inverts the sign of the angular velocity vector (ω < 0), causing precise anti-clockwise angular displacement.',
       steps: [
@@ -1031,7 +1031,7 @@ export const labBasicTheoryData: Record<string, BasicExperimentTheory> = {
     ],
     mathematicalFormulation: {
       formula:
-        'D_{\\text{out}} = \\text{Round}\\left(\\frac{V_{\\text{in}}}{V_{\\text{ref}}} \\times 255\\right), \\quad V_{\\text{in}} = \\frac{D_{\\text{out}} \\times 5000\\text{ mV}}{255}, \\quad \\text{Resolution (1 LSB)} = \\frac{V_{\\text{ref}}}{2^n - 1} = 19.61\\text{ mV}',
+        'D_out = Round((Vin / Vref) × 255),   Vin (mV) = (D_out × 5000 mV) / 255,   Resolution (1 LSB) = Vref / (2ⁿ - 1) = 5.0V / 255 = 19.61 mV',
       explanation:
         'The SAR comparison algorithm guarantees that the digital output has a maximum quantization uncertainty of ±0.5 LSB (±9.8 mV).',
       steps: [
@@ -1095,7 +1095,7 @@ export const labBasicTheoryData: Record<string, BasicExperimentTheory> = {
     ],
     mathematicalFormulation: {
       formula:
-        'V_o(D) = V_{\\text{ref}} \\times \\left(\\frac{D}{256}\\right), \\quad f_{\\text{square}} = \\frac{1}{2 \\times T_{\\text{half}}}, \\quad f_{\\text{tri}} = \\frac{1}{512 \\times T_{\\text{step}}}, \\quad V_{\\text{step}} = 5.0 \\times \\left(\\frac{\\Delta D}{256}\\right)',
+        'V_out(D) = Vref × (D / 256),   f_square = 1 / (2 × T_half),   f_tri = 1 / (512 × T_step),   V_step = 5.0V × (ΔD / 256)',
       explanation:
         'Waveform frequency is determined by the total 8086 CPU instruction execution cycles within each sample loop plus the programmable software delay count CX.',
       steps: [
@@ -1156,7 +1156,7 @@ export const labBasicTheoryData: Record<string, BasicExperimentTheory> = {
       }
     ],
     mathematicalFormulation: {
-      formula: '\\forall i \\in [0, N-1]: \\text{DEST}[i] \\leftarrow \\text{SRC}[i], \\quad \\text{Transfer Throughput: } 17 \\text{ clock cycles/byte with } \\text{REP MOVSB}',
+      formula: 'For all i ∈ [0, N-1]: DEST[i] ← SRC[i],   Transfer Throughput = 17 clock cycles/byte with REP MOVSB',
       explanation: 'REP MOVSB achieves maximal 8086 memory bus transfer speed by avoiding repeated instruction fetch and decode cycles.',
       steps: [
         'Initialize DS = @DATA, ES = DS',
@@ -1219,7 +1219,7 @@ export const labBasicTheoryData: Record<string, BasicExperimentTheory> = {
       }
     ],
     mathematicalFormulation: {
-      formula: '\\text{ADD: } A \\leftarrow A + \\text{src}, \\quad \\text{ADDC: } A \\leftarrow A + \\text{src} + \\text{CY}, \\quad \\text{SUBB: } A \\leftarrow A - \\text{src} - \\text{CY}, \\quad \\text{DA A: } A_{\\text{BCD}} = A + (06\\text{H} \\text{ if } AC=1) + (60\\text{H} \\text{ if } CY=1)',
+      formula: 'ADD: A ← A + src,   ADDC: A ← A + src + CY,   SUBB: A ← A - src - CY,   DA A: A_BCD = A + (06H if AC=1) + (60H if CY=1)',
       explanation: 'ALU performs two\'s complement binary arithmetic and updates PSW status flags in a single 12-clock machine cycle.',
       steps: [
         '8-Bit Addition: Load A = F8H, ADD A, #19H -> A = 11H, CY = 1 (Sum = 11H, Carry = 01H)',
@@ -1283,7 +1283,7 @@ export const labBasicTheoryData: Record<string, BasicExperimentTheory> = {
       }
     ],
     mathematicalFormulation: {
-      formula: '\\text{MUL AB: } B:A \\leftarrow A \\times B, \\quad \\text{OV} = 1 \\iff B \\neq 00\\text{H}; \\qquad \\text{DIV AB: } A \\leftarrow \\lfloor A / B \\rfloor, \\; B \\leftarrow A \\bmod B, \\quad \\text{OV} = 1 \\iff B = 0',
+      formula: 'MUL AB: B:A ← A × B,  OV = 1 ⟺ B ≠ 00H ;   DIV AB: A ← ⌊A / B⌋,  B ← A mod B,  OV = 1 ⟺ B = 0',
       explanation: 'High-speed hardware ALU multiplication and non-restoring integer division executing in exactly 48 oscillator clock cycles.',
       steps: [
         'MUL Test: A = 0F5H (245D), B = 18H (24D)',
@@ -1351,7 +1351,7 @@ export const labBasicTheoryData: Record<string, BasicExperimentTheory> = {
       }
     ],
     mathematicalFormulation: {
-      formula: '\\text{ANL: } A \\leftarrow A \\land M, \\quad \\text{ORL: } A \\leftarrow A \\lor M, \\quad \\text{XRL: } A \\leftarrow A \\oplus M, \\quad \\text{CPL: } A \\leftarrow \\neg A, \\quad \\text{SWAP: } A_{7..4} \\leftrightarrow A_{3..0}',
+      formula: 'ANL: A ← A ∧ M,   ORL: A ← A ∨ M,   XRL: A ← A ⊕ M,   CPL: A ← ¬A,   SWAP: A[7..4] ↔ A[3..0]',
       explanation: 'Byte-level and bit-level Boolean algebra evaluated natively in hardware without branches.',
       steps: [
         'Load Test Byte: A = 0A5H (1010 0101B)',
@@ -1423,7 +1423,7 @@ export const labBasicTheoryData: Record<string, BasicExperimentTheory> = {
       }
     ],
     mathematicalFormulation: {
-      formula: '\\text{Effective RAM Address of } R_i = (\\text{RS1} \\cdot 2 + \\text{RS0}) \\times 8 + i, \\quad \\text{where } i \\in [0, 7], \\; \\text{RS1, RS0} \\in \\{0, 1\\}',
+      formula: 'Effective RAM Address of Ri = (RS1 × 2 + RS0) × 8 + i,   where i ∈ [0, 7],  RS1, RS0 ∈ {0, 1}',
       explanation: 'Hardware address decoder shifts the 2-bit bank selector left by 3 bits and adds register index i.',
       steps: [
         'Select Bank 0: MOV PSW, #00H -> Write R0=10H ... R7=17H (Mapped to RAM 00H-07H)',
@@ -1486,7 +1486,7 @@ export const labBasicTheoryData: Record<string, BasicExperimentTheory> = {
       }
     ],
     mathematicalFormulation: {
-      formula: '\\text{Machine Cycle } T_{\\text{cyc}} = \\frac{12}{f_{\\text{osc}}} = 1.0\\,\\mu\\text{s}, \\quad N_{\\text{counts}} = \\frac{25\\,\\text{ms}}{1.0\\,\\mu\\text{s}} = 25{,}000, \\quad \\text{Preload} = 65{,}536 - 25{,}000 = 40{,}536 = 9\\text{E}58\\text{H}',
+      formula: 'Machine Cycle T_cyc = 12 / f_osc = 1.0 µs,   N_counts = 25 ms / 1.0 µs = 25,000,   Preload = 65,536 - 25,000 = 40,536 = 9E58H (TH0=9EH, TL0=58H)',
       explanation: 'Timer registers count upwards from 9E58H to FFFFH over exactly 25,000 clock pulses (25.000 ms).',
       steps: [
         'Crystal Frequency: fosc = 12.0 MHz -> Machine Cycle = 12 / 12 MHz = 1.0 µs',
@@ -1550,7 +1550,7 @@ export const labBasicTheoryData: Record<string, BasicExperimentTheory> = {
       }
     ],
     mathematicalFormulation: {
-      formula: '\\text{Preload}_{13\\text{-bit}} = 8{,}192 - 50 = 8{,}142, \\quad \\text{TH1} = \\lfloor 8{,}142 / 32 \\rfloor = 254 = \\text{FEH}, \\quad \\text{TL1} = 8{,}142 \\bmod 32 = 14 = 0\\text{EH}',
+      formula: 'Preload (13-bit) = 8,192 - 50 = 8,142,   TH1 = ⌊8,142 / 32⌋ = 254 = 0FEH,   TL1 = 8,142 mod 32 = 14 = 0EH',
       explanation: '13-bit counter increments through 50 states (1FCEH -> 1FFFH -> 0000H) over 50.0 µs.',
       steps: [
         'Machine Cycle Period: 12 / 12 MHz = 1.0 µs',
@@ -1614,7 +1614,7 @@ export const labBasicTheoryData: Record<string, BasicExperimentTheory> = {
       }
     ],
     mathematicalFormulation: {
-      formula: 'T_{\\text{base}} = (256 - \\text{TH0}) \\times 1.0\\,\\mu\\text{s} = (256 - 6) \\times 1.0\\,\\mu\\text{s} = 250\\,\\mu\\text{s}, \\quad T_{\\text{total}} = 300 \\times 250\\,\\mu\\text{s} = 75{,}000\\,\\mu\\text{s} = 75\\,\\text{ms}',
+      formula: 'T_base = (256 - TH0) × 1.0 µs = (256 - 6) × 1.0 µs = 250 µs,   T_total = 300 × 250 µs = 75,000 µs = 75 ms',
       explanation: 'Auto-reload hardware ensures jitter-free 250 µs periodic ticks, scaled by 300 software loop iterations.',
       steps: [
         'Target Base Delay: 250 µs (chosen to evenly divide 75,000 µs: 75,000 / 250 = 300)',
@@ -1680,7 +1680,7 @@ export const labBasicTheoryData: Record<string, BasicExperimentTheory> = {
       }
     ],
     mathematicalFormulation: {
-      formula: '\\text{Preload} = 65{,}536 - 80 = 65{,}456 = \\text{FFB0H}, \\quad \\text{TH1} = \\text{0FFH}, \\quad \\text{TL1} = \\text{0B0H}, \\quad f_{\\text{out}} = \\frac{1}{2 \\times 80\\,\\mu\\text{s}} = 6{,}250\\,\\text{Hz} = 6.25\\,\\text{kHz}',
+      formula: 'Preload = 65,536 - 80 = 65,456 = FFB0H (TH1=0FFH, TL1=0B0H),   f_out = 1 / (2 × 80 µs) = 6,250 Hz = 6.25 kHz',
       explanation: 'Counter 1 accumulates 80 pulses from FFB0H to FFFFH and overflows on the 80th event.',
       steps: [
         'Pulse / Delay Target: 80 µs (80 machine cycles / 80 external pulses)',
@@ -1743,7 +1743,7 @@ export const labBasicTheoryData: Record<string, BasicExperimentTheory> = {
       }
     ],
     mathematicalFormulation: {
-      formula: '\\text{Baud Rate} = \\frac{2^{\\text{SMOD}}}{32} \\times \\frac{f_{\\text{osc}}}{12 \\times (256 - \\text{TH1})}, \\quad \\text{TH1} = 256 - \\frac{28{,}800}{\\text{Baud Rate}} = 256 - 3 = 253 = \\text{0FDH}',
+      formula: 'Baud Rate = [2^SMOD / 32] × [f_osc / (12 × (256 - TH1))],   TH1 = 256 - (28,800 / Baud Rate) = 256 - 3 = 253 = 0FDH (-3)',
       explanation: 'Timer 1 overflows every 3 machine cycles to produce 9600 baud (bit duration = 104.17 µs).',
       steps: [
         'Crystal Oscillator Frequency: f_osc = 11.0592 MHz',
@@ -1801,7 +1801,7 @@ export const labBasicTheoryData: Record<string, BasicExperimentTheory> = {
       }
     ],
     mathematicalFormulation: {
-      formula: '\\text{Baud Rate} = \\frac{28{,}800}{256 - \\text{TH1}} = 4{,}800\\,\\text{Baud}, \\quad \\text{TH1} = 256 - \\frac{28{,}800}{4{,}800} = 256 - 6 = 250 = \\text{0FAH}',
+      formula: 'Baud Rate = 28,800 / (256 - TH1) = 4,800 Baud,   TH1 = 256 - (28,800 / 4,800) = 256 - 6 = 250 = 0FAH (-6)',
       explanation: 'Timer 1 overflows every 6 machine cycles to synthesize 4800 baud.',
       steps: [
         'Crystal Oscillator Frequency: 11.0592 MHz',
@@ -1856,7 +1856,7 @@ export const labBasicTheoryData: Record<string, BasicExperimentTheory> = {
       }
     ],
     mathematicalFormulation: {
-      formula: '\\text{Baud Rate} = \\frac{28{,}800}{256 - \\text{TH1}} = 2{,}400\\,\\text{Baud}, \\quad \\text{TH1} = 256 - \\frac{28{,}800}{2{,}400} = 256 - 12 = 244 = \\text{0F4H}',
+      formula: 'Baud Rate = 28,800 / (256 - TH1) = 2,400 Baud,   TH1 = 256 - (28,800 / 2,400) = 256 - 12 = 244 = 0F4H (-12)',
       explanation: 'Timer 1 overflows every 12 machine cycles to generate a 2400 baud bit clock.',
       steps: [
         'Crystal Oscillator Frequency: 11.0592 MHz',
@@ -1917,7 +1917,7 @@ export const labBasicTheoryData: Record<string, BasicExperimentTheory> = {
       }
     ],
     mathematicalFormulation: {
-      formula: '\\text{DDRAM Address Command} = 80\\text{H} + \\text{Offset}_{\\text{Row, Col}}, \\quad t_{\\text{EN\\_pulse}} \\ge 450\\,\\text{ns}, \\quad t_{\\text{clear}} \\ge 1.53\\,\\text{ms}',
+      formula: 'DDRAM Address Command = 80H + Offset_Row_Col,   t_EN_pulse ≥ 450 ns,   t_clear ≥ 1.53 ms',
       explanation: 'Setting DDRAM cursor requires MSB (Bit 7) HIGH. Clear screen and Return Home require extended execution delays (~1.53 to 2.0 ms).',
       steps: [
         'Line 1 Base Address: 00H -> Command Byte = 80H + 00H = 80H',
@@ -1980,7 +1980,7 @@ export const labBasicTheoryData: Record<string, BasicExperimentTheory> = {
       }
     ],
     mathematicalFormulation: {
-      formula: '\\text{Nibble}_1 = \\text{Byte} \\land \\text{0F0H}, \\quad \\text{Nibble}_2 = \\text{SWAP}(\\text{Byte}) \\land \\text{0F0H}, \\quad t_{\\text{byte\\_transfer}} = 2 \\times t_{\\text{nibble}} \\approx 80\\,\\mu\\text{s}',
+      formula: 'Nibble 1 (High) = Byte ∧ 0F0H,   Nibble 2 (Low) = SWAP(Byte) ∧ 0F0H,   t_byte_transfer = 2 × t_nibble ≈ 80 µs',
       explanation: 'Every byte transfer requires two 4-bit nibble cycles. Human perception threshold (>30 ms) renders the 80 µs transmission indistinguishable from 8-bit mode.',
       steps: [
         'Sample Byte: ASCII \'A\' = 41H = 0100 0001B',

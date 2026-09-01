@@ -394,12 +394,14 @@ export default function Sidebar({
                       exp_8051_uart_9600: { moduleId: 'm20', slideId: 'm20-s30' },
                       exp_8051_uart_4800: { moduleId: 'm20', slideId: 'm20-s31' },
                       exp_8051_uart_2400: { moduleId: 'm20', slideId: 'm20-s32' },
+                      exp_8051_lcd_8bit: { moduleId: 'm20', slideId: 'm20-s33' },
+                      exp_8051_lcd_4bit: { moduleId: 'm20', slideId: 'm20-s34' },
                     };
 
                     const groupedLabs = [
                       {
                         title: "Lab Resources 1: Arithmetic Instructions",
-                        experiments: labExperiments.filter(e => typeof e.number === 'string' && e.number.startsWith('1.'))
+                        experiments: labExperiments.filter(e => typeof e.number === 'string' && (e.number === '1A' || e.number === '1B' || e.number === '1C'))
                       },
                       {
                         title: "Lab Resources 2: Bit Manipulation Instructions",
@@ -440,6 +442,10 @@ export default function Sidebar({
                       {
                         title: "Lab Resources 11: 8051 UART Serial Operation",
                         experiments: labExperiments.filter(e => typeof e.number === 'string' && e.number.startsWith('11'))
+                      },
+                      {
+                        title: "Lab Resources 12: 8051 16×2 LCD Interfacing",
+                        experiments: labExperiments.filter(e => typeof e.number === 'string' && e.number.startsWith('12'))
                       }
                     ];
 
@@ -486,9 +492,6 @@ export default function Sidebar({
                                       <p className={`text-[10px] leading-normal font-medium line-clamp-2 ${isCurrent ? 'text-indigo-900/80' : 'text-slate-500'}`}>
                                         {exp.aim}
                                       </p>
-                                      <div className="flex items-center mt-0.5 text-[9px] font-mono font-bold uppercase tracking-wider text-slate-400">
-                                        <span>B.Tech Syllabus Lab</span>
-                                      </div>
                                     </button>
                                   );
                                 })}

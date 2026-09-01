@@ -60,16 +60,16 @@ export const LabExperimentFlowchartVisualizer: React.FC<LabExperimentFlowchartVi
       {/* Header & Controls */}
       <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[#B8D4E8]">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-[#2563EB]/10 flex items-center justify-center text-[#2563EB] border border-[#2563EB]/20">
-            <Compass className="w-4 h-4" />
+          <div className="w-9 h-9 rounded-xl bg-[#2563EB]/10 flex items-center justify-center text-[#2563EB] border border-[#2563EB]/20 shrink-0">
+            <Compass className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-[10px] font-mono text-[#2563EB] font-bold uppercase tracking-wider">
-              Control Flow Architecture
-            </div>
-            <h3 className="text-sm font-bold text-[#163A5F]">
-              {flowchart.title} - Logic Flowchart
+            <h3 className="text-base sm:text-lg font-extrabold text-[#163A5F] tracking-tight">
+              Flow Chart
             </h3>
+            <p className="text-xs sm:text-[13px] font-semibold text-[#2563EB]">
+              {flowchart.title} - Logic Flowchart
+            </p>
           </div>
         </div>
 

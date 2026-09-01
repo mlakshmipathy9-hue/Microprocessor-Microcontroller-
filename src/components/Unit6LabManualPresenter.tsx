@@ -55,6 +55,7 @@ import { labProgramTheoryData } from '../data/labProgramTheoryData';
 import { labBasicTheoryData } from '../data/labBasicTheoryData';
 import { LAB_FLOWCHARTS, resolveBranchTarget } from '../data/labFlowchartsComprehensiveData';
 import { LabExperimentFlowchartVisualizer } from './LabExperimentFlowchartVisualizer';
+import { LcdCircuitSchematicTab } from './LcdCircuitSchematicTab';
 
 // 16-Bit Signed & Unsigned Helper Functions for 8086 ALU Simulation & Dual-Format Display
 export function parse16BitUnsignedVal(valStr: string, isHex: boolean, defaultVal: number): number {
@@ -260,40 +261,42 @@ export function getExperimentVerificationSuite(
         }
       };
 
-    default:
-      // Generic generator for all other experiments
+    default: {
+      // Generator for other experiments (differentiated by 8051 vs 8086)
+      const is8051 = expId.startsWith('exp_8051_');
       const inps = manualPage.expectedOutput?.inputs || [];
       const outs = manualPage.expectedOutput?.outputs || [];
       const memRows: MemoryDumpEntry[] = [];
-      let offsetCtr = 0;
+      let offsetCtr = is8051 ? 0x30 : 0x00;
 
       inps.forEach((inp) => {
         memRows.push({
-          offset: `DS:${offsetCtr.toString(16).toUpperCase().padStart(4, '0')}H`,
+          offset: is8051 ? `RAM:${offsetCtr.toString(16).toUpperCase().padStart(2, '0')}H` : `DS:${offsetCtr.toString(16).toUpperCase().padStart(4, '0')}H`,
           symbol: inp.name,
           hexBytes: inp.val,
           formatted: inp.val,
           type: 'input',
-          comment: `Input Parameter for ${manualPage.title}`
+          comment: is8051 ? `8051 Internal RAM Input for ${manualPage.title}` : `Input Parameter for ${manualPage.title}`
         });
-        offsetCtr += 4;
+        offsetCtr += is8051 ? 1 : 4;
       });
 
+      let outOffsetCtr = is8051 ? 0x40 : offsetCtr;
       outs.forEach((out) => {
         memRows.push({
-          offset: `DS:${offsetCtr.toString(16).toUpperCase().padStart(4, '0')}H`,
+          offset: is8051 ? `RAM:${outOffsetCtr.toString(16).toUpperCase().padStart(2, '0')}H` : `DS:${outOffsetCtr.toString(16).toUpperCase().padStart(4, '0')}H`,
           symbol: out.name,
           hexBytes: out.val,
           formatted: out.val,
           type: 'output',
-          comment: `Simulated Output Result for ${manualPage.title}`
+          comment: is8051 ? `8051 Internal RAM Output for ${manualPage.title}` : `Simulated Output Result for ${manualPage.title}`
         });
-        offsetCtr += 4;
+        outOffsetCtr += is8051 ? 1 : 4;
       });
 
       const verRows: VerificationEntry[] = outs.map((out) => ({
         parameter: out.name,
-        memoryAddress: `Data Segment / Output Register`,
+        memoryAddress: is8051 ? `8051 Internal RAM (30H..7FH) / SFR Space` : `Data Segment / Output Register`,
         theoretical: out.val,
         simulated: out.val,
         match: true,
@@ -306,32 +309,51 @@ export function getExperimentVerificationSuite(
         observationData: {
           aim: manualPage.aim,
           inputs: inps.map((inp, idx) => ({
-            address: `DS:${(idx * 4).toString(16).toUpperCase().padStart(4, '0')}H`,
+            address: is8051 ? `RAM:${(0x30 + idx).toString(16).toUpperCase().padStart(2, '0')}H` : `DS:${(idx * 4).toString(16).toUpperCase().padStart(4, '0')}H`,
             variable: inp.name,
             hexVal: inp.val,
             decVal: inp.val
           })),
-          initialRegisters: [
-            { register: 'AX', value: lastStep?.registers?.AX || '1000H', purpose: 'Accumulator / Segment setup' },
-            { register: 'CX', value: lastStep?.registers?.CX || '0000H', purpose: 'Loop Counter' },
-            { register: 'SI', value: lastStep?.registers?.SI || '0000H', purpose: 'Source Index Pointer' },
-            { register: 'DI', value: lastStep?.registers?.DI || '0000H', purpose: 'Destination Index Pointer' }
-          ],
+          initialRegisters: is8051
+            ? [
+                { register: 'ACC', value: '00H', purpose: 'Accumulator (Primary 8-bit math/logic operand)' },
+                { register: 'B', value: '00H', purpose: 'B Register (Multiplication/Division math register)' },
+                { register: 'R0', value: '00H', purpose: 'Working Register Bank 0 pointer / temporary' },
+                { register: 'DPTR', value: '0000H', purpose: '16-bit Data Pointer for external/ROM lookup' },
+                { register: 'SP', value: '07H', purpose: 'Stack Pointer (starts at RAM 07H, increments on PUSH)' },
+                { register: 'PSW', value: '00H', purpose: 'Program Status Word (Bank 0: RS1=0, RS0=0, CY=0)' }
+              ]
+            : [
+                { register: 'AX', value: lastStep?.registers?.AX || '1000H', purpose: 'Accumulator / Segment setup' },
+                { register: 'CX', value: lastStep?.registers?.CX || '0000H', purpose: 'Loop Counter' },
+                { register: 'SI', value: lastStep?.registers?.SI || '0000H', purpose: 'Source Index Pointer' },
+                { register: 'DI', value: lastStep?.registers?.DI || '0000H', purpose: 'Destination Index Pointer' }
+              ],
           outputs: outs.map((out, idx) => ({
-            address: `DS:${((inps.length + idx) * 4).toString(16).toUpperCase().padStart(4, '0')}H`,
+            address: is8051 ? `RAM:${(0x40 + idx).toString(16).toUpperCase().padStart(2, '0')}H` : `DS:${((inps.length + idx) * 4).toString(16).toUpperCase().padStart(4, '0')}H`,
             variable: out.name,
             hexVal: out.val,
             decVal: out.val
           })),
-          finalFlags: [
-            { flag: 'CF', value: lastStep?.flags?.CF || '0', meaning: 'Carry Flag status' },
-            { flag: 'ZF', value: lastStep?.flags?.ZF || '1', meaning: 'Zero Flag status' },
-            { flag: 'SF', value: lastStep?.flags?.SF || '0', meaning: 'Sign Flag status' },
-            { flag: 'OF', value: lastStep?.flags?.OF || '0', meaning: 'Overflow Flag status' }
-          ],
-          resultSummary: manualPage.resultText || 'Experiment was executed and verified against theoretical values.'
+          finalFlags: is8051
+            ? [
+                { flag: 'CY', value: lastStep?.flags?.CF || '0', meaning: 'Carry Flag in PSW.7' },
+                { flag: 'AC', value: lastStep?.flags?.AF || '0', meaning: 'Auxiliary Carry in PSW.6' },
+                { flag: 'OV', value: lastStep?.flags?.OF || '0', meaning: 'Overflow Flag in PSW.2' },
+                { flag: 'P', value: lastStep?.flags?.PF || '0', meaning: 'Parity Flag in PSW.0' }
+              ]
+            : [
+                { flag: 'CF', value: lastStep?.flags?.CF || '0', meaning: 'Carry Flag status' },
+                { flag: 'ZF', value: lastStep?.flags?.ZF || '1', meaning: 'Zero Flag status' },
+                { flag: 'SF', value: lastStep?.flags?.SF || '0', meaning: 'Sign Flag status' },
+                { flag: 'OF', value: lastStep?.flags?.OF || '0', meaning: 'Overflow Flag status' }
+              ],
+          resultSummary: manualPage.resultText || (is8051
+            ? 'Experiment was executed and verified against 8051 microcontroller hardware architecture.'
+            : 'Experiment was executed and verified against theoretical values.')
         }
       };
+    }
   }
 }
 
@@ -1064,9 +1086,9 @@ const VIVA_VOCE_DATA: Record<string, Array<{ question: string; answer: string; c
       concept: 'DDRAM Memory Mapping & Line Base Addresses'
     },
     {
-      question: 'What is the purpose of the 10 kΩ potentiometer connected to Pin 3 (VEE)?',
-      answer: 'Pin 3 (VEE) controls the liquid crystal driving voltage (contrast level). Varying VEE from 0V to 5V adjusts the optical opacity of active dots. Grounding or near 0V provides maximum dark contrast, whereas 5V makes characters completely invisible.',
-      concept: 'LCD Contrast Adjustment (VEE Pin 3)'
+      question: 'What is the purpose of Pin 3 (VEE / V0) and what happens when it is tied to Ground (0V)?',
+      answer: 'Pin 3 (VEE / V0) controls the liquid crystal driving voltage (contrast level). Grounding Pin 3 (0V) provides maximum dark pixel contrast for sharp character visibility, which allows direct connection to GND without requiring an external potentiometer trimmer in standard digital circuits.',
+      concept: 'LCD Contrast Voltage (VEE Pin 3)'
     }
   ],
   exp_8051_lcd_4bit: [
@@ -1102,12 +1124,14 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
 }) => {
   const expId = SLIDE_TO_EXP_ID[slideId] || 'exp1';
   const expInfo = labExperiments.find((e) => e.id === expId) || labExperiments[0];
+  const is8051 = expId.startsWith('exp_8051_');
+  const isLcdExp = expId === 'exp_8051_lcd_8bit' || expId === 'exp_8051_lcd_4bit';
   const manualPage: LabManualPage = labManualPagesData[expId] || labManualPagesData.exp1;
   const vivaList = VIVA_VOCE_DATA[expId] || VIVA_VOCE_DATA.exp1;
 
   // Active section tab in university lab manual
-  const [activeTab, setActiveTab] = useState<'aim_theory' | 'algo_flow' | 'program_alp' | 'program_explanation' | 'exec_output' | 'viva_precautions'>('aim_theory');
-  const [codeMode, setCodeMode] = useState<'standard' | 'simplified'>('standard');
+  const [activeTab, setActiveTab] = useState<'aim_theory' | 'algo_flow' | 'circuit_schematic' | 'program_alp' | 'program_explanation' | 'exec_output' | 'viva_precautions'>('aim_theory');
+  const [codeMode, setCodeMode] = useState<'standard' | 'simplified' | 'c_code'>('standard');
   const [copiedCode, setCopiedCode] = useState(false);
   const [activeFlowStep, setActiveFlowStep] = useState<number | null>(null);
   const [expandedVivaIdx, setExpandedVivaIdx] = useState<number | null>(0);
@@ -1333,7 +1357,12 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
   });
 
   const handleCopyCode = () => {
-    const textToCopy = codeMode === 'standard' ? expInfo.standardCode : expInfo.simplifiedCode;
+    const textToCopy =
+      codeMode === 'c_code' && expInfo.cCode
+        ? expInfo.cCode
+        : codeMode === 'standard'
+        ? expInfo.standardCode
+        : expInfo.simplifiedCode;
     navigator.clipboard.writeText(textToCopy);
     setCopiedCode(true);
     setTimeout(() => setCopiedCode(false), 2000);
@@ -2281,14 +2310,24 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
     }
   };
 
-  const navTabs = [
-    { id: 'aim_theory', label: '1. Aim, Theory & Setup', icon: BookOpen },
-    { id: 'algo_flow', label: '2. Algorithm & Flowchart', icon: Compass },
-    { id: 'program_alp', label: '3. Source Program (ALP)', icon: FileCode },
-    { id: 'program_explanation', label: '4. Program Explanation', icon: Lightbulb },
-    { id: 'exec_output', label: '5. Step-by-Step Execution & Output', icon: Terminal },
-    { id: 'viva_precautions', label: '6. Viva Voce & Extension', icon: HelpCircle }
-  ];
+  const navTabs = isLcdExp
+    ? [
+        { id: 'aim_theory', label: '1. Aim, Theory & Setup', icon: BookOpen },
+        { id: 'algo_flow', label: '2. Algorithm & Flowchart', icon: Compass },
+        { id: 'circuit_schematic', label: '3. Circuit Schematic & Wiring', icon: Layers },
+        { id: 'program_alp', label: '4. Source Program', icon: FileCode },
+        { id: 'program_explanation', label: '5. Program Explanation', icon: Lightbulb },
+        { id: 'exec_output', label: '6. Step-by-Step Execution & Output', icon: Terminal },
+        { id: 'viva_precautions', label: '7. Viva Voce & Extension', icon: HelpCircle }
+      ]
+    : [
+        { id: 'aim_theory', label: '1. Aim, Theory & Setup', icon: BookOpen },
+        { id: 'algo_flow', label: '2. Algorithm & Flowchart', icon: Compass },
+        { id: 'program_alp', label: '3. Source Program', icon: FileCode },
+        { id: 'program_explanation', label: '4. Program Explanation', icon: Lightbulb },
+        { id: 'exec_output', label: '5. Step-by-Step Execution & Output', icon: Terminal },
+        { id: 'viva_precautions', label: '6. Viva Voce & Extension', icon: HelpCircle }
+      ];
 
   return (
     <div className="w-full h-full bg-white rounded-2xl md:rounded-3xl border border-[#B8D4E8] shadow-sm overflow-hidden flex flex-col justify-between">
@@ -2337,68 +2376,55 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
                 </p>
               </div>
 
-              {/* Objectives & Learning Outcomes Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                <div className="bg-[#EAF4FB]/40 rounded-2xl p-3 border border-[#B8D4E8] space-y-1.5 shadow-2xs">
-                  <div className="flex items-center gap-2 text-emerald-800 font-mono text-xs font-bold uppercase tracking-wider">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span>Course Objectives (COs)</span>
-                  </div>
-                  <ul className="space-y-1 text-xs sm:text-sm text-[#1F2937]">
-                    {manualPage.objectives.map((obj, idx) => (
-                      <li key={idx} className="flex items-start gap-2">
-                        <span className="text-emerald-600 font-bold">•</span>
-                        <span>{obj}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="bg-[#EAF4FB]/40 rounded-2xl p-3 border border-[#B8D4E8] space-y-1.5 shadow-2xs">
-                  <div className="flex items-center gap-2 text-[#2563EB] font-mono text-xs font-bold uppercase tracking-wider">
-                    <Award className="w-4 h-4 text-[#2563EB]" />
-                    <span>Learning Outcomes</span>
-                  </div>
-                  <ul className="space-y-1 text-xs sm:text-sm text-[#1F2937]">
-                    {manualPage.outcomes.map((outc, idx) => (
-                      <li key={idx} className="flex items-start gap-2">
-                        <span className="text-[#2563EB] font-bold">•</span>
-                        <span>{outc}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
               {/* Apparatus & Software Environment */}
-              <div className="bg-[#EAF4FB]/40 rounded-2xl p-3 border border-[#B8D4E8] space-y-2 shadow-2xs">
+              <div className="bg-[#EAF4FB]/40 rounded-2xl p-3.5 border border-[#B8D4E8] space-y-2 shadow-2xs">
                 <div className="flex items-center gap-2 text-[#163A5F] font-mono text-xs font-bold uppercase tracking-wider">
                   <Layers className="w-4 h-4 text-[#2563EB]" />
                   <span>Hardware & Software Apparatus Required</span>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                  <div className="bg-white p-2.5 rounded-xl border border-[#B8D4E8] flex items-center gap-2.5 shadow-2xs">
-                    <Cpu className="w-5 h-5 text-[#2563EB] shrink-0" />
-                    <div>
-                      <div className="text-xs font-bold text-[#163A5F]">Host Computer</div>
-                      <div className="text-[10px] text-[#475569] font-mono">x86 Architecture / PC</div>
+                {(() => {
+                  const is8051 = expId.startsWith('exp_8051_');
+                  const peripheralName = 
+                    expId.includes('lcd') ? '16×2 Alphanumeric LCD Module (HD44780 controller)' :
+                    expId.includes('stepper') ? '4-Phase Stepper Motor with ULN2003 Driver Interface' :
+                    expId.includes('keypad') ? '4×4 Hexadecimal Matrix Keypad Module' :
+                    expId.includes('traffic') ? 'Traffic Light Controller LED Signal Module' :
+                    expId.includes('dac') ? 'DAC 0808 (Digital-to-Analog Converter) with OP-AMP LM741' :
+                    expId.includes('adc') ? 'ADC 0804 (Analog-to-Digital Converter) Module' :
+                    expId.includes('uart') ? 'MAX232 Level Shifter & USB-to-UART Serial Interface' :
+                    expId.includes('counter') || expId.includes('timer') ? 'Digital Oscilloscope / Frequency Counter' :
+                    null;
+
+                  const apparatusList = is8051 ? [
+                    { name: 'Microcontroller Hardware', spec: '8051 Microcontroller Development Board / Trainer Kit (AT89C51 / AT89S52 with 11.0592 MHz Crystal Oscillator)' },
+                    ...(peripheralName ? [{ name: 'Interfacing Module', spec: peripheralName }] : []),
+                    { name: 'Power & Interconnects', spec: '+5V Regulated DC Power Supply, USB/ISP Flashing Cable, FR-C Connecting Ribbon Cables' },
+                    { name: 'Cross-Assembler & IDE', spec: 'Keil µVision IDE / Metalink 8051 Cross-Assembler (ASM51)' },
+                    { name: 'Simulation / Programming Tool', spec: 'Virtual 8051 Hardware Simulator / Flash Magic ISP Programmer' }
+                  ] : [
+                    { name: 'Host System', spec: 'IBM PC / Compatible Desktop Computer (Intel x86 architecture)' },
+                    { name: 'Macro Assembler', spec: 'Microsoft Macro Assembler (MASM) Version 6.11' },
+                    { name: 'Linker Utility', spec: '16-bit Segment Linker (LINK.EXE)' },
+                    { name: 'Emulation Environment', spec: 'DOSBox Emulator v0.74 (Real-Mode 16-bit Virtual Environment)' },
+                    { name: 'Debugging Utility', spec: 'MS-DOS DEBUG Utility / CodeView Debugger' }
+                  ];
+
+                  return (
+                    <div className="bg-white rounded-xl p-3 border border-[#B8D4E8]/80">
+                      <ul className="space-y-1.5 list-none pl-0 text-xs sm:text-sm text-[#1F2937]">
+                        {apparatusList.map((item, idx) => (
+                          <li key={idx} className="flex items-start gap-2">
+                            <span className="text-[#2563EB] font-bold text-sm leading-5 shrink-0">•</span>
+                            <div className="leading-relaxed">
+                              <span className="font-semibold text-[#163A5F]">{item.name}:</span>{' '}
+                              <span className="text-[#334155]">{item.spec}</span>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
                     </div>
-                  </div>
-                  <div className="bg-white p-2.5 rounded-xl border border-[#B8D4E8] flex items-center gap-2.5 shadow-2xs">
-                    <FileCode className="w-5 h-5 text-emerald-600 shrink-0" />
-                    <div>
-                      <div className="text-xs font-bold text-[#163A5F]">MASM & LINK</div>
-                      <div className="text-[10px] text-[#475569] font-mono">Version 6.11 Macro Assembler</div>
-                    </div>
-                  </div>
-                  <div className="bg-white p-2.5 rounded-xl border border-[#B8D4E8] flex items-center gap-2.5 shadow-2xs">
-                    <Terminal className="w-5 h-5 text-[#2563EB] shrink-0" />
-                    <div>
-                      <div className="text-xs font-bold text-[#163A5F]">DOSBox Emulator</div>
-                      <div className="text-[10px] text-[#475569] font-mono">v0.74 Real-Mode Virtual Lab</div>
-                    </div>
-                  </div>
-                </div>
+                  );
+                })()}
               </div>
 
               {/* Comprehensive Basic Theory of the Experiment */}
@@ -2556,19 +2582,6 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
                         </div>
                       </div>
                     </div>
-
-                    {/* Industrial & Practical Application */}
-                    <div className="bg-amber-50/80 rounded-2xl p-3 border border-amber-200 flex items-start gap-2.5 shadow-2xs">
-                      <Zap className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                      <div className="space-y-0.5">
-                        <div className="text-xs font-mono font-bold text-amber-900 uppercase tracking-wider">
-                          Industrial & Real-World Engineering Significance
-                        </div>
-                        <p className="text-xs text-amber-950 leading-relaxed">
-                          {basicTheory.industrialRelevance}
-                        </p>
-                      </div>
-                    </div>
                   </div>
                 );
               })()}
@@ -2591,11 +2604,20 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
                 {/* Formal Algorithm Steps in a Single Unified Division */}
                 <div className="lg:col-span-5 bg-white rounded-2xl p-3.5 border border-[#B8D4E8] space-y-2.5 shadow-2xs flex flex-col">
                   <div className="flex items-center justify-between pb-1.5 border-b border-[#B8D4E8]">
-                    <div className="flex items-center gap-2 text-[#2563EB] font-mono text-xs font-bold uppercase tracking-wider">
-                      <Hash className="w-4 h-4 text-[#2563EB]" />
-                      <span>Formal Step-by-Step Algorithm</span>
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-9 h-9 rounded-xl bg-[#2563EB]/10 flex items-center justify-center text-[#2563EB] border border-[#2563EB]/20 shrink-0">
+                        <Hash className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-base sm:text-lg font-extrabold text-[#163A5F] tracking-tight">
+                          Algorithm
+                        </h3>
+                        <p className="text-xs sm:text-[13px] font-semibold text-[#2563EB]">
+                          Step-by-Step Logic Sequence
+                        </p>
+                      </div>
                     </div>
-                    <span className="text-[10px] font-mono text-[#163A5F] bg-[#DCEFFA] px-2 py-0.5 rounded border border-[#B8D4E8] font-bold">
+                    <span className="text-xs font-mono text-[#163A5F] bg-[#DCEFFA] px-2.5 py-1 rounded-lg border border-[#B8D4E8] font-bold">
                       {algorithmNodes.length} Steps
                     </span>
                   </div>
@@ -2613,8 +2635,8 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
                       const noTarget = isDecision ? resolveBranchTarget(node.noBranch, algorithmNodes, idx) : null;
 
                       let stepLabel = node.label;
-                      if (isStart) stepLabel = `START: ${node.subLabel || 'Initialize Program & Load Data Segment'}`;
-                      else if (isStop) stepLabel = `STOP: ${node.subLabel || 'Terminate Program via DOS INT 21H'}`;
+                      if (isStart) stepLabel = `START: ${node.subLabel || (is8051 ? 'Initialize Program & Reset Vector (ORG 0000H)' : 'Initialize Program & Load Data Segment')}`;
+                      else if (isStop) stepLabel = `STOP: ${node.subLabel || (is8051 ? 'Halt Microcontroller / Infinite Loop (SJMP $)' : 'Terminate Program via DOS INT 21H')}`;
                       else if (isDecision) stepLabel = `Decision (Check Condition): ${node.label}`;
 
                       const badgeTypeColor = isStart
@@ -2822,6 +2844,14 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
             );
           })()}
 
+          {/* TAB: CIRCUIT SCHEMATIC & WIRING (EXP 12A & 12B LCD INTERFACING) */}
+          {activeTab === 'circuit_schematic' && isLcdExp && (
+            <LcdCircuitSchematicTab
+              expId={expId}
+              manualPage={manualPage}
+            />
+          )}
+
           {/* TAB 3: SOURCE PROGRAM (ALP) */}
           {activeTab === 'program_alp' && (
             <motion.div
@@ -2834,7 +2864,7 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
               {/* Program Header Controls */}
               <div className="flex flex-wrap items-center justify-between gap-2.5 bg-[#E3F1FA] p-2.5 rounded-2xl border border-[#B8D4E8]">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono font-bold text-[#163A5F] uppercase">Architecture:</span>
+                  <span className="text-xs font-mono font-bold text-[#163A5F] uppercase">Architecture / Language:</span>
                   <div className="flex items-center bg-white p-0.5 rounded-xl border border-[#B8D4E8]">
                     <button
                       onClick={() => setCodeMode('standard')}
@@ -2844,7 +2874,7 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
                           : 'text-[#163A5F] hover:text-[#2563EB]'
                       }`}
                     >
-                      MASM Standard Segments
+                      Standard Assembly (ALP)
                     </button>
                     <button
                       onClick={() => setCodeMode('simplified')}
@@ -2854,8 +2884,21 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
                           : 'text-[#163A5F] hover:text-[#2563EB]'
                       }`}
                     >
-                      Simplified (.MODEL SMALL)
+                      Simplified ALP
                     </button>
+                    {expInfo.cCode && (
+                      <button
+                        onClick={() => setCodeMode('c_code')}
+                        className={`px-3 py-1 text-xs font-mono font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1 ${
+                          codeMode === 'c_code'
+                            ? 'bg-emerald-600 text-white shadow-2xs'
+                            : 'text-[#163A5F] hover:text-emerald-700'
+                        }`}
+                      >
+                        <span className="w-2 h-2 rounded-full bg-emerald-300 inline-block"></span>
+                        <span>C Program (Keil C51)</span>
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -2864,7 +2907,13 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-[#EAF4FB] text-[#163A5F] text-xs font-mono font-bold border border-[#B8D4E8] transition-all cursor-pointer hover:border-[#2563EB] shadow-2xs"
                 >
                   {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-[#2563EB]" />}
-                  <span>{copiedCode ? 'Copied to Clipboard!' : 'Copy ALP Code'}</span>
+                  <span>
+                    {copiedCode
+                      ? 'Copied to Clipboard!'
+                      : codeMode === 'c_code'
+                      ? 'Copy C Program'
+                      : 'Copy ALP Code'}
+                  </span>
                 </button>
               </div>
 
@@ -2872,16 +2921,58 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
               <div className="bg-white rounded-2xl border border-[#B8D4E8] overflow-hidden shadow-xs font-mono text-xs">
                 <div className="bg-[#E3F1FA] px-3.5 py-1.5 border-b border-[#B8D4E8] flex items-center justify-between text-[#163A5F] font-bold">
                   <span className="flex items-center gap-2">
-                    <Code2 className="w-3.5 h-3.5 text-[#2563EB]" />
-                    <span>8086_EXP_{expInfo.number}.ASM</span>
+                    <Code2 className={`w-3.5 h-3.5 ${codeMode === 'c_code' ? 'text-emerald-600' : 'text-[#2563EB]'}`} />
+                    <span>
+                      {codeMode === 'c_code'
+                        ? (expInfo.number.toString().startsWith('10') || expInfo.number.toString().startsWith('12') || expInfo.number.toString().startsWith('9') || expInfo.number.toString().startsWith('11')
+                            ? `8051_EXP_${expInfo.number}.c`
+                            : `EXP_${expInfo.number}.c`)
+                        : (expInfo.number.toString().startsWith('10') || expInfo.number.toString().startsWith('12') || expInfo.number.toString().startsWith('9') || expInfo.number.toString().startsWith('11')
+                            ? `8051_EXP_${expInfo.number}.ASM`
+                            : `8086_EXP_${expInfo.number}.ASM`)}
+                    </span>
                   </span>
-                  <span className="text-[11px] text-[#475569]">{codeMode === 'standard' ? 'Full Segment Declarations' : 'Simplified Memory Model'}</span>
+                  <span className="text-[11px] text-[#475569]">
+                    {codeMode === 'c_code'
+                      ? 'Embedded C Source (Keil C51 / SDCC)'
+                      : is8051
+                      ? '8051 Assembly Language (ASM51)'
+                      : codeMode === 'standard'
+                      ? 'Full Segment Declarations'
+                      : 'Simplified Memory Model'}
+                  </span>
                 </div>
 
                 <div className="p-3 overflow-x-auto max-h-[460px] scrollbar-thin text-[#1F2937] leading-relaxed space-y-0.5 bg-white font-mono text-xs">
-                  {(codeMode === 'standard' ? expInfo.standardCode : expInfo.simplifiedCode)
+                  {(codeMode === 'c_code' && expInfo.cCode
+                    ? expInfo.cCode
+                    : codeMode === 'standard'
+                    ? expInfo.standardCode
+                    : expInfo.simplifiedCode
+                  )
                     .split('\n')
                     .map((line, lIdx) => {
+                      if (codeMode === 'c_code') {
+                        const trimmed = line.trim();
+                        const isCComment = trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*') || trimmed.startsWith('*/');
+                        const isCPreprocessor = trimmed.startsWith('#');
+                        const isCKeyword = /^(void|int|unsigned|char|sbit|while|for|if|else|return|switch|case|break)\b/i.test(trimmed);
+                        return (
+                          <div key={lIdx} className="flex gap-2.5 hover:bg-[#EAF4FB]/60 px-1.5 py-0.5 rounded">
+                            <span className="text-[#94A3B8] select-none w-6 text-right shrink-0 font-medium">{lIdx + 1}</span>
+                            {isCComment ? (
+                              <span className="whitespace-pre text-[#047857] italic font-medium">{line}</span>
+                            ) : isCPreprocessor ? (
+                              <span className="whitespace-pre text-[#7C3AED] font-bold">{line}</span>
+                            ) : (
+                              <span className={`whitespace-pre ${isCKeyword ? 'text-[#2563EB] font-bold' : 'text-[#163A5F] font-semibold'}`}>
+                                {line}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      }
+
                       const isPureComment = line.trim().startsWith(';');
                       const commentIdx = line.indexOf(';');
                       let codePart = line;
@@ -2890,7 +2981,9 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
                         codePart = line.substring(0, commentIdx);
                         commentPart = line.substring(commentIdx);
                       }
-                      const isDirective = /^(DATA_SEG|CODE_SEG|STACK_SEG|SEGMENT|ENDS|ASSUME|\.MODEL|\.STACK|\.DATA|\.CODE|MAIN PROC|MAIN ENDP|END)/i.test(codePart.trim());
+                      const isDirective = is8051
+                        ? /^(ORG|EQU|DB|DW|BIT|DATA|IDATA|XDATA|CSEG|DSEG|XSEG|BSEG|USING|END)\b/i.test(codePart.trim())
+                        : /^(DATA_SEG|CODE_SEG|STACK_SEG|SEGMENT|ENDS|ASSUME|\.MODEL|\.STACK|\.DATA|\.CODE|MAIN PROC|MAIN ENDP|END)\b/i.test(codePart.trim());
                       return (
                         <div key={lIdx} className="flex gap-2.5 hover:bg-[#EAF4FB]/60 px-1.5 py-0.5 rounded">
                           <span className="text-[#94A3B8] select-none w-6 text-right shrink-0 font-medium">{lIdx + 1}</span>
@@ -2967,7 +3060,9 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
                             Theoretical Explanation of the Assembly Program (ALP)
                           </h3>
                           <p className="text-[11px] text-blue-100/90 font-mono">
-                            Program Architecture, Segmentation Model, Machine Stages & Flag Mechanics
+                            {is8051
+                              ? '8051 Harvard Architecture, Memory Spaces (Internal RAM / SFRs / Flash ROM), Machine Cycles & Flags'
+                              : 'Program Architecture, Segmentation Model, Machine Stages & Flag Mechanics'}
                           </p>
                         </div>
                       </div>
@@ -2976,27 +3071,46 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
                       </p>
                     </div>
 
-                    {/* Memory Organization & Segmentation Model */}
+                    {/* Memory Organization & Architecture Model */}
                     <div className="bg-white rounded-2xl p-3.5 border border-[#B8D4E8] space-y-2 shadow-2xs">
                       <div className="flex items-center gap-2 text-[#163A5F] font-mono text-xs font-bold uppercase tracking-wider">
                         <Layers className="w-4 h-4 text-[#2563EB]" />
-                        <span>Memory Organization & Segmentation Model</span>
+                        <span>{is8051 ? 'Memory Organization & Address Spaces (Harvard Architecture)' : 'Memory Organization & Segmentation Model'}</span>
                       </div>
                       <div className="bg-[#EAF4FB]/50 p-3 rounded-xl border border-[#B8D4E8] text-xs sm:text-sm text-[#1F2937] leading-relaxed space-y-1.5">
                         <p>{progTheory.memoryAndSegmentation}</p>
                         <div className="flex flex-wrap gap-1.5 pt-1.5 border-t border-[#B8D4E8]/60 text-[11px] font-mono text-[#163A5F]">
-                          <span className="bg-blue-100 px-2 py-0.5 rounded border border-blue-200 font-semibold">
-                            Code Segment: CS:IP
-                          </span>
-                          <span className="bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200 font-semibold text-emerald-800">
-                            Data Segment: DS:Offset
-                          </span>
-                          <span className="bg-purple-100 px-2 py-0.5 rounded border border-purple-200 font-semibold text-purple-800">
-                            Extra Segment: ES:DI
-                          </span>
-                          <span className="bg-amber-100 px-2 py-0.5 rounded border border-amber-200 font-semibold text-amber-800">
-                            Byte Ordering: Little-Endian
-                          </span>
+                          {is8051 ? (
+                            <>
+                              <span className="bg-blue-100 px-2 py-0.5 rounded border border-blue-200 font-semibold text-blue-800">
+                                Program Flash ROM: 0000H - FFFFH (PC)
+                              </span>
+                              <span className="bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200 font-semibold text-emerald-800">
+                                Internal Data RAM: 00H - 7FH (Direct/Indirect)
+                              </span>
+                              <span className="bg-purple-100 px-2 py-0.5 rounded border border-purple-200 font-semibold text-purple-800">
+                                SFR Memory Map: 80H - FFH (Direct Addressing)
+                              </span>
+                              <span className="bg-amber-100 px-2 py-0.5 rounded border border-amber-200 font-semibold text-amber-800">
+                                Working Register Banks: Bank 0-3 (00H-1FH)
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="bg-blue-100 px-2 py-0.5 rounded border border-blue-200 font-semibold">
+                                Code Segment: CS:IP
+                              </span>
+                              <span className="bg-emerald-100 px-2 py-0.5 rounded border border-emerald-200 font-semibold text-emerald-800">
+                                Data Segment: DS:Offset
+                              </span>
+                              <span className="bg-purple-100 px-2 py-0.5 rounded border border-purple-200 font-semibold text-purple-800">
+                                Extra Segment: ES:DI
+                              </span>
+                              <span className="bg-amber-100 px-2 py-0.5 rounded border border-amber-200 font-semibold text-amber-800">
+                                Byte Ordering: Little-Endian
+                              </span>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -3140,22 +3254,6 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
                       <div className="bg-amber-50/70 p-2.5 rounded-xl border border-amber-200 text-xs text-amber-950 leading-relaxed font-mono">
                         {progTheory.dataFlowSummary}
                       </div>
-                    </div>
-
-                    {/* Assembly Programming Best Practices & Precautions */}
-                    <div className="bg-white rounded-2xl p-3 border border-[#B8D4E8] space-y-2 shadow-2xs">
-                      <div className="flex items-center gap-2 text-emerald-800 font-mono text-xs font-bold uppercase tracking-wider">
-                        <Lightbulb className="w-4 h-4 text-emerald-600" />
-                        <span>Assembly Programming Best Practices & Safety Tips</span>
-                      </div>
-                      <ul className="space-y-1 text-xs text-[#1F2937]">
-                        {progTheory.bestPractices.map((tip, idx) => (
-                          <li key={idx} className="flex items-start gap-2 bg-emerald-50/60 p-2 rounded-lg border border-emerald-200">
-                            <span className="text-emerald-600 font-bold">•</span>
-                            <span>{tip}</span>
-                          </li>
-                        ))}
-                      </ul>
                     </div>
                   </div>
                 );
@@ -3446,7 +3544,7 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
                           <div className="flex items-center justify-between text-xs font-mono font-bold text-[#163A5F]">
                             <span className="flex items-center gap-1.5">
                               <Cpu className="w-3.5 h-3.5 text-[#2563EB]" />
-                              <span>8086 Internal Register File at Step {currentStep.stepNum}:</span>
+                              <span>{is8051 ? '8051 Microcontroller Registers at Step' : '8086 Internal Register File at Step'} {currentStep.stepNum}:</span>
                             </span>
                             <span className="text-[10px] text-[#2563EB] font-bold">
                               ★ Modified register highlighted
@@ -3485,7 +3583,7 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
                           <div className="flex items-center justify-between text-xs font-mono font-bold text-[#163A5F]">
                             <span className="flex items-center gap-1.5">
                               <Binary className="w-3.5 h-3.5 text-[#2563EB]" />
-                              <span>Status Flags Register (FLAGS):</span>
+                              <span>{is8051 ? 'Program Status Word (PSW Flags):' : 'Status Flags Register (FLAGS):'}</span>
                             </span>
                           </div>
 
@@ -4456,7 +4554,7 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
                     <div className="lg:col-span-6 bg-white rounded-2xl p-3 border border-[#B8D4E8] space-y-2 shadow-2xs">
                       <div className="text-xs font-mono font-bold text-[#163A5F] uppercase flex items-center gap-1.5">
                         <Terminal className="w-3.5 h-3.5 text-[#2563EB]" />
-                        <span>RAM Segment Hex Dump</span>
+                        <span>{is8051 ? '8051 Internal RAM & SFR Hex Dump' : 'RAM Segment Hex Dump'}</span>
                       </div>
 
                       <div className="bg-[#EAF4FB]/70 rounded-xl p-2.5 border border-[#B8D4E8] font-mono text-xs text-[#163A5F] space-y-1 max-h-[160px] overflow-y-auto scrollbar-thin">
@@ -4475,7 +4573,7 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
                 const { memoryRows, verificationRows, observationData } = getExperimentVerificationSuite(expId, manualPage, lastStep);
 
                 const handleCopyObservation = () => {
-                  const text = `=== 8086 LAB OBSERVATION RECORD ===
+                  const text = `=== ${is8051 ? '8051 MICROCONTROLLER' : '8086'} LAB OBSERVATION RECORD ===
 EXPERIMENT: ${manualPage.number} - ${manualPage.title}
 
 --- 1. INPUT SPECIFICATION ---
@@ -4508,7 +4606,9 @@ ${observationData.resultSummary}
                           <span>4. Final Output, RAM Memory & Side-by-Side Verification</span>
                         </div>
                         <p className="text-xs text-[#52799F] mt-0.5 font-sans">
-                          Comparative validation: Theoretical Hand Proofs vs. 8086 Simulated CPU Registers & RAM Dump
+                          {is8051
+                            ? 'Comparative validation: Theoretical Hand Proofs vs. 8051 Simulated Registers & Internal RAM Dump'
+                            : 'Comparative validation: Theoretical Hand Proofs vs. 8086 Simulated CPU Registers & RAM Dump'}
                         </p>
                       </div>
 
@@ -4518,7 +4618,7 @@ ${observationData.resultSummary}
                           {[
                             { id: 'all', label: 'All Sections', icon: Layers },
                             { id: 'side_by_side', label: 'Side-by-Side Split', icon: ArrowRightLeft },
-                            { id: 'memory_dump', label: 'RAM & CPU State', icon: Database },
+                            { id: 'memory_dump', label: is8051 ? 'RAM & SFR State' : 'RAM & CPU State', icon: Database },
                             { id: 'manual_proof', label: 'Manual Proof', icon: Calculator },
                             { id: 'observation_sheet', label: 'Observation Book', icon: ClipboardCheck }
                           ].map((tab) => {
@@ -4559,7 +4659,9 @@ ${observationData.resultSummary}
                         </div>
                         <div>
                           <span className="text-[11px] font-mono font-bold text-emerald-900 block uppercase">Execution Status</span>
-                          <span className="text-xs text-emerald-800 font-medium">Program Terminated (INT 21H / 4CH)</span>
+                          <span className="text-xs text-emerald-800 font-medium">
+                            {is8051 ? 'Target Loop Reached (SJMP $)' : 'Program Terminated (INT 21H / 4CH)'}
+                          </span>
                         </div>
                       </div>
 
@@ -4579,7 +4681,9 @@ ${observationData.resultSummary}
                         </div>
                         <div>
                           <span className="text-[11px] font-mono font-bold text-amber-900 block uppercase">RAM Memory Structure</span>
-                          <span className="text-xs text-amber-800 font-medium">Intel Little-Endian Byte Order Verified</span>
+                          <span className="text-xs text-amber-800 font-medium">
+                            {is8051 ? 'Direct/Indirect 8-bit RAM Verified' : 'Intel Little-Endian Byte Order Verified'}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -4593,18 +4697,18 @@ ${observationData.resultSummary}
                             <span>Side-by-Side Dual-Panel Comparison</span>
                           </div>
                           <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#EAF4FB] text-[#2563EB] font-bold border border-[#B8D4E8]">
-                            Simulated 8086 State ↔ Theoretical Hand Proof
+                            {is8051 ? 'Simulated 8051 State ↔ Theoretical Hand Proof' : 'Simulated 8086 State ↔ Theoretical Hand Proof'}
                           </span>
                         </div>
 
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                          {/* LEFT PANEL: 8086 HARDWARE OUTPUT & MEMORY STATE */}
+                          {/* LEFT PANEL: HARDWARE OUTPUT & MEMORY STATE */}
                           {(verificationViewMode === 'all' || verificationViewMode === 'side_by_side' || verificationViewMode === 'memory_dump') && (
                             <div className="space-y-3 p-3.5 rounded-xl border border-blue-200 bg-blue-50/20">
                               <div className="flex items-center justify-between pb-2 border-b border-blue-200">
                                 <div className="flex items-center gap-2 text-xs font-mono font-bold text-blue-900 uppercase">
                                   <Cpu className="w-4 h-4 text-blue-600" />
-                                  <span>Simulated 8086 Final CPU & Memory Output</span>
+                                  <span>{is8051 ? 'Simulated 8051 Final Registers & RAM Output' : 'Simulated 8086 Final CPU & Memory Output'}</span>
                                 </div>
                                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-bold">
                                   Hardware State
@@ -4614,20 +4718,33 @@ ${observationData.resultSummary}
                               {/* Final Register File */}
                               <div className="space-y-1.5">
                                 <span className="text-[11px] font-mono font-bold text-[#163A5F] block">
-                                  Final CPU Register File:
+                                  {is8051 ? 'Final 8051 Microcontroller Registers:' : 'Final CPU Register File:'}
                                 </span>
                                 <div className="grid grid-cols-3 gap-1.5 font-mono text-xs">
-                                  {[
-                                    { reg: 'AX', val: lastStep?.registers?.AX || '0000H' },
-                                    { reg: 'BX', val: lastStep?.registers?.BX || '0000H' },
-                                    { reg: 'CX', val: lastStep?.registers?.CX || '0000H' },
-                                    { reg: 'DX', val: lastStep?.registers?.DX || '0000H' },
-                                    { reg: 'SI', val: lastStep?.registers?.SI || '0000H' },
-                                    { reg: 'DI', val: lastStep?.registers?.DI || '0000H' },
-                                    { reg: 'SP', val: lastStep?.registers?.SP || 'FFFEH' },
-                                    { reg: 'BP', val: lastStep?.registers?.BP || '0000H' },
-                                    { reg: 'IP', val: lastStep?.registers?.IP || '0028H' }
-                                  ].map((item) => (
+                                  {(is8051
+                                    ? [
+                                        { reg: 'ACC', val: (lastStep?.registers as any)?.ACC || (lastStep?.registers as any)?.A || '00H' },
+                                        { reg: 'B', val: (lastStep?.registers as any)?.B || '00H' },
+                                        { reg: 'R0', val: (lastStep?.registers as any)?.R0 || '00H' },
+                                        { reg: 'R1', val: (lastStep?.registers as any)?.R1 || '00H' },
+                                        { reg: 'R2', val: (lastStep?.registers as any)?.R2 || '00H' },
+                                        { reg: 'DPTR', val: (lastStep?.registers as any)?.DPTR || '0000H' },
+                                        { reg: 'SP', val: (lastStep?.registers as any)?.SP || '07H' },
+                                        { reg: 'PSW', val: (lastStep?.registers as any)?.PSW || '00H' },
+                                        { reg: 'PC', val: (lastStep?.registers as any)?.PC || '0020H' }
+                                      ]
+                                    : [
+                                        { reg: 'AX', val: (lastStep?.registers as any)?.AX || '0000H' },
+                                        { reg: 'BX', val: (lastStep?.registers as any)?.BX || '0000H' },
+                                        { reg: 'CX', val: (lastStep?.registers as any)?.CX || '0000H' },
+                                        { reg: 'DX', val: (lastStep?.registers as any)?.DX || '0000H' },
+                                        { reg: 'SI', val: (lastStep?.registers as any)?.SI || '0000H' },
+                                        { reg: 'DI', val: (lastStep?.registers as any)?.DI || '0000H' },
+                                        { reg: 'SP', val: (lastStep?.registers as any)?.SP || 'FFFEH' },
+                                        { reg: 'BP', val: (lastStep?.registers as any)?.BP || '0000H' },
+                                        { reg: 'IP', val: (lastStep?.registers as any)?.IP || '0028H' }
+                                      ]
+                                  ).map((item) => (
                                     <div key={item.reg} className="p-2 rounded-lg bg-white border border-[#B8D4E8] flex justify-between items-center">
                                       <span className="font-bold text-[#2563EB]">{item.reg}:</span>
                                       <span className="font-bold text-[#163A5F]">{item.val}</span>
@@ -4639,17 +4756,25 @@ ${observationData.resultSummary}
                               {/* Status Flags */}
                               <div className="space-y-1.5">
                                 <span className="text-[11px] font-mono font-bold text-[#163A5F] block">
-                                  Status Flags Register:
+                                  {is8051 ? 'Program Status Word (PSW Flags):' : 'Status Flags Register:'}
                                 </span>
-                                <div className="grid grid-cols-6 gap-1 font-mono text-center text-xs">
-                                  {[
-                                    { name: 'CF', val: lastStep?.flags?.CF ?? '0' },
-                                    { name: 'ZF', val: lastStep?.flags?.ZF ?? '0' },
-                                    { name: 'SF', val: lastStep?.flags?.SF ?? '0' },
-                                    { name: 'OF', val: lastStep?.flags?.OF ?? '0' },
-                                    { name: 'PF', val: lastStep?.flags?.PF ?? '0' },
-                                    { name: 'AF', val: lastStep?.flags?.AF ?? '0' }
-                                  ].map((flg) => (
+                                <div className={`grid ${is8051 ? 'grid-cols-4' : 'grid-cols-6'} gap-1 font-mono text-center text-xs`}>
+                                  {(is8051
+                                    ? [
+                                        { name: 'CY', val: (lastStep?.flags as any)?.CY ?? (lastStep?.flags as any)?.CF ?? '0' },
+                                        { name: 'AC', val: (lastStep?.flags as any)?.AC ?? (lastStep?.flags as any)?.AF ?? '0' },
+                                        { name: 'OV', val: (lastStep?.flags as any)?.OV ?? (lastStep?.flags as any)?.OF ?? '0' },
+                                        { name: 'P', val: (lastStep?.flags as any)?.P ?? (lastStep?.flags as any)?.PF ?? '0' }
+                                      ]
+                                    : [
+                                        { name: 'CF', val: (lastStep?.flags as any)?.CF ?? '0' },
+                                        { name: 'ZF', val: (lastStep?.flags as any)?.ZF ?? '0' },
+                                        { name: 'SF', val: (lastStep?.flags as any)?.SF ?? '0' },
+                                        { name: 'OF', val: (lastStep?.flags as any)?.OF ?? '0' },
+                                        { name: 'PF', val: (lastStep?.flags as any)?.PF ?? '0' },
+                                        { name: 'AF', val: (lastStep?.flags as any)?.AF ?? '0' }
+                                      ]
+                                  ).map((flg) => (
                                     <div key={flg.name} className={`p-1.5 rounded-lg border ${
                                       flg.val === '1' ? 'bg-amber-50 border-amber-300 text-amber-900 font-bold' : 'bg-white border-[#B8D4E8] text-[#52799F]'
                                     }`}>
@@ -4664,9 +4789,9 @@ ${observationData.resultSummary}
                               <div className="space-y-1.5">
                                 <div className="flex items-center justify-between">
                                   <span className="text-[11px] font-mono font-bold text-[#163A5F] block">
-                                    RAM Memory Segment Allocation:
+                                    {is8051 ? '8051 Internal RAM Memory Map:' : 'RAM Memory Segment Allocation:'}
                                   </span>
-                                  <span className="text-[10px] font-mono text-[#52799F]">Little-Endian Format</span>
+                                  <span className="text-[10px] font-mono text-[#52799F]">{is8051 ? 'Direct RAM (30H-7FH)' : 'Little-Endian Format'}</span>
                                 </div>
                                 <div className="overflow-x-auto rounded-lg border border-[#B8D4E8] bg-white">
                                   <table className="w-full text-left text-xs font-mono">
@@ -4931,9 +5056,9 @@ ${observationData.resultSummary}
             >
               {/* Precautions Box */}
               <div className="bg-rose-50/70 rounded-2xl p-3.5 border border-rose-200 space-y-1.5 shadow-2xs">
-                <div className="flex items-center gap-2 text-rose-800 font-mono text-xs font-bold uppercase tracking-wider">
-                  <ShieldAlert className="w-4 h-4 text-rose-600" />
-                  <span>Laboratory Precautions & Safeguards</span>
+                <div className="flex items-center gap-2 font-mono text-sm sm:text-[15px] font-bold uppercase tracking-wide">
+                  <ShieldAlert className="w-4.5 h-4.5 text-rose-600 shrink-0" />
+                  <span className="font-extrabold text-rose-950 tracking-wide">Laboratory Precautions & Safeguards</span>
                 </div>
                 <ul className="space-y-1 text-xs sm:text-sm text-rose-950">
                   {manualPage.precautions.map((p, idx) => (
@@ -4947,11 +5072,11 @@ ${observationData.resultSummary}
 
               {/* Student Extension Challenge Task */}
               <div className="bg-[#EAF4FB] rounded-2xl p-3.5 border border-[#B8D4E8] shadow-2xs space-y-1.5">
-                <div className="flex items-center gap-2 text-[#2563EB] font-mono text-xs font-bold uppercase tracking-wider">
-                  <Sparkles className="w-4 h-4 text-[#2563EB]" />
-                  <span>Student Homework / Lab Extension Challenge</span>
+                <div className="flex items-center gap-2 font-mono text-sm sm:text-[15px] font-bold uppercase tracking-wide">
+                  <Sparkles className="w-4.5 h-4.5 text-indigo-600 shrink-0" />
+                  <span className="font-extrabold text-indigo-950 tracking-wide">Student Homework / Lab Extension Challenge</span>
                 </div>
-                <h4 className="text-sm sm:text-base font-bold text-[#163A5F]">
+                <h4 className="text-sm sm:text-base font-bold text-indigo-900">
                   {manualPage.studentTask.title}
                 </h4>
                 <p className="text-xs sm:text-sm text-[#1F2937] leading-relaxed">
@@ -4966,11 +5091,11 @@ ${observationData.resultSummary}
               {/* Viva Voce Questions & Answers Accordion */}
               <div className="bg-white rounded-2xl p-3.5 border border-[#B8D4E8] space-y-2 shadow-2xs">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-[#163A5F] font-mono text-xs font-bold uppercase tracking-wider">
-                    <HelpCircle className="w-4 h-4 text-[#2563EB]" />
-                    <span>Viva Voce Oral Examination Questions (Standard Academic Bank)</span>
+                  <div className="flex items-center gap-2 font-mono text-sm sm:text-[15px] font-bold uppercase tracking-wide">
+                    <HelpCircle className="w-4.5 h-4.5 text-blue-600 shrink-0" />
+                    <span className="font-extrabold text-blue-950 tracking-wide">Viva Voce Oral Examination Questions</span>
                   </div>
-                  <span className="text-[10px] font-mono text-[#163A5F] bg-[#DCEFFA] px-2 py-0.5 rounded border border-[#B8D4E8] font-bold">{vivaList.length} Questions</span>
+                  <span className="text-[10px] font-mono text-blue-900 bg-blue-50 px-2 py-0.5 rounded border border-blue-200 font-bold">{vivaList.length} Questions</span>
                 </div>
 
                 <div className="space-y-1.5">
@@ -4983,25 +5108,25 @@ ${observationData.resultSummary}
                       >
                         <button
                           onClick={() => setExpandedVivaIdx(isExpanded ? null : vIdx)}
-                          className="w-full p-2.5 text-left flex items-center justify-between gap-2.5 text-xs sm:text-sm font-semibold text-[#163A5F] hover:text-blue-900 cursor-pointer"
+                          className="w-full p-2.5 text-left flex items-center justify-between gap-2.5 text-xs sm:text-sm font-bold text-slate-800 hover:text-blue-900 cursor-pointer"
                         >
                           <span className="flex items-center gap-2">
                             <span className="w-5 h-5 rounded-md bg-blue-100 text-blue-800 border border-blue-200 flex items-center justify-center text-[10px] font-mono font-bold shrink-0">
                               Q{vIdx + 1}
                             </span>
-                            <span>{viva.question}</span>
+                            <span className="font-bold">{viva.question}</span>
                           </span>
                           <ChevronDown className={`w-4 h-4 text-[#2563EB] transition-transform ${isExpanded ? 'rotate-180 text-[#2563EB]' : ''}`} />
                         </button>
 
                         {isExpanded && (
                           <div className="p-2.5 pt-0 text-xs sm:text-sm text-[#1F2937] leading-relaxed border-t border-[#B8D4E8] bg-white space-y-1">
-                            <div className="text-[10px] font-mono font-bold text-[#2563EB] uppercase pt-1.5">
+                            <div className="text-[10px] font-mono font-bold text-blue-700 uppercase pt-1.5">
                               Answer & Technical Explanation:
                             </div>
                             <p>{viva.answer}</p>
                             <div className="text-[10px] font-mono text-[#475569] pt-0.5">
-                              Concept Focus: <span className="text-[#163A5F] font-bold">{viva.concept}</span>
+                              <span className="font-bold text-[#163A5F]">Concept Focus:</span> <span className="text-[#163A5F] font-bold">{viva.concept}</span>
                             </div>
                           </div>
                         )}
@@ -5012,18 +5137,23 @@ ${observationData.resultSummary}
               </div>
 
               {/* Industrial & Embedded Applications */}
-              <div className="bg-white rounded-2xl p-3 border border-[#B8D4E8] space-y-2 shadow-2xs">
-                <div className="text-xs font-mono font-bold text-[#163A5F] uppercase flex items-center gap-1.5">
-                  <Layers className="w-3.5 h-3.5 text-[#2563EB]" />
-                  <span>Real-World Embedded Systems Applications</span>
+              <div className="bg-[#EAF4FB]/40 rounded-2xl p-3.5 border border-[#B8D4E8] space-y-2 shadow-2xs">
+                <div className="flex items-center gap-2 font-mono text-sm sm:text-[15px] font-bold uppercase tracking-wide">
+                  <Layers className="w-4.5 h-4.5 text-teal-600 shrink-0" />
+                  <span className="font-extrabold text-teal-950 tracking-wide">Real-World Embedded Systems & Industry Applications</span>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {manualPage.applications.map((app, aIdx) => (
-                    <div key={aIdx} className="bg-[#EAF4FB]/60 p-2.5 rounded-xl border border-[#B8D4E8] space-y-0.5 shadow-2xs">
-                      <div className="text-xs font-bold text-[#163A5F]">{app.title}</div>
-                      <p className="text-[11px] text-[#475569] leading-relaxed">{app.desc}</p>
-                    </div>
-                  ))}
+                <div className="bg-white rounded-xl p-3 border border-[#B8D4E8]/80">
+                  <ul className="space-y-1.5 list-none pl-0 text-xs sm:text-sm text-[#1F2937]">
+                    {manualPage.applications.map((app, aIdx) => (
+                      <li key={aIdx} className="flex items-start gap-2">
+                        <span className="text-[#2563EB] font-bold text-sm leading-5 shrink-0">•</span>
+                        <div className="leading-relaxed">
+                          <span className="font-bold text-[#163A5F]">{app.title}:</span>{' '}
+                          <span className="text-[#334155]">{app.desc}</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
             </motion.div>

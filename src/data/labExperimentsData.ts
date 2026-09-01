@@ -8,6 +8,7 @@ export interface LabExperiment {
   algorithm: string[];
   standardCode: string;
   simplifiedCode: string;
+  cCode?: string;
   bestPracticeTip: string;
 }
 
@@ -2775,7 +2776,51 @@ WAIT:
     CLR TF0                            ; Reset TF0 flag
     SJMP LOOP                          ; Repeat
 END`,
-    bestPracticeTip: 'Always clear TF0 (`CLR TF0`) in software before the next timer cycle because hardware timer polling does not auto-clear TF0 when interrupts are not used.'
+    cCode: `/* ==============================================================================
+ * EXPERIMENT 10A: 8051 Timer 0 in Mode 1 (16-Bit Timer) – 25 ms Delay & Blink P0
+ * Target: AT89C51 / AT89S52 (8051 Architecture)
+ * Compiler: Keil C51 / SDCC
+ * Crystal Frequency: 12.0 MHz (1 Machine Cycle = 1.0 µs)
+ * ============================================================================== */
+
+#include <reg51.h>
+
+// Function Declaration
+void delay_25ms(void);
+
+void main(void) {
+    // Configure Timer 0 in Mode 1: 16-bit Timer mode (GATE=0, C/T=0, M1=0, M0=1)
+    TMOD = 0x01;
+    
+    // Initialize Port 0: Set all pins LOW (All LEDs ON)
+    P0 = 0x00;
+
+    while (1) {
+        P0 = ~P0;           // Invert/Toggle all 8 pins of Port P0 (00H <-> FFH)
+        delay_25ms();       // Call hardware timer delay (25 milliseconds)
+    }
+}
+
+// Delay Routine using 8051 Timer 0 in Mode 1
+void delay_25ms(void) {
+    /* 16-bit Preload Calculation:
+     * Oscillator = 12.0 MHz -> 1 Machine Cycle = 1.0 µs
+     * Desired Delay = 25 ms = 25,000 µs = 25,000 clock counts
+     * Initial Preload = 65,536 - 25,000 = 40,536 = 0x9E58
+     * TH0 = 0x9E (High Byte), TL0 = 0x58 (Low Byte)
+     */
+    TH0 = 0x9E;             // Load Timer 0 High Byte (158D)
+    TL0 = 0x58;             // Load Timer 0 Low Byte (88D)
+    
+    TR0 = 1;                // Start Timer 0 (TCON.4 = 1)
+    
+    while (TF0 == 0);       // Wait in polling loop until Timer 0 overflows (TF0 = 1)
+    
+    TR0 = 0;                // Stop Timer 0
+    TF0 = 0;                // Clear Timer 0 Overflow Flag for next cycle
+}
+`,
+    bestPracticeTip: 'Always clear TF0 (`CLR TF0` in ALP / `TF0 = 0;` in C) in software before the next timer cycle because hardware timer polling does not auto-clear TF0 when interrupts are not used.'
   },
   {
     id: 'exp_8051_timer1_m0',
@@ -2843,6 +2888,49 @@ CHECK:
     CLR TF1                            ; Clear flag
     SJMP BLINK_P2                      ; Repeat
 END`,
+    cCode: `/* ==============================================================================
+ * EXPERIMENT 10B: 8051 Timer 1 in Mode 0 (13-Bit Timer) – 50 µs Delay & Blink P2
+ * Target: AT89C51 / AT89S52 (8051 Architecture)
+ * Compiler: Keil C51 / SDCC
+ * Crystal Frequency: 12.0 MHz (1 Machine Cycle = 1.0 µs)
+ * ============================================================================== */
+
+#include <reg51.h>
+
+void delay_50us(void);
+
+void main(void) {
+    // Configure Timer 1 in Mode 0 (13-bit Timer: GATE=0, C/T=0, M1=0, M0=0)
+    TMOD = 0x00;
+    
+    // Initialize Port 2 pins
+    P2 = 0x00;
+
+    while (1) {
+        P2 = ~P2;           // Toggle all 8 pins of Port P2
+        delay_50us();       // Call 50 µs hardware delay subroutine
+    }
+}
+
+void delay_50us(void) {
+    /* 13-bit Mode 0 Preload Calculation:
+     * Max Capacity = 2^13 = 8192 counts
+     * Required Count = 50 machine cycles (50 µs)
+     * Initial Preload = 8192 - 50 = 8142 = 0x1FCE (11111 1100 1110B)
+     * Upper 8 bits -> TH1 = 0xFE (1111 1110B)
+     * Lower 5 bits -> TL1 = 0x0E (0000 1110B, D5-D7 ignored)
+     */
+    TH1 = 0xFE;             // Load Upper 8 bits
+    TL1 = 0x0E;             // Load Lower 5 bits
+    
+    TR1 = 1;                // Start Timer 1 (TCON.6 = 1)
+    
+    while (TF1 == 0);       // Wait until 13-bit timer overflows (TF1 = 1)
+    
+    TR1 = 0;                // Stop Timer 1
+    TF1 = 0;                // Clear Timer 1 Overflow Flag
+}
+`,
     bestPracticeTip: 'In Mode 0 (13-bit), only bits D0-D4 of TLx are used as a 5-bit prescaler; bits D5-D7 of TLx are unused and must be set to 0 to prevent unintended offsets.'
   },
   {
@@ -2922,6 +3010,52 @@ I_LP:
     CLR TR0                            ; Stop Timer 0
     SJMP LOOP_P1                       ; Repeat 75 ms toggle
 END`,
+    cCode: `/* ==============================================================================
+ * EXPERIMENT 10C: 8051 Counter/Timer 0 Mode 2 (8-Bit Auto-Reload) – 75 ms Delay & Blink P1
+ * Target: AT89C51 / AT89S52 (8051 Architecture)
+ * Compiler: Keil C51 / SDCC
+ * Crystal Frequency: 12.0 MHz (1 Machine Cycle = 1.0 µs)
+ * ============================================================================== */
+
+#include <reg51.h>
+
+void delay_75ms(void);
+
+void main(void) {
+    // Configure Timer 0 in Mode 2 (8-bit Auto-Reload: TMOD = 0x02)
+    TMOD = 0x02;
+    
+    // Auto-Reload value for 250 µs tick (256 - 250 = 6 = 0x06)
+    TH0 = 0x06;
+    TL0 = 0x06;
+    
+    // Initialize Port 1 pins
+    P1 = 0x00;
+
+    while (1) {
+        P1 = ~P1;           // Toggle all 8 pins of Port 1
+        delay_75ms();       // Generate 75 ms delay using 300 auto-reloads (300 x 250 µs)
+    }
+}
+
+// 75 ms Delay Subroutine using Mode 2 Auto-Reload
+void delay_75ms(void) {
+    unsigned char outer;
+    unsigned char inner;
+    
+    TR0 = 1;                // Start Timer 0
+    
+    // Nested Loop: 2 * 150 = 300 overflows @ 250 µs each = 75,000 µs = 75 ms
+    for (outer = 0; outer < 2; outer++) {
+        for (inner = 0; inner < 150; inner++) {
+            while (TF0 == 0);   // Wait for 250 µs overflow (TF0 = 1)
+            TF0 = 0;            // Clear TF0 (Hardware automatically restores TL0 = TH0)
+        }
+    }
+    
+    TR0 = 0;                // Stop Timer 0
+}
+`,
     bestPracticeTip: 'In Mode 2 Auto-Reload, TH0 is never modified during timer operation; hardware automatically restores TL0 = TH0 on every overflow (FFH -> 00H), eliminating software reload latency jitter.'
   },
   {
@@ -2989,6 +3123,47 @@ POLL:
     CLR TF1                            ; Clear flag
     SJMP LOOP_P3                       ; Repeat
 END`,
+    cCode: `/* ==============================================================================
+ * EXPERIMENT 10D: 8051 Counter 1 in Mode 1 (16-Bit Counter/Timer) – 80 µs Delay & Blink P3
+ * Target: AT89C51 / AT89S52 (8051 Architecture)
+ * Compiler: Keil C51 / SDCC
+ * Crystal Frequency: 12.0 MHz (1 Machine Cycle = 1.0 µs)
+ * ============================================================================== */
+
+#include <reg51.h>
+
+void delay_80us(void);
+
+void main(void) {
+    // Configure Timer/Counter 1 in Mode 1:
+    // TMOD = 0x10 for Internal Timer (or TMOD = 0x50 for External Event Counter on P3.5 / T1)
+    TMOD = 0x10;
+    
+    // Initialize Port 3 pins
+    P3 = 0x00;
+
+    while (1) {
+        P3 = ~P3;           // Invert all 8 pins of Port 3
+        delay_80us();       // Call 80 µs delay subroutine
+    }
+}
+
+void delay_80us(void) {
+    /* 16-bit Preload Calculation for 80 counts:
+     * Count = 65,536 - 80 = 65,456 = 0xFFB0
+     * TH1 = 0xFF (High Byte), TL1 = 0xB0 (Low Byte: 176D)
+     */
+    TH1 = 0xFF;             // Load Counter 1 High Byte
+    TL1 = 0xB0;             // Load Counter 1 Low Byte
+    
+    TR1 = 1;                // Start Counter 1 (TCON.6 = 1)
+    
+    while (TF1 == 0);       // Wait in loop until TF1 = 1 (80 counts elapsed)
+    
+    TR1 = 0;                // Stop Counter 1
+    TF1 = 0;                // Clear Counter 1 Overflow Flag
+}
+`,
     bestPracticeTip: 'When configuring Timer 1 as an external Counter (C/T=1), the maximum external input pulse frequency cannot exceed 1/24 of the oscillator clock frequency (f_osc / 24 = 500 kHz at 12 MHz) due to internal 2-cycle sampling rules.'
   },
   {
@@ -3040,6 +3215,57 @@ WAIT_TX:
     CLR TI                             ; Clear TI flag
     SJMP TX_LOOP                       ; Repeat continuously
 END`,
+    cCode: `/* ==============================================================================
+ * EXPERIMENT 11A: 8051 UART Serial Character Transfer at 9600 Baud Rate
+ * Target: AT89C51 / AT89S52 (8051 Architecture)
+ * Compiler: Keil C51 / SDCC
+ * Crystal Frequency: 11.0592 MHz (Standard Baud Generator Crystal)
+ * ============================================================================== */
+
+#include <reg51.h>
+
+// Function Prototypes
+void uart_init_9600(void);
+void uart_tx_char(unsigned char ch);
+void uart_tx_string(char *str);
+
+void main(void) {
+    uart_init_9600();               // Initialize UART at 9600 Baud (8 data bits, 1 stop bit, no parity)
+
+    while (1) {
+        uart_tx_char('A');          // Transmit ASCII character 'A' (0x41) repeatedly
+    }
+}
+
+// Initialize 8051 UART for 9600 Baud Rate
+void uart_init_9600(void) {
+    /* 9600 Baud Preload Calculation:
+     * Oscillator = 11.0592 MHz -> Timer 1 Clock = 11.0592 MHz / (12 * 32) = 28,800 Hz
+     * Desired Baud Rate = 9600 Baud
+     * Reload Count = 28,800 / 9600 = 3
+     * TH1 = 256 - 3 = 253 = 0xFD
+     */
+    TMOD = 0x20;                    // Timer 1 in Mode 2 (8-bit Auto-Reload)
+    TH1 = 0xFD;                     // Reload value for 9600 baud
+    SCON = 0x50;                    // Mode 1: 8-bit UART, 1 Start bit, 1 Stop bit, REN=1 (Receiver Enabled)
+    TR1 = 1;                        // Start Timer 1 to generate baud clock
+    TI = 0;                         // Clear Transmit Interrupt flag
+}
+
+// Transmit Single Character over UART
+void uart_tx_char(unsigned char ch) {
+    SBUF = ch;                      // Load character into Serial Buffer (starts TX)
+    while (TI == 0);                // Wait in loop until hardware sets TI = 1
+    TI = 0;                         // Clear TI flag in software for next character
+}
+
+// Transmit Null-Terminated String
+void uart_tx_string(char *str) {
+    while (*str) {
+        uart_tx_char(*str++);
+    }
+}
+`,
     bestPracticeTip: 'Always clear TI with software instruction `CLR TI` after every serial transmission; the 8051 hardware asserts TI on completion but never clears it automatically.'
   },
   {
@@ -3091,6 +3317,57 @@ WAIT_TX:
     CLR TI                             ; Clear TI flag
     SJMP TX_LOOP                       ; Repeat continuously
 END`,
+    cCode: `/* ==============================================================================
+ * EXPERIMENT 11B: 8051 UART Serial Character Transfer at 4800 Baud Rate
+ * Target: AT89C51 / AT89S52 (8051 Architecture)
+ * Compiler: Keil C51 / SDCC
+ * Crystal Frequency: 11.0592 MHz (Standard Baud Generator Crystal)
+ * ============================================================================== */
+
+#include <reg51.h>
+
+// Function Prototypes
+void uart_init_4800(void);
+void uart_tx_char(unsigned char ch);
+void uart_tx_string(char *str);
+
+void main(void) {
+    uart_init_4800();               // Initialize UART at 4800 Baud, 8-N-1
+
+    while (1) {
+        uart_tx_char('B');          // Transmit ASCII character 'B' (0x42) repeatedly
+    }
+}
+
+// Initialize 8051 UART for 4800 Baud Rate
+void uart_init_4800(void) {
+    /* 4800 Baud Preload Calculation:
+     * Oscillator = 11.0592 MHz -> Timer 1 Clock = 28,800 Hz
+     * Desired Baud Rate = 4800 Baud
+     * Reload Count = 28,800 / 4800 = 6
+     * TH1 = 256 - 6 = 250 = 0xFA
+     */
+    TMOD = 0x20;                    // Timer 1 in Mode 2 (8-bit Auto-Reload)
+    TH1 = 0xFA;                     // Reload value for 4800 baud
+    SCON = 0x50;                    // Mode 1: 8-bit UART, 1 Start bit, 1 Stop bit, REN=1
+    TR1 = 1;                        // Start Timer 1
+    TI = 0;                         // Clear Transmit Interrupt flag
+}
+
+// Transmit Single Character over UART
+void uart_tx_char(unsigned char ch) {
+    SBUF = ch;                      // Load byte into SBUF to begin transmission
+    while (TI == 0);                // Wait until hardware sets TI = 1
+    TI = 0;                         // Clear TI flag
+}
+
+// Transmit Null-Terminated String
+void uart_tx_string(char *str) {
+    while (*str) {
+        uart_tx_char(*str++);
+    }
+}
+`,
     bestPracticeTip: 'At 4800 Baud, each bit period is 1 / 4800 = 208.33 µs, and each 10-bit asynchronous character frame takes 2.083 ms to transmit.'
   },
   {
@@ -3142,6 +3419,57 @@ WAIT_TX:
     CLR TI                             ; Clear TI flag
     SJMP TX_LOOP                       ; Repeat continuously
 END`,
+    cCode: `/* ==============================================================================
+ * EXPERIMENT 11C: 8051 UART Serial Character Transfer at 2400 Baud Rate
+ * Target: AT89C51 / AT89S52 (8051 Architecture)
+ * Compiler: Keil C51 / SDCC
+ * Crystal Frequency: 11.0592 MHz (Standard Baud Generator Crystal)
+ * ============================================================================== */
+
+#include <reg51.h>
+
+// Function Prototypes
+void uart_init_2400(void);
+void uart_tx_char(unsigned char ch);
+void uart_tx_string(char *str);
+
+void main(void) {
+    uart_init_2400();               // Initialize UART at 2400 Baud, 8-N-1
+
+    while (1) {
+        uart_tx_char('C');          // Transmit ASCII character 'C' (0x43) repeatedly
+    }
+}
+
+// Initialize 8051 UART for 2400 Baud Rate
+void uart_init_2400(void) {
+    /* 2400 Baud Preload Calculation:
+     * Oscillator = 11.0592 MHz -> Timer 1 Clock = 28,800 Hz
+     * Desired Baud Rate = 2400 Baud
+     * Reload Count = 28,800 / 2400 = 12
+     * TH1 = 256 - 12 = 244 = 0xF4
+     */
+    TMOD = 0x20;                    // Timer 1 in Mode 2 (8-bit Auto-Reload)
+    TH1 = 0xF4;                     // Reload value for 2400 baud
+    SCON = 0x50;                    // Mode 1: 8-bit UART, 1 Start bit, 1 Stop bit, REN=1
+    TR1 = 1;                        // Start Timer 1
+    TI = 0;                         // Clear Transmit Interrupt flag
+}
+
+// Transmit Single Character over UART
+void uart_tx_char(unsigned char ch) {
+    SBUF = ch;                      // Load character into Serial Buffer
+    while (TI == 0);                // Wait until TI is set by hardware
+    TI = 0;                         // Reset TI flag for next character
+}
+
+// Transmit Null-Terminated String
+void uart_tx_string(char *str) {
+    while (*str) {
+        uart_tx_char(*str++);
+    }
+}
+`,
     bestPracticeTip: 'Standard baud rates (2400, 4800, 9600) require an 11.0592 MHz crystal to produce zero percent frequency error; a 12.0 MHz crystal results in a ~8.5% timing error which causes frame corruption.'
   },
   {
@@ -3324,6 +3652,92 @@ END`,
 
     SJMP $
 END`,
+    cCode: `/* ==============================================================================
+ * EXPERIMENT 12A: Interfacing 16x2 LCD with 8051 Microcontroller in 8-Bit Mode
+ * Target: AT89C51 / AT89S52 (8051 Architecture)
+ * Compiler: Keil C51 / SDCC
+ * Crystal Frequency: 12.0 MHz
+ * Pin Connections:
+ *   LCD D0 - D7 <---> 8051 Port P1 (P1.0 - P1.7)
+ *   LCD RS      <---> P2.0 (0 = Command, 1 = Data)
+ *   LCD RW      <---> P2.1 (0 = Write, 1 = Read)
+ *   LCD EN      <---> P2.2 (High-to-Low Strobe)
+ * ============================================================================== */
+
+#include <reg51.h>
+
+// Pin Definitions
+#define LCD_DATA P1
+sbit LCD_RS = P2^0;
+sbit LCD_RW = P2^1;
+sbit LCD_EN = P2^2;
+
+// Function Prototypes
+void lcd_cmd(unsigned char cmd);
+void lcd_data(unsigned char ch);
+void lcd_init(void);
+void lcd_string(char *str);
+void delay_ms(unsigned int ms);
+
+void main(void) {
+    lcd_init();                     // Initialize LCD in 8-bit mode (38H, 0EH, 01H, 06H)
+    
+    lcd_cmd(0x80);                  // Set cursor to Line 1, Column 1
+    lcd_string("8051 INTERFACE");   // Send Line 1 string
+    
+    lcd_cmd(0xC0);                  // Set cursor to Line 2, Column 1
+    lcd_string("16x2 LCD 8-BIT");    // Send Line 2 string
+    
+    while (1);                      // Superloop
+}
+
+// Send Command Byte to LCD in 8-bit Mode
+void lcd_cmd(unsigned char cmd) {
+    LCD_DATA = cmd;                 // Place command byte on Port 1
+    LCD_RS = 0;                     // RS = 0 for Command
+    LCD_RW = 0;                     // RW = 0 for Write
+    LCD_EN = 1;                     // Pulse Enable High
+    delay_ms(1);
+    LCD_EN = 0;                     // Latch command on High-to-Low transition
+    delay_ms(2);                    // Wait for execution (2 ms)
+}
+
+// Send Data (Character) Byte to LCD in 8-bit Mode
+void lcd_data(unsigned char ch) {
+    LCD_DATA = ch;                  // Place ASCII byte on Port 1
+    LCD_RS = 1;                     // RS = 1 for Data
+    LCD_RW = 0;                     // RW = 0 for Write
+    LCD_EN = 1;                     // Pulse Enable High
+    delay_ms(1);
+    LCD_EN = 0;                     // Latch character
+    delay_ms(1);
+}
+
+// Initialize LCD Controller
+void lcd_init(void) {
+    delay_ms(20);                   // Power-up stabilization delay (>15 ms)
+    lcd_cmd(0x38);                  // 2 lines, 5x7 matrix, 8-bit mode
+    lcd_cmd(0x0C);                  // Display ON, Cursor OFF (or 0x0E for Cursor ON)
+    lcd_cmd(0x01);                  // Clear display screen
+    delay_ms(2);
+    lcd_cmd(0x06);                  // Auto-increment cursor position
+}
+
+// Print null-terminated string
+void lcd_string(char *str) {
+    while (*str) {
+        lcd_data(*str++);
+    }
+}
+
+// Millisecond Software Delay Routine
+void delay_ms(unsigned int ms) {
+    unsigned int i, j;
+    for (i = 0; i < ms; i++) {
+        for (j = 0; j < 120; j++);  // ~1 ms loop at 12 MHz
+    }
+}
+`,
     bestPracticeTip: 'Always provide at least a 15–20 ms delay upon power-up before issuing initialization commands to allow the HD44780 internal Power-On Reset (POR) circuit to settle.'
   },
   {
@@ -3607,6 +4021,115 @@ ORG 0000H
 
     SJMP $
 END`,
+    cCode: `/* ==============================================================================
+ * EXPERIMENT 12B: Interfacing 16x2 LCD with 8051 Microcontroller in 4-Bit Mode
+ * Target: AT89C51 / AT89S52 (8051 Architecture)
+ * Compiler: Keil C51 / SDCC
+ * Crystal Frequency: 12.0 MHz
+ * Pin Connections:
+ *   LCD D4 - D7 <---> 8051 Port P1.4 - P1.7 (Upper Nibble)
+ *   LCD RS      <---> P2.0 (0 = Command, 1 = Data)
+ *   LCD RW      <---> P2.1 (0 = Write, 1 = Read)
+ *   LCD EN      <---> P2.2 (High-to-Low Strobe)
+ *   (LCD D0 - D3 are left unconnected or grounded)
+ * ============================================================================== */
+
+#include <reg51.h>
+
+#define LCD_PORT P1
+sbit LCD_RS = P2^0;
+sbit LCD_RW = P2^1;
+sbit LCD_EN = P2^2;
+
+// Function Prototypes
+void lcd_cmd_4bit(unsigned char cmd);
+void lcd_data_4bit(unsigned char ch);
+void lcd_send_nibble(unsigned char nibble);
+void lcd_init_4bit(void);
+void lcd_string(char *str);
+void delay_ms(unsigned int ms);
+
+void main(void) {
+    lcd_init_4bit();                    // Initialize LCD into 4-bit bus mode (28H, 0EH, 01H, 06H)
+    
+    lcd_cmd_4bit(0x80);                 // Set cursor to Line 1, Column 1
+    lcd_string("4-BIT LCD MODE");       // Display string 1
+    
+    lcd_cmd_4bit(0xC0);                 // Set cursor to Line 2, Column 1
+    lcd_string("SAVING 4 I/O PINS");    // Display string 2
+    
+    while (1);                          // Infinite loop
+}
+
+// Send single nibble (Upper 4 bits) to LCD
+void lcd_send_nibble(unsigned char nibble) {
+    LCD_PORT = (LCD_PORT & 0x0F) | (nibble & 0xF0); // Preserve P1.0-P1.3, set P1.4-P1.7
+    LCD_EN = 1;
+    delay_ms(1);
+    LCD_EN = 0;                         // Latch nibble on falling edge
+}
+
+// Send 8-bit command in two 4-bit nibbles
+void lcd_cmd_4bit(unsigned char cmd) {
+    LCD_RS = 0;                         // Command mode
+    LCD_RW = 0;                         // Write mode
+    
+    lcd_send_nibble(cmd & 0xF0);        // Send Higher Nibble (D7 - D4)
+    lcd_send_nibble((cmd << 4) & 0xF0); // Send Lower Nibble (D3 - D0)
+    
+    delay_ms(2);                        // Wait for execution
+}
+
+// Send 8-bit data/character in two 4-bit nibbles
+void lcd_data_4bit(unsigned char ch) {
+    LCD_RS = 1;                         // Data mode
+    LCD_RW = 0;                         // Write mode
+    
+    lcd_send_nibble(ch & 0xF0);         // Send Higher Nibble (D7 - D4)
+    lcd_send_nibble((ch << 4) & 0xF0);  // Send Lower Nibble (D3 - D0)
+    
+    delay_ms(1);
+}
+
+// 4-Bit Initialization Protocol
+void lcd_init_4bit(void) {
+    LCD_RS = 0;
+    LCD_RW = 0;
+    LCD_EN = 0;
+    
+    delay_ms(20);                       // Power-on delay (>15 ms)
+    
+    // Step 1: Force HD44780 into 4-bit mode via 33H, 32H sequence
+    lcd_send_nibble(0x30);
+    delay_ms(5);
+    lcd_send_nibble(0x30);
+    delay_ms(1);
+    lcd_send_nibble(0x30);
+    delay_ms(1);
+    lcd_send_nibble(0x20);              // Switch to 4-bit mode
+    delay_ms(1);
+    
+    // Step 2: Regular 4-bit dual-nibble initialization commands
+    lcd_cmd_4bit(0x28);                 // 4-bit interface, 2 lines, 5x7 font
+    lcd_cmd_4bit(0x0C);                 // Display ON, Cursor OFF (or 0x0E)
+    lcd_cmd_4bit(0x01);                 // Clear LCD screen
+    delay_ms(2);
+    lcd_cmd_4bit(0x06);                 // Auto-increment cursor
+}
+
+void lcd_string(char *str) {
+    while (*str) {
+        lcd_data_4bit(*str++);
+    }
+}
+
+void delay_ms(unsigned int ms) {
+    unsigned int i, j;
+    for (i = 0; i < ms; i++) {
+        for (j = 0; j < 120; j++);
+    }
+}
+`,
     bestPracticeTip: 'In 4-bit mode, sending a single byte always requires two Enable strobe cycles: first for the high nibble (D7-D4), followed immediately by the low nibble (D3-D0).'
   }
 ];

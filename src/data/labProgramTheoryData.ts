@@ -2618,5 +2618,141 @@ export const labProgramTheoryData: Record<string, ProgramTheoryData> = {
       'Each character frame requires 4.167 ms to transmit at 2400 baud.',
       'Always clear TI with `CLR TI` immediately after `JNB TI, $`.'
     ]
+  },
+
+  exp_8051_lcd_8bit: {
+    overview:
+      'This 8051 Assembly Language Program demonstrates 8-bit parallel interfacing with an HD44780-compatible 16×2 alphanumeric LCD display module. Data is driven through Port 1 (P1.0-P1.7) and control signals through Port 2 (P2.0=RS, P2.1=RW, P2.2=EN).',
+    memoryAndSegmentation:
+      'Port 1 (90H) serves as 8-bit bidirectional data bus (D0-D7). Port 2 bit lines control LCD: P2.0 (RS - Register Select), P2.1 (RW - Read/Write, grounded/0 for write), P2.2 (EN - Enable latching strobe). Message strings are stored in code memory (ROM) and retrieved using `MOVC A, @A+DPTR`.',
+    logicStages: [
+      {
+        stageNumber: 1,
+        stageName: 'Initialize Control & Data Lines',
+        summary: 'Set RS=0 (Command Mode), RW=0 (Write), EN=0 (Disabled).',
+        hardwareAction: 'Clears P2.0, P2.1, P2.2 to place the LCD controller into command input state.',
+        codeSnippet: 'CLR P2.0\nCLR P2.1\nCLR P2.2'
+      },
+      {
+        stageNumber: 2,
+        stageName: 'Send LCD Initialization Command Sequence',
+        summary: 'Send 38H (8-bit, 2 lines, 5×7 font), 0EH (Display ON, Cursor ON), 01H (Clear Screen), 06H (Entry Mode: Auto-Increment).',
+        hardwareAction: 'Transmits each command byte on Port 1 and strobes EN high for >=450ns then low to latch into the LCD command register.',
+        codeSnippet: 'MOV A, #38H\nACALL LCD_CMD\nMOV A, #0EH\nACALL LCD_CMD\nMOV A, #01H\nACALL LCD_CMD\nMOV A, #06H\nACALL LCD_CMD'
+      },
+      {
+        stageNumber: 3,
+        stageName: 'Set Cursor to Line 1 (Address 80H) & Write Characters',
+        summary: 'Load Line 1 base DDRAM address 80H, stream ASCII string "8051 INTERFACE" with RS=1.',
+        hardwareAction: 'Sets RS=1 (Data Mode), puts ASCII character bytes on P1, and strobes EN to write to DDRAM.',
+        codeSnippet: 'MOV A, #80H\nACALL LCD_CMD\nMOV DPTR, #MSG1\nACALL DISP_STRING'
+      },
+      {
+        stageNumber: 4,
+        stageName: 'Set Cursor to Line 2 (Address C0H) & Write Characters',
+        summary: 'Load Line 2 base DDRAM address C0H, stream ASCII string "16x2 LCD 8-BIT".',
+        hardwareAction: 'Positions LCD internal address counter to row 2 column 1 and writes character bytes.',
+        codeSnippet: 'MOV A, #0C0H\nACALL LCD_CMD\nMOV DPTR, #MSG2\nACALL DISP_STRING\nSJMP $'
+      }
+    ],
+    instructionsTheory: [
+      {
+        mnemonic: 'MOVC A, @A+DPTR',
+        syntax: 'MOVC A, @A+DPTR',
+        role: 'Reads an ASCII character byte from Program ROM lookup table at base DPTR + offset A.',
+        flagsAffected: 'None',
+        detail: 'Enables streaming null-terminated string constants directly to the LCD data register.'
+      },
+      {
+        mnemonic: 'SETB P2.2 / CLR P2.2',
+        syntax: 'SETB EN / CLR EN',
+        role: 'Generates the high-to-low falling edge Enable strobe to latch data/commands into HD44780.',
+        flagsAffected: 'None',
+        detail: 'The HD44780 latches the data present on D0–D7 on the falling edge of the Enable (EN) signal.'
+      }
+    ],
+    flagsTheory: [
+      {
+        flag: 'BF',
+        fullName: 'Busy Flag (LCD Status Pin D7)',
+        roleInProgram: 'Indicates whether the LCD internal microcontroller is busy executing the previous command.',
+        triggerCondition: 'Polled with RS=0, RW=1; when BF=0 the LCD is ready for next transaction, or bypassed with software delay.'
+      }
+    ],
+    dataFlowSummary:
+      'Code ROM String (DPTR) -> MOVC A -> Port 1 (D0-D7) -> HD44780 DDRAM Matrix -> 16×2 5×7 Dot-Matrix Display.',
+    bestPractices: [
+      'Ensure a minimum 1.64 ms delay after the 01H (Clear Display) command before sending subsequent bytes.',
+      'Always maintain EN pulse width high for at least 450 ns to satisfy HD44780 timing parameters.',
+      'Pull RW low (GND) if only write operations are required in simple designs.'
+    ]
+  },
+
+  exp_8051_lcd_4bit: {
+    overview:
+      'This 8051 Assembly Language Program interfaces a 16×2 LCD in 4-bit mode using only 4 data lines (P1.4-P1.7 to D4-D7), conserving 4 microcontroller pins (P1.0-P1.3) for other peripherals. Commands and data are transmitted as two successive 4-bit nibbles.',
+    memoryAndSegmentation:
+      'Upper nibble of Port 1 (P1.4-P1.7) connects to LCD data lines D4-D7. Lower nibble of Port 1 (P1.0-P1.3) is left uncommitted for external I/O. Control signals: P2.0 (RS), P2.1 (RW), P2.2 (EN).',
+    logicStages: [
+      {
+        stageNumber: 1,
+        stageName: '4-Bit State Machine Synchronization Reset',
+        summary: 'Send 33H and 32H to force the HD44780 controller out of an unknown state and lock it into 4-bit mode.',
+        hardwareAction: 'Transmits 30H three times followed by 20H to establish 4-bit nibble synchronization.',
+        codeSnippet: 'MOV A, #33H\nACALL LCD_CMD_4BIT\nMOV A, #32H\nACALL LCD_CMD_4BIT'
+      },
+      {
+        stageNumber: 2,
+        stageName: 'Configure 4-Bit Function Set (28H)',
+        summary: 'Send command 28H (4-bit bus, 2 display lines, 5×7 dot font).',
+        hardwareAction: 'Transmits high nibble 20H + EN strobe, then low nibble 80H + EN strobe.',
+        codeSnippet: 'MOV A, #28H\nACALL LCD_CMD_4BIT'
+      },
+      {
+        stageNumber: 3,
+        stageName: 'Initialize Display & Cursor Parameters',
+        summary: 'Send 0EH (Display ON), 01H (Clear Display), and 06H (Entry Mode).',
+        hardwareAction: 'Transmits each command in two 4-bit chunks with EN pulses.',
+        codeSnippet: 'MOV A, #0EH\nACALL LCD_CMD_4BIT\nMOV A, #01H\nACALL LCD_CMD_4BIT\nMOV A, #06H\nACALL LCD_CMD_4BIT'
+      },
+      {
+        stageNumber: 4,
+        stageName: 'Stream Dual-Nibble ASCII Characters',
+        summary: 'Send characters for Line 1 (80H) and Line 2 (C0H) via `LCD_DATA_4BIT` routine (RS=1).',
+        hardwareAction: 'Extracts high nibble -> outputs on P1.4-P1.7 -> pulses EN -> SWAP A -> extracts low nibble -> pulses EN.',
+        codeSnippet: 'MOV A, #80H\nACALL LCD_CMD_4BIT\nMOV DPTR, #MSG1\nACALL DISP_4BIT\nMOV A, #0C0H\nACALL LCD_CMD_4BIT\nMOV DPTR, #MSG2\nACALL DISP_4BIT\nSJMP $'
+      }
+    ],
+    instructionsTheory: [
+      {
+        mnemonic: 'SWAP A',
+        syntax: 'SWAP A',
+        role: 'Exchanges the upper 4 bits (nibble) of Accumulator A with the lower 4 bits (bits 0-3 with 4-7).',
+        flagsAffected: 'None',
+        detail: 'Essential in 4-bit LCD drivers to quickly position the lower nibble into bits 4–7 for Port 1.4–1.7 transmission.'
+      },
+      {
+        mnemonic: 'ANL P1, #0F0H / ORL P1',
+        syntax: 'ANL / ORL',
+        role: 'Masks and merges 4-bit LCD data onto P1.4–P1.7 without altering the state of pins P1.0–P1.3.',
+        flagsAffected: 'None',
+        detail: 'Guarantees that other hardware connected to P1.0-P1.3 is not disturbed during LCD transactions.'
+      }
+    ],
+    flagsTheory: [
+      {
+        flag: 'Dual Nibble Synchronization',
+        fullName: '4-Bit Nibble Sequence State',
+        roleInProgram: 'Ensures the LCD controller receives the High Nibble first followed immediately by Low Nibble.',
+        triggerCondition: 'If a nibble is dropped, the LCD controller state becomes desynchronized until power-on or software reset.'
+      }
+    ],
+    dataFlowSummary:
+      '8-bit Byte -> High Nibble (P1.4-P1.7) + EN -> SWAP A -> Low Nibble (P1.4-P1.7) + EN -> HD44780 16×2 Display.',
+    bestPractices: [
+      'Pins D0–D3 of the LCD module should be left floating or tied to GND in 4-bit mode.',
+      'Always execute the 33H -> 32H reset sequence on microcontroller power-up to handle warm resets safely.',
+      'Remember that 4-bit mode takes roughly twice the transmission time as 8-bit mode, but saves 4 precious microcontroller I/O lines.'
+    ]
   }
 };
