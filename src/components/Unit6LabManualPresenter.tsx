@@ -56,6 +56,7 @@ import { labBasicTheoryData } from '../data/labBasicTheoryData';
 import { LAB_FLOWCHARTS, resolveBranchTarget } from '../data/labFlowchartsComprehensiveData';
 import { LabExperimentFlowchartVisualizer } from './LabExperimentFlowchartVisualizer';
 import { LcdCircuitSchematicTab } from './LcdCircuitSchematicTab';
+import { LcdCommandListSubTab } from './LcdCommandListSubTab';
 
 // 16-Bit Signed & Unsigned Helper Functions for 8086 ALU Simulation & Dual-Format Display
 export function parse16BitUnsignedVal(valStr: string, isHex: boolean, defaultVal: number): number {
@@ -1131,7 +1132,7 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
 
   // Active section tab in university lab manual
   const [activeTab, setActiveTab] = useState<'aim_theory' | 'algo_flow' | 'circuit_schematic' | 'program_alp' | 'program_explanation' | 'exec_output' | 'viva_precautions'>('aim_theory');
-  const [codeMode, setCodeMode] = useState<'standard' | 'simplified' | 'c_code'>('standard');
+  const [codeMode, setCodeMode] = useState<'standard' | 'simplified' | 'c_code' | 'lcd_commands'>('standard');
   const [copiedCode, setCopiedCode] = useState(false);
   const [activeFlowStep, setActiveFlowStep] = useState<number | null>(null);
   const [expandedVivaIdx, setExpandedVivaIdx] = useState<number | null>(0);
@@ -2899,140 +2900,166 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
                         <span>C Program (Keil C51)</span>
                       </button>
                     )}
+                    {isLcdExp && (
+                      <button
+                        onClick={() => setCodeMode('lcd_commands')}
+                        className={`px-3 py-1 text-xs font-mono font-bold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                          codeMode === 'lcd_commands'
+                            ? 'bg-[#2563EB] text-white shadow-2xs ring-1 ring-blue-400'
+                            : 'text-[#163A5F] hover:text-[#2563EB] hover:bg-blue-50'
+                        }`}
+                      >
+                        <Table className="w-3.5 h-3.5" />
+                        <span>LCD Command List & Reference</span>
+                        <span className={`text-[9px] px-1.5 py-0.2 rounded font-mono font-bold ${
+                          codeMode === 'lcd_commands' ? 'bg-white/20 text-white' : 'bg-blue-100 text-[#2563EB]'
+                        }`}>
+                          22 Cmds
+                        </span>
+                      </button>
+                    )}
                   </div>
                 </div>
 
-                <button
-                  onClick={handleCopyCode}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-[#EAF4FB] text-[#163A5F] text-xs font-mono font-bold border border-[#B8D4E8] transition-all cursor-pointer hover:border-[#2563EB] shadow-2xs"
-                >
-                  {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-[#2563EB]" />}
-                  <span>
-                    {copiedCode
-                      ? 'Copied to Clipboard!'
-                      : codeMode === 'c_code'
-                      ? 'Copy C Program'
-                      : 'Copy ALP Code'}
-                  </span>
-                </button>
-              </div>
-
-              {/* Code Display Area */}
-              <div className="bg-white rounded-2xl border border-[#B8D4E8] overflow-hidden shadow-xs font-mono text-xs">
-                <div className="bg-[#E3F1FA] px-3.5 py-1.5 border-b border-[#B8D4E8] flex items-center justify-between text-[#163A5F] font-bold">
-                  <span className="flex items-center gap-2">
-                    <Code2 className={`w-3.5 h-3.5 ${codeMode === 'c_code' ? 'text-emerald-600' : 'text-[#2563EB]'}`} />
+                {codeMode !== 'lcd_commands' && (
+                  <button
+                    onClick={handleCopyCode}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-[#EAF4FB] text-[#163A5F] text-xs font-mono font-bold border border-[#B8D4E8] transition-all cursor-pointer hover:border-[#2563EB] shadow-2xs"
+                  >
+                    {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-[#2563EB]" />}
                     <span>
-                      {codeMode === 'c_code'
-                        ? (expInfo.number.toString().startsWith('10') || expInfo.number.toString().startsWith('12') || expInfo.number.toString().startsWith('9') || expInfo.number.toString().startsWith('11')
-                            ? `8051_EXP_${expInfo.number}.c`
-                            : `EXP_${expInfo.number}.c`)
-                        : (expInfo.number.toString().startsWith('10') || expInfo.number.toString().startsWith('12') || expInfo.number.toString().startsWith('9') || expInfo.number.toString().startsWith('11')
-                            ? `8051_EXP_${expInfo.number}.ASM`
-                            : `8086_EXP_${expInfo.number}.ASM`)}
+                      {copiedCode
+                        ? 'Copied to Clipboard!'
+                        : codeMode === 'c_code'
+                        ? 'Copy C Program'
+                        : 'Copy ALP Code'}
                     </span>
-                  </span>
-                  <span className="text-[11px] text-[#475569]">
-                    {codeMode === 'c_code'
-                      ? 'Embedded C Source (Keil C51 / SDCC)'
-                      : is8051
-                      ? '8051 Assembly Language (ASM51)'
-                      : codeMode === 'standard'
-                      ? 'Full Segment Declarations'
-                      : 'Simplified Memory Model'}
-                  </span>
-                </div>
-
-                <div className="p-3 overflow-x-auto max-h-[460px] scrollbar-thin text-[#1F2937] leading-relaxed space-y-0.5 bg-white font-mono text-xs">
-                  {(codeMode === 'c_code' && expInfo.cCode
-                    ? expInfo.cCode
-                    : codeMode === 'standard'
-                    ? expInfo.standardCode
-                    : expInfo.simplifiedCode
-                  )
-                    .split('\n')
-                    .map((line, lIdx) => {
-                      if (codeMode === 'c_code') {
-                        const trimmed = line.trim();
-                        const isCComment = trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*') || trimmed.startsWith('*/');
-                        const isCPreprocessor = trimmed.startsWith('#');
-                        const isCKeyword = /^(void|int|unsigned|char|sbit|while|for|if|else|return|switch|case|break)\b/i.test(trimmed);
-                        return (
-                          <div key={lIdx} className="flex gap-2.5 hover:bg-[#EAF4FB]/60 px-1.5 py-0.5 rounded">
-                            <span className="text-[#94A3B8] select-none w-6 text-right shrink-0 font-medium">{lIdx + 1}</span>
-                            {isCComment ? (
-                              <span className="whitespace-pre text-[#047857] italic font-medium">{line}</span>
-                            ) : isCPreprocessor ? (
-                              <span className="whitespace-pre text-[#7C3AED] font-bold">{line}</span>
-                            ) : (
-                              <span className={`whitespace-pre ${isCKeyword ? 'text-[#2563EB] font-bold' : 'text-[#163A5F] font-semibold'}`}>
-                                {line}
-                              </span>
-                            )}
-                          </div>
-                        );
-                      }
-
-                      const isPureComment = line.trim().startsWith(';');
-                      const commentIdx = line.indexOf(';');
-                      let codePart = line;
-                      let commentPart = '';
-                      if (!isPureComment && commentIdx !== -1) {
-                        codePart = line.substring(0, commentIdx);
-                        commentPart = line.substring(commentIdx);
-                      }
-                      const isDirective = is8051
-                        ? /^(ORG|EQU|DB|DW|BIT|DATA|IDATA|XDATA|CSEG|DSEG|XSEG|BSEG|USING|END)\b/i.test(codePart.trim())
-                        : /^(DATA_SEG|CODE_SEG|STACK_SEG|SEGMENT|ENDS|ASSUME|\.MODEL|\.STACK|\.DATA|\.CODE|MAIN PROC|MAIN ENDP|END)\b/i.test(codePart.trim());
-                      return (
-                        <div key={lIdx} className="flex gap-2.5 hover:bg-[#EAF4FB]/60 px-1.5 py-0.5 rounded">
-                          <span className="text-[#94A3B8] select-none w-6 text-right shrink-0 font-medium">{lIdx + 1}</span>
-                          {isPureComment ? (
-                            <span className="whitespace-pre text-[#047857] italic font-medium">{line}</span>
-                          ) : commentIdx !== -1 ? (
-                            <span className="whitespace-pre">
-                              <span className={isDirective ? 'text-[#2563EB] font-bold' : 'text-[#163A5F] font-semibold'}>{codePart}</span>
-                              <span className="text-[#047857] italic font-medium">{commentPart}</span>
-                            </span>
-                          ) : (
-                            <span className={`whitespace-pre ${
-                              isDirective ? 'text-[#2563EB] font-bold' : 'text-[#163A5F] font-semibold'
-                            }`}>
-                              {line}
-                            </span>
-                          )}
-                        </div>
-                      );
-                    })}
-                </div>
+                  </button>
+                )}
               </div>
 
-              {/* Directives Glossary & Best Practice Tip */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                <div className="bg-white rounded-2xl p-3 border border-[#B8D4E8] space-y-1.5 shadow-2xs">
-                  <div className="text-xs font-mono font-bold text-[#163A5F] uppercase flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Directives Employed</span>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5">
-                    {expInfo.directivesUsed.map((d, i) => (
-                      <span key={i} className="px-2 py-0.5 rounded-lg bg-[#EAF4FB] border border-[#B8D4E8] text-xs font-mono font-bold text-[#163A5F]">
-                        {d}
+              {codeMode === 'lcd_commands' && isLcdExp ? (
+                <LcdCommandListSubTab expId={expId} />
+              ) : (
+                <>
+                  {/* Code Display Area */}
+                  <div className="bg-white rounded-2xl border border-[#B8D4E8] overflow-hidden shadow-xs font-mono text-xs">
+                    <div className="bg-[#E3F1FA] px-3.5 py-1.5 border-b border-[#B8D4E8] flex items-center justify-between text-[#163A5F] font-bold">
+                      <span className="flex items-center gap-2">
+                        <Code2 className={`w-3.5 h-3.5 ${codeMode === 'c_code' ? 'text-emerald-600' : 'text-[#2563EB]'}`} />
+                        <span>
+                          {codeMode === 'c_code'
+                            ? (expInfo.number.toString().startsWith('10') || expInfo.number.toString().startsWith('12') || expInfo.number.toString().startsWith('9') || expInfo.number.toString().startsWith('11')
+                                ? `8051_EXP_${expInfo.number}.c`
+                                : `EXP_${expInfo.number}.c`)
+                            : (expInfo.number.toString().startsWith('10') || expInfo.number.toString().startsWith('12') || expInfo.number.toString().startsWith('9') || expInfo.number.toString().startsWith('11')
+                                ? `8051_EXP_${expInfo.number}.ASM`
+                                : `8086_EXP_${expInfo.number}.ASM`)}
+                        </span>
                       </span>
-                    ))}
-                  </div>
-                </div>
+                      <span className="text-[11px] text-[#475569]">
+                        {codeMode === 'c_code'
+                          ? 'Embedded C Source (Keil C51 / SDCC)'
+                          : is8051
+                          ? '8051 Assembly Language (ASM51)'
+                          : codeMode === 'standard'
+                          ? 'Full Segment Declarations'
+                          : 'Simplified Memory Model'}
+                      </span>
+                    </div>
 
-                <div className="bg-white rounded-2xl p-3 border border-[#B8D4E8] space-y-1.5 shadow-2xs">
-                  <div className="text-xs font-mono font-bold text-emerald-800 uppercase flex items-center gap-1.5">
-                    <Award className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Lab Engineering Best Practice</span>
+                    <div className="p-3 overflow-x-auto max-h-[460px] scrollbar-thin text-[#1F2937] leading-relaxed space-y-0.5 bg-white font-mono text-xs">
+                      {(codeMode === 'c_code' && expInfo.cCode
+                        ? expInfo.cCode
+                        : codeMode === 'standard'
+                        ? expInfo.standardCode
+                        : expInfo.simplifiedCode
+                      )
+                        .split('\n')
+                        .map((line, lIdx) => {
+                          if (codeMode === 'c_code') {
+                            const trimmed = line.trim();
+                            const isCComment = trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*') || trimmed.startsWith('*/');
+                            const isCPreprocessor = trimmed.startsWith('#');
+                            const isCKeyword = /^(void|int|unsigned|char|sbit|while|for|if|else|return|switch|case|break)\b/i.test(trimmed);
+                            return (
+                              <div key={lIdx} className="flex gap-2.5 hover:bg-[#EAF4FB]/60 px-1.5 py-0.5 rounded">
+                                <span className="text-[#94A3B8] select-none w-6 text-right shrink-0 font-medium">{lIdx + 1}</span>
+                                {isCComment ? (
+                                  <span className="whitespace-pre text-[#047857] italic font-medium">{line}</span>
+                                ) : isCPreprocessor ? (
+                                  <span className="whitespace-pre text-[#7C3AED] font-bold">{line}</span>
+                                ) : (
+                                  <span className={`whitespace-pre ${isCKeyword ? 'text-[#2563EB] font-bold' : 'text-[#163A5F] font-semibold'}`}>
+                                    {line}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          }
+
+                          const isPureComment = line.trim().startsWith(';');
+                          const commentIdx = line.indexOf(';');
+                          let codePart = line;
+                          let commentPart = '';
+                          if (!isPureComment && commentIdx !== -1) {
+                            codePart = line.substring(0, commentIdx);
+                            commentPart = line.substring(commentIdx);
+                          }
+                          const isDirective = is8051
+                            ? /^(ORG|EQU|DB|DW|BIT|DATA|IDATA|XDATA|CSEG|DSEG|XSEG|BSEG|USING|END)\b/i.test(codePart.trim())
+                            : /^(DATA_SEG|CODE_SEG|STACK_SEG|SEGMENT|ENDS|ASSUME|\.MODEL|\.STACK|\.DATA|\.CODE|MAIN PROC|MAIN ENDP|END)\b/i.test(codePart.trim());
+                          return (
+                            <div key={lIdx} className="flex gap-2.5 hover:bg-[#EAF4FB]/60 px-1.5 py-0.5 rounded">
+                              <span className="text-[#94A3B8] select-none w-6 text-right shrink-0 font-medium">{lIdx + 1}</span>
+                              {isPureComment ? (
+                                <span className="whitespace-pre text-[#047857] italic font-medium">{line}</span>
+                              ) : commentIdx !== -1 ? (
+                                <span className="whitespace-pre">
+                                  <span className={isDirective ? 'text-[#2563EB] font-bold' : 'text-[#163A5F] font-semibold'}>{codePart}</span>
+                                  <span className="text-[#047857] italic font-medium">{commentPart}</span>
+                                </span>
+                              ) : (
+                                <span className={`whitespace-pre ${
+                                  isDirective ? 'text-[#2563EB] font-bold' : 'text-[#163A5F] font-semibold'
+                                }`}>
+                                  {line}
+                                </span>
+                              )}
+                            </div>
+                          );
+                        })}
+                    </div>
                   </div>
-                  <p className="text-xs text-[#1F2937] leading-relaxed">
-                    {expInfo.bestPracticeTip}
-                  </p>
-                </div>
-              </div>
+
+                  {/* Directives Glossary & Best Practice Tip */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                    <div className="bg-white rounded-2xl p-3 border border-[#B8D4E8] space-y-1.5 shadow-2xs">
+                      <div className="text-xs font-mono font-bold text-[#163A5F] uppercase flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                        <span>Directives Employed</span>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {expInfo.directivesUsed.map((d, i) => (
+                          <span key={i} className="px-2 py-0.5 rounded-lg bg-[#EAF4FB] border border-[#B8D4E8] text-xs font-mono font-bold text-[#163A5F]">
+                            {d}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="bg-white rounded-2xl p-3 border border-[#B8D4E8] space-y-1.5 shadow-2xs">
+                      <div className="text-xs font-mono font-bold text-emerald-800 uppercase flex items-center gap-1.5">
+                        <Award className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Lab Engineering Best Practice</span>
+                      </div>
+                      <p className="text-xs text-[#1F2937] leading-relaxed">
+                        {expInfo.bestPracticeTip}
+                      </p>
+                    </div>
+                  </div>
+                </>
+              )}
             </motion.div>
           )}
 

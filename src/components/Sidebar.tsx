@@ -52,11 +52,6 @@ export default function Sidebar({
     setActiveUnit(isUnit5 ? 'unit5' : isUnit4 ? 'unit4' : isUnit3 ? 'unit3' : isUnit2 ? 'unit2' : 'unit1');
   }, [currentModuleId, currentSlideId, modules]);
 
-  // Compute progress percent
-  const totalSlides = modules.reduce((acc, m) => acc + m.slides.length, 0);
-  const completedCount = completedSlides.length;
-  const progressPercent = Math.min(100, Math.round((completedCount / totalSlides) * 100));
-
   const hasSearch = searchQuery.trim().length > 0;
   const query = searchQuery.toLowerCase().trim();
 
@@ -174,37 +169,6 @@ export default function Sidebar({
             >
               &times;
             </button>
-          </div>
-
-          {/* Progress summary */}
-          <div className="p-4 border-b border-sky-100 bg-sky-50/30 shrink-0">
-            <div className="flex justify-between items-center mb-1.5">
-              <span className="text-[10px] font-bold text-slate-400 font-mono uppercase tracking-wider">Learning Progress</span>
-              <span className="text-xs font-bold text-indigo-600 font-mono">{progressPercent}% Completed</span>
-            </div>
-            <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden border border-slate-200">
-              <div
-                className="bg-indigo-600 h-full transition-all duration-500"
-                style={{ width: `${progressPercent}%` }}
-              ></div>
-            </div>
-            <div className="flex justify-between items-center mt-2 text-[10px] text-slate-500 font-mono">
-              <span>{completedCount} of {totalSlides} slides studied</span>
-              <span className="flex items-center gap-1 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 text-slate-600">
-                <GraduationCap className="w-3 h-3 text-indigo-600" />
-                {currentModuleId === 'm20' || activeUnit === 'labs'
-                  ? 'UNIT-6: Lab Resources & Manuals'
-                  : ['m26', 'm27', 'm28', 'm29', 'm30'].some(id => currentModuleId === id)
-                  ? 'UNIT-5: Microcontroller Interfacing'
-                  : ['m21', 'm22', 'm23', 'm24', 'm25'].some(id => currentModuleId === id)
-                  ? 'UNIT-4: 8051 Microcontroller'
-                  : ['m13', 'm14', 'm15', 'm16', 'm17', 'm18', 'm19'].some(id => currentModuleId === id)
-                  ? 'UNIT-3: 8086 Interfacing'
-                  : ['m8', 'm9', 'm10', 'm11', 'm12'].some(id => currentModuleId === id)
-                  ? 'UNIT-2: 8086 Programming'
-                  : 'UNIT-1: System Architecture'}
-              </span>
-            </div>
           </div>
 
           {/* Search box */}
