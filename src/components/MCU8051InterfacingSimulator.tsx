@@ -127,9 +127,6 @@ export default function MCU8051InterfacingSimulator({ initialTab = 'timers' }: M
             <h2 className="text-base font-bold text-slate-900 font-display">
               8051 Microcontroller Interfacing & Processor Suite
             </h2>
-            <p className="text-xs text-slate-500 font-mono">
-              UNIT V • Timers, Serial, Interrupts, LCD/Keypad, ADC/DAC, Stepper & Processor Comparison
-            </p>
           </div>
         </div>
 

@@ -34,20 +34,69 @@ export type MemoryCycleScenario =
 
 export interface MemorySchematicDiagramProps {
   initialScenario?: MemoryCycleScenario;
+  initialBaseAddress?: string;
+  onBaseAddressChange?: (newBase: string) => void;
 }
 
 export default function MemorySchematicDiagram({
-  initialScenario = 'aligned-word-ram-write'
+  initialScenario = 'aligned-word-ram-write',
+  initialBaseAddress = '00000',
+  onBaseAddressChange
 }: MemorySchematicDiagramProps) {
+  const [baseAddress, setBaseAddress] = useState<string>(initialBaseAddress);
   const [zoomLevel, setZoomLevel] = useState<number>(1);
   const [selectedChip, setSelectedChip] = useState<string | null>('ram1');
   const [activeScenario, setActiveScenario] = useState<MemoryCycleScenario>(initialScenario);
   const [tState, setTState] = useState<1 | 2 | 3 | 4>(1);
   const [isAutoStepping, setIsAutoStepping] = useState<boolean>(true);
-  const [customHexAddress, setCustomHexAddress] = useState<string>('00100');
+
+  // Derive base address values (32 KB boundary aligned)
+  const baseVal = parseInt(baseAddress || '0', 16) & 0xF8000;
+  const expectedA19 = ((baseVal >> 19) & 1) as 0 | 1;
+  const expectedA18 = ((baseVal >> 18) & 1) as 0 | 1;
+  const expectedA17 = ((baseVal >> 17) & 1) as 0 | 1;
+  const expectedA16 = ((baseVal >> 16) & 1) as 0 | 1;
+  const expectedA15 = ((baseVal >> 15) & 1) as 0 | 1;
+
+  const rangeStartVal = baseVal;
+  const rangeEndVal = baseVal + 0x07FFF;
+  const rangeStartHex = rangeStartVal.toString(16).toUpperCase().padStart(5, '0');
+  const rangeEndHex = rangeEndVal.toString(16).toUpperCase().padStart(5, '0');
+  const rangeLabel = `${rangeStartHex}H–${rangeEndHex}H`;
+
+  const [customHexAddress, setCustomHexAddress] = useState<string>(
+    (baseVal + 0x100).toString(16).toUpperCase().padStart(5, '0')
+  );
   const [useCustomAddress, setUseCustomAddress] = useState<boolean>(false);
   const [customAccessType, setCustomAccessType] = useState<'byte' | 'word'>('word');
   const [customOpType, setCustomOpType] = useState<'read' | 'write'>('write');
+
+  // Sync if initialBaseAddress prop changes
+  useEffect(() => {
+    if (initialBaseAddress) {
+      setBaseAddress(initialBaseAddress);
+      const parsedBase = parseInt(initialBaseAddress, 16) & 0xF8000;
+      if (!useCustomAddress) {
+        setCustomHexAddress((parsedBase + 0x100).toString(16).toUpperCase().padStart(5, '0'));
+      }
+    }
+  }, [initialBaseAddress]);
+
+  const updateBaseAddress = (newBase: string) => {
+    const parsed = parseInt(newBase || '0', 16) & 0xF8000;
+    const cleanHex = parsed.toString(16).toUpperCase().padStart(5, '0');
+    setBaseAddress(cleanHex);
+    setCustomHexAddress((parsed + 0x100).toString(16).toUpperCase().padStart(5, '0'));
+    if (onBaseAddressChange) {
+      onBaseAddressChange(cleanHex);
+    }
+  };
+
+  const toggleCsBit = (bitIndex: 19 | 18 | 17 | 16 | 15) => {
+    const mask = 1 << bitIndex;
+    const newBaseVal = (baseVal ^ mask) & 0xF8000;
+    updateBaseAddress(newBaseVal.toString(16).toUpperCase().padStart(5, '0'));
+  };
 
   // Auto-advance T-States when running
   useEffect(() => {
@@ -58,8 +107,7 @@ export default function MemorySchematicDiagram({
     return () => clearInterval(interval);
   }, [isAutoStepping]);
 
-  // Derive parameters from scenario or custom address
-  let addressHex = '00100';
+  let addressHex = (baseVal + 0x100).toString(16).toUpperCase().padStart(5, '0');
   let isWord = true;
   let isWrite = true;
   let scenarioTitle = '';
@@ -70,43 +118,43 @@ export default function MemorySchematicDiagram({
     isWord = customAccessType === 'word';
     isWrite = customOpType === 'write';
     scenarioTitle = `Custom Access at ${addressHex}H (${isWord ? '16-bit Word' : '8-bit Byte'} ${isWrite ? 'Write' : 'Read'})`;
-    scenarioDesc = `Simulating user-defined address ${addressHex}H for the 32 KB RAM array (00000H–07FFFH).`;
+    scenarioDesc = `Simulating user-defined address ${addressHex}H for the 32 KB RAM array (${rangeLabel}).`;
   } else {
     switch (activeScenario) {
       case 'aligned-word-ram-write':
-        addressHex = '00200';
+        addressHex = (baseVal + 0x200).toString(16).toUpperCase().padStart(5, '0');
         isWord = true;
         isWrite = true;
-        scenarioTitle = '1. Aligned 16-Bit Word RAM Write (Address 00200H)';
-        scenarioDesc = 'Writes a full 16-bit word simultaneously to BOTH Even (RAM_1) and Odd (RAM_2) 16 KB RAM chips in a single bus cycle (A0=0, BHE#=0, CS#=0, CE1#=0, CE2#=0, WR#=0, D0–D15).';
+        scenarioTitle = `1. Aligned 16-Bit Word RAM Write (Address ${addressHex}H)`;
+        scenarioDesc = `Writes a full 16-bit word simultaneously to BOTH Even (RAM_1) and Odd (RAM_2) 16 KB RAM chips in a single bus cycle (A0=0, B̅H̅E̅=0, C̅S̅=0, C̅E̅1̅=0, C̅E̅2̅=0, W̅R̅=0, D0–D15).`;
         break;
       case 'aligned-word-ram-read':
-        addressHex = '00100';
+        addressHex = (baseVal + 0x100).toString(16).toUpperCase().padStart(5, '0');
         isWord = true;
         isWrite = false;
-        scenarioTitle = '2. Aligned 16-Bit Word RAM Read (Address 00100H)';
-        scenarioDesc = 'Reads a 16-bit word from both 16 KB RAM banks simultaneously across D0–D15 in a single bus cycle (A0=0, BHE#=0, CS#=0, CE1#=0, CE2#=0, RD#=0).';
+        scenarioTitle = `2. Aligned 16-Bit Word RAM Read (Address ${addressHex}H)`;
+        scenarioDesc = `Reads a 16-bit word from both 16 KB RAM banks simultaneously across D0–D15 in a single bus cycle (A0=0, B̅H̅E̅=0, C̅S̅=0, C̅E̅1̅=0, C̅E̅2̅=0, R̅D̅=0).`;
         break;
       case 'even-byte-ram-read':
-        addressHex = '00102';
+        addressHex = (baseVal + 0x102).toString(16).toUpperCase().padStart(5, '0');
         isWord = false;
         isWrite = false;
-        scenarioTitle = '3. Even Byte RAM Read (Address 00102H)';
-        scenarioDesc = 'Reads 1 byte from RAM_1 (Even Bank, D0–D7). RAM_2 (Odd Bank) is disabled (A0=0, BHE#=1, CE1#=0, CE2#=1, RD#=0).';
+        scenarioTitle = `3. Even Byte RAM Read (Address ${addressHex}H)`;
+        scenarioDesc = `Reads 1 byte from RAM_1 (Even Bank, D0–D7). RAM_2 (Odd Bank) is disabled (A0=0, B̅H̅E̅=1, C̅E̅1̅=0, C̅E̅2̅=1, R̅D̅=0).`;
         break;
       case 'odd-byte-ram-read':
-        addressHex = '00103';
+        addressHex = (baseVal + 0x103).toString(16).toUpperCase().padStart(5, '0');
         isWord = false;
         isWrite = false;
-        scenarioTitle = '4. Odd Byte RAM Read (Address 00103H)';
-        scenarioDesc = 'Reads 1 byte from RAM_2 (Odd Bank, D8–D15). RAM_1 (Even Bank) is disabled (A0=1, BHE#=0, CE1#=1, CE2#=0, RD#=0).';
+        scenarioTitle = `4. Odd Byte RAM Read (Address ${addressHex}H)`;
+        scenarioDesc = `Reads 1 byte from RAM_2 (Odd Bank, D8–D15). RAM_1 (Even Bank) is disabled (A0=1, B̅H̅E̅=0, C̅E̅1̅=1, C̅E̅2̅=0, R̅D̅=0).`;
         break;
       case 'out-of-range-access':
-        addressHex = '08000';
+        addressHex = ((baseVal + 0x8000) & 0xFFFFF).toString(16).toUpperCase().padStart(5, '0');
         isWord = true;
         isWrite = false;
-        scenarioTitle = '5. Out-of-Range Memory Access (Address 08000H - Beyond 32 KB)';
-        scenarioDesc = 'Address 08000H has A15=1. The Absolute NAND decoder detects address outside 00000H–07FFFH, outputting CS#=1 (Inactive). Both 16 KB RAM chips remain in Standby!';
+        scenarioTitle = `5. Out-of-Range Memory Access (Address ${addressHex}H - Beyond 32 KB)`;
+        scenarioDesc = `Address ${addressHex}H does not match configured Chip Select. The Absolute NAND decoder outputs C̅S̅=1 (Inactive). Both 16 KB RAM chips remain in Standby!`;
         break;
     }
   }
@@ -128,9 +176,14 @@ export default function MemorySchematicDiagram({
   // M/IO# signal (Memory = 1, I/O = 0 for 8086 Minimum Mode)
   const mio = 1;
 
-  // Absolute NAND Decoder: CS# = NOT( NOT A19 * NOT A18 * NOT A17 * NOT A16 * NOT A15 * M/IO# )
-  // For 00000H to 07FFFH, A19..A15 must all be 0, and M/IO# must be 1.
-  const isAddressInRange = (a19 === 0 && a18 === 0 && a17 === 0 && a16 === 0 && a15 === 0 && mio === 1);
+  // Absolute NAND Decoder check:
+  const isAddressInRange = 
+    a19 === expectedA19 &&
+    a18 === expectedA18 &&
+    a17 === expectedA17 &&
+    a16 === expectedA16 &&
+    a15 === expectedA15 &&
+    mio === 1;
   const csBar = isAddressInRange ? 0 : 1; // Active LOW
 
   // Bank qualification using OR gates (74LS32):
@@ -166,33 +219,33 @@ export default function MemorySchematicDiagram({
   }> = {
     u1: {
       title: 'U1: Intel 8086 16-Bit Microprocessor',
-      subtitle: 'Minimum Mode Master Controller (MN/MX# = +5V)',
-      desc: 'The central processing unit that executes memory bus cycles. In Minimum Mode (Pin 33 tied to +5V), it directly generates bus control signals ALE, M/IO#, RD#, WR#, DEN#, and DT/R# without needing an external 8288 bus controller.',
+      subtitle: 'Minimum Mode Master Controller (MN/M̅X̅ = +5V)',
+      desc: 'The central processing unit that executes memory bus cycles. In Minimum Mode (Pin 33 tied to +5V), it directly generates bus control signals ALE, M/I̅O̅, R̅D̅, W̅R̅, D̅E̅N̅, and DT/R̅ without needing an external 8288 bus controller.',
       techSpecs: [
         { label: 'Clock Frequency', val: '5 MHz / 8 MHz (Standard 8086)' },
         { label: 'Address Bus', val: '20-bit (A0–A19) addressing 1 MB space' },
         { label: 'Multiplexed Bus', val: 'AD0–AD15 (Address in T1, Data in T2–T4)' },
-        { label: 'Target Memory', val: '32 KB RAM at 00000H–07FFFH' }
+        { label: 'Target Memory', val: `32 KB RAM at ${rangeLabel}` }
       ],
       pins: [
         { pin: 'AD0–AD15 (Pins 16–2, 39)', role: 'Time-multiplexed Address (T1) and Data (T2–T4)', state: tState === 1 ? `Addr: ${addressHex}H` : (isWrite ? 'Data Out (CPU->RAM)' : 'Data In (RAM->CPU)') },
         { pin: 'A16–A19 (Pins 35–38)', role: 'Time-multiplexed Upper Address (to Decoder)', state: `A19..A15: ${a19}${a18}${a17}${a16}${a15}b` },
-        { pin: 'BHE#/S7 (Pin 34)', role: 'Bus High Enable (Active LOW for Odd Bank RAM_2)', state: bhe === 0 ? '0 (LOW - Odd Bank ENABLED)' : '1 (HIGH - Odd Bank Inactive)' },
+        { pin: 'B̅H̅E̅ / S7 (Pin 34)', role: 'Bus High Enable (Active LOW for Odd Bank RAM_2)', state: bhe === 0 ? '0 (LOW - Odd Bank ENABLED)' : '1 (HIGH - Odd Bank Inactive)' },
         { pin: 'ALE (Pin 25)', role: 'Address Latch Enable strobe for 74LS373', state: ale === 1 ? '1 (PULSE HIGH in T1)' : '0 (LOW in T2–T4)' },
-        { pin: 'M/IO# (Pin 28)', role: 'Memory (HIGH) vs I/O (LOW) selector', state: '1 (HIGH - Memory Cycle)' },
-        { pin: 'RD# (Pin 32)', role: 'Active-LOW Memory Read strobe', state: rd === 0 ? '0 (ACTIVE READ)' : '1 (IDLE)' },
-        { pin: 'WR# (Pin 29)', role: 'Active-LOW Memory Write strobe', state: wr === 0 ? '0 (ACTIVE WRITE)' : '1 (IDLE)' },
-        { pin: 'DEN# (Pin 26)', role: 'Data Enable (Active LOW for 74LS245 Transceivers)', state: den === 0 ? '0 (ACTIVE LOW)' : '1 (Tristate)' },
-        { pin: 'DT/R# (Pin 27)', role: 'Data Transmit (1=Write) / Receive (0=Read)', state: dtr === 1 ? '1 (TRANSMIT)' : '0 (RECEIVE)' }
+        { pin: 'M/I̅O̅ (Pin 28)', role: 'Memory (HIGH) vs I/O (LOW) selector', state: '1 (HIGH - Memory Cycle)' },
+        { pin: 'R̅D̅ (Pin 32)', role: 'Active-LOW Memory Read strobe', state: rd === 0 ? '0 (ACTIVE READ)' : '1 (IDLE)' },
+        { pin: 'W̅R̅ (Pin 29)', role: 'Active-LOW Memory Write strobe', state: wr === 0 ? '0 (ACTIVE WRITE)' : '1 (IDLE)' },
+        { pin: 'D̅E̅N̅ (Pin 26)', role: 'Data Enable (Active LOW for 74LS245 Transceivers)', state: den === 0 ? '0 (ACTIVE LOW)' : '1 (Tristate)' },
+        { pin: 'DT/R̅ (Pin 27)', role: 'Data Transmit (1=Write) / Receive (0=Read)', state: dtr === 1 ? '1 (TRANSMIT)' : '0 (RECEIVE)' }
       ]
     },
     u2: {
       title: 'U2A, U2B, U2C: 3× 74LS373 Octal Latches',
-      subtitle: 'Demultiplexes AD0–AD15 & A16–A19/BHE# into Pure Address Lines',
-      desc: 'Latches the address lines during T1 on the falling edge of ALE. U2A produces A0–A7, U2B produces A8–A15, and U2C produces A16–A19 and BHE#. Holds stable addresses throughout T2, T3, and T4.',
+      subtitle: 'Demultiplexes AD0–AD15 & A16–A19/B̅H̅E̅ into Pure Address Lines',
+      desc: 'Latches the address lines during T1 on the falling edge of ALE. U2A produces A0–A7, U2B produces A8–A15, and U2C produces A16–A19 and B̅H̅E̅. Holds stable addresses throughout T2, T3, and T4.',
       techSpecs: [
         { label: 'Latch Type', val: '8-bit transparent D-type latch (3 units used)' },
-        { label: 'Control Pin', val: 'Pin 11 (LE) driven by 8086 ALE; Pin 1 (OE#) grounded' },
+        { label: 'Control Pin', val: 'Pin 11 (LE) driven by 8086 ALE; Pin 1 (O̅E̅) grounded' },
         { label: 'Memory Feeds', val: 'Latched A1–A14 wired to RAM address inputs A0–A13' }
       ],
       pins: [
@@ -200,38 +253,52 @@ export default function MemorySchematicDiagram({
         { pin: 'A0 (From U2A)', role: 'Even Bank enable line to OR Gate 1', state: a0 === 0 ? '0 (Even Address)' : '1 (Odd Address)' },
         { pin: 'A1–A14 (U2A & U2B)', role: '14 Address Lines to RAM A0–A13', state: `${chipAddrHex}H (Offset within 16KB)` },
         { pin: 'A15–A19 (U2B & U2C)', role: '5 High Address Lines to Absolute NAND Decoder', state: `${a19}${a18}${a17}${a16}${a15}b` },
-        { pin: 'BHE# (From U2C)', role: 'Odd Bank enable line to OR Gate 2', state: bhe === 0 ? '0 (LOW)' : '1 (HIGH)' }
+        { pin: 'B̅H̅E̅ (From U2C)', role: 'Odd Bank enable line to OR Gate 2', state: bhe === 0 ? '0 (LOW)' : '1 (HIGH)' }
       ]
     },
     u3_dec: {
       title: 'Absolute Address Decoder (Inverters + 6-Input NAND 74LS30)',
-      subtitle: 'Decodes A15–A19 & M/IO# for Exact 32 KB Block (00000H–07FFFH)',
-      desc: 'Performs absolute address decoding. Inverters invert A15, A16, A17, A18, A19. A 6-input NAND gate combines NOT(A19), NOT(A18), NOT(A17), NOT(A16), NOT(A15), and M/IO# to produce active-LOW Chip Select (CS# = 0) ONLY when addressing 00000H–07FFFH.',
+      subtitle: `Decodes A15–A19 & M/I̅O̅ for Exact 32 KB Block (${rangeLabel})`,
+      desc: `Performs absolute address decoding for 32 KB RAM starting at ${rangeStartHex}H. Address lines with expected bit 0 pass through inverters (74LS04), while address lines with expected bit 1 connect directly to the 74LS30 6-input NAND gate. Only when the 8086 outputs an address within ${rangeLabel} and M/I̅O̅=1 does C̅S̅ assert LOW (0V).`,
       techSpecs: [
-        { label: 'Logic Equation', val: 'CS# = NOT( NOT A19 • NOT A18 • NOT A17 • NOT A16 • NOT A15 • M/IO# )' },
-        { label: 'Address Range', val: '00000H to 07FFFH (Total 32,768 bytes)' },
+        { 
+          label: 'Logic Equation', 
+          val: `C̅S̅ = NOT( ${[
+            expectedA19 === 1 ? 'A19' : 'NOT(A19)',
+            expectedA18 === 1 ? 'A18' : 'NOT(A18)',
+            expectedA17 === 1 ? 'A17' : 'NOT(A17)',
+            expectedA16 === 1 ? 'A16' : 'NOT(A16)',
+            expectedA15 === 1 ? 'A15' : 'NOT(A15)',
+            'M/I̅O̅'
+          ].join(' • ')} )` 
+        },
+        { label: 'Address Range', val: `${rangeLabel} (Total 32,768 bytes)` },
         { label: 'Foldback / Shadow', val: 'None (Absolute decoding eliminates all aliasing)' }
       ],
       pins: [
-        { pin: 'A15–A19 Inputs', role: 'Upper address bits from 74LS373 Latches', state: `${a19}${a18}${a17}${a16}${a15}b (Inverted: ${1-a19}${1-a18}${1-a17}${1-a16}${1-a15}b)` },
-        { pin: 'M/IO# Input', role: 'Memory cycle enable (active HIGH)', state: '1 (HIGH)' },
-        { pin: 'CS# Output', role: 'Active-LOW Master Chip Select for 32 KB RAM array', state: csBar === 0 ? '0 (LOW - 32 KB RAM SELECTED)' : '1 (HIGH - INACTIVE)' }
+        { 
+          pin: 'A15–A19 Inputs', 
+          role: 'Upper address bits from 74LS373 Latches', 
+          state: `${a19}${a18}${a17}${a16}${a15}b (Expected: ${expectedA19}${expectedA18}${expectedA17}${expectedA16}${expectedA15}b)` 
+        },
+        { pin: 'M/I̅O̅ Input', role: 'Memory cycle enable (active HIGH)', state: '1 (HIGH)' },
+        { pin: 'C̅S̅ Output', role: 'Active-LOW Master Chip Select for 32 KB RAM array', state: csBar === 0 ? '0 (LOW - 32 KB RAM SELECTED)' : '1 (HIGH - INACTIVE)' }
       ]
     },
     u_or: {
       title: 'Bank Qualification OR Gates (74LS32 Quad 2-Input OR)',
-      subtitle: 'Generates Independent Chip Enables CE1# (Even) and CE2# (Odd)',
-      desc: 'Combines master CS# with bank selection signals A0 and BHE#. Because inputs and outputs are active-LOW, the OR gate functions as an active-LOW AND qualifier.',
+      subtitle: 'Generates Independent Chip Enables C̅E̅1̅ (Even) and C̅E̅2̅ (Odd)',
+      desc: 'Combines master C̅S̅ with bank selection signals A0 and B̅H̅E̅. Because inputs and outputs are active-LOW, the OR gate functions as an active-LOW AND qualifier.',
       techSpecs: [
-        { label: 'OR Gate 1', val: 'CE1# = CS# OR A0 (Enables Even Bank RAM_1 on D0–D7)' },
-        { label: 'OR Gate 2', val: 'CE2# = CS# OR BHE# (Enables Odd Bank RAM_2 on D8–D15)' },
-        { label: 'Word Transfer', val: 'When A0=0 & BHE#=0, BOTH CE1# and CE2# go LOW (0)' }
+        { label: 'OR Gate 1', val: 'C̅E̅1̅ = C̅S̅ OR A0 (Enables Even Bank RAM_1 on D0–D7)' },
+        { label: 'OR Gate 2', val: 'C̅E̅2̅ = C̅S̅ OR B̅H̅E̅ (Enables Odd Bank RAM_2 on D8–D15)' },
+        { label: 'Word Transfer', val: 'When A0=0 & B̅H̅E̅=0, BOTH C̅E̅1̅ and C̅E̅2̅ go LOW (0)' }
       ],
       pins: [
-        { pin: 'OR Gate 1 Inputs', role: 'CS# and A0', state: `CS#=${csBar}, A0=${a0}` },
-        { pin: 'CE1# Output', role: 'Even Bank RAM_1 Chip Enable', state: ce1Bar === 0 ? '0 (LOW - ACTIVE)' : '1 (HIGH - DISABLED)' },
-        { pin: 'OR Gate 2 Inputs', role: 'CS# and BHE#', state: `CS#=${csBar}, BHE#=${bhe}` },
-        { pin: 'CE2# Output', role: 'Odd Bank RAM_2 Chip Enable', state: ce2Bar === 0 ? '0 (LOW - ACTIVE)' : '1 (HIGH - DISABLED)' }
+        { pin: 'OR Gate 1 Inputs', role: 'C̅S̅ and A0', state: `C̅S̅=${csBar}, A0=${a0}` },
+        { pin: 'C̅E̅1̅ Output', role: 'Even Bank RAM_1 Chip Enable', state: ce1Bar === 0 ? '0 (LOW - ACTIVE)' : '1 (HIGH - DISABLED)' },
+        { pin: 'OR Gate 2 Inputs', role: 'C̅S̅ and B̅H̅E̅', state: `C̅S̅=${csBar}, B̅H̅E̅=${bhe}` },
+        { pin: 'C̅E̅2̅ Output', role: 'Odd Bank RAM_2 Chip Enable', state: ce2Bar === 0 ? '0 (LOW - ACTIVE)' : '1 (HIGH - DISABLED)' }
       ]
     },
     u4: {
@@ -239,50 +306,50 @@ export default function MemorySchematicDiagram({
       subtitle: 'Bidirectional Bus Buffers for Lower (D0–D7) & Upper (D8–D15) Data Buses',
       desc: 'Isolates the 8086 multiplexed data bus and boosts current drive to RAM chips. U4A connects AD0–AD7 to RAM_1 D0–D7; U4B connects AD8–AD15 to RAM_2 D8–D15.',
       techSpecs: [
-        { label: 'DIR (Pin 1)', val: 'Direction driven by DT/R# (1 = CPU->RAM Write, 0 = RAM->CPU Read)' },
-        { label: 'OE# (Pin 19)', val: 'Output Enable driven by 8086 DEN# (Active LOW)' }
+        { label: 'DIR (Pin 1)', val: 'Direction driven by DT/R̅ (1 = CPU->RAM Write, 0 = RAM->CPU Read)' },
+        { label: 'O̅E̅ (Pin 19)', val: 'Output Enable driven by 8086 D̅E̅N̅ (Active LOW)' }
       ],
       pins: [
-        { pin: 'DIR (Pin 1)', role: 'Driven by 8086 DT/R#', state: dtr === 1 ? '1 (TRANSMIT / WRITE)' : '0 (RECEIVE / READ)' },
-        { pin: 'OE# (Pin 19)', role: 'Driven by 8086 DEN#', state: den === 0 ? '0 (BUFFERS ACTIVE)' : '1 (TRISTATE)' },
+        { pin: 'DIR (Pin 1)', role: 'Driven by 8086 DT/R̅', state: dtr === 1 ? '1 (TRANSMIT / WRITE)' : '0 (RECEIVE / READ)' },
+        { pin: 'O̅E̅ (Pin 19)', role: 'Driven by 8086 D̅E̅N̅', state: den === 0 ? '0 (BUFFERS ACTIVE)' : '1 (TRISTATE)' },
         { pin: 'U4A (Lower Transceiver)', role: 'Buffers Even Data Byte (D0–D7)', state: lowerTransceiverActive ? 'Active Bus Driving' : 'High-Z' },
         { pin: 'U4B (Upper Transceiver)', role: 'Buffers Odd Data Byte (D8–D15)', state: upperTransceiverActive ? 'Active Bus Driving' : 'High-Z' }
       ]
     },
     ram1: {
       title: 'RAM 1: 16 KB Static RAM (Even Bank - 16 KB × 8, e.g. 62128)',
-      subtitle: 'Lower Byte RAM for Even Addresses: 00000H, 00002H, ... 07FFEH',
-      desc: 'Stores bytes located at even physical addresses. Selected when CS#=0 and A0=0 (CE1#=0). Data pins connected to lower bus D0–D7. Address inputs A0–A13 connect to system lines A1–A14.',
+      subtitle: `Lower Byte RAM for Even Addresses: ${rangeStartHex}H, ${(rangeStartVal + 2).toString(16).toUpperCase().padStart(5, '0')}H, ... ${(rangeEndVal - 1).toString(16).toUpperCase().padStart(5, '0')}H`,
+      desc: 'Stores bytes located at even physical addresses. Selected when C̅S̅=0 and A0=0 (C̅E̅1̅=0). Data pins connected to lower bus D0–D7. Address inputs A0–A13 connect to system lines A1–A14.',
       techSpecs: [
         { label: 'Capacity', val: '16,384 Bytes (16 KB × 8-bit SRAM)' },
         { label: 'Address Inputs', val: '14 Address Lines: A0–A13 connected to latched A1–A14' },
         { label: 'Data Bus', val: 'D0–D7 (Lower 8 bits of 16-bit bus)' },
-        { label: 'Address Range', val: '00000H to 07FFEH (Even byte locations)' },
-        { label: 'Chip Enable', val: 'CE1# = CS# OR A0 (Active LOW)' }
+        { label: 'Address Range', val: `${rangeStartHex}H to ${(rangeEndVal - 1).toString(16).toUpperCase().padStart(5, '0')}H (Even byte locations)` },
+        { label: 'Chip Enable', val: 'C̅E̅1̅ = C̅S̅ OR A0 (Active LOW)' }
       ],
       pins: [
-        { pin: 'CE1# (Chip Enable)', role: 'Gated by CS# and A0 from OR Gate 1', state: ce1Bar === 0 ? '0 (CHIP SELECTED / ACTIVE)' : '1 (STANDBY / HIGH-Z)' },
-        { pin: 'OE# (Output Enable)', role: 'Connected to 8086 RD#', state: rd === 0 ? '0 (READ ENABLED)' : '1 (HIGH)' },
-        { pin: 'WE# (Write Enable)', role: 'Connected to 8086 WR#', state: wr === 0 ? '0 (WRITE ENABLED)' : '1 (HIGH)' },
+        { pin: 'C̅E̅1̅ (Chip Enable)', role: 'Gated by C̅S̅ and A0 from OR Gate 1', state: ce1Bar === 0 ? '0 (CHIP SELECTED / ACTIVE)' : '1 (STANDBY / HIGH-Z)' },
+        { pin: 'O̅E̅ (Output Enable)', role: 'Connected to 8086 R̅D̅', state: rd === 0 ? '0 (READ ENABLED)' : '1 (HIGH)' },
+        { pin: 'W̅E̅ (Write Enable)', role: 'Connected to 8086 W̅R̅', state: wr === 0 ? '0 (WRITE ENABLED)' : '1 (HIGH)' },
         { pin: 'A0–A13 (14 lines)', role: 'Connected to 8086 latched A1–A14', state: `${chipAddrHex}H` },
         { pin: 'D0–D7 (Data Bus)', role: 'Connected to Transceiver U4A', state: ram1EvenActive ? (isWrite ? 'Writing Data In' : 'Driving Data Out') : 'High-Z' }
       ]
     },
     ram2: {
       title: 'RAM 2: 16 KB Static RAM (Odd Bank - 16 KB × 8, e.g. 62128)',
-      subtitle: 'Upper Byte RAM for Odd Addresses: 00001H, 00003H, ... 07FFFH',
-      desc: 'Stores bytes located at odd physical addresses. Selected when CS#=0 and BHE#=0 (CE2#=0). Data pins connected to upper bus D8–D15. Address inputs A0–A13 connect to system lines A1–A14.',
+      subtitle: `Upper Byte RAM for Odd Addresses: ${(rangeStartVal + 1).toString(16).toUpperCase().padStart(5, '0')}H, ${(rangeStartVal + 3).toString(16).toUpperCase().padStart(5, '0')}H, ... ${rangeEndHex}H`,
+      desc: 'Stores bytes located at odd physical addresses. Selected when C̅S̅=0 and B̅H̅E̅=0 (C̅E̅2̅=0). Data pins connected to upper bus D8–D15. Address inputs A0–A13 connect to system lines A1–A14.',
       techSpecs: [
         { label: 'Capacity', val: '16,384 Bytes (16 KB × 8-bit SRAM)' },
         { label: 'Address Inputs', val: '14 Address Lines: A0–A13 connected to latched A1–A14' },
         { label: 'Data Bus', val: 'D8–D15 (Upper 8 bits of 16-bit bus)' },
-        { label: 'Address Range', val: '00001H to 07FFFH (Odd byte locations)' },
-        { label: 'Chip Enable', val: 'CE2# = CS# OR BHE# (Active LOW)' }
+        { label: 'Address Range', val: `${(rangeStartVal + 1).toString(16).toUpperCase().padStart(5, '0')}H to ${rangeEndHex}H (Odd byte locations)` },
+        { label: 'Chip Enable', val: 'C̅E̅2̅ = C̅S̅ OR B̅H̅E̅ (Active LOW)' }
       ],
       pins: [
-        { pin: 'CE2# (Chip Enable)', role: 'Gated by CS# and BHE# from OR Gate 2', state: ce2Bar === 0 ? '0 (CHIP SELECTED / ACTIVE)' : '1 (STANDBY / HIGH-Z)' },
-        { pin: 'OE# (Output Enable)', role: 'Connected to 8086 RD#', state: rd === 0 ? '0 (READ ENABLED)' : '1 (HIGH)' },
-        { pin: 'WE# (Write Enable)', role: 'Connected to 8086 WR#', state: wr === 0 ? '0 (WRITE ENABLED)' : '1 (HIGH)' },
+        { pin: 'C̅E̅2̅ (Chip Enable)', role: 'Gated by C̅S̅ and B̅H̅E̅ from OR Gate 2', state: ce2Bar === 0 ? '0 (CHIP SELECTED / ACTIVE)' : '1 (STANDBY / HIGH-Z)' },
+        { pin: 'O̅E̅ (Output Enable)', role: 'Connected to 8086 R̅D̅', state: rd === 0 ? '0 (READ ENABLED)' : '1 (HIGH)' },
+        { pin: 'W̅E̅ (Write Enable)', role: 'Connected to 8086 W̅R̅', state: wr === 0 ? '0 (WRITE ENABLED)' : '1 (HIGH)' },
         { pin: 'A0–A13 (14 lines)', role: 'Connected to 8086 latched A1–A14', state: `${chipAddrHex}H` },
         { pin: 'D0–D7 (Data Bus)', role: 'Connected to Upper Transceiver U4B (D8–D15)', state: ram2OddActive ? (isWrite ? 'Writing Data In' : 'Driving Data Out') : 'High-Z' }
       ]
@@ -305,7 +372,7 @@ export default function MemorySchematicDiagram({
                 8086 32 KB RAM Interfacing Complete Circuit Schematic 📐💾
               </h3>
               <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold">
-                2 × 16 KB RAM (00000H–07FFFH)
+                2 × 16 KB RAM ({rangeLabel})
               </span>
             </div>
             <p className="text-xs text-slate-500">
@@ -314,32 +381,34 @@ export default function MemorySchematicDiagram({
           </div>
         </div>
 
-        {/* Zoom & View Controls */}
-        <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
-          <button
-            onClick={() => setZoomLevel((z) => Math.max(0.7, +(z - 0.1).toFixed(1)))}
-            className="p-1.5 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-white transition-all cursor-pointer shadow-2xs"
-            title="Zoom Out"
-          >
-            <ZoomOut className="w-4 h-4" />
-          </button>
-          <span className="text-[11px] font-mono font-bold text-indigo-700 px-1.5 min-w-[3rem] text-center">
-            {Math.round(zoomLevel * 100)}%
-          </span>
-          <button
-            onClick={() => setZoomLevel((z) => Math.min(1.5, +(z + 0.1).toFixed(1)))}
-            className="p-1.5 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-white transition-all cursor-pointer shadow-2xs"
-            title="Zoom In"
-          >
-            <ZoomIn className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => setZoomLevel(1)}
-            className="p-1.5 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-white transition-all cursor-pointer shadow-2xs"
-            title="Reset Zoom"
-          >
-            <Maximize2 className="w-4 h-4" />
-          </button>
+        {/* View Controls */}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200">
+            <button
+              onClick={() => setZoomLevel((z) => Math.max(0.7, +(z - 0.1).toFixed(1)))}
+              className="p-1.5 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-white transition-all cursor-pointer shadow-2xs"
+              title="Zoom Out"
+            >
+              <ZoomOut className="w-4 h-4" />
+            </button>
+            <span className="text-[11px] font-mono font-bold text-indigo-700 px-1.5 min-w-[3rem] text-center">
+              {Math.round(zoomLevel * 100)}%
+            </span>
+            <button
+              onClick={() => setZoomLevel((z) => Math.min(1.5, +(z + 0.1).toFixed(1)))}
+              className="p-1.5 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-white transition-all cursor-pointer shadow-2xs"
+              title="Zoom In"
+            >
+              <ZoomIn className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setZoomLevel(1)}
+              className="p-1.5 text-slate-600 hover:text-slate-900 rounded-lg hover:bg-white transition-all cursor-pointer shadow-2xs"
+              title="Reset Zoom"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -365,11 +434,11 @@ export default function MemorySchematicDiagram({
         {!useCustomAddress ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
             {[
-              { id: 'aligned-word-ram-write', label: '16-bit Word RAM Write', tag: '00200H (Both Banks)' },
-              { id: 'aligned-word-ram-read', label: '16-bit Word RAM Read', tag: '00100H (Both Banks)' },
-              { id: 'even-byte-ram-read', label: 'Even Byte RAM Read', tag: '00102H (RAM_1 Only)' },
-              { id: 'odd-byte-ram-read', label: 'Odd Byte RAM Read', tag: '00103H (RAM_2 Only)' },
-              { id: 'out-of-range-access', label: 'Out-of-Range (A15=1)', tag: '08000H (CS# Inactive)' }
+              { id: 'aligned-word-ram-write', label: '16-bit Word RAM Write', tag: `${(baseVal + 0x200).toString(16).toUpperCase().padStart(5, '0')}H (Both Banks)` },
+              { id: 'aligned-word-ram-read', label: '16-bit Word RAM Read', tag: `${(baseVal + 0x100).toString(16).toUpperCase().padStart(5, '0')}H (Both Banks)` },
+              { id: 'even-byte-ram-read', label: 'Even Byte RAM Read', tag: `${(baseVal + 0x102).toString(16).toUpperCase().padStart(5, '0')}H (RAM_1 Only)` },
+              { id: 'odd-byte-ram-read', label: 'Odd Byte RAM Read', tag: `${(baseVal + 0x103).toString(16).toUpperCase().padStart(5, '0')}H (RAM_2 Only)` },
+              { id: 'out-of-range-access', label: 'Out-of-Range (A15 Inverted)', tag: `${((baseVal + 0x8000) & 0xFFFFF).toString(16).toUpperCase().padStart(5, '0')}H (C̅S̅ Inactive)` }
             ].map((sc) => {
               const isSel = activeScenario === sc.id;
               return (
@@ -428,18 +497,18 @@ export default function MemorySchematicDiagram({
                 onClick={() => setCustomOpType('read')}
                 className={`px-2.5 py-1 rounded text-xs font-semibold cursor-pointer border ${customOpType === 'read' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-100 text-slate-700 border-slate-200'}`}
               >
-                Read (RD#=0)
+                Read (R̅D̅=0)
               </button>
               <button
                 onClick={() => setCustomOpType('write')}
                 className={`px-2.5 py-1 rounded text-xs font-semibold cursor-pointer border ${customOpType === 'write' ? 'bg-amber-600 text-white border-amber-600' : 'bg-slate-100 text-slate-700 border-slate-200'}`}
               >
-                Write (WR#=0)
+                Write (W̅R̅=0)
               </button>
             </div>
 
             <div className="text-xs text-slate-500 font-mono ml-auto">
-              Range: {isAddressInRange ? <span className="text-emerald-700 font-bold">00000H–07FFFH (Valid 32 KB RAM)</span> : <span className="text-red-700 font-bold">Outside 32 KB (CS#=1 Disabled)</span>}
+              Range: {isAddressInRange ? <span className="text-emerald-700 font-bold">{rangeLabel} (Valid 32 KB RAM)</span> : <span className="text-red-700 font-bold">Outside 32 KB (C̅S̅=1 Disabled)</span>}
             </div>
           </div>
         )}
@@ -456,13 +525,13 @@ export default function MemorySchematicDiagram({
               Addr: <strong className="text-slate-950">{addressHex}H</strong>
             </span>
             <span className={`px-2 py-0.5 rounded border ${isAddressInRange ? 'bg-emerald-50 text-emerald-800 border-emerald-300' : 'bg-red-50 text-red-800 border-red-300'}`}>
-              CS#: <strong>{csBar}</strong>
+              C̅S̅: <strong>{csBar}</strong>
             </span>
             <span className={`px-2 py-0.5 rounded border ${ce1Bar === 0 ? 'bg-indigo-50 text-indigo-800 border-indigo-300' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
-              RAM_1 CE1#: <strong>{ce1Bar}</strong>
+              RAM_1 C̅E̅1̅: <strong>{ce1Bar}</strong>
             </span>
             <span className={`px-2 py-0.5 rounded border ${ce2Bar === 0 ? 'bg-amber-50 text-amber-800 border-amber-300' : 'bg-slate-100 text-slate-500 border-slate-200'}`}>
-              RAM_2 CE2#: <strong>{ce2Bar}</strong>
+              RAM_2 C̅E̅2̅: <strong>{ce2Bar}</strong>
             </span>
             <span className="bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-slate-700">
               Offset A1–A14: <strong className="text-slate-900">{chipAddrHex}H</strong>
@@ -497,7 +566,7 @@ export default function MemorySchematicDiagram({
           </div>
           <span className="text-[11px] text-slate-600 font-medium ml-1">
             {tState === 1 && '— T1: Address Driven on AD0–AD15; ALE Pulses HIGH (Latches A0–A19)'}
-            {tState === 2 && '— T2: Bus switches to Data; RD#/WR# & DEN# Asserted LOW'}
+            {tState === 2 && '— T2: Bus switches to Data; R̅D̅ / W̅R̅ & D̅E̅N̅ Asserted LOW'}
             {tState === 3 && '— T3: RAM Chips decode & drive data / latch write data'}
             {tState === 4 && '— T4: Cycle completes; Bus returns to Tri-state'}
           </span>
@@ -593,9 +662,9 @@ export default function MemorySchematicDiagram({
               <text x="52" y="198" fill="#475569" fontSize="10">AD8–AD15 (Pins 39, 2–8)</text>
               <line x1="260" y1="195" x2="350" y2="195" stroke={tState === 1 ? '#6366f1' : '#94a3b8'} strokeWidth="2.5" />
 
-              {/* A16–A19 & BHE# */}
+              {/* A16–A19 & B̅H̅E̅ */}
               <text x="52" y="268" fill="#475569" fontSize="10">A16–A19 / S3–S6 (35–38)</text>
-              <text x="52" y="284" fill="#475569" fontSize="10">BHE# / S7 (Pin 34)</text>
+              <text x="52" y="284" fill="#475569" fontSize="10">B̅H̅E̅ / S7 (Pin 34)</text>
               <line x1="260" y1="275" x2="350" y2="275" stroke={tState === 1 ? '#a855f7' : '#94a3b8'} strokeWidth="2.5" />
 
               {/* Control Strobes */}
@@ -604,25 +673,25 @@ export default function MemorySchematicDiagram({
               <circle cx="260" cy="330" r="3.5" fill={ale === 1 ? '#ea580c' : '#94a3b8'} />
               <line x1="260" y1="330" x2="350" y2="330" stroke={ale === 1 ? '#ea580c' : '#cbd5e1'} strokeWidth={ale === 1 ? 2.5 : 1.5} />
 
-              {/* M/IO# (Pin 28) */}
-              <text x="52" y="384" fill="#15803d" fontSize="10" fontWeight="bold">M/IO# (Pin 28) = 1</text>
+              {/* M/I̅O̅ (Pin 28) */}
+              <text x="52" y="384" fill="#15803d" fontSize="10" fontWeight="bold">M/I̅O̅ (Pin 28) = 1</text>
               <circle cx="260" cy="380" r="3.5" fill="#15803d" />
               <line x1="260" y1="380" x2="560" y2="380" stroke="#15803d" strokeWidth="2" />
 
-              {/* RD# (Pin 32) */}
-              <text x="52" y="474" fill="#0369a1" fontSize="10" fontWeight="bold">RD# (Pin 32)</text>
+              {/* R̅D̅ (Pin 32) */}
+              <text x="52" y="474" fill="#0369a1" fontSize="10" fontWeight="bold">R̅D̅ (Pin 32)</text>
               <circle cx="260" cy="470" r="3.5" fill={rd === 0 ? '#0284c7' : '#94a3b8'} />
               <line x1="260" y1="470" x2="980" y2="470" stroke={rd === 0 ? '#0284c7' : '#cbd5e1'} strokeWidth={rd === 0 ? 2.5 : 1.5} />
 
-              {/* WR# (Pin 29) */}
-              <text x="52" y="514" fill="#b45309" fontSize="10" fontWeight="bold">WR# (Pin 29)</text>
+              {/* W̅R̅ (Pin 29) */}
+              <text x="52" y="514" fill="#b45309" fontSize="10" fontWeight="bold">W̅R̅ (Pin 29)</text>
               <circle cx="260" cy="510" r="3.5" fill={wr === 0 ? '#d97706' : '#94a3b8'} />
               <line x1="260" y1="510" x2="960" y2="510" stroke={wr === 0 ? '#d97706' : '#cbd5e1'} strokeWidth={wr === 0 ? 2.5 : 1.5} />
 
-              {/* DEN# (Pin 26) & DT/R# (Pin 27) */}
-              <text x="52" y="564" fill="#64748b" fontSize="10">DEN# (Pin 26)</text>
+              {/* D̅E̅N̅ (Pin 26) & DT/R̅ (Pin 27) */}
+              <text x="52" y="564" fill="#64748b" fontSize="10">D̅E̅N̅ (Pin 26)</text>
               <line x1="260" y1="560" x2="600" y2="560" stroke={den === 0 ? '#6366f1' : '#cbd5e1'} strokeWidth="1.5" />
-              <text x="52" y="594" fill="#64748b" fontSize="10">DT/R# (Pin 27)</text>
+              <text x="52" y="594" fill="#64748b" fontSize="10">DT/R̅ (Pin 27)</text>
               <line x1="260" y1="590" x2="600" y2="590" stroke="#64748b" strokeWidth="1.5" />
             </g>
 
@@ -644,7 +713,7 @@ export default function MemorySchematicDiagram({
               <text x="430" y="98" textAnchor="middle" fill="#1e1b4b" fontWeight="bold" fontSize="10.5">U2A: 74LS373 (Low)</text>
               <text x="358" y="118" fill="#475569" fontSize="9">AD0–AD7</text>
               <text x="460" y="118" fill="#1e1b4b" fontSize="9" fontWeight="bold">A0–A7</text>
-              <text x="430" y="138" textAnchor="middle" fill="#ea580c" fontSize="8">LE = ALE, OE# = GND</text>
+              <text x="430" y="138" textAnchor="middle" fill="#ea580c" fontSize="8">LE = ALE, O̅E̅ = GND</text>
 
               {/* U2B: AD8-AD15 -> A8-A15 */}
               <rect 
@@ -656,9 +725,9 @@ export default function MemorySchematicDiagram({
               <text x="430" y="178" textAnchor="middle" fill="#1e1b4b" fontWeight="bold" fontSize="10.5">U2B: 74LS373 (Mid)</text>
               <text x="358" y="198" fill="#475569" fontSize="9">AD8–AD15</text>
               <text x="458" y="198" fill="#1e1b4b" fontSize="9" fontWeight="bold">A8–A15</text>
-              <text x="430" y="218" textAnchor="middle" fill="#ea580c" fontSize="8">LE = ALE, OE# = GND</text>
+              <text x="430" y="218" textAnchor="middle" fill="#ea580c" fontSize="8">LE = ALE, O̅E̅ = GND</text>
 
-              {/* U2C: A16-A19 & BHE# */}
+              {/* U2C: A16-A19 & B̅H̅E̅ */}
               <rect 
                 x="350" y="240" width="160" height="70" rx="6" 
                 fill={selectedChip === 'u2' ? '#eef2ff' : '#ffffff'} 
@@ -666,9 +735,9 @@ export default function MemorySchematicDiagram({
                 strokeWidth="1.5"
               />
               <text x="430" y="258" textAnchor="middle" fill="#1e1b4b" fontWeight="bold" fontSize="10.5">U2C: 74LS373 (High)</text>
-              <text x="358" y="278" fill="#475569" fontSize="9">A16–A19, BHE#</text>
-              <text x="442" y="278" fill="#7e22ce" fontSize="8.5" fontWeight="bold">A16–A19, BHE#</text>
-              <text x="430" y="298" textAnchor="middle" fill="#ea580c" fontSize="8">LE = ALE, OE# = GND</text>
+              <text x="358" y="278" fill="#475569" fontSize="9">A16–A19, B̅H̅E̅</text>
+              <text x="442" y="278" fill="#7e22ce" fontSize="8.5" fontWeight="bold">A16–A19, B̅H̅E̅</text>
+              <text x="430" y="298" textAnchor="middle" fill="#ea580c" fontSize="8">LE = ALE, O̅E̅ = GND</text>
 
               {/* ALE Distribution bus line */}
               <line x1="350" y1="330" x2="350" y2="135" stroke={ale === 1 ? '#ea580c' : '#cbd5e1'} strokeWidth="2" strokeDasharray="3 3" />
@@ -687,9 +756,9 @@ export default function MemorySchematicDiagram({
             <path d="M 1020 35 L 1020 385 L 1030 385" fill="none" stroke="#0f172a" strokeWidth="2" />
             <text x="545" y="28" fill="#0f172a" fontSize="10" fontWeight="bold">A1–A14 Latched Address Bus (14 lines) → Connected to RAM 1 &amp; RAM 2 A0–A13</text>
 
-            {/* BHE# path -> OR Gate 2 (Pin for Odd Bank) */}
+            {/* B̅H̅E̅ path -> OR Gate 2 (Pin for Odd Bank) */}
             <path d="M 510 295 L 850 295 L 850 260 L 890 260" fill="none" stroke="#7e22ce" strokeWidth="2" />
-            <text x="630" y="290" fill="#7e22ce" fontSize="9.5" fontWeight="bold">BHE# (Odd Bank Enable)</text>
+            <text x="630" y="290" fill="#7e22ce" fontSize="9.5" fontWeight="bold">B̅H̅E̅ (Odd Bank Enable)</text>
 
             {/* A15–A19 path -> Absolute NAND Decoder */}
             <path d="M 510 205 L 535 205 L 535 460 L 560 460" fill="none" stroke="#7e22ce" strokeWidth="2" />
@@ -716,26 +785,26 @@ export default function MemorySchematicDiagram({
                 Absolute Decoder (74LS30 + 74LS04)
               </text>
               <text x="670" y="387" textAnchor="middle" fill="#86198f" fontSize="8.5" fontWeight="bold">
-                Range: 00000H–07FFFH (32 KB RAM)
+                Range: {rangeLabel} (32 KB RAM)
               </text>
 
               {/* Inverter indicators & Inputs */}
-              <text x="572" y="407" fill="#475569" fontSize="8.5">M/IO# (Pin 28) = 1</text>
-              <text x="572" y="425" fill="#701a75" fontSize="8.5">NOT A19 = {1 - a19}</text>
-              <text x="572" y="443" fill="#701a75" fontSize="8.5">NOT A18 = {1 - a18}</text>
-              <text x="572" y="461" fill="#701a75" fontSize="8.5">NOT A17 = {1 - a17}</text>
-              <text x="572" y="479" fill="#701a75" fontSize="8.5">NOT A16 = {1 - a16}</text>
-              <text x="572" y="497" fill="#701a75" fontSize="8.5">NOT A15 = {1 - a15}</text>
+              <text x="572" y="407" fill="#475569" fontSize="8.5">M/I̅O̅ (Pin 28) = 1</text>
+              <text x="572" y="425" fill="#701a75" fontSize="8.5">{expectedA19 === 1 ? `A19 (Direct) = ${a19}` : `NOT A19 = ${1 - a19}`}</text>
+              <text x="572" y="443" fill="#701a75" fontSize="8.5">{expectedA18 === 1 ? `A18 (Direct) = ${a18}` : `NOT A18 = ${1 - a18}`}</text>
+              <text x="572" y="461" fill="#701a75" fontSize="8.5">{expectedA17 === 1 ? `A17 (Direct) = ${a17}` : `NOT A17 = ${1 - a17}`}</text>
+              <text x="572" y="479" fill="#701a75" fontSize="8.5">{expectedA16 === 1 ? `A16 (Direct) = ${a16}` : `NOT A16 = ${1 - a16}`}</text>
+              <text x="572" y="497" fill="#701a75" fontSize="8.5">{expectedA15 === 1 ? `A15 (Direct) = ${a15}` : `NOT A15 = ${1 - a15}`}</text>
 
-              {/* Output CS# */}
+              {/* Output C̅S̅ */}
               <circle cx="780" cy="435" r="4" fill={csBar === 0 ? '#16a34a' : '#dc2626'} />
-              <text x="755" y="430" fill={csBar === 0 ? '#15803d' : '#b91c1c'} fontSize="10" fontWeight="bold">CS#</text>
+              <text x="755" y="430" fill={csBar === 0 ? '#15803d' : '#b91c1c'} fontSize="10" fontWeight="bold">C̅S̅</text>
             </g>
 
-            {/* Master CS# Line distribution to Bank OR Gates */}
+            {/* Master C̅S̅ Line distribution to Bank OR Gates */}
             <path d="M 780 435 L 820 435 L 820 190 L 890 190" fill="none" stroke={csBar === 0 ? '#16a34a' : '#cbd5e1'} strokeWidth="2.5" />
             <path d="M 820 240 L 890 240" fill="none" stroke={csBar === 0 ? '#16a34a' : '#cbd5e1'} strokeWidth="2.5" />
-            <text x="825" y="340" fill={csBar === 0 ? '#15803d' : '#64748b'} fontSize="9" fontWeight="bold">CS# (32 KB)</text>
+            <text x="825" y="340" fill={csBar === 0 ? '#15803d' : '#64748b'} fontSize="9" fontWeight="bold">C̅S̅ (32 KB)</text>
 
             {/* ========================================================================================= */}
             {/* 4. BANK QUALIFICATION OR GATES (74LS32) */}
@@ -745,7 +814,7 @@ export default function MemorySchematicDiagram({
               onClick={() => setSelectedChip('u_or')}
               className="cursor-pointer group"
             >
-              {/* OR Gate 1: CS# OR A0 -> CE1# (Even Bank) */}
+              {/* OR Gate 1: C̅S̅ OR A0 -> C̅E̅1̅ (Even Bank) */}
               <path 
                 d="M 890 160 Q 905 160 915 180 Q 905 200 890 200 Q 898 180 890 160 Z" 
                 fill={selectedChip === 'u_or' ? '#e0f2fe' : '#ffffff'} 
@@ -753,13 +822,13 @@ export default function MemorySchematicDiagram({
                 strokeWidth="1.8" 
               />
               <text x="900" y="183" fill="#0369a1" fontSize="7.5" fontWeight="bold">OR 1</text>
-              <text x="860" y="154" fill="#475569" fontSize="8.5">CS# + A0</text>
+              <text x="860" y="154" fill="#475569" fontSize="8.5">C̅S̅ + A0</text>
               <line x1="915" y1="180" x2="1030" y2="180" stroke={ce1Bar === 0 ? '#16a34a' : '#cbd5e1'} strokeWidth="2.5" />
               <text x="935" y="173" fill={ce1Bar === 0 ? '#15803d' : '#64748b'} fontSize="9" fontWeight="bold">
-                CE1# = {ce1Bar}
+                C̅E̅1̅ = {ce1Bar}
               </text>
 
-              {/* OR Gate 2: CS# OR BHE# -> CE2# (Odd Bank) */}
+              {/* OR Gate 2: C̅S̅ OR B̅H̅E̅ -> C̅E̅2̅ (Odd Bank) */}
               <path 
                 d="M 890 230 Q 905 230 915 250 Q 905 270 890 270 Q 898 250 890 230 Z" 
                 fill={selectedChip === 'u_or' ? '#fef3c7' : '#ffffff'} 
@@ -767,11 +836,11 @@ export default function MemorySchematicDiagram({
                 strokeWidth="1.8" 
               />
               <text x="900" y="253" fill="#b45309" fontSize="7.5" fontWeight="bold">OR 2</text>
-              <text x="855" y="285" fill="#475569" fontSize="8.5">CS# + BHE#</text>
-              {/* Route CE2# from OR2 down to RAM2 CE2# pin at y=450 */}
+              <text x="855" y="285" fill="#475569" fontSize="8.5">C̅S̅ + B̅H̅E̅</text>
+              {/* Route C̅E̅2̅ from OR2 down to RAM2 C̅E̅2̅ pin at y=450 */}
               <path d="M 915 250 L 970 250 L 970 450 L 1030 450" fill="none" stroke={ce2Bar === 0 ? '#d97706' : '#cbd5e1'} strokeWidth="2.5" />
               <text x="925" y="243" fill={ce2Bar === 0 ? '#b45309' : '#64748b'} fontSize="9" fontWeight="bold">
-                CE2# = {ce2Bar}
+                C̅E̅2̅ = {ce2Bar}
               </text>
             </g>
 
@@ -815,12 +884,12 @@ export default function MemorySchematicDiagram({
             <path d="M 770 611 L 1005 611 L 1005 415 L 1030 415" fill="none" stroke="#d97706" strokeWidth="2.5" />
             <text x="780" y="605" fill="#d97706" fontSize="9" fontWeight="bold">D8–D15 (Odd Byte Data Bus)</text>
 
-            {/* RD# & WR# Bus taps to RAM 1 and RAM 2 */}
-            {/* RD# tap into RAM 1 (y=215) and RAM 2 (y=485) */}
+            {/* R̅D̅ & W̅R̅ Bus taps to RAM 1 and RAM 2 */}
+            {/* R̅D̅ tap into RAM 1 (y=215) and RAM 2 (y=485) */}
             <path d="M 980 470 L 980 215 L 1030 215" fill="none" stroke={rd === 0 ? '#0284c7' : '#cbd5e1'} strokeWidth={rd === 0 ? 2.5 : 1.5} />
             <path d="M 980 470 L 980 485 L 1030 485" fill="none" stroke={rd === 0 ? '#0284c7' : '#cbd5e1'} strokeWidth={rd === 0 ? 2.5 : 1.5} />
 
-            {/* WR# tap into RAM 1 (y=250) and RAM 2 (y=520) */}
+            {/* W̅R̅ tap into RAM 1 (y=250) and RAM 2 (y=520) */}
             <path d="M 960 510 L 960 250 L 1030 250" fill="none" stroke={wr === 0 ? '#d97706' : '#cbd5e1'} strokeWidth={wr === 0 ? 2.5 : 1.5} />
             <path d="M 960 510 L 960 520 L 1030 520" fill="none" stroke={wr === 0 ? '#d97706' : '#cbd5e1'} strokeWidth={wr === 0 ? 2.5 : 1.5} />
 
@@ -845,7 +914,7 @@ export default function MemorySchematicDiagram({
                 RAM 1: 16 KB SRAM (Even Bank)
               </text>
               <text x="1155" y="78" textAnchor="middle" fill="#3730a3" fontSize="8.5">
-                62128 (16K × 8) • Range: 00000H–07FFEH
+                62128 (16K × 8) • Range: {rangeStartHex}H–{(rangeEndVal - 1).toString(16).toUpperCase().padStart(5, '0')}H
               </text>
 
               {/* Status Badge */}
@@ -866,13 +935,13 @@ export default function MemorySchematicDiagram({
               <text x="1042" y="108" fill="#475569" fontSize="9">A0–A13 (14 pins) ← A1–A14</text>
               <text x="1042" y="139" fill="#2563eb" fontSize="9" fontWeight="bold">D0–D7 (Data Bus)</text>
               <text x="1042" y="184" fill={ce1Bar === 0 ? '#15803d' : '#94a3b8'} fontSize="9" fontWeight="bold">
-                CE1# (Pin) = {ce1Bar}
+                C̅E̅1̅ (Pin) = {ce1Bar}
               </text>
               <text x="1042" y="219" fill={rd === 0 ? '#0284c7' : '#94a3b8'} fontSize="9" fontWeight="bold">
-                OE# (Pin) = {rd} (RD#)
+                O̅E̅ (Pin) = {rd} (R̅D̅)
               </text>
               <text x="1042" y="254" fill={wr === 0 ? '#d97706' : '#94a3b8'} fontSize="9" fontWeight="bold">
-                WE# (Pin) = {wr} (WR#)
+                W̅E̅ (Pin) = {wr} (W̅R̅)
               </text>
             </g>
 
@@ -894,7 +963,7 @@ export default function MemorySchematicDiagram({
                 RAM 2: 16 KB SRAM (Odd Bank)
               </text>
               <text x="1155" y="360" textAnchor="middle" fill="#92400e" fontSize="8.5">
-                62128 (16K × 8) • Range: 00001H–07FFFH
+                62128 (16K × 8) • Range: {(rangeStartVal + 1).toString(16).toUpperCase().padStart(5, '0')}H–{rangeEndHex}H
               </text>
 
               {/* Status Badge */}
@@ -915,13 +984,13 @@ export default function MemorySchematicDiagram({
               <text x="1042" y="388" fill="#475569" fontSize="9">A0–A13 (14 pins) ← A1–A14</text>
               <text x="1042" y="419" fill="#d97706" fontSize="9" fontWeight="bold">D8–D15 (Data Bus)</text>
               <text x="1042" y="454" fill={ce2Bar === 0 ? '#b45309' : '#94a3b8'} fontSize="9" fontWeight="bold">
-                CE2# (Pin) = {ce2Bar}
+                C̅E̅2̅ (Pin) = {ce2Bar}
               </text>
               <text x="1042" y="489" fill={rd === 0 ? '#0284c7' : '#94a3b8'} fontSize="9" fontWeight="bold">
-                OE# (Pin) = {rd} (RD#)
+                O̅E̅ (Pin) = {rd} (R̅D̅)
               </text>
               <text x="1042" y="524" fill={wr === 0 ? '#d97706' : '#94a3b8'} fontSize="9" fontWeight="bold">
-                WE# (Pin) = {wr} (WR#)
+                W̅E̅ (Pin) = {wr} (W̅R̅)
               </text>
             </g>
 
@@ -933,9 +1002,9 @@ export default function MemorySchematicDiagram({
               <circle cx="310" cy="12" r="4" fill="#d97706" />
               <text x="320" y="15" fill="#334155" fontSize="9.5">Upper Data (D8–D15)</text>
               <circle cx="470" cy="12" r="4" fill="#16a34a" />
-              <text x="480" y="15" fill="#334155" fontSize="9.5">Active Low Chip Select (CS#/CE#)</text>
+              <text x="480" y="15" fill="#334155" fontSize="9.5">Active Low Chip Select (C̅S̅ / C̅E̅)</text>
               <circle cx="680" cy="12" r="4" fill="#ea580c" />
-              <text x="690" y="15" fill="#334155" fontSize="9.5">Control Strobes (ALE, RD#, WR#)</text>
+              <text x="690" y="15" fill="#334155" fontSize="9.5">Control Strobes (ALE, R̅D̅, W̅R̅)</text>
             </g>
           </svg>
         </div>

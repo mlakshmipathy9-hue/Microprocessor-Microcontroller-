@@ -9,11 +9,13 @@ export type MemoryInterfacingTab = 'hierarchy' | 'types' | 'bank' | 'decoder' | 
 interface MemoryInterfacingSimulatorProps {
   initialTab?: MemoryInterfacingTab;
   allowedTabs?: MemoryInterfacingTab[];
+  title?: string;
 }
 
 export default function MemoryInterfacingSimulator({
   initialTab = 'hierarchy',
   allowedTabs,
+  title,
 }: MemoryInterfacingSimulatorProps) {
   const [activeTab, setActiveTab] = useState<MemoryInterfacingTab>(initialTab);
   const [selectedHierarchyLevel, setSelectedHierarchyLevel] = useState<number>(0);
@@ -236,13 +238,13 @@ export default function MemoryInterfacingSimulator({
     },
     bank: {
       label: 'Even/Odd Banks',
-      title: '8086 16-Bit Memory Bank Interfacing (BHE# & A0)',
-      subtitle: 'Even Bank (D0–D7 / A0=0) • Odd Bank (D8–D15 / BHE#=0) • Aligned vs. Misaligned Transfers'
+      title: '8086 16-Bit Memory Bank Interfacing (B̅H̅E̅ & A0)',
+      subtitle: 'Even Bank (D0–D7 / A0=0) • Odd Bank (D8–D15 / B̅H̅E̅=0) • Aligned vs. Misaligned Transfers'
     },
     decoder: {
       label: '74LS138 Decoder',
       title: '74LS138 3-to-8 Address Decoder & Chip Select Generator',
-      subtitle: 'Decodes High-Order Address Lines (A17–A19) • Active-Low Chip Select (CS0#–CS7#)'
+      subtitle: 'Decodes High-Order Address Lines (A17–A19) • Active-Low Chip Select (C̅S̅0–C̅S̅7)'
     },
     map: {
       label: '1 MB Memory Map',
@@ -274,40 +276,44 @@ export default function MemoryInterfacingSimulator({
 
   return (
     <div className="bg-white text-slate-800 p-4 md:p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4 text-xs font-sans">
-      {/* Top Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
-        <div className="flex items-center gap-2">
-          <div className="p-2 bg-indigo-50 rounded-xl border border-indigo-200 text-indigo-600">
-            <Database className="w-4 h-4" />
-          </div>
-          <div>
-            <h3 className="font-bold text-sm text-slate-900">{currentMeta.title}</h3>
-            <p className="text-[11px] text-slate-500">{currentMeta.subtitle}</p>
-          </div>
-        </div>
+      {/* Header bar with optional Title and Tab Switcher */}
+      {(title || displayedTabs.length > 1) && (
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
+          {title ? (
+            <div className="flex items-center gap-2">
+              <span className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg border border-indigo-100 shrink-0">
+                <Database className="w-4 h-4" />
+              </span>
+              <h2 className="text-sm md:text-base font-bold text-slate-900 tracking-tight">
+                {title}
+              </h2>
+            </div>
+          ) : (
+            <div />
+          )}
 
-        {/* Tab Switcher (Only shown if more than 1 tab is allowed) */}
-        {displayedTabs.length > 1 && (
-          <div className="flex flex-wrap bg-slate-100 p-1 rounded-xl border border-slate-200 gap-1">
-            {displayedTabs.map((tabKey) => {
-              const isSelected = activeTab === tabKey;
-              return (
-                <button
-                  key={tabKey}
-                  onClick={() => setActiveTab(tabKey)}
-                  className={`px-2.5 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-                    isSelected
-                      ? 'bg-white text-indigo-700 shadow-xs font-bold border border-slate-200/80'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  {tabMeta[tabKey].label}
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
+          {displayedTabs.length > 1 && (
+            <div className="flex flex-wrap bg-slate-100 p-1 rounded-xl border border-slate-200 gap-1 ml-auto">
+              {displayedTabs.map((tabKey) => {
+                const isSelected = activeTab === tabKey;
+                return (
+                  <button
+                    key={tabKey}
+                    onClick={() => setActiveTab(tabKey)}
+                    className={`px-2.5 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-white text-indigo-700 shadow-xs font-bold border border-slate-200/80'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    {tabMeta[tabKey].label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* TAB: Memory Hierarchy */}
       {activeTab === 'hierarchy' && (
@@ -549,7 +555,7 @@ export default function MemoryInterfacingSimulator({
                   <div className="text-base font-extrabold">{a0} ({a0 === 0 ? 'LOW - Enable Even' : 'HIGH'})</div>
                 </div>
                 <div className={`p-2 rounded border ${bhe === 0 ? 'bg-indigo-50 border-indigo-300 text-indigo-900' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
-                  <div className="text-[10px] text-slate-500 font-sans">BHE# Line (Bus High Enable)</div>
+                  <div className="text-[10px] text-slate-500 font-sans">B̅H̅E̅ Line (Bus High Enable)</div>
                   <div className="text-base font-extrabold">{bhe} ({bhe === 0 ? 'LOW - Enable Odd' : 'HIGH'})</div>
                 </div>
               </div>
@@ -586,7 +592,7 @@ export default function MemoryInterfacingSimulator({
                 </span>
                 <span className="font-mono text-[10px] bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded border border-indigo-200 font-bold">D8–D15 Data Bus</span>
               </div>
-              <p className="text-[11px] text-slate-600 mb-2">Activated when <strong className="text-slate-900">BHE# = 0</strong>. Holds odd memory addresses (00001H, 00003H, 00005H...).</p>
+              <p className="text-[11px] text-slate-600 mb-2">Activated when <strong className="text-slate-900"><span style={{ textDecoration: 'overline' }}>BHE</span> = 0</strong>. Holds odd memory addresses (00001H, 00003H, 00005H...).</p>
               <div className={`p-2 rounded text-center font-bold font-mono text-[11px] ${oddBankActive ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-slate-200 text-slate-500'}`}>
                 {oddBankActive ? '● BANK ACTIVE (D8-D15)' : '○ BANK INACTIVE'}
               </div>
@@ -610,7 +616,7 @@ export default function MemoryInterfacingSimulator({
             <div className="flex items-center justify-between">
               <span className="font-bold text-indigo-950 text-xs uppercase tracking-wider">IC 74LS138 3-to-8 Line Address Decoder Inputs</span>
               <span className={`text-[10px] font-mono px-2.5 py-0.5 rounded font-bold ${decoderEnabled ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'}`}>
-                Decoder {decoderEnabled ? 'ENABLED (G1=1, G2A#=0, G2B#=0)' : 'DISABLED'}
+                Decoder {decoderEnabled ? 'ENABLED (G1=1, G̅2̅A̅=0, G̅2̅B̅=0)' : 'DISABLED'}
               </span>
             </div>
 
@@ -652,7 +658,7 @@ export default function MemoryInterfacingSimulator({
 
           {/* 74LS138 Output Pin States */}
           <div className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-2 shadow-2xs">
-            <div className="text-slate-500 font-bold text-[10px] uppercase tracking-wider">Active-LOW Chip Select Outputs (Y0# to Y7#)</div>
+            <div className="text-slate-500 font-bold text-[10px] uppercase tracking-wider">Active-LOW Chip Select Outputs (Y̅0̅ to Y̅7̅)</div>
             <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
               {outputs.map((val, idx) => {
                 const isActive = val === 0;
@@ -663,7 +669,7 @@ export default function MemoryInterfacingSimulator({
                       isActive ? 'bg-emerald-600 text-white border-emerald-600 font-extrabold shadow-xs scale-105' : 'bg-slate-50 border-slate-200 text-slate-600'
                     }`}
                   >
-                    <div className="text-[9px] opacity-80">Y{idx}#</div>
+                    <div className="text-[9px] opacity-80"><span style={{ textDecoration: 'overline' }}>Y{idx}</span></div>
                     <div className="text-sm font-bold">{val}</div>
                     <div className="text-[8px] truncate">{isActive ? 'SELECTED' : 'High'}</div>
                   </div>
@@ -677,194 +683,129 @@ export default function MemoryInterfacingSimulator({
       {/* TAB 3: RAM & ROM 1MB Map & Address Decoding */}
       {activeTab === 'map' && (
         <div className="space-y-4">
-          {/* Top Banner: Concept Link */}
-          <div className="bg-gradient-to-r from-indigo-900 to-purple-900 text-white p-4 rounded-xl shadow-xs">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="bg-indigo-700/60 text-indigo-200 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">
-                  Architecture &amp; Decoding Foundation
+          {/* Bottom Division: Maximum RAM and ROM Limits in 8086 Memory System */}
+          <div className="bg-gradient-to-br from-indigo-50/70 via-purple-50/50 to-blue-50/70 p-4 sm:p-5 rounded-2xl border border-indigo-200 shadow-sm space-y-4">
+            {/* Division Proper Header */}
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-indigo-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <span className="p-2 bg-indigo-600 text-white rounded-xl shadow-xs shrink-0">
+                  <Database className="w-5 h-5" />
                 </span>
-                <h3 className="text-sm font-bold mt-1 text-white">
-                  8086 1 MB Physical Memory Organization &amp; Address Decoding Logic
-                </h3>
-                <p className="text-xs text-indigo-200 mt-0.5">
-                  How the 8086 partitions 1 MB (2^20 bytes = 1,048,576 bytes) and uses high-order address lines A15–A19 to select memory chips.
-                </p>
+                <div>
+                  <h3 className="font-bold text-sm sm:text-base text-indigo-950">
+                    8086 Physical Memory Space: Maximum RAM and ROM Limits
+                  </h3>
+                  <p className="text-[11px] text-slate-600">
+                    20 Address Lines (A0–A19) • Total Addressable Space: 1 MB (1,024 KB / 1,048,576 Bytes)
+                  </p>
+                </div>
               </div>
-            </div>
-          </div>
-
-          {/* 1 MB Memory Map Architecture Breakdown */}
-          <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-2xs space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-indigo-950 font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
-                <Layers className="w-4 h-4 text-indigo-600" />
-                1 MB Physical Address Space Allocation
-              </span>
-              <span className="text-[10px] bg-slate-100 text-slate-700 font-mono px-2 py-0.5 rounded font-bold">
-                Total Range: 00000H – FFFFFH
+              <span className="px-2.5 py-1 bg-indigo-100 text-indigo-800 text-[10px] font-mono font-bold rounded-lg border border-indigo-200">
+                Range: 00000H – FFFFFH
               </span>
             </div>
 
-            <div className="space-y-2.5 font-mono text-[11px]">
-              {/* Top ROM */}
-              <div className="bg-amber-50/80 border-2 border-amber-300 p-3 rounded-lg flex items-center justify-between text-amber-950 hover:bg-amber-50 transition-all">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-amber-200/70 rounded-md">
-                    <ShieldAlert className="w-5 h-5 text-amber-700 shrink-0" />
+            {/* Maximum RAM & ROM Limits Main Card with Visual Memory Bar */}
+            <div className="bg-white p-4 sm:p-5 rounded-xl border border-indigo-200/80 shadow-xs space-y-4">
+              {/* Visual Memory Map Representation (The Image/Diagram) */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-[11px] font-mono font-bold text-slate-700">
+                  <span>Lower Boundary: 00000H</span>
+                  <span className="text-indigo-600">Unified 1 MB Physical Address Map</span>
+                  <span>Upper Boundary: FFFFFH</span>
+                </div>
+
+                {/* 1 MB Memory Bar */}
+                <div className="w-full h-12 rounded-xl overflow-hidden border-2 border-slate-300 flex text-[10.5px] font-mono font-bold shadow-inner">
+                  {/* Lower RAM Zone */}
+                  <div className="w-1/2 bg-gradient-to-r from-emerald-500 to-teal-500 text-white flex flex-col items-center justify-center border-r-2 border-white px-2 text-center">
+                    <span>RAM Space (Up to 1 MB Max)</span>
+                    <span className="text-[9px] opacity-90 font-normal">Starts at 00000H (IVT &amp; User RAM)</span>
                   </div>
-                  <div>
-                    <strong className="text-amber-950 text-xs">Top Space: System EPROM / ROM (Reset Boot Firmware)</strong>
-                    <p className="text-[10.5px] text-amber-900 font-sans mt-0.5">
-                      <strong>Why placed here?</strong> When 8086 is reset, <code>CS = FFFFH</code> and <code>IP = 0000H</code> &rarr; execution starts at <strong>FFFF0H</strong>!
-                    </p>
+                  {/* Upper ROM Zone */}
+                  <div className="w-1/2 bg-gradient-to-r from-amber-500 to-orange-500 text-white flex flex-col items-center justify-center px-2 text-center">
+                    <span>ROM Space (Up to 1 MB Max)</span>
+                    <span className="text-[9px] opacity-90 font-normal">Ends at FFFFFH (Boot Vector FFFF0H)</span>
                   </div>
                 </div>
-                <div className="text-right shrink-0">
-                  <span className="bg-amber-200 text-amber-950 border border-amber-300 font-bold px-2.5 py-1 rounded text-[11px] block">
-                    FFFF0H – FFFFFH
-                  </span>
-                  <span className="text-[9px] text-amber-800 font-sans">Boot Vector Space</span>
+
+                <div className="flex justify-between text-[10px] text-slate-500 font-mono px-1">
+                  <span>▲ IVT Base: 00000H–003FFH</span>
+                  <span className="text-center text-slate-600 font-sans font-semibold">Total System Memory Budget = 1,024 KB (1 MB)</span>
+                  <span>Reset Vector: FFFF0H ▲</span>
                 </div>
               </div>
 
-              {/* General User RAM */}
-              <div className="bg-indigo-50/80 border-2 border-indigo-300 p-3 rounded-lg flex items-center justify-between text-indigo-950 hover:bg-indigo-50 transition-all">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-indigo-200/70 rounded-md">
-                    <Database className="w-5 h-5 text-indigo-700 shrink-0" />
+              {/* Maximum RAM and ROM Limits Detail Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-1">
+                {/* Max RAM Limit */}
+                <div className="bg-emerald-50/70 border-2 border-emerald-300 p-3.5 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between border-b border-emerald-200 pb-1.5">
+                    <span className="font-bold text-xs text-emerald-950 flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 inline-block" />
+                      Maximum RAM Limit: 1 MB (1,024 KB)
+                    </span>
+                    <span className="text-[9.5px] font-mono bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded font-bold">
+                      Starts @ 00000H
+                    </span>
                   </div>
-                  <div>
-                    <strong className="text-indigo-950 text-xs">Middle/Lower Space: SRAM / DRAM User &amp; System Memory</strong>
-                    <p className="text-[10.5px] text-indigo-900 font-sans mt-0.5">
-                      Allocated for Code Segment (CS), Data Segment (DS), Stack Segment (SS), Extra Segment (ES), and OS buffers.
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right shrink-0">
-                  <span className="bg-indigo-200 text-indigo-950 border border-indigo-300 font-bold px-2.5 py-1 rounded text-[11px] block">
-                    00400H – FFFEFH
-                  </span>
-                  <span className="text-[9px] text-indigo-800 font-sans">Read/Write RAM Area</span>
-                </div>
-              </div>
-
-              {/* IVT Table at Bottom */}
-              <div className="bg-emerald-50/80 border-2 border-emerald-300 p-3 rounded-lg flex items-center justify-between text-emerald-950 hover:bg-emerald-50 transition-all">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-emerald-200/70 rounded-md">
-                    <Cpu className="w-5 h-5 text-emerald-700 shrink-0" />
-                  </div>
-                  <div>
-                    <strong className="text-emerald-950 text-xs">Bottom 1 KB: Interrupt Vector Table (IVT)</strong>
-                    <p className="text-[10.5px] text-emerald-900 font-sans mt-0.5">
-                      Holds 256 Interrupt Pointers (Type 0 to 255), 4 bytes each (IP:CS) pointing to Interrupt Service Routines (ISRs).
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right shrink-0">
-                  <span className="bg-emerald-200 text-emerald-950 border border-emerald-300 font-bold px-2.5 py-1 rounded text-[11px] block">
-                    00000H – 003FFH
-                  </span>
-                  <span className="text-[9px] text-emerald-800 font-sans">Dedicated 1 KB IVT</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Interactive Bridge & Clarifications: Connecting Slide 4 (Theory) to Slide 5 (Circuit Design Problem) */}
-          <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-blue-50 p-4 rounded-xl border border-indigo-200 shadow-2xs space-y-4">
-            <div className="flex items-center gap-2.5">
-              <span className="p-2 bg-indigo-600 text-white rounded-lg shadow-xs">
-                <Lightbulb className="w-5 h-5" />
-              </span>
-              <div>
-                <h4 className="font-bold text-xs text-indigo-950">
-                  Key Conceptual Link &amp; Architecture Clarifications
-                </h4>
-                <p className="text-[11px] text-slate-600">
-                  How the 1 MB memory organization rules directly govern the 32 KB RAM Interfacing Problem:
-                </p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-              {/* Clarification 1: 32 KB RAM Placement in the Map */}
-              <div className="bg-white p-3.5 rounded-xl border border-indigo-200 shadow-xs space-y-2 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center gap-1.5 text-indigo-900 font-bold mb-1">
-                    <Database className="w-4 h-4 text-indigo-600 shrink-0" />
-                    <span>1. Where does the 32 KB RAM sit?</span>
-                  </div>
-                  <p className="text-[11px] text-slate-600 leading-relaxed">
-                    The 32 KB RAM chip (<code>00000H – 07FFFH</code>) sits at the <strong>very bottom</strong> of the 1 MB space and spans two areas:
-                  </p>
-                  <ul className="mt-2 space-y-1.5 text-[10.5px] text-slate-700">
-                    <li className="flex items-start gap-1 bg-emerald-50 p-1.5 rounded border border-emerald-200">
-                      <span className="font-bold text-emerald-800 shrink-0">• 00000H–003FFH (1 KB):</span>
-                      <span>Interrupt Vector Table (IVT) holding 256 vector pointers.</span>
+                  <ul className="text-xs text-emerald-950 space-y-1.5 leading-relaxed">
+                    <li className="flex items-start gap-1.5">
+                      <span className="text-emerald-700 font-bold shrink-0">•</span>
+                      <span><strong>Lower Boundary Requirement:</strong> RAM must begin at physical address <strong>00000H</strong>.</span>
                     </li>
-                    <li className="flex items-start gap-1 bg-indigo-50 p-1.5 rounded border border-indigo-200">
-                      <span className="font-bold text-indigo-800 shrink-0">• 00400H–07FFFH (31 KB):</span>
-                      <span>User &amp; OS RAM holding <strong>CS, DS, SS, ES</strong> segments (Code, Variables, Stack).</span>
+                    <li className="flex items-start gap-1.5">
+                      <span className="text-emerald-700 font-bold shrink-0">•</span>
+                      <span><strong>Dedicated IVT:</strong> The lowest 1 KB (00000H–003FFH) holds 256 Interrupt Pointers (4 bytes each).</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <span className="text-emerald-700 font-bold shrink-0">•</span>
+                      <span><strong>Storage Role:</strong> Houses operating system buffers, stack segment, data variables, and user program code.</span>
                     </li>
                   </ul>
                 </div>
-                <div className="text-[10px] text-indigo-700 bg-indigo-50/70 px-2 py-1 rounded font-medium">
-                  &bull; Stack (SS) &amp; Data (DS) MUST be in RAM to allow writes!
-                </div>
-              </div>
 
-              {/* Clarification 2: Accessing 00100H (IVT vs User Access) */}
-              <div className="bg-white p-3.5 rounded-xl border border-purple-200 shadow-xs space-y-2 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center gap-1.5 text-purple-900 font-bold mb-1">
-                    <Cpu className="w-4 h-4 text-purple-600 shrink-0" />
-                    <span>2. Accessing Address 00100H?</span>
+                {/* Max ROM Limit */}
+                <div className="bg-amber-50/70 border-2 border-amber-300 p-3.5 rounded-xl space-y-2">
+                  <div className="flex items-center justify-between border-b border-amber-200 pb-1.5">
+                    <span className="font-bold text-xs text-amber-950 flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-600 inline-block" />
+                      Maximum ROM Limit: 1 MB (1,024 KB)
+                    </span>
+                    <span className="text-[9.5px] font-mono bg-amber-200 text-amber-900 px-2 py-0.5 rounded font-bold">
+                      Ends @ FFFFFH
+                    </span>
                   </div>
-                  <p className="text-[11px] text-slate-600 leading-relaxed">
-                    <code>00100H</code> (decimal 256) falls strictly inside the <strong>1 KB IVT</strong> (256 / 4 = Type 64 / INT 40H):
-                  </p>
-                  <ul className="mt-2 space-y-1.5 text-[10.5px] text-slate-700">
-                    <li className="flex items-start gap-1 bg-purple-50 p-1.5 rounded border border-purple-200">
-                      <span className="font-bold text-purple-800 shrink-0">&bull; Hardware Bus:</span>
-                      <span>Treats it as a standard memory read/write cycle (A15–A19 = 0 &rarr; CS# = 0, Even bank enabled).</span>
+                  <ul className="text-xs text-amber-950 space-y-1.5 leading-relaxed">
+                    <li className="flex items-start gap-1.5">
+                      <span className="text-amber-700 font-bold shrink-0">•</span>
+                      <span><strong>Upper Boundary Requirement:</strong> ROM must end at top address <strong>FFFFFH</strong>.</span>
                     </li>
-                    <li className="flex items-start gap-1 bg-amber-50 p-1.5 rounded border border-amber-200">
-                      <span className="font-bold text-amber-800 shrink-0">&bull; 8086 CPU:</span>
-                      <span>On <code>INT 64</code>, fetches IP &amp; CS. On user <code>MOV</code>, updates the ISR pointer vector.</span>
+                    <li className="flex items-start gap-1.5">
+                      <span className="text-amber-700 font-bold shrink-0">•</span>
+                      <span><strong>Power-On Reset Vector:</strong> 8086 CPU always boots at <code>CS:IP = FFFFH:0000H</code> &rarr; <strong>FFFF0H</strong>.</span>
+                    </li>
+                    <li className="flex items-start gap-1.5">
+                      <span className="text-amber-700 font-bold shrink-0">•</span>
+                      <span><strong>Storage Role:</strong> Holds non-volatile system BIOS, POST diagnostics, and bootstrap loader firmware.</span>
                     </li>
                   </ul>
                 </div>
-                <div className="text-[10px] text-purple-700 bg-purple-50/70 px-2 py-1 rounded font-medium">
-                  &bull; Safe User Program RAM starts above IVT at <code>00400H</code>.
-                </div>
               </div>
 
-              {/* Clarification 3: Maximum RAM & ROM limits */}
-              <div className="bg-white p-3.5 rounded-xl border border-amber-200 shadow-xs space-y-2 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center gap-1.5 text-amber-900 font-bold mb-1">
-                    <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0" />
-                    <span>3. Max RAM &amp; ROM Limits?</span>
-                  </div>
-                  <p className="text-[11px] text-slate-600 leading-relaxed">
-                    With 20 address lines (A0–A19), total memory is capped at <strong>1 MB (1,024 KB)</strong>:
-                  </p>
-                  <ul className="mt-2 space-y-1.5 text-[10.5px] text-slate-700">
-                    <li className="flex items-start gap-1 bg-slate-50 p-1.5 rounded border border-slate-200">
-                      <span className="font-bold text-slate-800 shrink-0">&bull; Golden Rule 1:</span>
-                      <span><strong>RAM starts at 00000H</strong> (to host the 1 KB IVT, Stack, and Data variables).</span>
-                    </li>
-                    <li className="flex items-start gap-1 bg-slate-50 p-1.5 rounded border border-slate-200">
-                      <span className="font-bold text-slate-800 shrink-0">&bull; Golden Rule 2:</span>
-                      <span><strong>ROM ends at FFFFFH</strong> (to hold the Reset Vector at <code>FFFF0H</code>).</span>
-                    </li>
-                  </ul>
+              {/* Total Memory Capacity Constraint */}
+              <div className="bg-slate-50 border border-slate-200 p-3 rounded-xl flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-indigo-900 font-mono text-[11px] bg-indigo-100 px-2 py-0.5 rounded border border-indigo-200">
+                    Capacity Constraint
+                  </span>
+                  <span className="font-medium text-slate-700">
+                    Total RAM Size + Total ROM Size &le; <strong>1 MB (1,024 KB)</strong>
+                  </span>
                 </div>
-                <div className="text-[10px] text-amber-800 bg-amber-50/70 px-2 py-1 rounded font-medium">
-                  &bull; RAM Size + ROM Size &le; 1 MB (e.g. 960 KB RAM + 64 KB ROM).
-                </div>
+                <span className="text-[11px] font-mono text-slate-500">
+                  Example: 960 KB RAM + 64 KB ROM = 1,024 KB
+                </span>
               </div>
             </div>
           </div>

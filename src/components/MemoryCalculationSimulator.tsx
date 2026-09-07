@@ -532,7 +532,7 @@ export default function MemoryCalculationSimulator({ defaultTab = 'segmented-str
               </div>
               <div className={`pt-2 border-t border-dashed ${isOddActive ? 'border-indigo-200' : 'border-slate-200'}`}>
                 <span className={`text-[11px] block font-semibold ${isOddActive ? 'text-slate-700' : 'text-slate-400'}`}>Bus Hook: <strong className={`font-mono ${isOddActive ? 'text-indigo-700' : 'text-slate-500'}`}>D8 - D15</strong></span>
-                <span className={`text-[10px] block mt-0.5 ${isOddActive ? 'text-slate-500' : 'text-slate-400'}`}>Enabled by <strong className={`font-mono ${isOddActive ? 'text-indigo-700' : 'text-slate-500'}`}>BHE# = 0</strong></span>
+                <span className={`text-[10px] block mt-0.5 ${isOddActive ? 'text-slate-500' : 'text-slate-400'}`}>Enabled by <strong className={`font-mono ${isOddActive ? 'text-indigo-700' : 'text-slate-500'}`}>B̅H̅E̅ = 0</strong></span>
               </div>
             </div>
 
@@ -559,7 +559,7 @@ export default function MemoryCalculationSimulator({ defaultTab = 'segmented-str
           {/* Physical Signal Bus Table */}
           <div className="bg-white rounded-lg border border-slate-200/60 overflow-hidden text-[12.5px]">
             <div className="grid grid-cols-4 bg-slate-50 font-bold p-2 border-b border-slate-150 text-slate-700 text-center text-[10.5px] uppercase tracking-wider">
-              <div>BHE# (Bus High Enable)</div>
+              <div><span style={{ textDecoration: 'overline' }}>BHE</span> (Bus High Enable)</div>
               <div>A0 Address Pin</div>
               <div>Data Bus Lines</div>
               <div>Memory Performance</div>
@@ -591,7 +591,7 @@ export default function MemoryCalculationSimulator({ defaultTab = 'segmented-str
             <div className="bg-slate-50 border border-slate-200/80 rounded-lg p-3 text-[12.5px] leading-relaxed text-slate-800 space-y-2">
               {bankOp === 'read-word-even' && (
                 <p className="text-emerald-900 font-sans font-medium">
-                  ⚡ <strong>Aligned Word Access Peak Efficiency:</strong> Reading from even address 00040H triggers A0=0 (Lower Bank on D0–D7) and BHE#=0 (Upper Bank on D8–D15) simultaneously, allowing the 8086 to fetch all 16 bits in a <strong>single memory bus cycle</strong>!
+                  ⚡ <strong>Aligned Word Access Peak Efficiency:</strong> Reading from even address 00040H triggers A0=0 (Lower Bank on D0–D7) and B̅H̅E̅=0 (Upper Bank on D8–D15) simultaneously, allowing the 8086 to fetch all 16 bits in a <strong>single memory bus cycle</strong>!
                 </p>
               )}
               {bankOp === 'read-word-odd' && (
@@ -1948,7 +1948,7 @@ export default function MemoryCalculationSimulator({ defaultTab = 'segmented-str
                               </div>
                               <div className="pt-2 border-t border-dashed border-slate-200">
                                 <span className="text-[11px] block font-semibold text-slate-700">Bus Hook: <strong className="font-mono text-indigo-700">D8 - D15</strong></span>
-                                <span className="text-[10px] block mt-0.5 text-slate-500">Enabled by <strong className="font-mono text-indigo-700">BHE# = 0</strong></span>
+                                <span className="text-[10px] block mt-0.5 text-slate-500">Enabled by <strong className="font-mono text-indigo-700">B̅H̅E̅ = 0</strong></span>
                               </div>
                             </div>
 
@@ -1975,7 +1975,7 @@ export default function MemoryCalculationSimulator({ defaultTab = 'segmented-str
                           {/* Physical Signal Bus Table */}
                           <div className="bg-white rounded-lg border border-slate-200/60 overflow-hidden text-[12.5px]">
                             <div className="grid grid-cols-4 bg-slate-50 font-bold p-2 border-b border-slate-150 text-slate-700 text-center text-[10.5px] uppercase tracking-wider">
-                              <div>BHE# (Bus High Enable)</div>
+                              <div><span style={{ textDecoration: 'overline' }}>BHE</span> (Bus High Enable)</div>
                               <div>A0 Address Pin</div>
                               <div>Data Bus Lines</div>
                               <div>Memory Performance</div>

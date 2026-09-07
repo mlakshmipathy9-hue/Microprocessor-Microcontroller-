@@ -114,10 +114,10 @@ export default function TrafficSchematicDiagram({
       subtitle: 'Traffic Intersection State Controller',
       desc: 'Executes the 4-phase traffic state sequencer program. Writes LED activation bytes (21H, 11H, 0CH, 0AH) to 8255 Port A (80H), calls nested software delay loops (~30s Green, ~5s Yellow), and polls Port C for pedestrian pushbuttons.',
       pins: [
-        { pin: 'Pin 33 (MN/MX#)', func: 'Tied to +5V VCC to set Minimum Mode.' },
+        { pin: 'Pin 33 (MN/M̅X̅)', func: 'Tied to +5V VCC to set Minimum Mode.' },
         { pin: 'Pin 25 (ALE)', func: 'Address Latch Enable connected to 74LS373 (Pin 11).' },
-        { pin: 'Pin 28 (M/IO#)', func: 'Asserted LOW for I/O cycles to enable 74LS138 decoder.' },
-        { pin: 'Pin 29 (WR#)', func: 'Write strobe connected to 8255 WR# (Pin 36).' },
+        { pin: 'Pin 28 (M/I̅O̅)', func: 'Asserted LOW for I/O cycles to enable 74LS138 decoder.' },
+        { pin: 'Pin 29 (W̅R̅)', func: 'Write strobe connected to 8255 W̅R̅ (Pin 36).' },
         { pin: 'AD0–AD7', func: 'Multiplexed address/data bus lines.' }
       ]
     },
@@ -127,18 +127,18 @@ export default function TrafficSchematicDiagram({
       desc: 'Latches lower address bits A0–A7 from multiplexed AD0–AD7 when ALE pulses HIGH during clock cycle T1, providing stable A0 and A1 lines to select 8255 internal registers.',
       pins: [
         { pin: 'Pin 11 (LE)', func: 'Driven by 8086 ALE (Pin 25).' },
-        { pin: 'Pin 1 (OE#)', func: 'Connected to GND (0V) for active 3-state output.' },
+        { pin: 'Pin 1 (O̅E̅)', func: 'Connected to GND (0V) for active 3-state output.' },
         { pin: 'Pins Q0, Q1', func: 'Latched address outputs connected to 8255 A0 and A1.' }
       ]
     },
     u3: {
       title: 'U3: 74LS138 3-to-8 Line Decoder',
       subtitle: 'I/O Chip Select Generator (Base 80H)',
-      desc: 'Decodes upper address lines A2–A7 and M/IO# to assert active-low CS# (Pin 6) on the 8255 for I/O port address range 80H–87H.',
+      desc: 'Decodes upper address lines A2–A7 and M/I̅O̅ to assert active-low C̅S̅ (Pin 6) on the 8255 for I/O port address range 80H–87H.',
       pins: [
         { pin: 'Pin 6 (G1)', func: 'Tied to +5V VCC.' },
-        { pin: 'Pins 4, 5 (G2A#, G2B#)', func: 'Tied to 8086 M/IO# and A7.' },
-        { pin: 'Pin 15 (Y0#)', func: 'Asserted LOW for addresses 80H–87H -> 8255 CS#.' }
+        { pin: 'Pins 4, 5 (G̅2̅A̅, G̅2̅B̅)', func: 'Tied to 8086 M/I̅O̅ and A7.' },
+        { pin: 'Pin 15 (Y̅0̅)', func: 'Asserted LOW for addresses 80H–87H -> 8255 C̅S̅.' }
       ]
     },
     u4: {
@@ -187,9 +187,6 @@ export default function TrafficSchematicDiagram({
                 4-Way Intersection
               </span>
             </div>
-            <p className="text-[10px] text-slate-500 font-sans">
-              8086 (U1) ↔ 74LS373 (U2) ↔ 74LS138 (U3) ↔ 8255A (U4) ↔ 7407 Driver (U5) ↔ NS &amp; EW LED Clusters
-            </p>
           </div>
         </div>
 
@@ -343,9 +340,9 @@ export default function TrafficSchematicDiagram({
               <text x="10" y="70" fill="#dc2626" fontWeight="bold">AD0–AD7</text>
               <text x="10" y="95" fill="#dc2626">AD8–AD15</text>
               <text x="10" y="120" fill="#059669" fontWeight="bold">ALE (Pin 25)</text>
-              <text x="10" y="145" fill="#d97706" fontWeight="bold">M/IO# (Pin 28)</text>
-              <text x="10" y="170" fill="#d97706">WR# (Pin 29)</text>
-              <text x="10" y="195" fill="#d97706">RD# (Pin 32)</text>
+              <text x="10" y="145" fill="#d97706" fontWeight="bold">M/I̅O̅ (Pin 28)</text>
+              <text x="10" y="170" fill="#d97706">W̅R̅ (Pin 29)</text>
+              <text x="10" y="195" fill="#d97706">R̅D̅ (Pin 32)</text>
               <text x="10" y="230" fill="#4338ca" fontSize="8.5" fontWeight="bold">Traffic Code (AL):</text>
               <text x="10" y="250" fill="#1e293b" fontSize="8">P1: 21H (NS G/EW R)</text>
               <text x="10" y="268" fill="#1e293b" fontSize="8">P2: 11H (NS Y/EW R)</text>
@@ -382,7 +379,7 @@ export default function TrafficSchematicDiagram({
 
               <text x="8" y="55" fill="#dc2626" fontWeight="bold">AD0–AD7</text>
               <text x="8" y="80" fill="#059669" fontWeight="bold">LE (Pin 11)</text>
-              <text x="8" y="105" fill="#64748b">OE# (GND)</text>
+              <text x="8" y="105" fill="#64748b">O̅E̅ (GND)</text>
 
               <text x="117" y="55" fill="#2563eb" textAnchor="end" fontWeight="bold">A0 (Q0)</text>
               <text x="117" y="80" fill="#2563eb" textAnchor="end" fontWeight="bold">A1 (Q1)</text>
@@ -419,11 +416,11 @@ export default function TrafficSchematicDiagram({
 
               <text x="8" y="55" fill="#d97706" fontWeight="bold">A2, A3, A4</text>
               <text x="8" y="80" fill="#d97706">G1 (+5V)</text>
-              <text x="8" y="105" fill="#d97706">G2A# (M/IO#)</text>
-              <text x="8" y="130" fill="#d97706">G2B# (A7)</text>
+              <text x="8" y="105" fill="#d97706">G̅2̅A̅ (M/I̅O̅)</text>
+              <text x="8" y="130" fill="#d97706">G̅2̅B̅ (A7)</text>
 
-              <text x="117" y="75" fill="#059669" textAnchor="end" fontWeight="bold">Y0# (CS#)</text>
-              <text x="117" y="115" fill="#94a3b8" textAnchor="end">Y1#–Y7#</text>
+              <text x="117" y="75" fill="#059669" textAnchor="end" fontWeight="bold">Y̅0̅ (C̅S̅)</text>
+              <text x="117" y="115" fill="#94a3b8" textAnchor="end">Y̅1̅–Y̅7̅</text>
 
               <circle cx="0" cy="55" r="3" fill="#d97706" />
               <circle cx="0" cy="105" r="3" fill="#d97706" />
@@ -461,9 +458,9 @@ export default function TrafficSchematicDiagram({
               <text x="10" y="55" fill="#dc2626" fontWeight="bold">D0–D7 (Bus)</text>
               <text x="10" y="80" fill="#2563eb" fontWeight="bold">A0 (Pin 9)</text>
               <text x="10" y="105" fill="#2563eb" fontWeight="bold">A1 (Pin 8)</text>
-              <text x="10" y="135" fill="#059669" fontWeight="bold">CS# (Pin 6)</text>
-              <text x="10" y="160" fill="#d97706">WR# (Pin 36)</text>
-              <text x="10" y="185" fill="#d97706">RD# (Pin 5)</text>
+              <text x="10" y="135" fill="#059669" fontWeight="bold">C̅S̅ (Pin 6)</text>
+              <text x="10" y="160" fill="#d97706">W̅R̅ (Pin 36)</text>
+              <text x="10" y="185" fill="#d97706">R̅D̅ (Pin 5)</text>
               <text x="10" y="210" fill="#64748b">RESET = 0</text>
               <text x="10" y="240" fill="#4f46e5" fontSize="8.5" fontWeight="bold">Base Port: 80H</text>
 

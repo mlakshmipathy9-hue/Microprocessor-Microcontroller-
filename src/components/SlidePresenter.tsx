@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { Component, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Slide, QuizQuestion } from '../types';
 import { ChevronLeft, ChevronRight, CheckCircle, HelpCircle, GraduationCap, RefreshCw, Layers, PanelLeftClose, PanelLeftOpen, Sparkles, BookOpen, X, ZoomIn, Target, Cpu, Maximize2, Minimize2, Video, Play, Film } from 'lucide-react';
@@ -31,6 +31,21 @@ function getVideoEmbed(url: string) {
   };
 }
 
+function renderWithOverbars(str: string): React.ReactNode {
+  if (!str.includes('\u0305')) return str;
+  const parts = str.split(/((?:[A-Za-z0-9_]\u0305)+)/g);
+  return parts.map((part, i) => {
+    if (part.includes('\u0305')) {
+      return (
+        <span key={i} className="overline decoration-current inline-block font-bold" style={{ textDecoration: 'overline' }}>
+          {part.replace(/\u0305/g, '')}
+        </span>
+      );
+    }
+    return part;
+  });
+}
+
 function SlidePointContent({ text }: { text: string }) {
   if (text.includes('\n')) {
     const lines = text.split('\n');
@@ -42,7 +57,7 @@ function SlidePointContent({ text }: { text: string }) {
       <div className="flex-1 space-y-1.5 text-left">
         {firstLine && (
           <p className="text-slate-800 text-[13.5px] md:text-[14px] font-semibold leading-relaxed text-left">
-            {firstLine}
+            {renderWithOverbars(firstLine)}
           </p>
         )}
         {isCode ? (
@@ -52,7 +67,7 @@ function SlidePointContent({ text }: { text: string }) {
         ) : (
           <div className="text-slate-700 text-[13px] md:text-[13.5px] space-y-1 pl-1 text-left">
             {lines.slice(1).map((line, lIdx) => (
-              <p key={lIdx} className="leading-relaxed text-left">{line}</p>
+              <p key={lIdx} className="leading-relaxed text-left">{renderWithOverbars(line)}</p>
             ))}
           </div>
         )}
@@ -66,56 +81,152 @@ function SlidePointContent({ text }: { text: string }) {
     const content = text.slice(colonIndex + 1);
     return (
       <p className="text-slate-800 text-[13.5px] md:text-[14px] font-medium leading-relaxed text-left flex-1">
-        <strong className="font-bold text-slate-950 mr-1">{label}</strong>
-        <span className="text-slate-700">{content}</span>
+        <strong className="font-bold text-slate-950 mr-1">{renderWithOverbars(label)}</strong>
+        <span className="text-slate-700">{renderWithOverbars(content)}</span>
       </p>
     );
   }
 
   return (
     <p className="text-slate-800 text-[13.5px] md:text-[14px] font-medium leading-relaxed text-left flex-1">
-      {text}
+      {renderWithOverbars(text)}
     </p>
   );
 }
 
 import { Unit6LabManualPresenter } from './Unit6LabManualPresenter';
 
-// Import simulators lazily for code-splitting
-const EvolutionTimeline = React.lazy(() => import('./EvolutionTimeline'));
-const PinConfigurationSimulator = React.lazy(() => import('./PinConfigurationSimulator'));
-const ArchitectureExplorer = React.lazy(() => import('./ArchitectureExplorer'));
-const FlagRegisterSimulator = React.lazy(() => import('./FlagRegisterSimulator'));
-const MemoryCalculationSimulator = React.lazy(() => import('./MemoryCalculationSimulator'));
-const InterruptVectorTableSimulator = React.lazy(() => import('./InterruptVectorTableSimulator'));
-const IntroInterruptsSimulator = React.lazy(() => import('./IntroInterruptsSimulator'));
-const TimingDiagramSimulator = React.lazy(() => import('./TimingDiagramSimulator'));
-const PipeliningSimulator = React.lazy(() => import('./PipeliningSimulator'));
-const OperatingModeSimulator = React.lazy(() => import('./OperatingModeSimulator'));
-const MinimumModeHardwareSimulator = React.lazy(() => import('./MinimumModeHardwareSimulator'));
+// Robust lazy import with automatic retry for code-split simulator chunks
+function lazyWithRetry<T extends React.ComponentType<any>>(
+  factory: () => Promise<{ default: T } | any>,
+  retries = 3,
+  interval = 800
+): React.LazyExoticComponent<T> {
+  return React.lazy(() => {
+    return new Promise<{ default: T }>((resolve, reject) => {
+      const attempt = (remaining: number) => {
+        factory()
+          .then((mod) => {
+            if (mod && mod.default) {
+              resolve(mod);
+            } else if (mod) {
+              resolve({ default: mod } as any);
+            } else {
+              resolve(mod);
+            }
+          })
+          .catch((error) => {
+            console.warn(`Dynamic module import retry (${remaining} attempts left):`, error);
+            if (remaining > 0) {
+              setTimeout(() => {
+                attempt(remaining - 1);
+              }, interval);
+            } else {
+              reject(error);
+            }
+          });
+      };
+      attempt(retries);
+    });
+  });
+}
+
+interface SimulatorErrorBoundaryProps {
+  children: React.ReactNode;
+  resetKey?: string;
+}
+
+interface SimulatorErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+// Error Boundary for gracefully catching and retrying dynamic module load failures
+class SimulatorErrorBoundary extends (Component as any) {
+  state: SimulatorErrorBoundaryState = { hasError: false, error: null };
+
+  static getDerivedStateFromError(error: Error): SimulatorErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, info: any) {
+    console.error('SimulatorErrorBoundary caught error:', error, info);
+  }
+
+  componentDidUpdate(prevProps: any) {
+    if (prevProps.resetKey !== (this as any).props.resetKey && this.state.hasError) {
+      (this as any).setState({ hasError: false, error: null });
+    }
+  }
+
+  handleRetry = () => {
+    (this as any).setState({ hasError: false, error: null });
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-6 my-4 bg-slate-50 border border-slate-200 rounded-xl text-center flex flex-col items-center justify-center gap-3 shadow-xs">
+          <div className="w-10 h-10 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-700 font-bold font-mono">
+            !
+          </div>
+          <div className="space-y-1">
+            <h4 className="text-sm font-bold text-slate-900 font-sans">
+              Interactive Simulator Loading Glitch
+            </h4>
+            <p className="text-xs text-slate-600 max-w-md font-sans">
+              The simulator could not be loaded due to a transient network condition or module update.
+            </p>
+          </div>
+          <button
+            onClick={this.handleRetry}
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+          >
+            Retry Loading Simulator
+          </button>
+        </div>
+      );
+    }
+    return (this as any).props.children;
+  }
+}
+
+// Import simulators lazily with retry for code-splitting
+const EvolutionTimeline = lazyWithRetry(() => import('./EvolutionTimeline'));
+const PinConfigurationSimulator = lazyWithRetry(() => import('./PinConfigurationSimulator'));
+const ArchitectureExplorer = lazyWithRetry(() => import('./ArchitectureExplorer'));
+const FlagRegisterSimulator = lazyWithRetry(() => import('./FlagRegisterSimulator'));
+const MemoryCalculationSimulator = lazyWithRetry(() => import('./MemoryCalculationSimulator'));
+const InterruptVectorTableSimulator = lazyWithRetry(() => import('./InterruptVectorTableSimulator'));
+const IntroInterruptsSimulator = lazyWithRetry(() => import('./IntroInterruptsSimulator'));
+const TimingDiagramSimulator = lazyWithRetry(() => import('./TimingDiagramSimulator'));
+const PipeliningSimulator = lazyWithRetry(() => import('./PipeliningSimulator'));
+const OperatingModeSimulator = lazyWithRetry(() => import('./OperatingModeSimulator'));
+const MinimumModeHardwareSimulator = lazyWithRetry(() => import('./MinimumModeHardwareSimulator'));
 
 // Unit II Simulators
-const DevPipelineSimulator = React.lazy(() => import('./DevPipelineSimulator'));
-const AddressingModesSimulator = React.lazy(() => import('./AddressingModesSimulator'));
-const InstructionDecoderSimulator = React.lazy(() => import('./InstructionDecoderSimulator'));
-const InstructionBuilderSimulator = React.lazy(() => import('./InstructionBuilderSimulator').then(m => ({ default: m.InstructionBuilderSimulator })));
-const DirectiveSandboxSimulator = React.lazy(() => import('./DirectiveSandboxSimulator'));
-const AssemblerPlaygroundSimulator = React.lazy(() => import('./AssemblerPlaygroundSimulator'));
-const AssemblerPassSimulator = React.lazy(() => import('./AssemblerPassSimulator'));
-const AssemblerOutputsSimulator = React.lazy(() => import('./AssemblerOutputsSimulator'));
+const DevPipelineSimulator = lazyWithRetry(() => import('./DevPipelineSimulator'));
+const AddressingModesSimulator = lazyWithRetry(() => import('./AddressingModesSimulator'));
+const InstructionDecoderSimulator = lazyWithRetry(() => import('./InstructionDecoderSimulator'));
+const InstructionBuilderSimulator = lazyWithRetry(() => import('./InstructionBuilderSimulator').then(m => ({ default: m.InstructionBuilderSimulator })));
+const DirectiveSandboxSimulator = lazyWithRetry(() => import('./DirectiveSandboxSimulator'));
+const AssemblerPlaygroundSimulator = lazyWithRetry(() => import('./AssemblerPlaygroundSimulator'));
+const AssemblerPassSimulator = lazyWithRetry(() => import('./AssemblerPassSimulator'));
+const AssemblerOutputsSimulator = lazyWithRetry(() => import('./AssemblerOutputsSimulator'));
 
 // Unit III Simulators
-const MemoryInterfacingSimulator = React.lazy(() => import('./MemoryInterfacingSimulator'));
-const PPI8255Simulator = React.lazy(() => import('./PPI8255Simulator'));
-const PeripheralInterfacingSimulator = React.lazy(() => import('./PeripheralInterfacingSimulator'));
-const AnalogInterfacingSimulator = React.lazy(() => import('./AnalogInterfacingSimulator'));
-const Interrupt8259Simulator = React.lazy(() => import('./Interrupt8259Simulator'));
-const USART8251Simulator = React.lazy(() => import('./USART8251Simulator'));
-const DMA8237Simulator = React.lazy(() => import('./DMA8237Simulator'));
+const MemoryInterfacingSimulator = lazyWithRetry(() => import('./MemoryInterfacingSimulator'));
+const PPI8255Simulator = lazyWithRetry(() => import('./PPI8255Simulator'));
+const PPI8255RegistersOverview = lazyWithRetry(() => import('./PPI8255RegistersOverview'));
+const PeripheralInterfacingSimulator = lazyWithRetry(() => import('./PeripheralInterfacingSimulator'));
+const AnalogInterfacingSimulator = lazyWithRetry(() => import('./AnalogInterfacingSimulator'));
+const Interrupt8259Simulator = lazyWithRetry(() => import('./Interrupt8259Simulator'));
+const USART8251Simulator = lazyWithRetry(() => import('./USART8251Simulator'));
+const DMA8237Simulator = lazyWithRetry(() => import('./DMA8237Simulator'));
 
 // Unit IV & V Simulators
-const MCU8051Simulator = React.lazy(() => import('./MCU8051Simulator'));
-const MCU8051InterfacingSimulator = React.lazy(() => import('./MCU8051InterfacingSimulator'));
+const MCU8051Simulator = lazyWithRetry(() => import('./MCU8051Simulator'));
+const MCU8051InterfacingSimulator = lazyWithRetry(() => import('./MCU8051InterfacingSimulator'));
 
 interface SlidePresenterProps {
   slide: Slide;
@@ -509,22 +620,53 @@ export default function SlidePresenter({
           allowedTabs = ['ram-rom-design'];
         }
 
-        component = <MemoryInterfacingSimulator initialTab={initialTab} allowedTabs={allowedTabs} />;
+        component = (
+          <MemoryInterfacingSimulator
+            initialTab={initialTab}
+            allowedTabs={allowedTabs}
+            title={
+              slide.id === 'm13-s3'
+                ? 'Memory Banking & Address Decoding'
+                : slide.id === 'm13-s4'
+                ? '8086 Physical Memory Map Design'
+                : undefined
+            }
+          />
+        );
         break;
       }
       case 'ppi-8255': {
         let initialTab: 'diagram' | 'pins' | 'architecture' | 'modes' | 'iomode' | 'bsr' | 'registers' = 'diagram';
         let allowedTabs: ('diagram' | 'pins' | 'architecture' | 'modes' | 'iomode' | 'bsr' | 'registers')[] | undefined = undefined;
+        let pinsVariant: 'features-only' | 'inspector' | 'all' = 'all';
 
         if (slide.id === 'm14-s1') {
-          initialTab = 'diagram';
-          allowedTabs = ['diagram', 'pins'];
+          initialTab = 'pins';
+          allowedTabs = ['pins'];
+          pinsVariant = 'features-only';
+          component = <PPI8255Simulator initialTab={initialTab} allowedTabs={allowedTabs} pinsVariant={pinsVariant} />;
         } else if (slide.id === 'm14-s2') {
+          initialTab = 'pins';
+          allowedTabs = ['pins'];
+          pinsVariant = 'inspector';
+          component = <PPI8255Simulator initialTab={initialTab} allowedTabs={allowedTabs} pinsVariant={pinsVariant} />;
+        } else if (slide.id === 'm14-s3') {
+          initialTab = 'diagram';
+          allowedTabs = ['diagram'];
+          component = <PPI8255Simulator initialTab={initialTab} allowedTabs={allowedTabs} pinsVariant={pinsVariant} />;
+        } else if (slide.id === 'm14-s3b') {
+          component = <PPI8255RegistersOverview />;
+        } else if (slide.id === 'm14-s4') {
           initialTab = 'modes';
           allowedTabs = ['modes', 'iomode', 'bsr', 'registers'];
+          component = <PPI8255Simulator initialTab={initialTab} allowedTabs={allowedTabs} pinsVariant={pinsVariant} />;
+        } else if (slide.id === 'm14-s5') {
+          initialTab = 'iomode';
+          allowedTabs = ['iomode', 'bsr', 'registers', 'modes'];
+          component = <PPI8255Simulator initialTab={initialTab} allowedTabs={allowedTabs} pinsVariant={pinsVariant} />;
+        } else {
+          component = <PPI8255Simulator initialTab={initialTab} allowedTabs={allowedTabs} pinsVariant={pinsVariant} />;
         }
-
-        component = <PPI8255Simulator initialTab={initialTab} allowedTabs={allowedTabs} />;
         break;
       }
       case 'peripheral-interfacing': {
@@ -605,14 +747,16 @@ export default function SlidePresenter({
     }
 
     return (
-      <React.Suspense fallback={
-        <div className="p-8 text-center text-slate-500 font-mono text-xs flex items-center justify-center gap-2">
-          <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-          <span>Loading Interactive Simulator...</span>
-        </div>
-      }>
-        {component}
-      </React.Suspense>
+      <SimulatorErrorBoundary resetKey={slide.id}>
+        <React.Suspense fallback={
+          <div className="p-8 text-center text-slate-500 font-mono text-xs flex items-center justify-center gap-2">
+            <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+            <span>Loading Interactive Simulator...</span>
+          </div>
+        }>
+          {component}
+        </React.Suspense>
+      </SimulatorErrorBoundary>
     );
   };
 
@@ -628,16 +772,31 @@ export default function SlidePresenter({
       {/* Floating Full Screen Mode Controls & Hanging Left/Right Navigation Buttons */}
       {fullScreenMode && (
         <>
-          {/* Top-Right Exit Full Screen Button */}
-          <button
-            id="fullscreen-exit-button"
-            onClick={() => onToggleFullScreen?.(false)}
-            className="absolute top-3 right-3 z-50 px-3 py-1.5 bg-slate-900/80 hover:bg-slate-950 text-slate-200 hover:text-white rounded-full transition-all border border-slate-700/60 shadow-lg cursor-pointer flex items-center gap-1.5 text-xs font-semibold backdrop-blur-md hover:scale-105"
-            title="Exit Full Screen Mode (or press Esc / Double Tap)"
+          {/* Top Fullscreen Header Bar */}
+          <div
+            id="fullscreen-header-bar"
+            className="flex items-center justify-between gap-3 px-3.5 py-2 mb-2 bg-slate-900 text-white rounded-xl shadow-md border border-slate-800 z-40 shrink-0"
           >
-            <Minimize2 className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden sm:inline">Exit Fullscreen</span>
-          </button>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono tracking-wider bg-indigo-500/25 border border-indigo-400/30 text-indigo-300 uppercase shrink-0">
+                <Sparkles className="w-3 h-3 text-indigo-400" />
+                {slide.moduleTitle || 'Academic Courseware'}
+              </span>
+              <h1 id="fullscreen-slide-title" className="text-xs sm:text-sm md:text-base font-bold text-white tracking-tight truncate">
+                {slide.title}
+              </h1>
+            </div>
+
+            <button
+              id="fullscreen-exit-button"
+              onClick={() => onToggleFullScreen?.(false)}
+              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white rounded-full transition-all border border-slate-600/70 shadow-xs cursor-pointer flex items-center gap-1.5 text-xs font-semibold shrink-0 hover:scale-105"
+              title="Exit Full Screen Mode (or press Esc / Double Tap)"
+            >
+              <Minimize2 className="w-3.5 h-3.5 text-amber-400" />
+              <span className="hidden sm:inline">Exit Fullscreen</span>
+            </button>
+          </div>
 
           {/* Hanging Left Button (Previous Slide) */}
           <button
@@ -1089,22 +1248,8 @@ export default function SlidePresenter({
             </button>
           </div>
 
-          {/* Center Tools & Banners (Status, Dr. M Lakshmipathy, Theory, Magnifier, FullScreen) */}
+          {/* Center Tools & Banners (Dr. M Lakshmipathy, Theory, Magnifier, FullScreen) */}
           <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 flex-1 min-w-0 px-1">
-            {/* Progress bar inside controls (Desktop only) */}
-            <div className="hidden lg:flex items-center gap-2 text-slate-400 font-mono text-xs uppercase tracking-wider font-bold shrink-0">
-              <span>Status:</span>
-              {completedSlides.includes(slide.id) ? (
-                <span className="flex items-center gap-1 text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-150 text-xs">
-                  <CheckCircle className="w-3.5 h-3.5" /> Studied
-                </span>
-              ) : (
-                <span className="text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded border border-amber-150 text-xs">
-                  In Progress
-                </span>
-              )}
-            </div>
-
             {/* Academic Preparedness Banner - Dr. M Lakshmipathy */}
             {!projectorMode && (
               <div className="hidden lg:flex flex-col items-center text-center bg-slate-100/60 border border-slate-200/60 rounded-xl px-3 py-1 shrink-0">

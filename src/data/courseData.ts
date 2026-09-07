@@ -1407,27 +1407,21 @@ export const courseData: Module[] = [
       },
       {
         id: 'm13-s3',
-        title: '3. 8086 Semiconductor Memory Interfacing & Bus Connections 💾',
+        title: '3. Memory Banking & Address Decoding',
         moduleTitle: 'Module 13: Semiconductor Memory Interfacing (RAM & ROM)',
         moduleId: 'm13',
         interactiveType: 'memory-interfacing',
-        points: [
-          'Memory Interfacing Fundamentals: Primary memory interfacing involves connecting RAM (SRAM/DRAM for data, stack, variables) and ROM (EPROM/Flash for BIOS firmware) to 8086 address, data, and control buses.',
-          '8086 Memory Address Space: The 8086 features a 20-bit address bus (A0-A19), allowing it to address up to 1 MB (1,048,576 bytes) of physical memory spanning from 00000H to FFFFFH.',
-          'Address Decoding Circuits: Higher-order address lines (e.g. A17-A19 or A14-A19) are decoded using 3-to-8 decoders (such as IC 74LS138) to generate active-low Chip Select (CS# / CE#) signals for memory chips.',
-          'Control Signal Matching: Microprocessor control signals MEMR# / RD# (Read) and MEMW# / WR# (Write) connect to memory chip enable pins (OE# Output Enable, WE# Write Enable) to control bus direction.',
-          'Bus Demultiplexing & Buffering: Demultiplexing AD0-AD15 using 74LS373 octal latches (controlled by ALE) and buffering data with 74LS245 transceivers ensures clean, stable electrical drive for memory arrays.'
-        ]
+        points: []
       },
       {
         id: 'm13-s4',
-        title: '4. Memory Map Design & Address Decoding 📐',
+        title: '4. 8086 Physical Memory Map Design',
         moduleTitle: 'Module 13: Semiconductor Memory Interfacing (RAM & ROM)',
         moduleId: 'm13',
         interactiveType: 'memory-interfacing',
         points: [
           'Memory Mapping Concept: A memory map defines the exact start and end physical addresses assigned to each RAM and ROM chip within the 1 MB address space.',
-          'Even and Odd Memory Banks: To achieve 16-bit wide data transfers, 1 MB memory is organized into two 512 KB banks: Even Bank (connected to D0-D7, selected by A0=0) and Odd Bank (connected to D8-D15, selected by BHE#=0).',
+          'Even and Odd Memory Banks: To achieve 16-bit wide data transfers, 1 MB memory is organized into two 512 KB banks: Even Bank (connected to D0-D7, selected by A0=0) and Odd Bank (connected to D8-D15, selected by B̅H̅E̅=0).',
           'Calculating Memory Address Range: For a 64 KB memory chip (2^16 bytes), 16 address lines (A0-A15) connect directly to chip address pins, while the remaining 4 high address lines (A16-A19) connect to the decoder.',
           'ROM Address Mapping in 8086: Because 8086 automatically starts execution from FFFF0H upon RESET, system boot EPROM/ROM must be mapped to the top of memory space (ending at FFFFFH).',
           'RAM Address Mapping in 8086: System RAM is mapped at lower memory addresses starting at 00000H because the Interrupt Vector Table (IVT) occupies addresses 00000H to 003FFH.'
@@ -1440,12 +1434,12 @@ export const courseData: Module[] = [
         moduleId: 'm13',
         interactiveType: 'memory-interfacing',
         points: [
-          'Design Problem 1 (32 KB RAM Interfacing with Absolute Decoding):\n• Problem: Interface 32 KB of RAM to 8086 using absolute decoding with suitable address (00000H–07FFFH).\n• Step 1 (Capacity): 32 KB total -> Even Bank (16 KB, D0–D7) & Odd Bank (16 KB, D8–D15) -> 2 ICs of 16 KB RAM.\n• Step 2 (Address Lines): 16 KB = 2^14 -> 14 address lines (A1–A14 to chip A0–A13); A0 & BHE# for bank select; 5 high lines (A15–A19) for absolute decoding.\n• Step 3 (Decoding Table): Binary address range 00000H to 07FFFH with A19..A15 = 00000b.\n• Step 4 (Chip Select Logic): CS# = NOT(NOT A19 • NOT A18 • NOT A17 • NOT A16 • NOT A15 • M/IO#). Even Bank CE1# = CS# OR A0; Odd Bank CE2# = CS# OR BHE#.\n• Step 5 (Schematic): 8086 MPU (Min Mode) + 3× 74LS373 Latches + Absolute NAND/OR Decoder + 2× 74LS245 Transceivers + 2× 16 KB SRAM chips.',
-          'Block 1: Intel 8086 Microprocessor (Minimum Mode Bus Master)\n• Operation: Configured in Minimum Mode by connecting Pin 33 (MN/MX#) to +5V VCC, generating bus strobes directly without an external 8288 controller.\n• Key Signals:\n  - AD0–AD15: Time-multiplexed 16-bit Address (T1) and Data (T2–T4) bus.\n  - A16/S3–A19/S6 & BHE#/S7: Time-multiplexed upper address and status bits.\n  - ALE (Pin 25): Address Latch Enable strobe pulsing HIGH in T1.\n  - M/IO# (Pin 28): HIGH for memory cycles; RD# (Pin 32) & WR# (Pin 29) for read/write strobes.\n  - DEN# (Pin 26) & DT/R# (Pin 27): Drive external 74LS245 transceivers.',
-          'Block 2: 74LS373 Octal Transparent D-Latches (Address Demultiplexing Stage)\n• Why Demultiplexing is Required: To reduce pin count, the 8086 shares pins for address and data. Address is valid ONLY during clock cycle T1.\n• Latch Configuration:\n  - 3 × 74LS373 latches capture address on the falling edge of ALE (Pin 25 connected to LE Pin 11).\n  - U2A latches AD0–AD7 -> A0–A7; U2B latches AD8–AD15 -> A8–A15; U2C latches A16–A19 & BHE# -> A16–A19 & BHE#.\n  - Latched addresses remain rock-solid throughout T2, T3, and T4 states while AD0–AD15 lines carry data.',
-          'Block 3: 74LS138 3-to-8 Line Address Decoder (Chip Select Generator)\n• Operation: Decodes high-order address bits A17, A18, A19 to partition the 1 MB address space into 128 KB blocks.\n• Decoder Wiring:\n  - Select inputs A, B, C wired to latched A17, A18, A19.\n  - Enable G1 wired to M/IO# (HIGH for memory); G2A# and G2B# tied to GND (0V).\n  - Y0# (Pin 15) asserts LOW for 00000H–1FFFFH to select SRAM Bank.\n  - Y7# (Pin 7) asserts LOW for E0000H–FFFFFH to select Boot EPROM Bank.',
-          'Block 4: 74LS245 Octal Bidirectional Bus Transceivers (Data Buffers)\n• Function: Isolates CPU from capacitive bus loading and provides clean bidirectional data drive.\n• Control Wiring:\n  - U4A buffers Lower Data Bus (D0–D7); U4B buffers Upper Data Bus (D8–D15).\n  - DIR (Pin 1) driven by 8086 DT/R# (1 = Transmit / Write, 0 = Receive / Read).\n  - OE# (Pin 19) driven by 8086 DEN# (asserted LOW during data phase T2–T4).',
-          'Block 5: Even & Odd Memory Banks (2 × SRAM 62256 & 2 × EPROM 27256)\n• 16-Bit Memory Architecture: 1 MB space is split into Even Bank (D0–D7, selected by A0=0) and Odd Bank (D8–D15, selected by BHE#=0).\n• Gating Logic:\n  - Even Bank CE# = CS# OR A0 (Active LOW only when chip selected AND address is even).\n  - Odd Bank CE# = CS# OR BHE# (Active LOW only when chip selected AND odd byte/word accessed).\n• Address Connection: Memory chips connect latched A1–A15 to chip address inputs A0–A14 (address shifted by 1 bit because A0 is used for bank enable).\n• Control Pins: OE# connects to 8086 RD#; WE# connects to 8086 WR# (EPROMs have no WE# pin).'
+          'Design Problem 1 (32 KB RAM Interfacing with Absolute Decoding):\n• Problem: Interface 32 KB of RAM to 8086 using absolute decoding with suitable address (00000H–07FFFH).\n• Step 1 (Capacity): 32 KB total -> Even Bank (16 KB, D0–D7) & Odd Bank (16 KB, D8–D15) -> 2 ICs of 16 KB RAM.\n• Step 2 (Address Lines): 16 KB = 2^14 -> 14 address lines (A1–A14 to chip A0–A13); A0 & B̅H̅E̅ for bank select; 5 high lines (A15–A19) for absolute decoding.\n• Step 3 (Decoding Table): Binary address range 00000H to 07FFFH with A19..A15 = 00000b.\n• Step 4 (Chip Select Logic): C̅S̅ = NOT(NOT A19 • NOT A18 • NOT A17 • NOT A16 • NOT A15 • M/I̅O̅). Even Bank C̅E̅1̅ = C̅S̅ OR A0; Odd Bank C̅E̅2̅ = C̅S̅ OR B̅H̅E̅.\n• Step 5 (Schematic): 8086 MPU (Min Mode) + 3× 74LS373 Latches + Absolute NAND/OR Decoder + 2× 74LS245 Transceivers + 2× 16 KB SRAM chips.',
+          'Block 1: Intel 8086 Microprocessor (Minimum Mode Bus Master)\n• Operation: Configured in Minimum Mode by connecting Pin 33 (MN/M̅X̅) to +5V VCC, generating bus strobes directly without an external 8288 controller.\n• Key Signals:\n  - AD0–AD15: Time-multiplexed 16-bit Address (T1) and Data (T2–T4) bus.\n  - A16/S3–A19/S6 & B̅H̅E̅/S7: Time-multiplexed upper address and status bits.\n  - ALE (Pin 25): Address Latch Enable strobe pulsing HIGH in T1.\n  - M/I̅O̅ (Pin 28): HIGH for memory cycles; R̅D̅ (Pin 32) & W̅R̅ (Pin 29) for read/write strobes.\n  - D̅E̅N̅ (Pin 26) & DT/R̅ (Pin 27): Drive external 74LS245 transceivers.',
+          'Block 2: 74LS373 Octal Transparent D-Latches (Address Demultiplexing Stage)\n• Why Demultiplexing is Required: To reduce pin count, the 8086 shares pins for address and data. Address is valid ONLY during clock cycle T1.\n• Latch Configuration:\n  - 3 × 74LS373 latches capture address on the falling edge of ALE (Pin 25 connected to LE Pin 11).\n  - U2A latches AD0–AD7 -> A0–A7; U2B latches AD8–AD15 -> A8–A15; U2C latches A16–A19 & B̅H̅E̅ -> A16–A19 & B̅H̅E̅.\n  - Latched addresses remain rock-solid throughout T2, T3, and T4 states while AD0–AD15 lines carry data.',
+          'Block 3: 74LS138 3-to-8 Line Address Decoder (Chip Select Generator)\n• Operation: Decodes high-order address bits A17, A18, A19 to partition the 1 MB address space into 128 KB blocks.\n• Decoder Wiring:\n  - Select inputs A, B, C wired to latched A17, A18, A19.\n  - Enable G1 wired to M/I̅O̅ (HIGH for memory); G̅2̅A̅ and G̅2̅B̅ tied to GND (0V).\n  - Y̅0̅ (Pin 15) asserts LOW for 00000H–1FFFFH to select SRAM Bank.\n  - Y̅7̅ (Pin 7) asserts LOW for E0000H–FFFFFH to select Boot EPROM Bank.',
+          'Block 4: 74LS245 Octal Bidirectional Bus Transceivers (Data Buffers)\n• Function: Isolates CPU from capacitive bus loading and provides clean bidirectional data drive.\n• Control Wiring:\n  - U4A buffers Lower Data Bus (D0–D7); U4B buffers Upper Data Bus (D8–D15).\n  - DIR (Pin 1) driven by 8086 DT/R̅ (1 = Transmit / Write, 0 = Receive / Read).\n  - O̅E̅ (Pin 19) driven by 8086 D̅E̅N̅ (asserted LOW during data phase T2–T4).',
+          'Block 5: Even & Odd Memory Banks (2 × SRAM 62256 & 2 × EPROM 27256)\n• 16-Bit Memory Architecture: 1 MB space is split into Even Bank (D0–D7, selected by A0=0) and Odd Bank (D8–D15, selected by B̅H̅E̅=0).\n• Gating Logic:\n  - Even Bank C̅E̅ = C̅S̅ OR A0 (Active LOW only when chip selected AND address is even).\n  - Odd Bank C̅E̅ = C̅S̅ OR B̅H̅E̅ (Active LOW only when chip selected AND odd byte/word accessed).\n• Address Connection: Memory chips connect latched A1–A15 to chip address inputs A0–A14 (address shifted by 1 bit because A0 is used for bank enable).\n• Control Pins: O̅E̅ connects to 8086 R̅D̅; W̅E̅ connects to 8086 W̅R̅ (EPROMs have no W̅E̅ pin).'
         ]
       },
       {
@@ -1457,10 +1451,10 @@ export const courseData: Module[] = [
         points: [
           'Design Problem 2 (Combined RAM + ROM Interfacing Design):\n• Problem Statement: Interface 32 KB of RAM (00000H–07FFFH) and 32 KB of ROM/EPROM (F8000H–FFFFFH) to the 8086 microprocessor using 16 KB memory ICs and suitable address decoding.',
           'Step 1: Memory Budgeting & Bank Division:\n• Total Memory: 64 KB (32 KB RAM + 32 KB ROM).\n• RAM Organization: 32 KB / 2 = 2 ICs of 16 KB SRAM (62128) -> RAM 1 Even Bank (D0–D7) & RAM 2 Odd Bank (D8–D15).\n• ROM Organization: 32 KB / 2 = 2 ICs of 16 KB EPROM (27128) -> ROM 1 Even Bank (D0–D7) & ROM 2 Odd Bank (D8–D15).\n• Total IC Count: 4 Memory Chips (2× RAM + 2× ROM).',
-          'Step 2: Address Line Budget & Pin Allocation:\n• Individual 16 KB Chip: 16 KB = 2^14 bytes -> 14 address lines on each chip (A0–A13).\n• Memory to 8086 Wiring: Connect chip A0–A13 to 8086 latched address lines A1–A14 (address shifted by 1 bit for bank selection).\n• Bank Enables: A0 = 0 enables Even Banks (RAM 1 & ROM 1); BHE# = 0 enables Odd Banks (RAM 2 & ROM 2).\n• High Decoding Lines: 20 - 15 = 5 address lines (A15, A16, A17, A18, A19) connect to address decoders.',
-          'Step 3: Binary Decoding Map & Address Ranges:\n• 32 KB RAM (00000H–07FFFH): A19..A15 = 00000b, A14..A1 = 00000000000000b to 11111111111111b.\n• 32 KB ROM (F8000H–FFFFFH): A19..A15 = 11111b, A14..A1 = 00000000000000b to 11111111111111b.\n• Reset Vector: 8086 jumps to FFFF0H upon power-on, which falls inside ROM 1 & ROM 2.\n• Unmapped Space: Addresses 08000H to F7FFFH leave decoders inactive (CS# = 1, High-Z bus).',
-          'Step 4: Decoder & Chip Select Logic:\n• Master RAM CS#: CS_RAM# = NOT( NOT A19 • NOT A18 • NOT A17 • NOT A16 • NOT A15 • M/IO# ).\n• Master ROM CS#: CS_ROM# = NOT( A19 • A18 • A17 • A16 • A15 • M/IO# ).\n• 4-Way Bank OR Gates (74LS32):\n  - CE_RAM1# = CS_RAM# OR A0 (RAM 1 Even Bank)\n  - CE_RAM2# = CS_RAM# OR BHE# (RAM 2 Odd Bank)\n  - CE_ROM1# = CS_ROM# OR A0 (ROM 1 Even Bank)\n  - CE_ROM2# = CS_ROM# OR BHE# (ROM 2 Odd Bank)',
-          'Step 5 & 6: Complete 8086 Dual-Memory Circuit Wiring:\n• Demultiplexing: 3× 74LS373 latches capture AD0–AD15 & A16–A19/BHE# on ALE falling edge.\n• Data Buffering: 2× 74LS245 transceivers drive D0–D7 (U4A) and D8–D15 (U4B) enabled by DEN# and directed by DT/R#.\n• Control Strobes: 8086 RD# connects to OE# of all 4 chips. 8086 WR# connects to WE# of RAM 1 & RAM 2 ONLY (ROM chips have NO WE# pin, preventing accidental overwrites of boot firmware).'
+          'Step 2: Address Line Budget & Pin Allocation:\n• Individual 16 KB Chip: 16 KB = 2^14 bytes -> 14 address lines on each chip (A0–A13).\n• Memory to 8086 Wiring: Connect chip A0–A13 to 8086 latched address lines A1–A14 (address shifted by 1 bit for bank selection).\n• Bank Enables: A0 = 0 enables Even Banks (RAM 1 & ROM 1); B̅H̅E̅ = 0 enables Odd Banks (RAM 2 & ROM 2).\n• High Decoding Lines: 20 - 15 = 5 address lines (A15, A16, A17, A18, A19) connect to address decoders.',
+          'Step 3: Binary Decoding Map & Address Ranges:\n• 32 KB RAM (00000H–07FFFH): A19..A15 = 00000b, A14..A1 = 00000000000000b to 11111111111111b.\n• 32 KB ROM (F8000H–FFFFFH): A19..A15 = 11111b, A14..A1 = 00000000000000b to 11111111111111b.\n• Reset Vector: 8086 jumps to FFFF0H upon power-on, which falls inside ROM 1 & ROM 2.\n• Unmapped Space: Addresses 08000H to F7FFFH leave decoders inactive (C̅S̅ = 1, High-Z bus).',
+          'Step 4: Decoder & Chip Select Logic:\n• Master RAM C̅S̅: C̅S̅_RAM = NOT( NOT A19 • NOT A18 • NOT A17 • NOT A16 • NOT A15 • M/I̅O̅ ).\n• Master ROM C̅S̅: C̅S̅_ROM = NOT( A19 • A18 • A17 • A16 • A15 • M/I̅O̅ ).\n• 4-Way Bank OR Gates (74LS32):\n  - C̅E̅_RAM1 = C̅S̅_RAM OR A0 (RAM 1 Even Bank)\n  - C̅E̅_RAM2 = C̅S̅_RAM OR B̅H̅E̅ (RAM 2 Odd Bank)\n  - C̅E̅_ROM1 = C̅S̅_ROM OR A0 (ROM 1 Even Bank)\n  - C̅E̅_ROM2 = C̅S̅_ROM OR B̅H̅E̅ (ROM 2 Odd Bank)',
+          'Step 5 & 6: Complete 8086 Dual-Memory Circuit Wiring:\n• Demultiplexing: 3× 74LS373 latches capture AD0–AD15 & A16–A19/B̅H̅E̅ on ALE falling edge.\n• Data Buffering: 2× 74LS245 transceivers drive D0–D7 (U4A) and D8–D15 (U4B) enabled by D̅E̅N̅ and directed by DT/R̅.\n• Control Strobes: 8086 R̅D̅ connects to O̅E̅ of all 4 chips. 8086 W̅R̅ connects to W̅E̅ of RAM 1 & RAM 2 ONLY (ROM chips have NO W̅E̅ pin, preventing accidental overwrites of boot firmware).'
         ]
       },
       {
@@ -1490,7 +1484,7 @@ export const courseData: Module[] = [
               'To reduce total power consumption during instruction fetching'
             ],
             correctAnswer: 1,
-            explanation: 'The 8086 data bus is 16 bits wide. Dividing memory into Even Bank (D0-D7, selected by A0=0) and Odd Bank (D8-D15, selected by BHE#=0) allows the 8086 to fetch either an 8-bit byte or a full 16-bit word in a single memory cycle.'
+            explanation: 'The 8086 data bus is 16 bits wide. Dividing memory into Even Bank (D0-D7, selected by A0=0) and Odd Bank (D8-D15, selected by B̅H̅E̅=0) allows the 8086 to fetch either an 8-bit byte or a full 16-bit word in a single memory cycle.'
           },
           {
             question: 'Where must system ROM (EPROM/Flash) containing boot code be mapped in the 8086 memory address space?',
@@ -1498,7 +1492,7 @@ export const courseData: Module[] = [
               'At address 00000H because IVT starts there',
               'At address 80000H in the middle of memory',
               'At the top of memory near FFFF0H because 8086 jumps to FFFF0H upon RESET',
-              'Anywhere in memory as long as CS# is connected to A0'
+              'Anywhere in memory as long as C̅S̅ is connected to A0'
             ],
             correctAnswer: 2,
             explanation: 'Upon hardware RESET, the 8086 automatically sets CS = FFFFH and IP = 0000H, yielding physical address FFFF0H. Boot code/ROM must reside at FFFF0H to execute startup code.'
@@ -1509,7 +1503,7 @@ export const courseData: Module[] = [
               'By applying a 12V electrical pulse to the RESET pin',
               'By exposing the chip silicon wafer to intense Ultraviolet (UV) light through a quartz window',
               'By executing a software CLC instruction in assembly',
-              'By grounding the Chip Select (CS#) line for 5 seconds'
+              'By grounding the Chip Select (C̅S̅) line for 5 seconds'
             ],
             correctAnswer: 1,
             explanation: 'EPROMs feature a transparent quartz window over the silicon die. Exposing the die to high-intensity UV light discharges the floating gates, erasing all stored bytes back to FFH.'
@@ -1524,30 +1518,86 @@ export const courseData: Module[] = [
     slides: [
       {
         id: 'm14-s1',
-        title: '1. Intel 8255 PPI Architecture & Port Configuration 🔌',
+        title: '1. Intel 8255 PPI Pin Diagram & Salient Features 📌',
+        moduleTitle: 'Module 14: Intel 8255 Programmable Peripheral Interface',
+        moduleId: 'm14',
+        interactiveType: 'ppi-8255',
+        points: [
+          '24 Programmable I/O Pins: Organized into three independent 8-bit ports: Port A (PA0–PA7), Port B (PB0–PB7), and Port C (PC0–PC7).',
+          'Two 4-bit Sub-Ports in Port C: Port C can be split into Port C Upper (PC7–PC4) and Port C Lower (PC3–PC0), independently programmable for I/O or used as handshake lines.',
+          'Three Operating Modes in I/O Mode (D7 = 1):\n• Mode 0 (Basic I/O): Simple input or output without handshaking.\n• Mode 1 (Strobed I/O): Handshake signals on Port C synchronize data transfer on Ports A and B.\n• Mode 2 (Strobed Bi-directional Bus): Port A functions as an 8-bit bidirectional data bus with 5 Port C handshake lines.',
+          'Bit Set/Reset (BSR) Mode (D7 = 0): Allows individual setting (1) or resetting (0) of any single bit in Port C without affecting other bits.',
+          'Direct Microprocessor Bus Compatibility: Connects directly to 8085/8086 via 8-bit bidirectional data bus (D0–D7), address selection (A0, A1), Chip Select (C̅S̅), Read (R̅D̅), Write (W̅R̅), and RESET.',
+          'Standard 40-Pin DIP Package: Operates with single +5V DC supply, TTL-compatible logic, with Darlington transistor drive capability (up to 1.5 mA sink/source) on Port C for driving relays and displays.'
+        ]
+      },
+      {
+        id: 'm14-s2',
+        title: '2. Intel 8255 PPI Pin Details & Address Decoding 🔍',
+        moduleTitle: 'Module 14: Intel 8255 Programmable Peripheral Interface',
+        moduleId: 'm14',
+        interactiveType: 'ppi-8255',
+        points: [
+          'Interactive 40-Pin DIP Package: Click any pin on the package to inspect its signal type, electrical direction, bus timing role, and internal group assignment.',
+          'Internal Address Decoding (A1, A0):\n• A1 = 0, A0 = 0 ➔ Selected Port: Port A\n• A1 = 0, A0 = 1 ➔ Selected Port: Port B\n• A1 = 1, A0 = 0 ➔ Selected Port: Port C\n• A1 = 1, A0 = 1 ➔ Selected Port: Control Register',
+          'Chip Select (C̅S̅): Active-LOW input (Pin 6). Enables CPU communication with 8255 when LOW; when HIGH, internal buffers enter high impedance (High-Z).',
+          'Read & Write Strobes (R̅D̅, W̅R̅): Active-LOW inputs. R̅D̅ = 0 enables 8255 to send port data/status to CPU; W̅R̅ = 0 enables CPU to write data or control words to 8255.',
+          'RESET Input: Active-HIGH input (Pin 35). A HIGH pulse on RESET clears the internal control register and initializes all 24 I/O pins into Mode 0 Input state for system safety.'
+        ]
+      },
+      {
+        id: 'm14-s3',
+        title: '3. Intel 8255 PPI Architecture & Port Configuration 🔌',
         moduleTitle: 'Module 14: Intel 8255 Programmable Peripheral Interface',
         moduleId: 'm14',
         interactiveType: 'ppi-8255',
         points: [
           '3 Ports in 8255 from User\'s Point of View:\n• Port A, Port B, and Port C.\n• Port C is composed of two independent 4-bit ports: PC7–4 (PC Upper) and PC3–0 (PC Lower).',
           'Address Lines A1, A0 (Internal Port Selection):\n• A1 = 0, A0 = 0 ➔ Selected Port: Port A\n• A1 = 0, A0 = 1 ➔ Selected Port: Port B\n• A1 = 1, A0 = 0 ➔ Selected Port: Port C\n• A1 = 1, A0 = 1 ➔ Selected Port: Control Port (Control Register)',
-          'CS (Chip Select): Chip Select (Active LOW) enables or disables the 8255 IC for communication with the microprocessor.',
+          'Chip Select (C̅S̅): Chip Select (Active LOW, C̅S̅) enables or disables the 8255 IC for communication with the microprocessor.',
           'Internal Port Structure: Features 24 programmable I/O pins organized into three 8-bit ports (Port A: PA0–PA7, Port B: PB0–PB7, Port C: PC0–PC7).',
           'Group A and Group B Controls: Group A controls Port A and Port C Upper; Group B controls Port B and Port C Lower.'
         ]
       },
       {
-        id: 'm14-s2',
-        title: '2. 8255 Operating Modes & Control Word Format ⚙️',
+        id: 'm14-s3b',
+        title: '4. Intel 8255 Internal Registers (Simple Concept) 📦',
         moduleTitle: 'Module 14: Intel 8255 Programmable Peripheral Interface',
         moduleId: 'm14',
         interactiveType: 'ppi-8255',
         points: [
-          'Mode 0 (Basic I/O): All ports (A, B, C) operate as simple input or output ports without handshaking. Data is written or read directly.',
-          'Mode 1 (Strobed I/O): Ports A and B use Port C lines as handshake signals (STB#, IBF, ACK#, OBF#, INTR) to synchronize data transfer with peripheral devices.',
-          'Mode 2 (Strobed Bi-directional Bus I/O): Port A functions as a 8-bit bi-directional data bus with Port C supplying 5 handshake control lines. (Port B can operate in Mode 0 or 1).',
-          'I/O Mode Set Control Word: Written to Control Register when D7 = 1. Configures mode selection for Group A (D6,D5) and Group B (D2), and port directions (D4 for Port A, D3 for Port C Upper, D1 for Port B, D0 for Port C Lower).',
-          'BSR Mode (Bit Set/Reset): Activated when D7 = 0. Allows individual setting (1) or resetting (0) of any single bit in Port C without affecting other bits.'
+          '1. Port A Data Register (A1 = 0, A0 = 0) — 8-bit Data Port',
+          '2. Port B Data Register (A1 = 0, A0 = 1) — 8-bit Data Port',
+          '3. Port C Data Register (A1 = 1, A0 = 0) — 8-bit Data / Handshake Port',
+          '4. Control Register / CWR (A1 = 1, A0 = 1) — 8-bit Configuration (Write-Only)'
+        ]
+      },
+      {
+        id: 'm14-s4',
+        title: '5. Intel 8255 Control Register Configuration & Operating Modes ⚙️',
+        moduleTitle: 'Module 14: Intel 8255 Programmable Peripheral Interface',
+        moduleId: 'm14',
+        interactiveType: 'ppi-8255',
+        points: [
+          '1. Control Register Format — I/O Mode Set (D7 = 1)',
+          '2. Control Register Format — Bit Set / Reset (BSR) Mode (D7 = 0)',
+          '3. Mode 0: Basic / Simple Input & Output',
+          '4. Mode 1: Strobed / Handshake Input & Output',
+          '5. Mode 2: Strobed Bi-directional Bus (Port A Only)'
+        ]
+      },
+      {
+        id: 'm14-s5',
+        title: '6. 8255 Control Word Formats & Detailed Specifications ⚙️',
+        moduleTitle: 'Module 14: Intel 8255 Programmable Peripheral Interface',
+        moduleId: 'm14',
+        interactiveType: 'ppi-8255',
+        points: [
+          '1. I/O Mode Set Control Word (D7 = 1) — Mode & Port Direction Configuration',
+          '2. BSR Control Word (D7 = 0) — Bit Set / Reset for Port C',
+          '3. Mode 0: Basic / Simple I/O (Unlatched Inputs, Latched Outputs)',
+          '4. Mode 1: Strobed / Handshake I/O (Ports A & B with Port C Handshakes)',
+          '5. Mode 2: Strobed Bi-directional Bus (Port A with 5 Port C Handshakes)'
         ]
       },
       {

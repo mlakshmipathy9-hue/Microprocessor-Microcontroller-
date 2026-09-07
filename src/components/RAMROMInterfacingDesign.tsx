@@ -259,7 +259,7 @@ export default function RAMROMInterfacingDesign() {
 
               <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1.5">
                 <span className="text-[10px] font-bold text-slate-500 uppercase">2. Bank Enable Selection</span>
-                <p className="text-slate-800 font-bold text-sm">A0 &amp; BHE# Strobes</p>
+                <p className="text-slate-800 font-bold text-sm">A0 &amp; <Overline>BHE</Overline> Strobes</p>
                 <div className="text-slate-600 text-[10px] space-y-0.5 pt-1 border-t border-slate-100">
                   <div>• <strong className="text-emerald-600">A0 = 0</strong>: Selects Even Banks (RAM1 / ROM1)</div>
                   <div>• <strong className="text-amber-600"><Overline>BHE</Overline> = 0</strong>: Selects Odd Banks (RAM2 / ROM2)</div>
@@ -511,11 +511,11 @@ export default function RAMROMInterfacingDesign() {
             {/* Test Status Badges */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10.5px] font-sans">
               <div className={`p-2 rounded-lg border ${csRamBar === 0 ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-slate-100 text-slate-400'}`}>
-                <div className="font-bold">CS_RAM#</div>
+                <div className="font-bold"><Overline>CS_RAM</Overline></div>
                 <div className="font-mono">{csRamBar} ({csRamBar === 0 ? 'RAM SELECTED' : 'Inactive'})</div>
               </div>
               <div className={`p-2 rounded-lg border ${csRomBar === 0 ? 'bg-amber-50 border-amber-300 text-amber-900' : 'bg-slate-100 text-slate-400'}`}>
-                <div className="font-bold">CS_ROM#</div>
+                <div className="font-bold"><Overline>CS_ROM</Overline></div>
                 <div className="font-mono">{csRomBar} ({csRomBar === 0 ? 'ROM SELECTED' : 'Inactive'})</div>
               </div>
               <div className={`p-2 rounded-lg border ${ceRam1Bar === 0 || ceRom1Bar === 0 ? 'bg-indigo-50 border-indigo-300 text-indigo-900' : 'bg-slate-100 text-slate-400'}`}>
@@ -524,7 +524,7 @@ export default function RAMROMInterfacingDesign() {
               </div>
               <div className={`p-2 rounded-lg border ${ceRam2Bar === 0 || ceRom2Bar === 0 ? 'bg-indigo-50 border-indigo-300 text-indigo-900' : 'bg-slate-100 text-slate-400'}`}>
                 <div className="font-bold">Odd Bank (D8–D15)</div>
-                <div className="font-mono">BHE#={bhe} ({bhe === 0 ? 'ENABLED' : 'Disabled'})</div>
+                <div className="font-mono"><Overline>BHE</Overline>={bhe} ({bhe === 0 ? 'ENABLED' : 'Disabled'})</div>
               </div>
             </div>
           </div>
@@ -543,7 +543,7 @@ export default function RAMROMInterfacingDesign() {
               </span>
               <div>
                 <h4 className="font-bold text-slate-900 text-xs">Step 4: Decoder &amp; Chip Select Logic Design</h4>
-                <p className="text-[10px] text-slate-500">Hardware Boolean gating equations for Master CS# and 4× Bank CEs</p>
+                <p className="text-[10px] text-slate-500">Hardware Boolean gating equations for Master <Overline>CS</Overline> and 4× Bank <Overline>CE</Overline>s</p>
               </div>
             </div>
 
@@ -560,14 +560,14 @@ export default function RAMROMInterfacingDesign() {
                     <Overline>CS_RAM</Overline> = <Overline>( <Overline>A19</Overline> • <Overline>A18</Overline> • <Overline>A17</Overline> • <Overline>A16</Overline> • <Overline>A15</Overline> • M/<Overline>IO</Overline> )</Overline>
                   </div>
                   <p className="text-[10px] text-slate-600 font-sans">
-                    Asserts LOW (0) ONLY when A19..A15 = 00000b and M/IO# = 1 (Range: 00000H–07FFFH).
+                    Asserts LOW (0) ONLY when A19..A15 = 00000b and M/<Overline>IO</Overline> = 1 (Range: 00000H–07FFFH).
                   </p>
 
                   <div className="font-bold text-amber-800 pt-1 border-t border-purple-200/60">
                     <Overline>CS_ROM</Overline> = <Overline>( A19 • A18 • A17 • A16 • A15 • M/<Overline>IO</Overline> )</Overline>
                   </div>
                   <p className="text-[10px] text-slate-600 font-sans">
-                    Asserts LOW (0) ONLY when A19..A15 = 11111b and M/IO# = 1 (Range: F8000H–FFFFFH).
+                    Asserts LOW (0) ONLY when A19..A15 = 11111b and M/<Overline>IO</Overline> = 1 (Range: F8000H–FFFFFH).
                   </p>
                 </div>
               </div>
@@ -610,20 +610,20 @@ export default function RAMROMInterfacingDesign() {
             {/* Read/Write Control Signal Connection Matrix */}
             <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-2">
               <span className="text-[11px] font-bold text-slate-800">
-                3. Bus Control Strobes Connection Matrix (RD# &amp; WR#)
+                3. Bus Control Strobes Connection Matrix (<Overline>RD</Overline> &amp; <Overline>WR</Overline>)
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
                 <div className="p-2 bg-blue-50 rounded-lg border border-blue-200 space-y-1">
-                  <div className="font-bold text-blue-900">8086 RD# (Pin 32) &rarr; Memory OE# Pins</div>
+                  <div className="font-bold text-blue-900">8086 <Overline>RD</Overline> (Pin 32) &rarr; Memory <Overline>OE</Overline> Pins</div>
                   <p className="text-[10.5px] text-slate-600">
                     Connected to the Output Enable (<Overline>OE</Overline>) of <strong>ALL 4 Chips</strong> (RAM 1, RAM 2, ROM 1, ROM 2). Enables chip internal output buffers during read cycles.
                   </p>
                 </div>
 
                 <div className="p-2 bg-rose-50 rounded-lg border border-rose-200 space-y-1">
-                  <div className="font-bold text-rose-900">8086 WR# (Pin 29) &rarr; RAM WE# Pins ONLY</div>
+                  <div className="font-bold text-rose-900">8086 <Overline>WR</Overline> (Pin 29) &rarr; RAM <Overline>WE</Overline> Pins ONLY</div>
                   <p className="text-[10.5px] text-slate-600">
-                    Connected to the Write Enable (<Overline>WE</Overline>) of <strong>RAM 1 &amp; RAM 2 ONLY</strong>. ROM chips have <strong>NO WE# pin</strong>, making writes physically impossible and protecting boot firmware!
+                    Connected to the Write Enable (<Overline>WE</Overline>) of <strong>RAM 1 &amp; RAM 2 ONLY</strong>. ROM chips have <strong>NO <Overline>WE</Overline> pin</strong>, making writes physically impossible and protecting boot firmware!
                   </p>
                 </div>
               </div>
@@ -654,7 +654,7 @@ export default function RAMROMInterfacingDesign() {
                 <span className="text-[10px] font-bold text-indigo-600 uppercase">Stage 1</span>
                 <h5 className="font-bold text-xs text-indigo-900">8086 MPU (Master)</h5>
                 <p className="text-[10.5px] text-indigo-700 leading-relaxed">
-                  Generates AD0–AD15, A16–A19, BHE#, ALE, M/IO#, RD#, WR#, DEN#, DT/R#.
+                  Generates AD0–AD15, A16–A19, <Overline>BHE</Overline>, ALE, M/<Overline>IO</Overline>, <Overline>RD</Overline>, <Overline>WR</Overline>, <Overline>DEN</Overline>, DT/<Overline>R</Overline>.
                 </p>
               </div>
 
@@ -663,7 +663,7 @@ export default function RAMROMInterfacingDesign() {
                 <span className="text-[10px] font-bold text-blue-600 uppercase">Stage 2</span>
                 <h5 className="font-bold text-xs text-blue-900">3× 74LS373 Latches</h5>
                 <p className="text-[10.5px] text-blue-700 leading-relaxed">
-                  Latches on ALE falling edge to generate stable A0–A19 &amp; BHE# address lines.
+                  Latches on ALE falling edge to generate stable A0–A19 &amp; <Overline>BHE</Overline> address lines.
                 </p>
               </div>
 
@@ -672,7 +672,7 @@ export default function RAMROMInterfacingDesign() {
                 <span className="text-[10px] font-bold text-purple-600 uppercase">Stage 3</span>
                 <h5 className="font-bold text-xs text-purple-900">Decoders &amp; OR Gates</h5>
                 <p className="text-[10.5px] text-purple-700 leading-relaxed">
-                  Decodes A15–A19 for CS_RAM# / CS_ROM# and gates with A0 / BHE# for 4× CEs.
+                  Decodes A15–A19 for <Overline>CS_RAM</Overline> / <Overline>CS_ROM</Overline> and gates with A0 / <Overline>BHE</Overline> for 4× <Overline>CE</Overline>s.
                 </p>
               </div>
 
@@ -693,7 +693,7 @@ export default function RAMROMInterfacingDesign() {
               <ul className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px] text-slate-700">
                 <li className="p-2 bg-slate-50 rounded-lg border border-slate-200 flex items-start gap-1.5">
                   <span className="font-bold text-indigo-700 shrink-0">• Write Line:</span>
-                  <span>RAM chips connect to <code>WR#</code> via <code>WE#</code>. ROM chips have <strong>NO</strong> write connection.</span>
+                  <span>RAM chips connect to <code><Overline>WR</Overline></code> via <code><Overline>WE</Overline></code>. ROM chips have <strong>NO</strong> write connection.</span>
                 </li>
                 <li className="p-2 bg-slate-50 rounded-lg border border-slate-200 flex items-start gap-1.5">
                   <span className="font-bold text-indigo-700 shrink-0">• Location:</span>
@@ -701,7 +701,7 @@ export default function RAMROMInterfacingDesign() {
                 </li>
                 <li className="p-2 bg-slate-50 rounded-lg border border-slate-200 flex items-start gap-1.5">
                   <span className="font-bold text-indigo-700 shrink-0">• Transceiver DIR:</span>
-                  <span>RAM reads and writes flip <code>DT/R#</code> (1 vs 0). ROM accesses strictly use receive (<code>DT/R# = 0</code>).</span>
+                  <span>RAM reads and writes flip <code>DT/<Overline>R</Overline></code> (1 vs 0). ROM accesses strictly use receive (<code>DT/<Overline>R</Overline> = 0</code>).</span>
                 </li>
                 <li className="p-2 bg-slate-50 rounded-lg border border-slate-200 flex items-start gap-1.5">
                   <span className="font-bold text-indigo-700 shrink-0">• Speed &amp; Ready:</span>

@@ -1040,22 +1040,9 @@ END MAIN                      ; End of assembly program`;
 
   return (
     <div className="bg-white text-slate-800 p-4 md:p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4 text-xs font-sans">
-      {/* Dedicated Header for Current Peripheral without redundant tabs */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
-        <div className="flex items-center gap-2.5">
-          <div className="p-2 bg-indigo-50 rounded-xl border border-indigo-200 text-indigo-600 shadow-2xs">
-            {currentHeader.icon}
-          </div>
-          <div>
-            <h3 className="font-bold text-sm text-slate-900">{currentHeader.title}</h3>
-            <p className="text-[11px] text-slate-500">
-              {currentHeader.subtitle}
-            </p>
-          </div>
-        </div>
-
-        {/* Tab Switcher for Multi-tab modes (e.g. Slide 1 combined Circuit & Stepper Motor, Slide 2 7-Segment, Slide 3 Keypad) */}
-        {((allowedTabs && allowedTabs.length > 1) || showTabs) && (
+      {/* Tab Switcher for Multi-tab modes */}
+      {((allowedTabs && allowedTabs.length > 1) || showTabs) && (
+        <div className="flex flex-wrap items-center justify-end gap-2 border-b border-slate-100 pb-3">
           <div className="flex flex-wrap bg-slate-100 p-1 rounded-xl border border-slate-200 gap-1 shadow-inner">
             {(allowedTabs || ['schematic', 'circuit', 'stepper', 'display', 'keypad', 'traffic', 'traffic-code', 'alp']).map((tabKey) => {
               const tabMeta: Record<string, { label: string; icon: React.ReactNode }> = {
@@ -1095,8 +1082,8 @@ END MAIN                      ; End of assembly program`;
               );
             })}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* TAB 0: PROTEUS SCHEMATIC CIRCUIT DIAGRAM (Unipolar Stepper Motor) */}
       {activeTab === 'schematic' && (

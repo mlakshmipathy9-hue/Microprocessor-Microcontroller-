@@ -3,9 +3,10 @@ import { Layers, Zap, Info, CheckCircle2, Sliders, ArrowRight, Eye, RefreshCw, C
 
 interface PPI8255ArchitectureDiagramProps {
   onSelectBlock?: (blockId: string) => void;
+  headerSlot?: React.ReactNode;
 }
 
-export default function PPI8255ArchitectureDiagram({ onSelectBlock }: PPI8255ArchitectureDiagramProps) {
+export default function PPI8255ArchitectureDiagram({ onSelectBlock, headerSlot }: PPI8255ArchitectureDiagramProps) {
   const [selectedBlock, setSelectedBlock] = useState<string>('data_bus_buffer');
   const [animating, setAnimating] = useState<boolean>(true);
 
@@ -24,8 +25,8 @@ export default function PPI8255ArchitectureDiagram({ onSelectBlock }: PPI8255Arc
       pins: ['D7 – D0 (Pins 27–34)'],
       description: 'Tri-state 8-bit bidirectional buffer that interfaces the internal 8255 8-bit data bus to the 8086 system data bus. It transmits data, control words, and reads status information.',
       keyPoints: [
-        'Active only during valid CPU read (RD#=0) or write (WR#=0) cycles with CS#=0',
-        'Remains in high-impedance (High-Z) tristate when CS# is HIGH (deselected)',
+        'Active only during valid CPU read (R̅D̅=0) or write (W̅R̅=0) cycles with C̅S̅=0',
+        'Remains in high-impedance (High-Z) tristate when C̅S̅ is HIGH (deselected)',
         'Driven directly by internal read/write control logic'
       ]
     },
@@ -33,10 +34,10 @@ export default function PPI8255ArchitectureDiagram({ onSelectBlock }: PPI8255Arc
       title: 'Read/Write Control Logic',
       category: 'Internal Control & Timing',
       color: 'emerald',
-      pins: ['RD# (Pin 5)', 'WR# (Pin 36)', 'A1 (Pin 8)', 'A0 (Pin 9)', 'RESET (Pin 35)', 'CS# (Pin 6)'],
+      pins: ['R̅D̅ (Pin 5)', 'W̅R̅ (Pin 36)', 'A1 (Pin 8)', 'A0 (Pin 9)', 'RESET (Pin 35)', 'C̅S̅ (Pin 6)'],
       description: 'Manages all internal read and write operations. Decodes address pins A0, A1, and control strobes to route data between system data bus and internal port registers.',
       keyPoints: [
-        'CS# = 0 enables 8255 communication; CS# = 1 isolates 8255 from system bus',
+        'C̅S̅ = 0 enables 8255 communication; C̅S̅ = 1 isolates 8255 from system bus',
         'A1, A0 = 00 (Port A), 01 (Port B), 10 (Port C), 11 (Control Register)',
         'RESET pulses HIGH to clear all internal registers and set all 24 I/O pins into Mode 0 Input state'
       ]
@@ -62,7 +63,7 @@ export default function PPI8255ArchitectureDiagram({ onSelectBlock }: PPI8255Arc
       keyPoints: [
         'Controls 8-bit Port B (PB7–PB0) and 4-bit Port C Lower (PC3–PC0)',
         'Supports Mode 0 (Basic I/O) and Mode 1 (Strobed I/O) only; does NOT support Mode 2',
-        'Manages Port B handshaking signals (STB_B#, IBF_B, INTR_B) via Port C Lower'
+        'Manages Port B handshaking signals (S̅T̅B̅_B, IBF_B, INTR_B) via Port C Lower'
       ]
     },
     port_a: {
@@ -74,7 +75,7 @@ export default function PPI8255ArchitectureDiagram({ onSelectBlock }: PPI8255Arc
       keyPoints: [
         'Mode 0: Simple unlatched input or latched output',
         'Mode 1: Latched input/output with handshaking on Port C Upper lines',
-        'Mode 2: 8-bit bidirectional bus using PC7–PC3 for handshake (PC7=OBF#, PC6=ACK#, PC5=IBF, PC4=STB#, PC3=INTR)'
+        'Mode 2: 8-bit bidirectional bus using PC7–PC3 for handshake (PC7=O̅B̅F̅, PC6=A̅C̅K̅, PC5=IBF, PC4=S̅T̅B̅, PC3=INTR)'
       ]
     },
     port_c_upper: {
@@ -84,10 +85,10 @@ export default function PPI8255ArchitectureDiagram({ onSelectBlock }: PPI8255Arc
       pins: ['PC7 – PC4 (Pins 10–13)'],
       description: '4-bit port associated with Group A. In Mode 0, it acts as a simple 4-bit input or output port. In Mode 1 and Mode 2, these pins serve as dedicated handshake control signals for Port A.',
       keyPoints: [
-        'PC7 = OBF_A# (Output Buffer Full) / general I/O',
-        'PC6 = ACK_A# (Acknowledge input) / general I/O',
+        'PC7 = O̅B̅F̅_A (Output Buffer Full) / general I/O',
+        'PC6 = A̅C̅K̅_A (Acknowledge input) / general I/O',
         'PC5 = IBF_A (Input Buffer Full) / general I/O',
-        'PC4 = STB_A# (Strobe input) / general I/O',
+        'PC4 = S̅T̅B̅_A (Strobe input) / general I/O',
         'Supports individual bit set/reset via BSR Mode (D7=0 in control word)'
       ]
     },
@@ -99,8 +100,8 @@ export default function PPI8255ArchitectureDiagram({ onSelectBlock }: PPI8255Arc
       description: '4-bit port associated with Group B. In Mode 0, functions as a 4-bit nibble I/O port. In Mode 1, provides handshake control signals for Port B.',
       keyPoints: [
         'PC3 = INTR_A (Port A Interrupt Request in Mode 1/2) or general I/O',
-        'PC2 = STB_B# / ACK_B# (Strobe/Acknowledge for Port B)',
-        'PC1 = IBF_B / OBF_B# (Buffer Full indicator for Port B)',
+        'PC2 = S̅T̅B̅_B / A̅C̅K̅_B (Strobe/Acknowledge for Port B)',
+        'PC1 = IBF_B / O̅B̅F̅_B (Buffer Full indicator for Port B)',
         'PC0 = INTR_B (Port B Interrupt Request in Mode 1)',
         'Independently manipulatable via BSR (Bit Set/Reset) commands'
       ]
@@ -151,7 +152,7 @@ export default function PPI8255ArchitectureDiagram({ onSelectBlock }: PPI8255Arc
   const currentInfo = blockDetails[selectedBlock] || blockDetails.data_bus_buffer;
 
   return (
-    <div className="bg-white text-slate-800 p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-xs space-y-4 font-sans text-xs">
+    <div className="space-y-4 font-sans text-xs">
       {/* Header bar */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
         <div className="flex items-center gap-2">
@@ -168,7 +169,8 @@ export default function PPI8255ArchitectureDiagram({ onSelectBlock }: PPI8255Arc
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {headerSlot}
           <button
             onClick={() => setAnimating(!animating)}
             className={`px-2.5 py-1.5 rounded-lg border text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
@@ -928,7 +930,7 @@ export default function PPI8255ArchitectureDiagram({ onSelectBlock }: PPI8255Arc
           </div>
 
           <span className="px-2.5 py-1 rounded-full text-[10.5px] font-mono font-bold bg-amber-100 text-amber-900 border border-amber-300">
-            CS#: Active LOW (0)
+            <span style={{ textDecoration: 'overline' }}>CS</span>: Active LOW (0)
           </span>
         </div>
 
@@ -987,7 +989,7 @@ export default function PPI8255ArchitectureDiagram({ onSelectBlock }: PPI8255Arc
             <div className="p-2.5 bg-blue-50/80 rounded-lg border border-blue-200 text-[11px] text-blue-900 flex items-start gap-2">
               <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
               <div>
-                <strong>CS (Chip Select):</strong> Enables or disables the 8255 IC. When <code className="font-mono font-bold text-blue-950">CS# = 0</code>, the 8255 is selected for CPU communication. When <code className="font-mono font-bold text-blue-950">CS# = 1</code>, the internal bus buffers are held in High-Z (tri-state).
+                <strong><span style={{ textDecoration: 'overline' }}>CS</span> (Chip Select):</strong> Enables or disables the 8255 IC. When <code className="font-mono font-bold text-blue-950"><span style={{ textDecoration: 'overline' }}>CS</span> = 0</code>, the 8255 is selected for CPU communication. When <code className="font-mono font-bold text-blue-950"><span style={{ textDecoration: 'overline' }}>CS</span> = 1</code>, the internal bus buffers are held in High-Z (tri-state).
               </div>
             </div>
           </div>

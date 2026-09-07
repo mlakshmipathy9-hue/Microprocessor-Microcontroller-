@@ -158,35 +158,26 @@ export default function AnalogInterfacingSimulator({
 
   return (
     <div className="bg-white text-slate-800 p-4 md:p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4 text-xs font-sans">
-      {/* Top Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
-        <div className="flex items-center gap-2">
-          <div className="p-2 bg-indigo-50 rounded-xl border border-indigo-200 text-indigo-600">
-            <Activity className="w-4 h-4" />
-          </div>
-          <div>
-            <h3 className="font-bold text-sm text-slate-900">8086 Analog Interfacing (ADC &amp; DAC)</h3>
-            <p className="text-[11px] text-slate-500">ADC 0808 Conversion, Static &amp; Dynamic Characteristics, and DAC 0800 Scope</p>
+      {/* Tab Switcher */}
+      {visibleTabs.length > 1 && (
+        <div className="flex flex-wrap items-center justify-end gap-2 border-b border-slate-100 pb-3">
+          <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 gap-1 flex-wrap">
+            {visibleTabs.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setActiveTab(t.id)}
+                className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer text-xs ${
+                  activeTab === t.id 
+                    ? 'bg-white text-indigo-700 shadow-xs font-bold border border-slate-200/80' 
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
           </div>
         </div>
-
-        {/* Tab Switcher */}
-        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 gap-1 flex-wrap">
-          {visibleTabs.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setActiveTab(t.id)}
-              className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer text-xs ${
-                activeTab === t.id 
-                  ? 'bg-white text-indigo-700 shadow-xs font-bold border border-slate-200/80' 
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* ============================================================== */}
       {/* TAB 1: ADC 0808 HARDWARE LAB                                   */}

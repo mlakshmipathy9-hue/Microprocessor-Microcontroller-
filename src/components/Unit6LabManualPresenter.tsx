@@ -124,6 +124,136 @@ export interface ObservationRecordData {
   outputs: Array<{ address: string; variable: string; hexVal: string; decVal: string }>;
   finalFlags: Array<{ flag: string; value: string; meaning: string }>;
   resultSummary: string;
+  isNoMemory?: boolean;
+}
+
+export function isExperimentNoMemory(expId: string): boolean {
+  const noMemoryExperiments = [
+    'exp_8051_timer0_m1',
+    'exp_8051_timer1_m0',
+    'exp_8051_counter0_m2',
+    'exp_8051_counter1_m1',
+    'exp_8051_uart_9600',
+    'exp_8051_uart_4800',
+    'exp_8051_uart_2400',
+    'exp_8051_lcd_8bit',
+    'exp_8051_lcd_4bit',
+    'exp_clock1',
+    'exp_clock2',
+    'exp_clock3',
+    'exp_stepper1',
+    'exp_stepper2',
+    'exp_adc',
+    'exp_dac',
+    'exp5'
+  ];
+  return noMemoryExperiments.includes(expId);
+}
+
+export function resolveHardwareOrMemoryAddress(
+  expId: string,
+  name: string,
+  index: number,
+  isOutput: boolean,
+  is8051: boolean
+): string {
+  const n = name.toLowerCase();
+
+  // If this experiment doesn't use data memory, resolve actual SFR/Port/Hardware location
+  if (isExperimentNoMemory(expId)) {
+    // 8051 Timer / Counter / Waveform / Clock
+    if (n.includes('oscillator') || n.includes('crystal') || n.includes('fosc')) {
+      return 'XTAL (Pins 18 & 19)';
+    }
+    if (n.includes('tmod')) {
+      return 'SFR: 89H (TMOD)';
+    }
+    if (n.includes('preload') || (n.includes('th0') && n.includes('tl0'))) {
+      return 'SFR: 8CH:8AH (TH0:TL0)';
+    }
+    if (n.includes('th1') && n.includes('tl1')) {
+      return 'SFR: 8DH:8BH (TH1:TL1)';
+    }
+    if (n.includes('th0')) {
+      return 'SFR: 8CH (TH0)';
+    }
+    if (n.includes('tl0')) {
+      return 'SFR: 8AH (TL0)';
+    }
+    if (n.includes('th1')) {
+      return 'SFR: 8DH (TH1)';
+    }
+    if (n.includes('tl1')) {
+      return 'SFR: 8BH (TL1)';
+    }
+    if (n.includes('port p0') || n.includes('port 0') || n.includes('p0')) {
+      return 'Port: P0 (SFR 80H)';
+    }
+    if (n.includes('port p1') || n.includes('port 1') || n.includes('p1')) {
+      return 'Port: P1 (SFR 90H)';
+    }
+    if (n.includes('port p2') || n.includes('port 2') || n.includes('p2')) {
+      return 'Port: P2 (SFR A0H)';
+    }
+    if (n.includes('port p3') || n.includes('port 3') || n.includes('p3')) {
+      return 'Port: P3 (SFR B0H)';
+    }
+    if (n.includes('scon')) {
+      return 'SFR: 98H (SCON)';
+    }
+    if (n.includes('sbuf')) {
+      return 'SFR: 99H (SBUF)';
+    }
+    if (n.includes('pcon')) {
+      return 'SFR: 87H (PCON)';
+    }
+    if (n.includes('tcon') || n.includes('tr0') || n.includes('tf0') || n.includes('tr1') || n.includes('tf1')) {
+      return 'SFR: 88H (TCON)';
+    }
+    if (n.includes('period') || n.includes('pulse duration') || n.includes('square wave') || n.includes('waveform')) {
+      return is8051 ? 'Output Pin Waveform' : 'Oscilloscope Waveform';
+    }
+    if (n.includes('frequency') || n.includes('duty cycle') || n.includes('rate') || n.includes('baud')) {
+      return is8051 ? 'Measured Output Signal' : 'Logic Analyzer Signal';
+    }
+
+    // 8255 / Interfacing
+    if (n.includes('control word') || n.includes('control reg')) {
+      return 'I/O Port: 06H (Control Reg)';
+    }
+    if (n.includes('port a')) {
+      return 'I/O Port: 00H (Port A)';
+    }
+    if (n.includes('port b')) {
+      return 'I/O Port: 02H (Port B)';
+    }
+    if (n.includes('port c')) {
+      return 'I/O Port: 04H (Port C)';
+    }
+    if (n.includes('stepper') || n.includes('phase')) {
+      return 'I/O Port: 00H (Port A Coils)';
+    }
+    if (n.includes('adc') || n.includes('analog')) {
+      return 'ADC0808 (Port A: 00H)';
+    }
+    if (n.includes('dac')) {
+      return 'DAC0800 (Port A: 00H)';
+    }
+    if (n.includes('lcd')) {
+      return '16x2 LCD (Ports P1/P2)';
+    }
+
+    return is8051 ? 'Hardware SFR / Pin' : 'Hardware I/O Port';
+  }
+
+  // Memory is used: return real RAM / Data Segment address
+  if (is8051) {
+    const base = isOutput ? 0x40 : 0x30;
+    return `RAM:${(base + index).toString(16).toUpperCase().padStart(2, '0')}H`;
+  } else {
+    const base = isOutput ? 0x08 + index * 2 : index * 2;
+    return `DS:${base.toString(16).toUpperCase().padStart(4, '0')}H`;
+  }
 }
 
 export function getExperimentVerificationSuite(
@@ -265,44 +395,185 @@ export function getExperimentVerificationSuite(
     default: {
       // Generator for other experiments (differentiated by 8051 vs 8086)
       const is8051 = expId.startsWith('exp_8051_');
+      const isNoMemory = isExperimentNoMemory(expId);
       const inps = manualPage.expectedOutput?.inputs || [];
       const outs = manualPage.expectedOutput?.outputs || [];
       const memRows: MemoryDumpEntry[] = [];
       let offsetCtr = is8051 ? 0x30 : 0x00;
 
-      inps.forEach((inp) => {
-        memRows.push({
-          offset: is8051 ? `RAM:${offsetCtr.toString(16).toUpperCase().padStart(2, '0')}H` : `DS:${offsetCtr.toString(16).toUpperCase().padStart(4, '0')}H`,
-          symbol: inp.name,
-          hexBytes: inp.val,
-          formatted: inp.val,
-          type: 'input',
-          comment: is8051 ? `8051 Internal RAM Input for ${manualPage.title}` : `Input Parameter for ${manualPage.title}`
+      if (isNoMemory) {
+        if (expId === 'exp_8051_timer0_m1') {
+          memRows.push(
+            { offset: 'SFR:89H', symbol: 'TMOD', hexBytes: '01H', formatted: '01H (Mode 1: 16-bit Timer 0)', type: 'input', comment: 'Configures Timer 0 as 16-bit software-controlled timer (GATE=0, C/T=0)' },
+            { offset: 'SFR:8CH', symbol: 'TH0', hexBytes: '9EH', formatted: '9EH (158D)', type: 'input', comment: 'Upper 8 bits of 16-bit 25 ms preload count (40,536D)' },
+            { offset: 'SFR:8AH', symbol: 'TL0', hexBytes: '58H', formatted: '58H (88D)', type: 'input', comment: 'Lower 8 bits of 16-bit 25 ms preload count (40,536D)' },
+            { offset: 'SFR:88H.4', symbol: 'TR0', hexBytes: '01H / 00H', formatted: 'TCON Bit 4', type: 'input', comment: 'Timer 0 Run bit: SETB TR0 starts timer; CLR TR0 stops timer' },
+            { offset: 'SFR:88H.5', symbol: 'TF0', hexBytes: '00H -> 01H', formatted: 'TCON Bit 5', type: 'output', comment: 'Timer 0 Overflow flag: Hardware sets to 1 after 25,000 µs count' },
+            { offset: 'SFR:80H', symbol: 'Port P0', hexBytes: '00H ↔ FFH', formatted: '00H / FFH', type: 'output', comment: 'Port 0 I/O Pins toggle all 8 LEDs every 25.0 ms (20 Hz square wave)' },
+            { offset: 'Pins 18-19', symbol: 'XTAL1/2', hexBytes: '12.0 MHz', formatted: '12.000 MHz Clock', type: 'system', comment: 'Machine Cycle = 1.000 µs (No internal data RAM is used)' }
+          );
+        } else if (expId === 'exp_8051_timer1_m0') {
+          memRows.push(
+            { offset: 'SFR:89H', symbol: 'TMOD', hexBytes: '00H', formatted: '00H (Mode 0: 13-bit Timer 1)', type: 'input', comment: 'Timer 1 in 13-bit mode (max count 8,192)' },
+            { offset: 'SFR:8DH', symbol: 'TH1', hexBytes: 'FEH', formatted: '0FEH (Upper 8 bits)', type: 'input', comment: 'Upper 8 bits of 13-bit 50 µs preload (8,142D)' },
+            { offset: 'SFR:8BH', symbol: 'TL1', hexBytes: '0EH', formatted: '0EH (Lower 5 bits)', type: 'input', comment: 'Lower 5 bits of 13-bit 50 µs preload (8,142D)' },
+            { offset: 'SFR:88H.6', symbol: 'TR1', hexBytes: '01H / 00H', formatted: 'TCON Bit 6', type: 'input', comment: 'Timer 1 Run Control bit' },
+            { offset: 'SFR:88H.7', symbol: 'TF1', hexBytes: '00H -> 01H', formatted: 'TCON Bit 7', type: 'output', comment: 'Timer 1 Overflow flag' },
+            { offset: 'SFR:A0H', symbol: 'Port P2', hexBytes: '00H ↔ FFH', formatted: '00H / FFH', type: 'output', comment: 'Port P2 pins toggle every 50 µs (10.0 kHz square wave)' },
+            { offset: 'Pins 18-19', symbol: 'XTAL1/2', hexBytes: '12.0 MHz', formatted: '12.000 MHz Clock', type: 'system', comment: 'Machine Cycle = 1.000 µs (No internal data RAM is used)' }
+          );
+        } else if (expId === 'exp_8051_counter0_m2') {
+          memRows.push(
+            { offset: 'SFR:89H', symbol: 'TMOD', hexBytes: '02H', formatted: '02H (Mode 2: 8-bit Auto-Reload)', type: 'input', comment: 'Timer 0 Mode 2: Auto-reloads TL0 from TH0 upon rollover' },
+            { offset: 'SFR:8CH', symbol: 'TH0', hexBytes: '06H', formatted: '06H (Reload Value: 6D)', type: 'input', comment: 'Preload value: 256 - 250 = 6D (250 µs cycle)' },
+            { offset: 'SFR:8AH', symbol: 'TL0', hexBytes: '06H', formatted: '06H (Active Counter)', type: 'input', comment: 'Increments from 06H to FFH then automatically reloads' },
+            { offset: 'SFR:88H.4', symbol: 'TR0', hexBytes: '01H', formatted: 'TCON Bit 4', type: 'input', comment: 'Timer 0 Run bit' },
+            { offset: 'SFR:88H.5', symbol: 'TF0', hexBytes: '00H -> 01H', formatted: 'TCON Bit 5', type: 'output', comment: 'Timer 0 Overflow flag polled every 250 µs' },
+            { offset: 'SFR:90H', symbol: 'Port P1', hexBytes: '00H ↔ FFH', formatted: '00H / FFH', type: 'output', comment: 'Port P1 toggles every 300 cycles (75 ms delay)' },
+            { offset: 'Pins 18-19', symbol: 'XTAL1/2', hexBytes: '12.0 MHz', formatted: '12.000 MHz Clock', type: 'system', comment: 'Hardware SFR driven (Internal RAM not allocated)' }
+          );
+        } else {
+          inps.forEach((inp, idx) => {
+            memRows.push({
+              offset: resolveHardwareOrMemoryAddress(expId, inp.name, idx, false, is8051),
+              symbol: inp.name.split(' ')[0] || `INP_${idx}`,
+              hexBytes: inp.val.split(' ')[0] || inp.val,
+              formatted: inp.val,
+              type: 'input',
+              comment: `${inp.name} (Hardware SFR / Configuration)`
+            });
+          });
+          outs.forEach((out, idx) => {
+            memRows.push({
+              offset: resolveHardwareOrMemoryAddress(expId, out.name, idx, true, is8051),
+              symbol: out.name.split(' ')[0] || `OUT_${idx}`,
+              hexBytes: out.val.split(' ')[0] || out.val,
+              formatted: out.val,
+              type: 'output',
+              comment: `${out.name} (Hardware Port / Signal Output)`
+            });
+          });
+        }
+      } else {
+        inps.forEach((inp) => {
+          memRows.push({
+            offset: is8051 ? `RAM:${offsetCtr.toString(16).toUpperCase().padStart(2, '0')}H` : `DS:${offsetCtr.toString(16).toUpperCase().padStart(4, '0')}H`,
+            symbol: inp.name,
+            hexBytes: inp.val,
+            formatted: inp.val,
+            type: 'input',
+            comment: is8051 ? `8051 Internal RAM Input for ${manualPage.title}` : `Input Parameter for ${manualPage.title}`
+          });
+          offsetCtr += is8051 ? 1 : 4;
         });
-        offsetCtr += is8051 ? 1 : 4;
-      });
 
-      let outOffsetCtr = is8051 ? 0x40 : offsetCtr;
-      outs.forEach((out) => {
-        memRows.push({
-          offset: is8051 ? `RAM:${outOffsetCtr.toString(16).toUpperCase().padStart(2, '0')}H` : `DS:${outOffsetCtr.toString(16).toUpperCase().padStart(4, '0')}H`,
-          symbol: out.name,
-          hexBytes: out.val,
-          formatted: out.val,
-          type: 'output',
-          comment: is8051 ? `8051 Internal RAM Output for ${manualPage.title}` : `Simulated Output Result for ${manualPage.title}`
+        let outOffsetCtr = is8051 ? 0x40 : offsetCtr;
+        outs.forEach((out) => {
+          memRows.push({
+            offset: is8051 ? `RAM:${outOffsetCtr.toString(16).toUpperCase().padStart(2, '0')}H` : `DS:${outOffsetCtr.toString(16).toUpperCase().padStart(4, '0')}H`,
+            symbol: out.name,
+            hexBytes: out.val,
+            formatted: out.val,
+            type: 'output',
+            comment: is8051 ? `8051 Internal RAM Output for ${manualPage.title}` : `Simulated Output Result for ${manualPage.title}`
+          });
+          outOffsetCtr += is8051 ? 1 : 4;
         });
-        outOffsetCtr += is8051 ? 1 : 4;
-      });
+      }
 
-      const verRows: VerificationEntry[] = outs.map((out) => ({
+      const verRows: VerificationEntry[] = outs.map((out, idx) => ({
         parameter: out.name,
-        memoryAddress: is8051 ? `8051 Internal RAM (30H..7FH) / SFR Space` : `Data Segment / Output Register`,
+        memoryAddress: isNoMemory
+          ? resolveHardwareOrMemoryAddress(expId, out.name, idx, true, is8051)
+          : is8051 ? `8051 Internal RAM (30H..7FH) / SFR Space` : `Data Segment / Output Register`,
         theoretical: out.val,
         simulated: out.val,
         match: true,
-        notes: `Validated against algorithm logic for ${manualPage.title}`
+        notes: isNoMemory
+          ? `Verified against ${is8051 ? '8051 SFR timer & port latches (No RAM used)' : 'hardware I/O port logic'}`
+          : `Validated against algorithm logic for ${manualPage.title}`
       }));
+
+      let initialRegistersList: Array<{ register: string; value: string; purpose: string }> = [];
+      if (is8051) {
+        if (expId === 'exp_8051_timer0_m1') {
+          initialRegistersList = [
+            { register: 'TMOD', value: '01H', purpose: 'Timer 0 configured in Mode 1 (16-bit Timer Mode)' },
+            { register: 'TH0', value: '9EH', purpose: 'High byte of 25 ms preload count (158D / 40,536D)' },
+            { register: 'TL0', value: '58H', purpose: 'Low byte of 25 ms preload count (88D / 40,536D)' },
+            { register: 'TCON', value: '00H', purpose: 'Timer Control (TR0=0 initially, TF0=0 overflow cleared)' },
+            { register: 'P0', value: '00H', purpose: 'Port 0 output pins (All LEDs ON initially, toggles 00H ↔ FFH)' },
+            { register: 'SP', value: '07H', purpose: 'Stack Pointer at default reset address' }
+          ];
+        } else if (expId === 'exp_8051_timer1_m0') {
+          initialRegistersList = [
+            { register: 'TMOD', value: '00H', purpose: 'Timer 1 configured in Mode 0 (13-bit Timer Mode)' },
+            { register: 'TH1', value: 'FEH', purpose: 'Upper 8 bits of 50 µs preload count (8,142D)' },
+            { register: 'TL1', value: '0EH', purpose: 'Lower 5 bits of 50 µs preload count (8,142D)' },
+            { register: 'TCON', value: '00H', purpose: 'TR1=0 initially, TF1=0 overflow flag' },
+            { register: 'P2', value: '00H', purpose: 'Port 2 output pins (toggles 00H ↔ FFH at 10 kHz)' },
+            { register: 'SP', value: '07H', purpose: 'Stack Pointer at default reset address' }
+          ];
+        } else if (expId === 'exp_8051_counter0_m2') {
+          initialRegistersList = [
+            { register: 'TMOD', value: '02H', purpose: 'Timer 0 configured in Mode 2 (8-bit Auto-Reload)' },
+            { register: 'TH0', value: '06H', purpose: 'Auto-reload value (256 - 250 = 6D for 250 µs interval)' },
+            { register: 'TL0', value: '06H', purpose: 'Initial count value loaded from TH0' },
+            { register: 'TCON', value: '00H', purpose: 'TR0=0 initially, TF0=0 overflow flag' },
+            { register: 'P1', value: '00H', purpose: 'Port 1 LED output pins' },
+            { register: 'SP', value: '07H', purpose: 'Stack Pointer at default reset address' }
+          ];
+        } else {
+          initialRegistersList = [
+            { register: 'ACC', value: '00H', purpose: 'Accumulator (Primary 8-bit math/logic operand)' },
+            { register: 'B', value: '00H', purpose: 'B Register (Multiplication/Division math register)' },
+            { register: 'R0', value: '00H', purpose: 'Working Register Bank 0 pointer / temporary' },
+            { register: 'DPTR', value: '0000H', purpose: '16-bit Data Pointer for external/ROM lookup' },
+            { register: 'SP', value: '07H', purpose: 'Stack Pointer (starts at RAM 07H, increments on PUSH)' },
+            { register: 'PSW', value: '00H', purpose: 'Program Status Word (Bank 0: RS1=0, RS0=0, CY=0)' }
+          ];
+        }
+      } else {
+        initialRegistersList = [
+          { register: 'AX', value: lastStep?.registers?.AX || '1000H', purpose: 'Accumulator / Segment setup' },
+          { register: 'CX', value: lastStep?.registers?.CX || '0000H', purpose: 'Loop Counter' },
+          { register: 'SI', value: lastStep?.registers?.SI || '0000H', purpose: 'Source Index Pointer' },
+          { register: 'DI', value: lastStep?.registers?.DI || '0000H', purpose: 'Destination Index Pointer' }
+        ];
+      }
+
+      let finalFlagsList: Array<{ flag: string; value: string; meaning: string }> = [];
+      if (is8051) {
+        if (expId === 'exp_8051_timer0_m1') {
+          finalFlagsList = [
+            { flag: 'TF0', value: '1 → 0', meaning: 'Timer 0 Overflow Flag: Hardware asserted at 25 ms, cleared by software' },
+            { flag: 'TR0', value: '1 → 0', meaning: 'Timer 0 Run Control: Stopped after delay loop' },
+            { flag: 'CY', value: '0', meaning: 'Carry Flag (Unaffected by timer delay operations)' },
+            { flag: 'P', value: '0 / 1', meaning: 'Accumulator Parity' }
+          ];
+        } else if (expId === 'exp_8051_timer1_m0') {
+          finalFlagsList = [
+            { flag: 'TF1', value: '1 → 0', meaning: 'Timer 1 Overflow Flag: Hardware asserted at 50 µs, cleared by software' },
+            { flag: 'TR1', value: '1 → 0', meaning: 'Timer 1 Run Control: Stopped after delay' },
+            { flag: 'CY', value: '0', meaning: 'Carry Flag (Unaffected)' },
+            { flag: 'P', value: '0 / 1', meaning: 'Accumulator Parity' }
+          ];
+        } else {
+          finalFlagsList = [
+            { flag: 'CY', value: lastStep?.flags?.CF || '0', meaning: 'Carry Flag in PSW.7' },
+            { flag: 'AC', value: lastStep?.flags?.AF || '0', meaning: 'Auxiliary Carry in PSW.6' },
+            { flag: 'OV', value: lastStep?.flags?.OF || '0', meaning: 'Overflow Flag in PSW.2' },
+            { flag: 'P', value: lastStep?.flags?.PF || '0', meaning: 'Parity Flag in PSW.0' }
+          ];
+        }
+      } else {
+        finalFlagsList = [
+          { flag: 'CF', value: lastStep?.flags?.CF || '0', meaning: 'Carry Flag status' },
+          { flag: 'ZF', value: lastStep?.flags?.ZF || '1', meaning: 'Zero Flag status' },
+          { flag: 'SF', value: lastStep?.flags?.SF || '0', meaning: 'Sign Flag status' },
+          { flag: 'OF', value: lastStep?.flags?.OF || '0', meaning: 'Overflow Flag status' }
+        ];
+      }
 
       return {
         memoryRows: memRows,
@@ -310,47 +581,24 @@ export function getExperimentVerificationSuite(
         observationData: {
           aim: manualPage.aim,
           inputs: inps.map((inp, idx) => ({
-            address: is8051 ? `RAM:${(0x30 + idx).toString(16).toUpperCase().padStart(2, '0')}H` : `DS:${(idx * 4).toString(16).toUpperCase().padStart(4, '0')}H`,
+            address: resolveHardwareOrMemoryAddress(expId, inp.name, idx, false, is8051),
             variable: inp.name,
             hexVal: inp.val,
             decVal: inp.val
           })),
-          initialRegisters: is8051
-            ? [
-                { register: 'ACC', value: '00H', purpose: 'Accumulator (Primary 8-bit math/logic operand)' },
-                { register: 'B', value: '00H', purpose: 'B Register (Multiplication/Division math register)' },
-                { register: 'R0', value: '00H', purpose: 'Working Register Bank 0 pointer / temporary' },
-                { register: 'DPTR', value: '0000H', purpose: '16-bit Data Pointer for external/ROM lookup' },
-                { register: 'SP', value: '07H', purpose: 'Stack Pointer (starts at RAM 07H, increments on PUSH)' },
-                { register: 'PSW', value: '00H', purpose: 'Program Status Word (Bank 0: RS1=0, RS0=0, CY=0)' }
-              ]
-            : [
-                { register: 'AX', value: lastStep?.registers?.AX || '1000H', purpose: 'Accumulator / Segment setup' },
-                { register: 'CX', value: lastStep?.registers?.CX || '0000H', purpose: 'Loop Counter' },
-                { register: 'SI', value: lastStep?.registers?.SI || '0000H', purpose: 'Source Index Pointer' },
-                { register: 'DI', value: lastStep?.registers?.DI || '0000H', purpose: 'Destination Index Pointer' }
-              ],
+          initialRegisters: initialRegistersList,
           outputs: outs.map((out, idx) => ({
-            address: is8051 ? `RAM:${(0x40 + idx).toString(16).toUpperCase().padStart(2, '0')}H` : `DS:${((inps.length + idx) * 4).toString(16).toUpperCase().padStart(4, '0')}H`,
+            address: resolveHardwareOrMemoryAddress(expId, out.name, idx, true, is8051),
             variable: out.name,
             hexVal: out.val,
             decVal: out.val
           })),
-          finalFlags: is8051
-            ? [
-                { flag: 'CY', value: lastStep?.flags?.CF || '0', meaning: 'Carry Flag in PSW.7' },
-                { flag: 'AC', value: lastStep?.flags?.AF || '0', meaning: 'Auxiliary Carry in PSW.6' },
-                { flag: 'OV', value: lastStep?.flags?.OF || '0', meaning: 'Overflow Flag in PSW.2' },
-                { flag: 'P', value: lastStep?.flags?.PF || '0', meaning: 'Parity Flag in PSW.0' }
-              ]
-            : [
-                { flag: 'CF', value: lastStep?.flags?.CF || '0', meaning: 'Carry Flag status' },
-                { flag: 'ZF', value: lastStep?.flags?.ZF || '1', meaning: 'Zero Flag status' },
-                { flag: 'SF', value: lastStep?.flags?.SF || '0', meaning: 'Sign Flag status' },
-                { flag: 'OF', value: lastStep?.flags?.OF || '0', meaning: 'Overflow Flag status' }
-              ],
+          finalFlags: finalFlagsList,
+          isNoMemory: isNoMemory,
           resultSummary: manualPage.resultText || (is8051
-            ? 'Experiment was executed and verified against 8051 microcontroller hardware architecture.'
+            ? (isNoMemory
+                ? 'Experiment was executed using 8051 Special Function Registers and Port latches. Internal Data RAM is not used.'
+                : 'Experiment was executed and verified against 8051 microcontroller hardware architecture.')
             : 'Experiment was executed and verified against theoretical values.')
         }
       };
@@ -1116,6 +1364,69 @@ const VIVA_VOCE_DATA: Record<string, Array<{ question: string; answer: string; c
   ]
 };
 
+export function getInitialSimState(expId: string, expInfo: any, manualPage: LabManualPage) {
+  const is8051 = expId.startsWith('exp_8051_');
+  const isNoMem = isExperimentNoMemory(expId);
+
+  const registers: Record<string, string> = is8051
+    ? (expId === 'exp_8051_timer0_m1'
+        ? { TMOD: '01H', TH0: '9EH', TL0: '58H', TCON: '00H', P0: '00H', SP: '07H' }
+        : expId === 'exp_8051_timer1_m0'
+        ? { TMOD: '00H', TH1: 'FEH', TL1: '0EH', TCON: '00H', P2: '00H', SP: '07H' }
+        : expId === 'exp_8051_counter0_m2'
+        ? { TMOD: '02H', TH0: '06H', TL0: '06H', TCON: '00H', P1: '00H', SP: '07H' }
+        : { ACC: '00H', B: '00H', R0: '00H', DPTR: '0000H', SP: '07H', PSW: '00H' })
+    : {
+        AX: expInfo?.number === '1B' ? '0050H' : expInfo?.number === '1C' ? '0078H' : '4C00H',
+        BX: '0004H',
+        CX: '0000H',
+        DX: '0000H',
+        SI: '0004H',
+        DI: '0004H',
+        SP: '0100H',
+        BP: '0000H'
+      };
+
+  const flags: Record<string, string> = is8051
+    ? (expId.includes('timer') || expId.includes('counter')
+        ? { TF0: '0', TR0: '0', CY: '0', P: '0' }
+        : { CY: '0', AC: '0', OV: '0', P: '0' })
+    : { CF: '0', ZF: '1', SF: '0', OF: '0', PF: '1', IF: '1' };
+
+  const memoryDump: string[] = isNoMem
+    ? (is8051
+        ? [
+            `SFR Hardware Trace: Pure SFR & Port operation (Internal RAM not allocated)`,
+            `Control / Timer: ${manualPage.expectedOutput?.registers || (expId === 'exp_8051_timer0_m1' ? 'TMOD (89H)=01H, TH0 (8CH)=9EH, TL0 (8AH)=58H' : 'TMOD, TH1, TL1, TCON')}`,
+            `Output Port: ${manualPage.expectedOutput?.outputs[0]?.name || 'Port Pin'} = ${manualPage.expectedOutput?.outputs[0]?.val || 'Active'}`
+          ]
+        : [
+            `Hardware I/O Trace: Direct Port interfacing (RAM Data Segment not used)`,
+            `Control Word / Port: ${manualPage.expectedOutput?.inputs[0]?.name || 'Port'} = ${manualPage.expectedOutput?.inputs[0]?.val || 'Active'}`,
+            `Observed Output: ${manualPage.expectedOutput?.outputs[0]?.name || 'Port'} = ${manualPage.expectedOutput?.outputs[0]?.val || 'Ready'}`
+          ])
+    : (is8051
+        ? [
+            'RAM:30H  ' + (manualPage.expectedOutput?.inputs[0]?.val || '00H'),
+            'RAM:40H  ' + (manualPage.expectedOutput?.outputs[0]?.val || '00H'),
+            'RAM:50H  ' + (manualPage.expectedOutput?.outputs[1]?.val || '00H')
+          ]
+        : [
+            'DS:0000  ' + (manualPage.expectedOutput?.inputs[0]?.val || 'FF FE FD FC'),
+            'DS:0010  ' + (manualPage.expectedOutput?.outputs[0]?.val || '00 01 01 01'),
+            'DS:0020  ' + (manualPage.expectedOutput?.outputs[1]?.val || 'EE FC FA F8')
+          ]);
+
+  return {
+    status: 'Ready',
+    result: manualPage.expectedOutput.desc,
+    registers,
+    flags,
+    memoryDump,
+    cycles: 42
+  };
+}
+
 export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = ({
   slideId,
   slideTitle,
@@ -1305,27 +1616,7 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
     setExp2InputMode('hex');
     setExp2ActiveSection('all');
 
-    setSimOutput({
-      status: 'Ready',
-      result: manualPage.expectedOutput.desc,
-      registers: {
-        AX: expInfo.number === '1B' ? 'FFFBH' : expInfo.number === '1C' ? '0078H' : '4C00H',
-        BX: '0004H',
-        CX: '0000H',
-        DX: '0000H',
-        SI: '0004H',
-        DI: '0004H',
-        SP: '0100H',
-        BP: '0000H'
-      },
-      flags: { CF: '0', ZF: '1', SF: '0', OF: '0', PF: '1', IF: '1' },
-      memoryDump: [
-        'DS:0000  ' + (manualPage.expectedOutput.inputs[0]?.val || 'FF FE FD FC'),
-        'DS:0010  ' + (manualPage.expectedOutput.outputs[0]?.val || '00 01 01 01'),
-        'DS:0020  ' + (manualPage.expectedOutput.outputs[1]?.val || 'EE FC FA F8')
-      ],
-      cycles: 42
-    });
+    setSimOutput(getInitialSimState(expId, expInfo, manualPage));
   }, [expId, slideId]);
 
   const [simOutput, setSimOutput] = useState<{
@@ -1335,27 +1626,7 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
     flags: Record<string, string>;
     memoryDump: string[];
     cycles: number;
-  }>({
-    status: 'Ready',
-    result: manualPage.expectedOutput.desc,
-    registers: {
-      AX: expInfo.number === '1B' ? '0050H' : expInfo.number === '1C' ? '0078H' : '4C00H',
-      BX: '0004H',
-      CX: '0000H',
-      DX: '0000H',
-      SI: '0004H',
-      DI: '0004H',
-      SP: '0100H',
-      BP: '0000H'
-    },
-    flags: { CF: '0', ZF: '1', SF: '0', OF: '0', PF: '1', IF: '1' },
-    memoryDump: [
-      'DS:0000  ' + (manualPage.expectedOutput.inputs[0]?.val || 'FF FE FD FC'),
-      'DS:0010  ' + (manualPage.expectedOutput.outputs[0]?.val || '00 01 01 01'),
-      'DS:0020  ' + (manualPage.expectedOutput.outputs[1]?.val || 'EE FC FA F8')
-    ],
-    cycles: 42
-  });
+  }>(() => getInitialSimState(expId, expInfo, manualPage));
 
   const handleCopyCode = () => {
     const textToCopy =
@@ -2453,19 +2724,19 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
                       </p>
                     </div>
 
-                    {/* Key Concepts Grid */}
+                    {/* Key Concepts List */}
                     <div className="bg-white rounded-2xl p-3.5 border border-[#B8D4E8] space-y-2 shadow-2xs">
                       <div className="flex items-center gap-2 text-[#2563EB] font-mono text-xs font-bold uppercase tracking-wider">
                         <Lightbulb className="w-4 h-4 text-[#2563EB]" />
                         <span>Key Theoretical Concepts & Foundations</span>
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      <div className="divide-y divide-[#B8D4E8]/60 border border-[#B8D4E8] rounded-xl overflow-hidden bg-white">
                         {basicTheory.keyConcepts.map((concept, idx) => (
                           <div
                             key={idx}
-                            className="bg-[#F8FAFC] p-3 rounded-xl border border-[#B8D4E8] space-y-1.5 flex flex-col justify-between"
+                            className="p-3 hover:bg-[#F8FAFC] transition-colors flex flex-col sm:flex-row sm:items-start gap-2.5 sm:gap-4"
                           >
-                            <div className="space-y-1">
+                            <div className="sm:w-48 shrink-0 space-y-1">
                               {concept.badge && (
                                 <span className="inline-block text-[9px] font-mono font-bold text-[#2563EB] bg-[#EAF4FB] px-2 py-0.5 rounded border border-[#B8D4E8]">
                                   {concept.badge}
@@ -2474,10 +2745,10 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
                               <h4 className="text-xs font-bold text-[#163A5F]">
                                 {concept.title}
                               </h4>
-                              <p className="text-[11px] text-[#475569] leading-relaxed">
-                                {concept.description}
-                              </p>
                             </div>
+                            <p className="text-xs text-[#475569] leading-relaxed flex-1">
+                              {concept.description}
+                            </p>
                           </div>
                         ))}
                       </div>
@@ -2513,31 +2784,44 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
                       </div>
                     )}
 
-                    {/* 8086 Architectural Mechanisms */}
+                    {/* Hardware Registers & Architectural Mechanisms Table */}
                     <div className="bg-white rounded-2xl p-3.5 border border-[#B8D4E8] space-y-2 shadow-2xs">
                       <div className="flex items-center gap-2 text-[#2563EB] font-mono text-xs font-bold uppercase tracking-wider">
                         <Cpu className="w-4 h-4 text-[#2563EB]" />
-                        <span>8086 Hardware Registers & Architectural Mechanisms</span>
+                        <span>
+                          {expId.startsWith('exp_8051_')
+                            ? '8051 Microcontroller Architecture & Register Mechanisms'
+                            : '8086 Hardware Registers & Architectural Mechanisms'}
+                        </span>
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                        {basicTheory.architecturalMechanisms.map((mech, mIdx) => (
-                          <div
-                            key={mIdx}
-                            className="bg-[#EAF4FB]/40 p-2.5 rounded-xl border border-[#B8D4E8] space-y-1"
-                          >
-                            <div className="text-xs font-mono font-bold text-[#163A5F] flex items-center gap-1.5">
-                              <span className="w-2 h-2 rounded-full bg-[#2563EB]" />
-                              {mech.feature}
-                            </div>
-                            <div className="text-[11px] text-[#475569] leading-snug">
-                              {mech.role}
-                            </div>
-                          </div>
-                        ))}
+                      <div className="overflow-x-auto border border-[#B8D4E8] rounded-xl bg-white">
+                        <table className="w-full text-left text-xs font-sans">
+                          <thead>
+                            <tr className="bg-[#EAF4FB] border-b border-[#B8D4E8] text-[#163A5F] font-mono text-[11px] uppercase">
+                              <th className="py-2 px-3.5 font-bold w-1/3">Architectural Element / Register</th>
+                              <th className="py-2 px-3.5 font-bold">Functional Role & System Behavior</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-[#B8D4E8]/60">
+                            {basicTheory.architecturalMechanisms.map((mech, mIdx) => (
+                              <tr key={mIdx} className="hover:bg-[#F8FAFC] transition-colors">
+                                <td className="py-2 px-3.5 font-mono font-bold text-[#163A5F] align-top">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] shrink-0" />
+                                    <span>{mech.feature}</span>
+                                  </div>
+                                </td>
+                                <td className="py-2 px-3.5 text-[#334155] text-xs leading-relaxed align-top">
+                                  {mech.role}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
                     </div>
 
-                    {/* Worked Numerical Example (Manual Calculation Trace) */}
+                    {/* Worked Numerical Example (Manual Calculation Trace Table) */}
                     <div className="bg-white rounded-2xl p-3.5 border border-[#B8D4E8] space-y-2 shadow-2xs">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-emerald-800 font-mono text-xs font-bold uppercase tracking-wider">
@@ -2548,38 +2832,50 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
                           Manual Verification
                         </span>
                       </div>
-                      <div className="bg-[#F8FAFC] p-3 rounded-xl border border-[#B8D4E8] space-y-2">
-                        <div className="text-xs font-mono text-[#163A5F] bg-white p-2 rounded-lg border border-[#B8D4E8]">
-                          <span className="text-[#64748B] block text-[10px] uppercase font-sans font-bold">
-                            {basicTheory.workedExample.inputLabel}:
+                      <div className="border border-[#B8D4E8] rounded-xl overflow-hidden bg-white">
+                        <div className="bg-[#EAF4FB] px-3.5 py-2 border-b border-[#B8D4E8] flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+                          <span className="text-[#163A5F]">
+                            <strong>{basicTheory.workedExample.inputLabel}:</strong>{' '}
+                            <span className="text-[#2563EB] font-bold">{basicTheory.workedExample.inputValue}</span>
                           </span>
-                          <strong className="text-[#2563EB]">{basicTheory.workedExample.inputValue}</strong>
+                          <span className="text-emerald-800 font-bold">
+                            Verified Output: {basicTheory.workedExample.finalOutput}
+                          </span>
                         </div>
-                        <div className="space-y-1">
-                          {basicTheory.workedExample.calculationSteps.map((cStep) => (
-                            <div
-                              key={cStep.stepNumber}
-                              className="bg-white p-2 rounded-lg border border-[#CBD5E1] text-[11px] flex flex-wrap items-center justify-between gap-2"
-                            >
-                              <div className="flex items-center gap-2">
-                                <span className="w-5 h-5 rounded bg-blue-100 text-blue-800 font-mono font-bold text-[10px] flex items-center justify-center shrink-0">
-                                  {cStep.stepNumber}
-                                </span>
-                                <span className="font-mono text-[#163A5F]">{cStep.operation}</span>
-                              </div>
-                              <div className="flex items-center gap-2 text-[10px] font-mono">
-                                <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                                  {cStep.intermediateResult}
-                                </span>
-                                <span className="text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200">
-                                  {cStep.flagImpact}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                        <div className="text-xs font-mono text-emerald-900 bg-emerald-50/80 p-2 rounded-lg border border-emerald-300 font-semibold">
-                          Verified Output: {basicTheory.workedExample.finalOutput}
+
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-xs font-sans">
+                            <thead>
+                              <tr className="bg-[#F8FAFC] border-b border-[#B8D4E8] text-[#163A5F] font-mono text-[11px] uppercase">
+                                <th className="py-2 px-3 font-bold w-12 text-center">Step</th>
+                                <th className="py-2 px-3 font-bold">Operation / Instruction</th>
+                                <th className="py-2 px-3 font-bold">Intermediate Value</th>
+                                <th className="py-2 px-3 font-bold">Flags Impacted</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-[#B8D4E8]/60 font-mono text-[11px]">
+                              {basicTheory.workedExample.calculationSteps.map((cStep) => (
+                                <tr key={cStep.stepNumber} className="hover:bg-[#F8FAFC]">
+                                  <td className="py-2 px-3 text-center font-bold text-[#2563EB] bg-[#EAF4FB]/30">
+                                    {cStep.stepNumber}
+                                  </td>
+                                  <td className="py-2 px-3 font-bold text-[#163A5F]">
+                                    {cStep.operation}
+                                  </td>
+                                  <td className="py-2 px-3">
+                                    <span className="text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 font-bold">
+                                      {cStep.intermediateResult}
+                                    </span>
+                                  </td>
+                                  <td className="py-2 px-3">
+                                    <span className="text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200 font-bold">
+                                      {cStep.flagImpact}
+                                    </span>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
                         </div>
                       </div>
                     </div>
@@ -4581,7 +4877,7 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
                     <div className="lg:col-span-6 bg-white rounded-2xl p-3 border border-[#B8D4E8] space-y-2 shadow-2xs">
                       <div className="text-xs font-mono font-bold text-[#163A5F] uppercase flex items-center gap-1.5">
                         <Terminal className="w-3.5 h-3.5 text-[#2563EB]" />
-                        <span>{is8051 ? '8051 Internal RAM & SFR Hex Dump' : 'RAM Segment Hex Dump'}</span>
+                        <span>{is8051 ? (isExperimentNoMemory(expId) ? '8051 SFR & Port Trace (RAM Not Used)' : '8051 Internal RAM & SFR Hex Dump') : (isExperimentNoMemory(expId) ? 'Hardware Port & Control Trace (RAM Not Used)' : 'RAM Segment Hex Dump')}</span>
                       </div>
 
                       <div className="bg-[#EAF4FB]/70 rounded-xl p-2.5 border border-[#B8D4E8] font-mono text-xs text-[#163A5F] space-y-1 max-h-[160px] overflow-y-auto scrollbar-thin">
@@ -4598,22 +4894,23 @@ export const Unit6LabManualPresenter: React.FC<Unit6LabManualPresenterProps> = (
               {activeExecModule === 'verification' && (() => {
                 const lastStep = execData.steps[execData.steps.length - 1];
                 const { memoryRows, verificationRows, observationData } = getExperimentVerificationSuite(expId, manualPage, lastStep);
+                const isNoMemory = observationData.isNoMemory ?? isExperimentNoMemory(expId);
 
                 const handleCopyObservation = () => {
                   const text = `=== ${is8051 ? '8051 MICROCONTROLLER' : '8086'} LAB OBSERVATION RECORD ===
 EXPERIMENT: ${manualPage.number} - ${manualPage.title}
-
---- 1. INPUT SPECIFICATION ---
-${observationData.inputs.map((inp, idx) => `[${idx + 1}] Memory Address: ${inp.address} | Variable: ${inp.variable.padEnd(14)} | Hex: ${inp.hexVal.padEnd(16)} | Dec: ${inp.decVal}`).join('\n')}
+${isNoMemory ? 'NOTE: Internal Data RAM (30H–7FH) is NOT USED. All operations execute via hardware SFRs & Port latches.\n' : ''}
+--- 1. INPUT SPECIFICATIONS ${isNoMemory ? '& HARDWARE SFRs' : ''} ---
+${observationData.inputs.map((inp, idx) => `[${idx + 1}] ${isNoMemory ? 'Location' : 'Memory Address'}: ${inp.address} | Variable: ${inp.variable.padEnd(16)} | Hex: ${inp.hexVal.padEnd(16)} | Value: ${inp.decVal}`).join('\n')}
 
 --- 2. INITIAL REGISTER SETUP ---
-${observationData.initialRegisters.map((reg) => `Register: ${reg.register.padEnd(4)} = ${reg.value.padEnd(8)} | Purpose: ${reg.purpose}`).join('\n')}
+${observationData.initialRegisters.map((reg) => `Register: ${reg.register.padEnd(6)} = ${reg.value.padEnd(8)} | Purpose: ${reg.purpose}`).join('\n')}
 
---- 3. OBSERVED OUTPUTS & MEMORY DUMP ---
-${observationData.outputs.map((out, idx) => `[${idx + 1}] Memory Address: ${out.address} | Variable: ${out.variable.padEnd(14)} | Hex: ${out.hexVal.padEnd(16)} | Dec: ${out.decVal}`).join('\n')}
+--- 3. ${isNoMemory ? 'OBSERVED OUTPUTS & HARDWARE PORT STATE' : 'OBSERVED OUTPUTS & MEMORY DUMP'} ---
+${observationData.outputs.map((out, idx) => `[${idx + 1}] ${isNoMemory ? 'Location' : 'Memory Address'}: ${out.address} | Variable: ${out.variable.padEnd(16)} | Hex: ${out.hexVal.padEnd(16)} | Value: ${out.decVal}`).join('\n')}
 
---- 4. FINAL CPU STATUS FLAGS ---
-${observationData.finalFlags.map((flg) => `Flag: ${flg.flag.padEnd(4)} = ${flg.value} (${flg.meaning})`).join('\n')}
+--- 4. FINAL ${is8051 ? 'HARDWARE FLAGS / PSW' : 'CPU STATUS FLAGS'} ---
+${observationData.finalFlags.map((flg) => `Flag: ${flg.flag.padEnd(6)} = ${flg.value} (${flg.meaning})`).join('\n')}
 
 --- 5. VERIFIED RESULT ---
 ${observationData.resultSummary}
@@ -4630,12 +4927,16 @@ ${observationData.resultSummary}
                       <div>
                         <div className="flex items-center gap-2 text-sm font-mono font-bold text-[#163A5F] uppercase">
                           <Award className="w-4.5 h-4.5 text-[#2563EB]" />
-                          <span>4. Final Output, RAM Memory & Side-by-Side Verification</span>
+                          <span>4. Final Output, {isNoMemory ? (is8051 ? 'SFR State' : 'Hardware State') : 'RAM Memory'} & Side-by-Side Verification</span>
                         </div>
                         <p className="text-xs text-[#52799F] mt-0.5 font-sans">
                           {is8051
-                            ? 'Comparative validation: Theoretical Hand Proofs vs. 8051 Simulated Registers & Internal RAM Dump'
-                            : 'Comparative validation: Theoretical Hand Proofs vs. 8086 Simulated CPU Registers & RAM Dump'}
+                            ? (isNoMemory
+                                ? 'Comparative validation: Theoretical Timing/Waveform Proofs vs. 8051 Simulated SFR Registers & Port Latches'
+                                : 'Comparative validation: Theoretical Hand Proofs vs. 8051 Simulated Registers & Internal RAM Dump')
+                            : (isNoMemory
+                                ? 'Comparative validation: Theoretical Hand Proofs vs. 8086 Simulated Hardware I/O Ports'
+                                : 'Comparative validation: Theoretical Hand Proofs vs. 8086 Simulated CPU Registers & RAM Dump')}
                         </p>
                       </div>
 
@@ -4645,7 +4946,7 @@ ${observationData.resultSummary}
                           {[
                             { id: 'all', label: 'All Sections', icon: Layers },
                             { id: 'side_by_side', label: 'Side-by-Side Split', icon: ArrowRightLeft },
-                            { id: 'memory_dump', label: is8051 ? 'RAM & SFR State' : 'RAM & CPU State', icon: Database },
+                            { id: 'memory_dump', label: is8051 ? (isNoMemory ? 'SFR & Port State' : 'RAM & SFR State') : (isNoMemory ? 'Hardware I/O State' : 'RAM & CPU State'), icon: Database },
                             { id: 'manual_proof', label: 'Manual Proof', icon: Calculator },
                             { id: 'observation_sheet', label: 'Observation Book', icon: ClipboardCheck }
                           ].map((tab) => {
@@ -4707,9 +5008,13 @@ ${observationData.resultSummary}
                           <Database className="w-4.5 h-4.5" />
                         </div>
                         <div>
-                          <span className="text-[11px] font-mono font-bold text-amber-900 block uppercase">RAM Memory Structure</span>
+                          <span className="text-[11px] font-mono font-bold text-amber-900 block uppercase">
+                            {isNoMemory ? 'Memory Architecture' : 'RAM Memory Structure'}
+                          </span>
                           <span className="text-xs text-amber-800 font-medium">
-                            {is8051 ? 'Direct/Indirect 8-bit RAM Verified' : 'Intel Little-Endian Byte Order Verified'}
+                            {isNoMemory
+                              ? (is8051 ? 'Pure SFR & Port Driven (Internal RAM Not Used)' : 'Hardware I/O Port Driven (RAM Not Used)')
+                              : is8051 ? 'Direct/Indirect 8-bit RAM Verified' : 'Intel Little-Endian Byte Order Verified'}
                           </span>
                         </div>
                       </div>
@@ -4735,7 +5040,7 @@ ${observationData.resultSummary}
                               <div className="flex items-center justify-between pb-2 border-b border-blue-200">
                                 <div className="flex items-center gap-2 text-xs font-mono font-bold text-blue-900 uppercase">
                                   <Cpu className="w-4 h-4 text-blue-600" />
-                                  <span>{is8051 ? 'Simulated 8051 Final Registers & RAM Output' : 'Simulated 8086 Final CPU & Memory Output'}</span>
+                                  <span>{is8051 ? (isNoMemory ? 'Simulated 8051 Final SFRs & Port Output' : 'Simulated 8051 Final Registers & RAM Output') : (isNoMemory ? 'Simulated 8086 Final CPU & I/O Port Output' : 'Simulated 8086 Final CPU & Memory Output')}</span>
                                 </div>
                                 <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-bold">
                                   Hardware State
@@ -4812,20 +5117,33 @@ ${observationData.resultSummary}
                                 </div>
                               </div>
 
-                              {/* RAM Memory Dump Table */}
+                              {/* RAM / SFR Memory Dump Table */}
                               <div className="space-y-1.5">
+                                {isNoMemory && (
+                                  <div className="p-2.5 rounded-lg bg-amber-50/90 border border-amber-300 text-amber-950 flex items-start gap-2 text-[11px] font-sans">
+                                    <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                                    <div>
+                                      <span className="font-bold block">Internal RAM (30H–7FH) Status:</span>
+                                      <span>
+                                        Data RAM is <strong className="text-amber-900">NOT USED</strong> in this experiment. All timing, count, and waveform generation execute directly via 8051 hardware Special Function Registers ({expId === 'exp_8051_timer0_m1' ? 'TMOD, TH0, TL0, TCON' : 'SFRs'}) and physical Port latches ({expId === 'exp_8051_timer0_m1' ? 'Port P0' : 'I/O Ports'}).
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
                                 <div className="flex items-center justify-between">
                                   <span className="text-[11px] font-mono font-bold text-[#163A5F] block">
-                                    {is8051 ? '8051 Internal RAM Memory Map:' : 'RAM Memory Segment Allocation:'}
+                                    {isNoMemory
+                                      ? (is8051 ? '8051 Special Function Registers & Port Allocation Map:' : 'Hardware Port & Control Register Allocation:')
+                                      : (is8051 ? '8051 Internal RAM Memory Map:' : 'RAM Memory Segment Allocation:')}
                                   </span>
-                                  <span className="text-[10px] font-mono text-[#52799F]">{is8051 ? 'Direct RAM (30H-7FH)' : 'Little-Endian Format'}</span>
+                                  <span className="text-[10px] font-mono text-[#52799F]">{isNoMemory ? 'Data RAM: Not Used (Pure SFR & Port)' : is8051 ? 'Direct RAM (30H-7FH)' : 'Little-Endian Format'}</span>
                                 </div>
                                 <div className="overflow-x-auto rounded-lg border border-[#B8D4E8] bg-white">
                                   <table className="w-full text-left text-xs font-mono">
                                     <thead className="bg-[#EAF4FB] text-[#163A5F] text-[11px] border-b border-[#B8D4E8]">
                                       <tr>
-                                        <th className="p-2">Address</th>
-                                        <th className="p-2">Symbol</th>
+                                        <th className="p-2">{isNoMemory ? 'Register / Port' : 'Address'}</th>
+                                        <th className="p-2">{isNoMemory ? 'SFR / Symbol' : 'Symbol'}</th>
                                         <th className="p-2">Hex Bytes</th>
                                         <th className="p-2">Value</th>
                                         <th className="p-2 text-center">Type</th>
@@ -4942,9 +5260,9 @@ ${observationData.resultSummary}
                             <thead className="bg-[#EAF4FB] text-[#163A5F] text-[11px] border-b border-[#B8D4E8]">
                               <tr>
                                 <th className="p-2.5">Parameter / Variable</th>
-                                <th className="p-2.5">Storage Location</th>
+                                <th className="p-2.5">{isNoMemory ? 'Register / Hardware Location' : 'Storage Location'}</th>
                                 <th className="p-2.5">Theoretical Hand Calculation</th>
-                                <th className="p-2.5">Simulated 8086 Output</th>
+                                <th className="p-2.5">{is8051 ? 'Simulated 8051 Output' : 'Simulated 8086 Output'}</th>
                                 <th className="p-2.5 text-center">Verification Status</th>
                               </tr>
                             </thead>
@@ -4986,17 +5304,31 @@ ${observationData.resultSummary}
                         </div>
 
                         <div className="p-4 rounded-xl border border-emerald-300 bg-emerald-50/20 space-y-3 font-mono text-xs">
+                          {isNoMemory && (
+                            <div className="p-2.5 rounded-lg bg-amber-50/90 border border-amber-300 text-amber-950 flex items-start gap-2 text-[11px] font-sans">
+                              <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                              <div>
+                                <span className="font-bold">Hardware Architecture Notice:</span>
+                                <span className="block text-[#475569]">
+                                  Internal Data Memory (RAM 30H–7FH) is <strong className="text-amber-900">NOT USED</strong> in this experiment. All operational parameters and timing delays are governed strictly by hardware Special Function Registers (SFRs) and physical Port latches.
+                                </span>
+                              </div>
+                            </div>
+                          )}
+
                           {/* Inputs Table */}
                           <div className="space-y-1.5">
-                            <span className="font-bold text-emerald-900 uppercase block text-[11px]">1. Input Specifications:</span>
+                            <span className="font-bold text-emerald-900 uppercase block text-[11px]">
+                              {isNoMemory ? '1. Input Specifications & Hardware Setup:' : '1. Input Specifications:'}
+                            </span>
                             <div className="overflow-x-auto rounded-lg border border-[#B8D4E8] bg-white">
                               <table className="w-full text-left text-xs font-mono">
                                 <thead className="bg-[#EAF4FB] text-[#163A5F] text-[11px] border-b border-[#B8D4E8]">
                                   <tr>
-                                    <th className="p-2">Memory Address</th>
-                                    <th className="p-2">Variable / Label</th>
+                                    <th className="p-2">{isNoMemory ? 'Hardware Location / Register' : 'Memory Address'}</th>
+                                    <th className="p-2">{isNoMemory ? 'Parameter / SFR Name' : 'Variable / Label'}</th>
                                     <th className="p-2">Hex Value</th>
-                                    <th className="p-2">Decimal Equivalent</th>
+                                    <th className="p-2">{isNoMemory ? 'Decimal / Configuration Equivalent' : 'Decimal Equivalent'}</th>
                                   </tr>
                                 </thead>
                                 <tbody className="divide-y divide-[#B8D4E8]">
@@ -5015,13 +5347,15 @@ ${observationData.resultSummary}
 
                           {/* Outputs Table */}
                           <div className="space-y-1.5">
-                            <span className="font-bold text-emerald-900 uppercase block text-[11px]">2. Observed Output & Memory Dump:</span>
+                            <span className="font-bold text-emerald-900 uppercase block text-[11px]">
+                              {isNoMemory ? '2. Observed Output & Hardware Port / Signal State:' : '2. Observed Output & Memory Dump:'}
+                            </span>
                             <div className="overflow-x-auto rounded-lg border border-[#B8D4E8] bg-white">
                               <table className="w-full text-left text-xs font-mono">
                                 <thead className="bg-[#EAF4FB] text-[#163A5F] text-[11px] border-b border-[#B8D4E8]">
                                   <tr>
-                                    <th className="p-2">Memory Address</th>
-                                    <th className="p-2">Output Variable</th>
+                                    <th className="p-2">{isNoMemory ? 'Port / Signal Location' : 'Memory Address'}</th>
+                                    <th className="p-2">{isNoMemory ? 'Output Variable / Signal' : 'Output Variable'}</th>
                                     <th className="p-2">Hex Bytes</th>
                                     <th className="p-2">Observed Result</th>
                                   </tr>
@@ -5042,7 +5376,9 @@ ${observationData.resultSummary}
 
                           {/* Final Flags Status */}
                           <div className="space-y-1.5">
-                            <span className="font-bold text-emerald-900 uppercase block text-[11px]">3. CPU Status Flag Register:</span>
+                            <span className="font-bold text-emerald-900 uppercase block text-[11px]">
+                              {is8051 ? '3. 8051 Status & Hardware Flags (PSW / TCON):' : '3. CPU Status Flag Register:'}
+                            </span>
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                               {observationData.finalFlags.map((flg, idx) => (
                                 <div key={idx} className="p-2 rounded-lg bg-white border border-[#B8D4E8]">
@@ -5062,6 +5398,11 @@ ${observationData.resultSummary}
                             <p className="text-[#334155] font-sans text-xs mt-0.5 leading-relaxed font-medium">
                               {observationData.resultSummary}
                             </p>
+                            {isNoMemory && (
+                              <p className="text-[11px] font-sans text-emerald-900 mt-1 font-semibold">
+                                ✓ Confirmed: Program executes purely via Special Function Registers (SFRs) and Port pins with zero data RAM allocation.
+                              </p>
+                            )}
                           </div>
                         </div>
                       </div>

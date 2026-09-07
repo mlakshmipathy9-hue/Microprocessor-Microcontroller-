@@ -127,6 +127,52 @@ export default function Sidebar({
     });
   }
 
+  const unitInfoMap: Record<'unit1' | 'unit2' | 'unit3' | 'unit4' | 'unit5' | 'labs', {
+    unitNumber: string;
+    unitNumberRoman: string;
+    unitName: string;
+    category: string;
+  }> = {
+    unit1: {
+      unitNumber: 'Unit 1',
+      unitNumberRoman: 'UNIT - I',
+      unitName: 'System Architecture',
+      category: '8086 Microprocessor'
+    },
+    unit2: {
+      unitNumber: 'Unit 2',
+      unitNumberRoman: 'UNIT - II',
+      unitName: '8086 Programming',
+      category: '8086 ALP & Directives'
+    },
+    unit3: {
+      unitNumber: 'Unit 3',
+      unitNumberRoman: 'UNIT - III',
+      unitName: '8086 Interfacing',
+      category: 'Peripherals & Memory'
+    },
+    unit4: {
+      unitNumber: 'Unit 4',
+      unitNumberRoman: 'UNIT - IV',
+      unitName: '8051 Microcontroller',
+      category: 'Hardware & Architecture'
+    },
+    unit5: {
+      unitNumber: 'Unit 5',
+      unitNumberRoman: 'UNIT - V',
+      unitName: 'MCU Interfacing',
+      category: 'Peripherals & LCD Interfacing'
+    },
+    labs: {
+      unitNumber: 'Unit 6',
+      unitNumberRoman: 'UNIT - VI',
+      unitName: 'Lab Resources',
+      category: 'Lab Manual & Experiments'
+    }
+  };
+
+  const selectedUnitInfo = unitInfoMap[activeUnit];
+
   return (
     <div
       className={`fixed inset-y-0 left-0 z-40 bg-white/80 backdrop-blur-md text-slate-800 flex flex-col border-sky-100 transition-all duration-300 ease-in-out h-full shrink-0 overflow-hidden ${
@@ -140,32 +186,22 @@ export default function Sidebar({
         <div className="flex flex-col flex-1 min-h-0">
           {/* Sidebar Header */}
           <div className="p-4 border-b border-sky-100 bg-sky-50/50 flex items-center justify-between h-16 shrink-0">
-            <div className="flex items-center gap-2.5">
-              <div className="p-1.5 bg-indigo-600 rounded-lg text-white shadow-xs">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="p-1.5 bg-indigo-600 rounded-lg text-white shadow-xs shrink-0">
                 <Cpu className="w-5 h-5" />
               </div>
-              <div>
-                <h1 className="font-display font-bold text-xs tracking-wider uppercase text-slate-900 leading-tight">
-                  8086 Microprocessor
+              <div className="min-w-0">
+                <h1 className="font-display font-bold text-xs tracking-wider uppercase text-slate-900 leading-tight truncate">
+                  {selectedUnitInfo.unitNumberRoman}: {selectedUnitInfo.unitName}
                 </h1>
-                <span className="text-[9px] text-indigo-600 font-mono tracking-wider font-semibold uppercase">
-                  {currentModuleId === 'm20' || activeUnit === 'labs'
-                    ? 'UNIT-6: LAB RESOURCES & MANUALS'
-                    : ['m26', 'm27', 'm28', 'm29', 'm30'].some(id => currentModuleId === id)
-                    ? 'UNIT-5: MICROCONTROLLER INTERFACING'
-                    : ['m21', 'm22', 'm23', 'm24', 'm25'].some(id => currentModuleId === id)
-                    ? 'UNIT-4: 8051 MICROCONTROLLER'
-                    : ['m13', 'm14', 'm15', 'm16', 'm17', 'm18', 'm19'].some(id => currentModuleId === id)
-                    ? 'UNIT-3: 8086 INTERFACING'
-                    : ['m8', 'm9', 'm10', 'm11', 'm12'].some(id => currentModuleId === id)
-                    ? 'UNIT-2: 8086 PROGRAMMING'
-                    : 'UNIT-1: SYSTEM ARCHITECTURE'}
+                <span className="text-[9px] text-indigo-600 font-mono tracking-wider font-bold uppercase block truncate">
+                  {selectedUnitInfo.category}
                 </span>
               </div>
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="lg:hidden text-slate-500 hover:text-slate-900 cursor-pointer text-xl font-bold p-1"
+              className="lg:hidden text-slate-500 hover:text-slate-900 cursor-pointer text-xl font-bold p-1 shrink-0"
             >
               &times;
             </button>

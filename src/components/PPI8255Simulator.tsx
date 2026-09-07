@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Cpu, Sliders, CheckCircle2, Zap, ArrowRight, ToggleLeft, ToggleRight, Settings, Layers, Hash, Info, Eye } from 'lucide-react';
+import { Cpu, Sliders, CheckCircle2, Zap, ArrowRight, ToggleLeft, ToggleRight, Settings, Layers, Hash, Info, Eye, Sparkles } from 'lucide-react';
 import PPI8255ArchitectureDiagram from './PPI8255ArchitectureDiagram';
 import PPI8255ModesOfOperation from './PPI8255ModesOfOperation';
 
@@ -8,14 +8,17 @@ export type PPI8255Tab = 'diagram' | 'pins' | 'architecture' | 'modes' | 'iomode
 interface PPI8255SimulatorProps {
   initialTab?: PPI8255Tab;
   allowedTabs?: PPI8255Tab[];
+  pinsVariant?: 'features-only' | 'inspector' | 'all';
 }
 
 export default function PPI8255Simulator({
   initialTab = 'pins',
   allowedTabs,
+  pinsVariant = 'all',
 }: PPI8255SimulatorProps) {
   const [activeTab, setActiveTab] = useState<PPI8255Tab>(initialTab);
   const [selectedPin, setSelectedPin] = useState<number | null>(null);
+  const [activeGroupFilter, setActiveGroupFilter] = useState<'all' | 'Port A' | 'Port B' | 'Port C' | 'Control & Bus' | 'Power'>('all');
 
   useEffect(() => {
     if (initialTab) {
@@ -75,15 +78,15 @@ export default function PPI8255Simulator({
     2: { name: 'PA2', type: 'Port A', desc: 'Port A Bit 2 bidirectional I/O line.', details: 'Group A 8-bit port pin. Can drive standard TTL loads (sink 1.6mA - 2.5mA).' },
     3: { name: 'PA1', type: 'Port A', desc: 'Port A Bit 1 bidirectional I/O line.', details: 'Group A 8-bit port pin.' },
     4: { name: 'PA0', type: 'Port A', desc: 'Port A Bit 0 (LSB) bidirectional I/O line.', details: 'Group A port LSB. Mode 0 basic I/O, Mode 1 strobed, or Mode 2 bi-directional.' },
-    5: { name: 'RD#', type: 'Control & Bus', desc: 'Read Strobe (Active LOW input).', details: 'CPU asserts RD# LOW to read data from the selected 8255 port or control register onto D0–D7.' },
-    6: { name: 'CS#', type: 'Control & Bus', desc: 'Chip Select (Active LOW input).', details: 'A LOW on CS# enables 8255 communication with CPU. High disables bus buffers (high-impedance).' },
+    5: { name: 'R̅D̅', type: 'Control & Bus', desc: 'Read Strobe (Active LOW input).', details: 'CPU asserts R̅D̅ LOW to read data from the selected 8255 port or control register onto D0–D7.' },
+    6: { name: 'C̅S̅', type: 'Control & Bus', desc: 'Chip Select (Active LOW input).', details: 'A LOW on C̅S̅ enables 8255 communication with CPU. High disables bus buffers (high-impedance).' },
     7: { name: 'GND', type: 'Power', desc: 'System Ground reference (0V).', details: 'Connects to common DC ground rail (0V).' },
     8: { name: 'A1', type: 'Control & Bus', desc: 'Internal Port Address Line 1.', details: 'Used with A0 to select Port A (00), Port B (01), Port C (10), or Control Register (11).' },
     9: { name: 'A0', type: 'Control & Bus', desc: 'Internal Port Address Line 0.', details: 'Connects to latched address line A0 or A1 from CPU.' },
-    10: { name: 'PC7', type: 'Port C', desc: 'Port C Upper Bit 7 / OBF_A# / Handshake.', details: 'Group A handshake line or general-purpose 4-bit upper I/O line with individual BSR capability.' },
-    11: { name: 'PC6', type: 'Port C', desc: 'Port C Upper Bit 6 / ACK_A# / Handshake.', details: 'Group A handshake line in Mode 1/2 or general I/O.' },
+    10: { name: 'PC7', type: 'Port C', desc: 'Port C Upper Bit 7 / O̅B̅F̅_A / Handshake.', details: 'Group A handshake line or general-purpose 4-bit upper I/O line with individual BSR capability.' },
+    11: { name: 'PC6', type: 'Port C', desc: 'Port C Upper Bit 6 / A̅C̅K̅_A / Handshake.', details: 'Group A handshake line in Mode 1/2 or general I/O.' },
     12: { name: 'PC5', type: 'Port C', desc: 'Port C Upper Bit 5 / IBF_A / Handshake.', details: 'Input Buffer Full signal for Port A in Mode 1/2.' },
-    13: { name: 'PC4', type: 'Port C', desc: 'Port C Upper Bit 4 / STB_A# / Handshake.', details: 'Strobe input for Port A in Mode 1.' },
+    13: { name: 'PC4', type: 'Port C', desc: 'Port C Upper Bit 4 / S̅T̅B̅_A / Handshake.', details: 'Strobe input for Port A in Mode 1.' },
     14: { name: 'PC0', type: 'Port C', desc: 'Port C Lower Bit 0 / Handshake.', details: 'Group B 4-bit lower I/O line or interrupt request line.' },
     15: { name: 'PC1', type: 'Port C', desc: 'Port C Lower Bit 1 / Handshake.', details: 'Group B handshake line or general I/O line.' },
     16: { name: 'PC2', type: 'Port C', desc: 'Port C Lower Bit 2 / Handshake.', details: 'Group B handshake line or general I/O line.' },
@@ -106,7 +109,7 @@ export default function PPI8255Simulator({
     33: { name: 'D1', type: 'Control & Bus', desc: 'Bidirectional Data Bus Bit 1.', details: 'Connects to CPU data bus D1.' },
     34: { name: 'D0', type: 'Control & Bus', desc: 'Bidirectional Data Bus Bit 0 (LSB).', details: 'Connects to CPU data bus D0.' },
     35: { name: 'RESET', type: 'Control & Bus', desc: 'Reset Input (Active HIGH).', details: 'A HIGH on RESET clears the internal control register and sets all 24 I/O ports (A, B, C) to Input Mode.' },
-    36: { name: 'WR#', type: 'Control & Bus', desc: 'Write Strobe (Active LOW input).', details: 'CPU asserts WR# LOW to write data or control words from CPU into 8255 ports/registers.' },
+    36: { name: 'W̅R̅', type: 'Control & Bus', desc: 'Write Strobe (Active LOW input).', details: 'CPU asserts W̅R̅ LOW to write data or control words from CPU into 8255 ports/registers.' },
     37: { name: 'PA7', type: 'Port A', desc: 'Port A Bit 7 (MSB) bidirectional I/O line.', details: 'Group A 8-bit port MSB.' },
     38: { name: 'PA6', type: 'Port A', desc: 'Port A Bit 6 bidirectional I/O line.', details: 'Group A 8-bit port pin.' },
     39: { name: 'PA5', type: 'Port A', desc: 'Port A Bit 5 bidirectional I/O line.', details: 'Group A 8-bit port pin.' },
@@ -118,13 +121,18 @@ export default function PPI8255Simulator({
     if (!pin) return 'bg-slate-100 text-slate-700 border-slate-300';
     if (selectedPin === pinNum) return 'bg-amber-400 text-amber-950 border-amber-600 font-extrabold ring-2 ring-amber-400';
     
+    const matchesFilter = activeGroupFilter === 'all' || pin.type === activeGroupFilter;
+    const filterClasses = matchesFilter
+      ? 'opacity-100'
+      : 'opacity-30 grayscale hover:opacity-100 hover:grayscale-0';
+
     switch (pin.type) {
-      case 'Port A': return 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100';
-      case 'Port B': return 'bg-indigo-50 text-indigo-800 border-indigo-300 hover:bg-indigo-100';
-      case 'Port C': return 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100';
-      case 'Control & Bus': return 'bg-blue-50 text-blue-800 border-blue-300 hover:bg-blue-100';
-      case 'Power': return 'bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100';
-      default: return 'bg-slate-50 text-slate-700 border-slate-300';
+      case 'Port A': return `bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100 ${filterClasses} ${matchesFilter && activeGroupFilter !== 'all' ? 'ring-2 ring-emerald-400 font-bold' : ''}`;
+      case 'Port B': return `bg-indigo-50 text-indigo-800 border-indigo-300 hover:bg-indigo-100 ${filterClasses} ${matchesFilter && activeGroupFilter !== 'all' ? 'ring-2 ring-indigo-400 font-bold' : ''}`;
+      case 'Port C': return `bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100 ${filterClasses} ${matchesFilter && activeGroupFilter !== 'all' ? 'ring-2 ring-amber-400 font-bold' : ''}`;
+      case 'Control & Bus': return `bg-blue-50 text-blue-800 border-blue-300 hover:bg-blue-100 ${filterClasses} ${matchesFilter && activeGroupFilter !== 'all' ? 'ring-2 ring-blue-400 font-bold' : ''}`;
+      case 'Power': return `bg-rose-50 text-rose-800 border-rose-300 hover:bg-rose-100 ${filterClasses} ${matchesFilter && activeGroupFilter !== 'all' ? 'ring-2 ring-rose-400 font-bold' : ''}`;
+      default: return `bg-slate-50 text-slate-700 border-slate-300 ${filterClasses}`;
     }
   };
 
@@ -172,70 +180,142 @@ export default function PPI8255Simulator({
 
   const currentTabInfo = tabLabels[activeTab] || tabLabels.pins;
 
+  const tabSwitcherElement = displayedTabs.length > 1 ? (
+    <div className="flex flex-wrap bg-slate-100 p-1 rounded-xl border border-slate-200 gap-1 shadow-inner">
+      {displayedTabs.map((tabKey) => {
+        const isSelected = activeTab === tabKey;
+        return (
+          <button
+            key={tabKey}
+            onClick={() => setActiveTab(tabKey)}
+            className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer text-[11px] ${
+              isSelected
+                ? 'bg-white text-indigo-700 shadow-xs font-bold border border-slate-200/80'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            {tabLabels[tabKey].label}
+          </button>
+        );
+      })}
+    </div>
+  ) : null;
+
   return (
     <div className="bg-white text-slate-800 p-4 md:p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4 text-xs font-sans">
-      {/* Top Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
-        <div className="flex items-center gap-2">
-          <div className="p-2 bg-indigo-50 rounded-xl border border-indigo-200 text-indigo-600 shadow-2xs">
-            <Cpu className="w-4 h-4" />
+      {/* Fallback header for other tabs */}
+      {displayedTabs.length > 1 && activeTab !== 'diagram' && activeTab !== 'pins' && (
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-slate-100 rounded-xl border border-slate-200 text-slate-700">
+              <Layers className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-slate-900">
+                {currentTabInfo.title || currentTabInfo.label}
+              </h3>
+            </div>
           </div>
-          <div>
-            <h3 className="font-bold text-sm text-slate-900">{currentTabInfo.title}</h3>
-            <p className="text-[11px] text-slate-500">{currentTabInfo.subtitle}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            {tabSwitcherElement}
           </div>
         </div>
-
-        {/* Tab Switcher */}
-        {displayedTabs.length > 1 && (
-          <div className="flex flex-wrap bg-slate-100 p-1 rounded-xl border border-slate-200 gap-1 shadow-inner">
-            {displayedTabs.map((tabKey) => {
-              const isSelected = activeTab === tabKey;
-              return (
-                <button
-                  key={tabKey}
-                  onClick={() => setActiveTab(tabKey)}
-                  className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer text-[11px] ${
-                    isSelected
-                      ? 'bg-white text-indigo-700 shadow-xs font-bold border border-slate-200/80'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  {tabLabels[tabKey].label}
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
+      )}
 
       {/* ========================================================================= */}
       {/* TAB 1: 40-PIN DIP PIN DIAGRAM                                             */}
       {/* ========================================================================= */}
       {activeTab === 'pins' && (
         <div className="space-y-4">
-          {/* Functional Group Legend */}
-          <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-            <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-700">
-              <Eye className="w-3.5 h-3.5 text-indigo-600" />
-              <span>Pin Group Legend:</span>
+          {/* Header bar with title and buttons inside division */}
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 pb-3">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 bg-indigo-50 rounded-xl border border-indigo-200 text-indigo-700 shadow-2xs">
+                <Cpu className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                  {pinsVariant === 'features-only' 
+                    ? 'Intel 8255 PPI 40-Pin DIP Pin Diagram & Salient Features'
+                    : pinsVariant === 'inspector'
+                    ? 'Intel 8255 PPI 40-Pin DIP Pin Functions & Address Decoding'
+                    : 'Intel 8255 PPI 40-Pin DIP Pin Diagram & Architecture'}
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  {pinsVariant === 'features-only'
+                    ? '40-Pin Dual In-Line Package (DIP) • Ports A, B, C (24 I/O Pins) • Architectural Specifications'
+                    : pinsVariant === 'inspector'
+                    ? 'Interactive Pin-by-Pin Inspector • Internal Address Decoding Table (A1, A0, R̅D̅, W̅R̅)'
+                    : 'Complete 40-Pin Package Layout • Ports A, B, C (24 I/O Pins) • Bus Control & Architectural Features'}
+                </p>
+              </div>
             </div>
-            <div className="flex flex-wrap gap-1.5 text-[10px]">
-              <span className="px-2 py-0.5 rounded-md font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
-                Port A (8 Pins: PA0–PA7)
-              </span>
-              <span className="px-2 py-0.5 rounded-md font-bold bg-indigo-100 text-indigo-900 border border-indigo-300">
-                Port B (8 Pins: PB0–PB7)
-              </span>
-              <span className="px-2 py-0.5 rounded-md font-bold bg-amber-100 text-amber-900 border border-amber-300">
-                Port C (8 Pins: PC0–PC7)
-              </span>
-              <span className="px-2 py-0.5 rounded-md font-bold bg-blue-100 text-blue-900 border border-blue-300">
-                Bus &amp; Control (14 Pins)
-              </span>
-              <span className="px-2 py-0.5 rounded-md font-bold bg-rose-100 text-rose-900 border border-rose-300">
-                Power (VCC 26, GND 7)
-              </span>
+
+            {/* Buttons inside division */}
+            <div className="flex flex-wrap items-center gap-2">
+              {tabSwitcherElement}
+              <div className="flex flex-wrap items-center gap-1 text-[10px]">
+                <button
+                  onClick={() => setActiveGroupFilter('all')}
+                  className={`px-2 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                    activeGroupFilter === 'all'
+                      ? 'bg-slate-800 text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300'
+                  }`}
+                >
+                  All Pins
+                </button>
+                <button
+                  onClick={() => setActiveGroupFilter(activeGroupFilter === 'Port A' ? 'all' : 'Port A')}
+                  className={`px-2 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                    activeGroupFilter === 'Port A'
+                      ? 'bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-300'
+                      : 'bg-emerald-50 text-emerald-900 border border-emerald-300 hover:bg-emerald-100'
+                  }`}
+                >
+                  Port A (PA0–PA7)
+                </button>
+                <button
+                  onClick={() => setActiveGroupFilter(activeGroupFilter === 'Port B' ? 'all' : 'Port B')}
+                  className={`px-2 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                    activeGroupFilter === 'Port B'
+                      ? 'bg-indigo-600 text-white shadow-xs ring-2 ring-indigo-300'
+                      : 'bg-indigo-50 text-indigo-900 border border-indigo-300 hover:bg-indigo-100'
+                  }`}
+                >
+                  Port B (PB0–PB7)
+                </button>
+                <button
+                  onClick={() => setActiveGroupFilter(activeGroupFilter === 'Port C' ? 'all' : 'Port C')}
+                  className={`px-2 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                    activeGroupFilter === 'Port C'
+                      ? 'bg-amber-600 text-white shadow-xs ring-2 ring-amber-300'
+                      : 'bg-amber-50 text-amber-900 border border-amber-300 hover:bg-amber-100'
+                  }`}
+                >
+                  Port C (PC0–PC7)
+                </button>
+                <button
+                  onClick={() => setActiveGroupFilter(activeGroupFilter === 'Control & Bus' ? 'all' : 'Control & Bus')}
+                  className={`px-2 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                    activeGroupFilter === 'Control & Bus'
+                      ? 'bg-blue-600 text-white shadow-xs ring-2 ring-blue-300'
+                      : 'bg-blue-50 text-blue-900 border border-blue-300 hover:bg-blue-100'
+                  }`}
+                >
+                  Bus &amp; Control
+                </button>
+                <button
+                  onClick={() => setActiveGroupFilter(activeGroupFilter === 'Power' ? 'all' : 'Power')}
+                  className={`px-2 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                    activeGroupFilter === 'Power'
+                      ? 'bg-rose-600 text-white shadow-xs ring-2 ring-rose-300'
+                      : 'bg-rose-50 text-rose-900 border border-rose-300 hover:bg-rose-100'
+                  }`}
+                >
+                  Power (VCC, GND)
+                </button>
+              </div>
             </div>
           </div>
 
@@ -303,114 +383,174 @@ export default function PPI8255Simulator({
               </div>
             </div>
 
-            {/* Selected Pin Details Panel & Pinout Reference Table */}
+            {/* Right Column: Displayed according to pinsVariant */}
             <div className="lg:col-span-5 space-y-3">
-              {/* Selected Pin Detail Card */}
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-xs space-y-2.5">
-                <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white font-mono font-extrabold flex items-center justify-center text-xs">
-                      {selectedPin ? selectedPin : 'i'}
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-xs text-slate-900">
-                        {selectedPin ? `Pin ${selectedPin}: ${pinData[selectedPin].name}` : 'Pin Inspector'}
-                      </h4>
-                      <span className="text-[10px] text-slate-500 font-medium">
-                        {selectedPin ? pinData[selectedPin].type : 'Click a pin on the left to inspect'}
-                      </span>
-                    </div>
-                  </div>
-                  {selectedPin && (
-                    <span className="px-2 py-0.5 rounded text-[9.5px] font-bold uppercase font-mono bg-indigo-100 text-indigo-800">
-                      {pinData[selectedPin].type}
+              {/* Variant 1: Salient Features of Intel 8255 PPI (Only on features-only / Slide 1) */}
+              {(pinsVariant === 'features-only' || pinsVariant === 'all') && (
+                <div className="bg-gradient-to-br from-indigo-50/70 to-white p-4 rounded-xl border border-indigo-200 shadow-xs space-y-3">
+                  <div className="flex items-center justify-between border-b border-indigo-100 pb-2">
+                    <span className="font-bold text-xs text-indigo-950 flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-indigo-600" />
+                      Salient Features of Intel 8255 PPI
                     </span>
-                  )}
-                </div>
-
-                {selectedPin ? (
+                    <span className="text-[9.5px] font-mono text-indigo-700 font-bold bg-indigo-100 px-2 py-0.5 rounded-full">
+                      40-Pin DIP • +5V DC
+                    </span>
+                  </div>
                   <div className="space-y-2 text-[11px]">
-                    <div className="p-2 bg-white rounded-lg border border-slate-200">
-                      <strong className="text-slate-800 block text-[10px] uppercase font-bold text-slate-500 mb-0.5">
-                        Signal Description:
-                      </strong>
-                      <p className="text-slate-700 leading-relaxed font-sans">{pinData[selectedPin].desc}</p>
+                    <div className="p-2.5 rounded-lg bg-white border border-slate-200 shadow-2xs">
+                      <strong className="text-indigo-900 block font-bold text-[11px] mb-0.5">24 Programmable I/O Pins</strong>
+                      <p className="text-slate-600 text-[10.5px] leading-relaxed">
+                        Organized into three independent 8-bit ports: <strong>Port A (PA0–PA7)</strong>, <strong>Port B (PB0–PB7)</strong>, and <strong>Port C (PC0–PC7)</strong>.
+                      </p>
                     </div>
-                    <div className="p-2 bg-white rounded-lg border border-slate-200">
-                      <strong className="text-slate-800 block text-[10px] uppercase font-bold text-slate-500 mb-0.5">
-                        Architectural Function:
-                      </strong>
-                      <p className="text-slate-600 leading-relaxed font-sans">{pinData[selectedPin].details}</p>
+                    <div className="p-2.5 rounded-lg bg-white border border-slate-200 shadow-2xs">
+                      <strong className="text-indigo-900 block font-bold text-[11px] mb-0.5">Two 4-bit Port C Sub-Ports</strong>
+                      <p className="text-slate-600 text-[10.5px] leading-relaxed">
+                        Port C is split into <strong>Port C Upper (PC7–PC4)</strong> and <strong>Port C Lower (PC3–PC0)</strong>. Each nibble can be configured independently for simple I/O or handshake signals.
+                      </p>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-white border border-slate-200 shadow-2xs">
+                      <strong className="text-indigo-900 block font-bold text-[11px] mb-0.5">3 I/O Operating Modes</strong>
+                      <p className="text-slate-600 text-[10.5px] leading-relaxed">
+                        • <strong>Mode 0 (Basic I/O):</strong> Simple input/output without handshake strobes.<br />
+                        • <strong>Mode 1 (Strobed I/O):</strong> Handshaking using Port C lines to synchronize data.<br />
+                        • <strong>Mode 2 (Bi-directional Bus):</strong> 8-bit bidirectional data bus on Port A with 5 handshake lines.
+                      </p>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-white border border-slate-200 shadow-2xs">
+                      <strong className="text-indigo-900 block font-bold text-[11px] mb-0.5">Bit Set / Reset (BSR) Mode</strong>
+                      <p className="text-slate-600 text-[10.5px] leading-relaxed">
+                        Activated when control word bit D7 = 0. Allows setting (1) or resetting (0) of any single bit of Port C without affecting other Port C bits.
+                      </p>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-white border border-slate-200 shadow-2xs">
+                      <strong className="text-indigo-900 block font-bold text-[11px] mb-0.5">8085 / 8086 Microprocessor Bus Compatibility</strong>
+                      <p className="text-slate-600 text-[10.5px] leading-relaxed">
+                        Direct connection to 8-bit bidirectional data bus (D0–D7), address selection (A0, A1), Chip Select (<span style={{ textDecoration: 'overline' }}>CS</span>), Read (<span style={{ textDecoration: 'overline' }}>RD</span>), Write (<span style={{ textDecoration: 'overline' }}>WR</span>), and RESET.
+                      </p>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-white border border-slate-200 shadow-2xs">
+                      <strong className="text-indigo-900 block font-bold text-[11px] mb-0.5">Darlington Drive Capability</strong>
+                      <p className="text-slate-600 text-[10.5px] leading-relaxed">
+                        Any pin on Port C can drive Darlington transistor pairs (sinking up to 1.5 mA at 1.5V) for interfacing directly with relays, solenoids, and displays.
+                      </p>
                     </div>
                   </div>
-                ) : (
-                  <div className="p-4 text-center text-slate-500 text-[11px] bg-white rounded-lg border border-slate-200">
-                    <Info className="w-5 h-5 text-indigo-400 mx-auto mb-1" />
-                    Select any of the 40 pins on the DIP package diagram to see its bus timing role, electrical direction, and internal group assignment.
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
 
-              {/* 8255 Internal Address Decoding Summary (A1, A0, CS#, RD#, WR#) */}
-              <div className="bg-indigo-50 text-slate-900 p-3.5 rounded-xl border border-indigo-200 shadow-xs space-y-2">
-                <div className="flex items-center justify-between border-b border-indigo-200 pb-1.5">
-                  <span className="font-bold text-[11px] text-indigo-950 flex items-center gap-1.5">
-                    <Sliders className="w-3.5 h-3.5 text-indigo-600" />
-                    8255 Internal Address Decoding Table
-                  </span>
-                  <span className="text-[9px] font-mono text-indigo-700 font-bold">CS# = 0 (Active)</span>
-                </div>
-                <div className="overflow-x-auto text-[10px] font-mono">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="border-b border-indigo-200 text-indigo-900">
-                        <th className="py-1 px-1">A1</th>
-                        <th className="py-1 px-1">A0</th>
-                        <th className="py-1 px-1">RD#</th>
-                        <th className="py-1 px-1">WR#</th>
-                        <th className="py-1 px-1 text-right">Selected Port / Operation</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-indigo-100 text-slate-800">
-                      <tr>
-                        <td className="py-1 px-1 text-emerald-700 font-bold">0</td>
-                        <td className="py-1 px-1 text-emerald-700 font-bold">0</td>
-                        <td className="py-1 px-1">0</td>
-                        <td className="py-1 px-1">1</td>
-                        <td className="py-1 px-1 text-right text-emerald-800 font-sans font-medium">Read Port A → Data Bus</td>
-                      </tr>
-                      <tr>
-                        <td className="py-1 px-1 text-emerald-700 font-bold">0</td>
-                        <td className="py-1 px-1 text-emerald-700 font-bold">0</td>
-                        <td className="py-1 px-1">1</td>
-                        <td className="py-1 px-1">0</td>
-                        <td className="py-1 px-1 text-right text-emerald-800 font-sans font-medium">Write Data Bus → Port A</td>
-                      </tr>
-                      <tr>
-                        <td className="py-1 px-1 text-indigo-700 font-bold">0</td>
-                        <td className="py-1 px-1 text-indigo-700 font-bold">1</td>
-                        <td className="py-1 px-1">0/1</td>
-                        <td className="py-1 px-1">1/0</td>
-                        <td className="py-1 px-1 text-right text-indigo-800 font-sans font-medium">Read / Write Port B</td>
-                      </tr>
-                      <tr>
-                        <td className="py-1 px-1 text-amber-700 font-bold">1</td>
-                        <td className="py-1 px-1 text-amber-700 font-bold">0</td>
-                        <td className="py-1 px-1">0/1</td>
-                        <td className="py-1 px-1">1/0</td>
-                        <td className="py-1 px-1 text-right text-amber-800 font-sans font-medium">Read / Write Port C</td>
-                      </tr>
-                      <tr className="bg-indigo-100/70">
-                        <td className="py-1 px-1 text-purple-700 font-bold">1</td>
-                        <td className="py-1 px-1 text-purple-700 font-bold">1</td>
-                        <td className="py-1 px-1">1</td>
-                        <td className="py-1 px-1">0</td>
-                        <td className="py-1 px-1 text-right text-purple-900 font-sans font-bold">Write Control Register</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              {/* Variant 2: Pin Inspector Card & Address Decoding Table (On inspector / Slide 2) */}
+              {(pinsVariant === 'inspector' || pinsVariant === 'all') && (
+                <>
+                  {/* Selected Pin Detail Card */}
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 shadow-xs space-y-2.5">
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white font-mono font-extrabold flex items-center justify-center text-xs">
+                          {selectedPin ? selectedPin : 'i'}
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-xs text-slate-900">
+                            {selectedPin ? `Pin ${selectedPin}: ${pinData[selectedPin].name}` : 'Pin Inspector'}
+                          </h4>
+                          <span className="text-[10px] text-slate-500 font-medium">
+                            {selectedPin ? pinData[selectedPin].type : 'Click a pin on the left to inspect'}
+                          </span>
+                        </div>
+                      </div>
+                      {selectedPin && (
+                        <span className="px-2 py-0.5 rounded text-[9.5px] font-bold uppercase font-mono bg-indigo-100 text-indigo-800">
+                          {pinData[selectedPin].type}
+                        </span>
+                      )}
+                    </div>
+
+                    {selectedPin ? (
+                      <div className="space-y-2 text-[11px]">
+                        <div className="p-2 bg-white rounded-lg border border-slate-200">
+                          <strong className="text-slate-800 block text-[10px] uppercase font-bold text-slate-500 mb-0.5">
+                            Signal Description:
+                          </strong>
+                          <p className="text-slate-700 leading-relaxed font-sans">{pinData[selectedPin].desc}</p>
+                        </div>
+                        <div className="p-2 bg-white rounded-lg border border-slate-200">
+                          <strong className="text-slate-800 block text-[10px] uppercase font-bold text-slate-500 mb-0.5">
+                            Architectural Function:
+                          </strong>
+                          <p className="text-slate-600 leading-relaxed font-sans">{pinData[selectedPin].details}</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center text-slate-500 text-[11px] bg-white rounded-lg border border-slate-200">
+                        <Info className="w-5 h-5 text-indigo-400 mx-auto mb-1" />
+                        Select any of the 40 pins on the DIP package diagram to see its bus timing role, electrical direction, and internal group assignment.
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 8255 Internal Address Decoding Summary (A1, A0, CS, RD, WR) */}
+                  <div className="bg-indigo-50 text-slate-900 p-3.5 rounded-xl border border-indigo-200 shadow-xs space-y-2">
+                    <div className="flex items-center justify-between border-b border-indigo-200 pb-1.5">
+                      <span className="font-bold text-[11px] text-indigo-950 flex items-center gap-1.5">
+                        <Sliders className="w-3.5 h-3.5 text-indigo-600" />
+                        8255 Internal Address Decoding Table
+                      </span>
+                      <span className="text-[9px] font-mono text-indigo-700 font-bold"><span style={{ textDecoration: 'overline' }}>CS</span> = 0 (Active)</span>
+                    </div>
+                    <div className="overflow-x-auto text-[10px] font-mono">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="border-b border-indigo-200 text-indigo-900">
+                            <th className="py-1 px-1">A1</th>
+                            <th className="py-1 px-1">A0</th>
+                            <th className="py-1 px-1"><span style={{ textDecoration: 'overline' }}>RD</span></th>
+                            <th className="py-1 px-1"><span style={{ textDecoration: 'overline' }}>WR</span></th>
+                            <th className="py-1 px-1 text-right">Selected Port / Operation</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-indigo-100 text-slate-800">
+                          <tr>
+                            <td className="py-1 px-1 text-emerald-700 font-bold">0</td>
+                            <td className="py-1 px-1 text-emerald-700 font-bold">0</td>
+                            <td className="py-1 px-1">0</td>
+                            <td className="py-1 px-1">1</td>
+                            <td className="py-1 px-1 text-right text-emerald-800 font-sans font-medium">Read Port A → Data Bus</td>
+                          </tr>
+                          <tr>
+                            <td className="py-1 px-1 text-emerald-700 font-bold">0</td>
+                            <td className="py-1 px-1 text-emerald-700 font-bold">0</td>
+                            <td className="py-1 px-1">1</td>
+                            <td className="py-1 px-1">0</td>
+                            <td className="py-1 px-1 text-right text-emerald-800 font-sans font-medium">Write Data Bus → Port A</td>
+                          </tr>
+                          <tr>
+                            <td className="py-1 px-1 text-indigo-700 font-bold">0</td>
+                            <td className="py-1 px-1 text-indigo-700 font-bold">1</td>
+                            <td className="py-1 px-1">0/1</td>
+                            <td className="py-1 px-1">1/0</td>
+                            <td className="py-1 px-1 text-right text-indigo-800 font-sans font-medium">Read / Write Port B</td>
+                          </tr>
+                          <tr>
+                            <td className="py-1 px-1 text-amber-700 font-bold">1</td>
+                            <td className="py-1 px-1 text-amber-700 font-bold">0</td>
+                            <td className="py-1 px-1">0/1</td>
+                            <td className="py-1 px-1">1/0</td>
+                            <td className="py-1 px-1 text-right text-amber-800 font-sans font-medium">Read / Write Port C</td>
+                          </tr>
+                          <tr className="bg-indigo-100/70">
+                            <td className="py-1 px-1 text-purple-700 font-bold">1</td>
+                            <td className="py-1 px-1 text-purple-700 font-bold">1</td>
+                            <td className="py-1 px-1">1</td>
+                            <td className="py-1 px-1">0</td>
+                            <td className="py-1 px-1 text-right text-purple-900 font-sans font-bold">Write Control Register</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -450,7 +590,7 @@ export default function PPI8255Simulator({
                     <span className="text-[9px] px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded font-bold">Control</span>
                   </div>
                   <p className="text-slate-600 text-[10px]">
-                    Decodes <strong>RD#</strong>, <strong>WR#</strong>, <strong>CS#</strong>, <strong>A0</strong>, <strong>A1</strong>, and <strong>RESET</strong> signals to direct internal data flow to the appropriate port registers.
+                    Decodes <strong><span style={{ textDecoration: 'overline' }}>RD</span></strong>, <strong><span style={{ textDecoration: 'overline' }}>WR</span></strong>, <strong><span style={{ textDecoration: 'overline' }}>CS</span></strong>, <strong>A0</strong>, <strong>A1</strong>, and <strong>RESET</strong> signals to direct internal data flow to the appropriate port registers.
                   </p>
                 </div>
               </div>
@@ -880,7 +1020,7 @@ export default function PPI8255Simulator({
       {/* TAB 0: FIGURE 1.3 ARCHITECTURE DIAGRAM                                   */}
       {/* ========================================================================= */}
       {activeTab === 'diagram' && (
-        <PPI8255ArchitectureDiagram />
+        <PPI8255ArchitectureDiagram headerSlot={tabSwitcherElement} />
       )}
 
       {/* ========================================================================= */}

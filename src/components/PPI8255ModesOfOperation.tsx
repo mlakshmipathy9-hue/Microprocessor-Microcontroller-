@@ -38,15 +38,48 @@ export default function PPI8255ModesOfOperation() {
   // Show 16 Configurations Table in Mode 0
   const [showConfigTable, setShowConfigTable] = useState<boolean>(false);
 
-  // Interactive BSR Demo
-  const [demoBsrBit, setDemoBsrBit] = useState<number>(3);
-  const [demoBsrVal, setDemoBsrVal] = useState<number>(1);
-  const [demoPortCBits, setDemoPortCBits] = useState<number[]>([0, 1, 0, 1, 0, 0, 1, 0]);
+  // Interactive BSR Demo State (Direct D3, D2, D1, D0 with instant Port C reflection)
+  const [bsrD3, setBsrD3] = useState<number>(0);
+  const [bsrD2, setBsrD2] = useState<number>(1);
+  const [bsrD1, setBsrD1] = useState<number>(1); // 011 -> Bit 3 (PC3)
+  const [bsrD0, setBsrD0] = useState<number>(1); // 1 -> SET
+  const [demoPortCBits, setDemoPortCBits] = useState<number[]>([0, 0, 0, 1, 0, 0, 0, 0]); // PC0 to PC7
+  const [lastActionMsg, setLastActionMsg] = useState<string>('PC3 was SET to 1');
 
-  const applyDemoBsr = () => {
-    const updated = [...demoPortCBits];
-    updated[demoBsrBit] = demoBsrVal;
-    setDemoPortCBits(updated);
+  // Active target bit calculated directly from D3, D2, D1 (000=PC0 ... 111=PC7)
+  const activeBsrTargetBit = (bsrD3 << 2) | (bsrD2 << 1) | bsrD1;
+  const bsrControlWordByte = (bsrD3 << 3) | (bsrD2 << 2) | (bsrD1 << 1) | bsrD0;
+  const bsrControlWordHex = bsrControlWordByte.toString(16).toUpperCase().padStart(2, '0') + 'H';
+  const bsrControlWordBin = `0000 ${bsrD3}${bsrD2}${bsrD1}${bsrD0}`;
+
+  // Reactive updater: Whenever D0, D1, D2, or D3 changes, PORT C immediately reflects it!
+  const updateBsrBits = (newD3: number, newD2: number, newD1: number, newD0: number) => {
+    setBsrD3(newD3);
+    setBsrD2(newD2);
+    setBsrD1(newD1);
+    setBsrD0(newD0);
+    const target = (newD3 << 2) | (newD2 << 1) | newD1;
+    setDemoPortCBits(prev => {
+      const next = [...prev];
+      next[target] = newD0;
+      return next;
+    });
+    setLastActionMsg(`D3 D2 D1 = [${newD3}${newD2}${newD1}]₂ (PC${target}) • D0 = ${newD0} (${newD0 === 1 ? 'SET to 1' : 'RESET to 0'}) → Port C PC${target} is now ${newD0}`);
+  };
+
+  const selectPortCBit = (bitIndex: number) => {
+    const d3 = (bitIndex >> 2) & 1;
+    const d2 = (bitIndex >> 1) & 1;
+    const d1 = bitIndex & 1;
+    updateBsrBits(d3, d2, d1, bsrD0);
+  };
+
+  const toggleD0 = (newD0: number) => {
+    updateBsrBits(bsrD3, bsrD2, bsrD1, newD0);
+  };
+
+  const reapplyCurrentBsr = () => {
+    updateBsrBits(bsrD3, bsrD2, bsrD1, bsrD0);
   };
 
   // TypeScript Interfaces for Steppers
@@ -82,14 +115,14 @@ export default function PPI8255ModesOfOperation() {
   // Mode 1 Steps Definition
   const mode1InputSteps: Mode1Step[] = [
     {
-      title: 'Step 1: Peripheral Sends Data & Asserts STB# = 0',
+      title: 'Step 1: Peripheral Sends Data & Asserts S̅T̅B̅ = 0',
       stb: 0,
       ibf: 0,
       intr: 0,
       rd: 1,
       cpuAction: '8086 CPU is executing background routines (waiting or polling).',
-      periphAction: 'External Device (e.g. Keyboard/ADC) places 8-bit data onto PA0–PA7 and pulses STB# = 0.',
-      ppiAction: '8255 detects falling edge of STB# and latches external data into Port A input register.',
+      periphAction: 'External Device (e.g. Keyboard/ADC) places 8-bit data onto PA0–PA7 and pulses S̅T̅B̅ = 0.',
+      ppiAction: '8255 detects falling edge of S̅T̅B̅ and latches external data into Port A input register.',
       hardwareState: 'Data latched into Port A register'
     },
     {
@@ -104,83 +137,83 @@ export default function PPI8255ModesOfOperation() {
       hardwareState: 'IBF active (Peripheral inhibited from writing)'
     },
     {
-      title: 'Step 3: STB# Returns High & 8255 Asserts INTR = 1',
+      title: 'Step 3: S̅T̅B̅ Returns High & 8255 Asserts INTR = 1',
       stb: 1,
       ibf: 1,
       intr: 1,
       rd: 1,
       cpuAction: '8086 receives hardware Interrupt on INTR pin (or reads status register in polling).',
-      periphAction: 'Peripheral line STB# returns to HIGH (idle).',
-      ppiAction: 'When STB# is HIGH, IBF is HIGH, and INTE is enabled, 8255 asserts INTR = HIGH (PC3) to signal 8086.',
+      periphAction: 'Peripheral line S̅T̅B̅ returns to HIGH (idle).',
+      ppiAction: 'When S̅T̅B̅ is HIGH, IBF is HIGH, and INTE is enabled, 8255 asserts INTR = HIGH (PC3) to signal 8086.',
       hardwareState: 'Interrupt raised to CPU (INTR = 1)'
     },
     {
-      title: 'Step 4: 8086 CPU Executes "IN AL, PortA" (RD# = 0)',
+      title: 'Step 4: 8086 CPU Executes "IN AL, PortA" (R̅D̅ = 0)',
       stb: 1,
       ibf: 1,
       intr: 0,
       rd: 0,
-      cpuAction: '8086 enters Interrupt Service Routine (ISR) and executes IN AL, 00H (asserts RD# = 0).',
+      cpuAction: '8086 enters Interrupt Service Routine (ISR) and executes IN AL, 00H (asserts R̅D̅ = 0).',
       periphAction: 'Peripheral is idle, waiting for buffer to free.',
-      ppiAction: 'Falling edge of RD# automatically resets INTR = 0 and places latched data on system data bus D0–D7.',
+      ppiAction: 'Falling edge of R̅D̅ automatically resets INTR = 0 and places latched data on system data bus D0–D7.',
       hardwareState: 'INTR cleared; Data transferred to CPU AL'
     },
     {
-      title: 'Step 5: RD# Returns High → IBF Resets to 0 (Buffer Empty)',
+      title: 'Step 5: R̅D̅ Returns High → IBF Resets to 0 (Buffer Empty)',
       stb: 1,
       ibf: 0,
       intr: 0,
       rd: 1,
       cpuAction: '8086 stores AL in RAM and completes the I/O read cycle.',
       periphAction: 'Peripheral detects IBF = 0 ("Buffer Empty") and is now ready to transmit the next byte!',
-      ppiAction: 'Rising edge of RD# automatically resets IBF = 0 (PC5). Handshake cycle complete!',
+      ppiAction: 'Rising edge of R̅D̅ automatically resets IBF = 0 (PC5). Handshake cycle complete!',
       hardwareState: 'Buffer cleared; Ready for next byte'
     }
   ];
 
   const mode1OutputSteps: Mode1Step[] = [
     {
-      title: 'Step 1: 8086 CPU Executes "OUT PortA, AL" (WR# = 0)',
+      title: 'Step 1: 8086 CPU Executes "OUT PortA, AL" (W̅R̅ = 0)',
       wr: 0,
       obf: 1,
       ack: 1,
       intr: 0,
-      cpuAction: '8086 writes data byte to Port A by asserting WR# = LOW.',
+      cpuAction: '8086 writes data byte to Port A by asserting W̅R̅ = LOW.',
       periphAction: 'External device (e.g. Printer) is in standby.',
-      ppiAction: '8255 receives WR# = 0 and accepts data from system bus D0–D7.',
+      ppiAction: '8255 receives W̅R̅ = 0 and accepts data from system bus D0–D7.',
       hardwareState: 'Data writing into Port A output latch'
     },
     {
-      title: 'Step 2: WR# Returns High → 8255 Asserts OBF# = 0',
+      title: 'Step 2: W̅R̅ Returns High → 8255 Asserts O̅B̅F̅ = 0',
       wr: 1,
       obf: 0,
       ack: 1,
       intr: 0,
       cpuAction: '8086 finishes OUT instruction and continues execution.',
-      periphAction: 'Printer detects OBF# = LOW ("Data is ready on Port A pins").',
-      ppiAction: 'On rising edge of WR#, 8255 latches data to output pins (PA0–PA7) and asserts OBF# = LOW (PC7).',
-      hardwareState: 'OBF# = 0 (Data valid on Port A pins)'
+      periphAction: 'Printer detects O̅B̅F̅ = LOW ("Data is ready on Port A pins").',
+      ppiAction: 'On rising edge of W̅R̅, 8255 latches data to output pins (PA0–PA7) and asserts O̅B̅F̅ = LOW (PC7).',
+      hardwareState: 'O̅B̅F̅ = 0 (Data valid on Port A pins)'
     },
     {
-      title: 'Step 3: Peripheral Latches Data & Sends ACK# = 0',
+      title: 'Step 3: Peripheral Latches Data & Sends A̅C̅K̅ = 0',
       wr: 1,
       obf: 1,
       ack: 0,
       intr: 0,
       cpuAction: '8086 is doing other tasks or waiting for completion.',
-      periphAction: 'Printer reads the byte from PA0–PA7 and sends a LOW pulse ACK# = 0 (PC6).',
-      ppiAction: 'Falling edge of ACK# automatically resets OBF# = HIGH (indicating data has been accepted).',
-      hardwareState: 'OBF# reset to 1; Peripheral processing byte'
+      periphAction: 'Printer reads the byte from PA0–PA7 and sends a LOW pulse A̅C̅K̅ = 0 (PC6).',
+      ppiAction: 'Falling edge of A̅C̅K̅ automatically resets O̅B̅F̅ = HIGH (indicating data has been accepted).',
+      hardwareState: 'O̅B̅F̅ reset to 1; Peripheral processing byte'
     },
     {
-      title: 'Step 4: ACK# Returns High → 8255 Asserts INTR = 1',
+      title: 'Step 4: A̅C̅K̅ Returns High → 8255 Asserts INTR = 1',
       wr: 1,
       obf: 1,
       ack: 1,
       intr: 1,
       cpuAction: '8086 receives INTR = 1 indicating printer is ready for next character.',
-      periphAction: 'Printer finishes print cycle and returns ACK# to HIGH.',
-      ppiAction: 'On rising edge of ACK# (with OBF#=1 and INTE=1), 8255 drives INTR = HIGH (PC3).',
+      periphAction: 'Printer finishes print cycle and returns A̅C̅K̅ to HIGH.',
+      ppiAction: 'On rising edge of A̅C̅K̅ (with O̅B̅F̅=1 and INTE=1), 8255 drives INTR = HIGH (PC3).',
       hardwareState: 'INTR = 1 (Requests next byte from CPU)'
     },
     {
@@ -189,9 +222,9 @@ export default function PPI8255ModesOfOperation() {
       obf: 1,
       ack: 1,
       intr: 0,
-      cpuAction: '8086 ISR executes OUT PortA, AL for next byte, asserting WR# = LOW.',
-      periphAction: 'Peripheral waits for next OBF# strobe.',
-      ppiAction: 'Falling edge of WR# immediately clears INTR = 0. New transfer begins!',
+      cpuAction: '8086 ISR executes OUT PortA, AL for next byte, asserting W̅R̅ = LOW.',
+      periphAction: 'Peripheral waits for next O̅B̅F̅ strobe.',
+      ppiAction: 'Falling edge of W̅R̅ immediately clears INTR = 0. New transfer begins!',
       hardwareState: 'Next byte handshake initiated'
     }
   ];
@@ -205,18 +238,18 @@ export default function PPI8255ModesOfOperation() {
       acka: 1,
       intra: 0,
       busDir: 'CPU → 8255 Output Latch',
-      desc: '8086 CPU executes OUT PortA, AL (WR# = 0). Data is written into Port A output latch.',
-      pinStatus: 'PA0–PA7 outputs held; OBF_A# (PC7) goes LOW on rising edge of WR#.'
+      desc: '8086 CPU executes OUT PortA, AL (W̅R̅ = 0). Data is written into Port A output latch.',
+      pinStatus: 'PA0–PA7 outputs held; O̅B̅F̅_A (PC7) goes LOW on rising edge of W̅R̅.'
     },
     {
-      title: 'Mode 2 Transmit: Step 2 - Device Pulses ACK_A# = 0',
+      title: 'Mode 2 Transmit: Step 2 - Device Pulses A̅C̅K̅_A = 0',
       wr: 1,
       obfa: 1,
       acka: 0,
       intra: 0,
       busDir: '8255 PA Pins → Device Bus',
-      desc: 'Device responds with ACK_A# = 0. This enables Port A output buffers to drive external bus.',
-      pinStatus: 'ACK_A# (PC6) = 0 enables Port A tri-state drivers; OBF_A# goes HIGH.'
+      desc: 'Device responds with A̅C̅K̅_A = 0. This enables Port A output buffers to drive external bus.',
+      pinStatus: 'A̅C̅K̅_A (PC6) = 0 enables Port A tri-state drivers; O̅B̅F̅_A goes HIGH.'
     },
     {
       title: 'Mode 2 Transmit: Step 3 - Transmission Complete (INTR_A = 1)',
@@ -225,41 +258,41 @@ export default function PPI8255ModesOfOperation() {
       acka: 1,
       intra: 1,
       busDir: 'Bus floats back to High-Z',
-      desc: 'On rising edge of ACK_A#, 8255 disables output buffers (High-Z) and asserts INTR_A = 1 (PC3).',
+      desc: 'On rising edge of A̅C̅K̅_A, 8255 disables output buffers (High-Z) and asserts INTR_A = 1 (PC3).',
       pinStatus: 'INTR_A = 1 signals CPU that device is ready for next byte.'
     }
   ];
 
   const mode2RxSteps: Mode2Step[] = [
     {
-      title: 'Mode 2 Receive (Device → CPU): Step 1 - Device Sends STB_A# = 0',
+      title: 'Mode 2 Receive (Device → CPU): Step 1 - Device Sends S̅T̅B̅_A = 0',
       rd: 1,
       stba: 0,
       ibfa: 1,
       intra: 0,
       busDir: 'Device → 8255 Input Latch',
-      desc: 'External Device places data on bidirectional Port A lines and pulses STB_A# = 0 (PC4).',
+      desc: 'External Device places data on bidirectional Port A lines and pulses S̅T̅B̅_A = 0 (PC4).',
       pinStatus: 'Data latched into Port A input register; IBF_A (PC5) goes HIGH.'
     },
     {
-      title: 'Mode 2 Receive: Step 2 - STB_A# Returns High → INTR_A = 1',
+      title: 'Mode 2 Receive: Step 2 - S̅T̅B̅_A Returns High → INTR_A = 1',
       rd: 1,
       stba: 1,
       ibfa: 1,
       intra: 1,
       busDir: 'Data held safely in 8255 register',
-      desc: 'When STB_A# returns HIGH, 8255 asserts INTR_A = 1 (PC3) requesting CPU to read data.',
+      desc: 'When S̅T̅B̅_A returns HIGH, 8255 asserts INTR_A = 1 (PC3) requesting CPU to read data.',
       pinStatus: 'INTR_A = 1 interrupts 8086 CPU; IBF_A remains HIGH (device inhibited).'
     },
     {
-      title: 'Mode 2 Receive: Step 3 - CPU Reads Data (RD# = 0)',
+      title: 'Mode 2 Receive: Step 3 - CPU Reads Data (R̅D̅ = 0)',
       rd: 0,
       stba: 1,
       ibfa: 0,
       intra: 0,
       busDir: '8255 → 8086 CPU Bus',
-      desc: '8086 CPU executes IN AL, PortA (RD# = 0). INTR_A resets on RD# falling edge; IBF_A resets on RD# rising edge.',
-      pinStatus: 'RD# = 0 transfers data to CPU AL; IBF_A clears to 0 (ready for next input).'
+      desc: '8086 CPU executes IN AL, PortA (R̅D̅ = 0). INTR_A resets on R̅D̅ falling edge; IBF_A resets on R̅D̅ rising edge.',
+      pinStatus: 'R̅D̅ = 0 transfers data to CPU AL; IBF_A clears to 0 (ready for next input).'
     }
   ];
 
@@ -321,7 +354,7 @@ export default function PPI8255ModesOfOperation() {
       {(selectedSubView === 'overview' || selectedSubView === 'table') && (
         <div className="space-y-4">
           {/* Top Banner: Control Word MSB (D7) Determination */}
-          <div className="bg-gradient-to-br from-indigo-50/90 via-white to-blue-50/70 p-4 rounded-xl border border-indigo-200/80 shadow-2xs space-y-2">
+          <div className="bg-gradient-to-br from-indigo-50/90 via-white to-blue-50/70 p-3.5 rounded-xl border border-indigo-200/80 shadow-2xs flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <span className="p-1.5 bg-indigo-600 text-white rounded-lg font-bold text-xs font-mono">
                 D7 MSB
@@ -330,10 +363,14 @@ export default function PPI8255ModesOfOperation() {
                 Primary Mode Classification via Control Word Bit 7 (D7)
               </h4>
             </div>
-            <p className="text-xs text-slate-600 leading-relaxed">
-              The 8255 operates in two primary functional regimes selected by the MSB of the Control Word:
-              when <strong className="text-indigo-900 font-mono">D7 = 0</strong>, the chip enters <strong className="text-indigo-900">Bit Set/Reset (BSR) Mode</strong> for Port C bit manipulation; when <strong className="text-indigo-900 font-mono">D7 = 1</strong>, the chip enters <strong className="text-indigo-900">I/O Mode</strong> (subdivided into Mode 0, Mode 1, and Mode 2).
-            </p>
+            <div className="flex items-center gap-2 text-xs font-semibold">
+              <span className="px-2.5 py-1 rounded-md bg-amber-100 text-amber-900 border border-amber-300">
+                D7 = 0 ➔ BSR Mode
+              </span>
+              <span className="px-2.5 py-1 rounded-md bg-indigo-100 text-indigo-900 border border-indigo-300">
+                D7 = 1 ➔ I/O Modes (Mode 0, 1, 2)
+              </span>
+            </div>
           </div>
 
           {/* Bento Grid */}
@@ -341,23 +378,67 @@ export default function PPI8255ModesOfOperation() {
             {/* Card 1: BSR Mode */}
             <div 
               onClick={() => setSelectedSubView('bsr')}
-              className="bg-white p-4 rounded-xl border border-amber-200 hover:border-amber-400 hover:shadow-md transition-all cursor-pointer space-y-2.5 group"
+              className="bg-white p-4 rounded-xl border border-amber-200 hover:border-amber-400 hover:shadow-md transition-all cursor-pointer space-y-3 group"
             >
               <div className="flex justify-between items-center">
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300">
-                  D7 = 0 • Port C Only
+                  D7 = 0 • BIT SET / RESET
                 </span>
-                <ArrowRight className="w-4 h-4 text-amber-500 group-hover:translate-x-1 transition-transform" />
+                <span className="text-[11px] font-bold text-amber-600 group-hover:text-amber-700 flex items-center gap-1">
+                  Click for Interactive Simulator <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </span>
               </div>
-              <h5 className="font-bold text-sm text-slate-900 group-hover:text-amber-700">
-                1. BSR (Bit Set / Reset) Mode
+              <h5 className="font-bold text-sm text-slate-900 group-hover:text-amber-700 flex items-center justify-between">
+                <span>1. BSR (Bit Set / Reset) Mode</span>
+                <span className="font-mono text-xs font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">
+                  D7 = 0
+                </span>
               </h5>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Allows individual setting (<code className="text-amber-800 font-bold">1</code>) or resetting (<code className="text-amber-800 font-bold">0</code>) of any single bit in <strong>Port C (PC0–PC7)</strong> using a single control word write, leaving all other pins unaffected.
-              </p>
-              <div className="bg-amber-50/60 p-2.5 rounded-lg text-[11px] text-amber-950 font-medium space-y-1 border border-amber-150">
-                <div>⚡ <strong>No effect on Ports A or B.</strong></div>
-                <div>🎯 <strong>Used for:</strong> Stepper motor control pulses, LED toggling, generating handshake strobes.</div>
+
+              {/* BSR Bit Structure Mini Layout */}
+              <div className="bg-amber-50/70 p-2.5 rounded-lg border border-amber-200 space-y-1.5">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-900 block">
+                  BSR Control Word Format (Written to CWR at A1=1, A0=1):
+                </span>
+                <div className="grid grid-cols-8 gap-1 text-center font-mono text-[10px]">
+                  <div className="bg-amber-200/80 p-1 rounded border border-amber-400">
+                    <span className="text-[8px] text-amber-800 block">D7</span>
+                    <strong className="text-amber-950 font-black">0</strong>
+                    <span className="text-[7px] text-amber-700 block">BSR</span>
+                  </div>
+                  <div className="bg-slate-100 p-1 rounded border border-slate-200">
+                    <span className="text-[8px] text-slate-400 block">D6</span>
+                    <span className="text-slate-500 font-bold">X</span>
+                    <span className="text-[7px] text-slate-400 block">N/A</span>
+                  </div>
+                  <div className="bg-slate-100 p-1 rounded border border-slate-200">
+                    <span className="text-[8px] text-slate-400 block">D5</span>
+                    <span className="text-slate-500 font-bold">X</span>
+                    <span className="text-[7px] text-slate-400 block">N/A</span>
+                  </div>
+                  <div className="bg-slate-100 p-1 rounded border border-slate-200">
+                    <span className="text-[8px] text-slate-400 block">D4</span>
+                    <span className="text-slate-500 font-bold">X</span>
+                    <span className="text-[7px] text-slate-400 block">N/A</span>
+                  </div>
+                  <div className="bg-amber-100/90 p-1 rounded border border-amber-300 col-span-3">
+                    <span className="text-[8px] text-amber-800 block">D3 • D2 • D1</span>
+                    <strong className="text-amber-950 font-bold">B2 B1 B0</strong>
+                    <span className="text-[7px] text-amber-700 block">Bit (000–111)</span>
+                  </div>
+                  <div className="bg-amber-200/80 p-1 rounded border border-amber-400">
+                    <span className="text-[8px] text-amber-800 block">D0</span>
+                    <strong className="text-amber-950 font-black">S / R</strong>
+                    <span className="text-[7px] text-amber-700 block">1=Set, 0=Reset</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 p-2.5 rounded-lg text-[11px] text-slate-800 space-y-1 border border-slate-200">
+                <div>🔑 <strong>D7 = 0 activates BSR Mode:</strong> If D7 is 0, the control word is treated strictly as BSR.</div>
+                <div>🎯 <strong>Affects Port C Only (PC0–PC7):</strong> Sets or resets one individual bit at a time without disturbing the other 7 bits.</div>
+                <div>🚫 <strong>Ports A &amp; B Unaffected:</strong> Ports A &amp; B maintain their configured I/O states completely.</div>
+                <div>💡 <strong>Common Use Cases:</strong> Generating strobe pulses, toggling handshake lines, pulse train generation for stepper motors, turning on/off relays and LEDs.</div>
               </div>
             </div>
 
@@ -375,9 +456,6 @@ export default function PPI8255ModesOfOperation() {
               <h5 className="font-bold text-sm text-slate-900 group-hover:text-emerald-700">
                 2. Mode 0: Basic / Simple I/O
               </h5>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Standard unidirectional I/O without hardware handshaking. Ports A, B, C Upper (PC4–PC7), and C Lower (PC0–PC3) can be independently programmed as input or output.
-              </p>
               <div className="bg-emerald-50/60 p-2.5 rounded-lg text-[11px] text-emerald-950 font-medium space-y-1 border border-emerald-150">
                 <div>🔒 <strong>Outputs are latched;</strong> Inputs are buffered (unlatched).</div>
                 <div>🧩 <strong>16 possible port combinations</strong> with 0 handshake lines needed.</div>
@@ -398,12 +476,9 @@ export default function PPI8255ModesOfOperation() {
               <h5 className="font-bold text-sm text-slate-900 group-hover:text-indigo-700">
                 3. Mode 1: Strobed / Handshake I/O
               </h5>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Synchronized 8-bit data transfers for <strong>Port A</strong> and <strong>Port B</strong> using dedicated <strong>Port C</strong> lines as hardware handshake and interrupt request signals.
-              </p>
               <div className="bg-indigo-50/60 p-2.5 rounded-lg text-[11px] text-indigo-950 font-medium space-y-1 border border-indigo-150">
-                <div>🔄 <strong>Input Handshake:</strong> STB#, IBF, INTR, INTE.</div>
-                <div>📤 <strong>Output Handshake:</strong> OBF#, ACK#, INTR, INTE.</div>
+                <div>🔄 <strong>Input Handshake:</strong> S̅T̅B̅, IBF, INTR, INTE.</div>
+                <div>📤 <strong>Output Handshake:</strong> O̅B̅F̅, A̅C̅K̅, INTR, INTE.</div>
               </div>
             </div>
 
@@ -421,9 +496,6 @@ export default function PPI8255ModesOfOperation() {
               <h5 className="font-bold text-sm text-slate-900 group-hover:text-purple-700">
                 4. Mode 2: Strobed Bi-directional Bus
               </h5>
-              <p className="text-xs text-slate-600 leading-relaxed">
-                Allows <strong>Port A</strong> to function as a bidirectional 8-bit bus with 5 handshake lines supplied by <strong>Port C (PC3–PC7)</strong>.
-              </p>
               <div className="bg-purple-50/60 p-2.5 rounded-lg text-[11px] text-purple-950 font-medium space-y-1 border border-purple-150">
                 <div>🔁 <strong>Port A:</strong> 8-bit bidirectional data bus (both in &amp; out).</div>
                 <div>📦 <strong>Port B:</strong> Remains in Mode 0 or Mode 1 with PC0–PC2.</div>
@@ -474,7 +546,7 @@ export default function PPI8255ModesOfOperation() {
                     <td className="p-2.5 font-bold text-indigo-900">Mode 1 (D7 = 1)</td>
                     <td className="p-2.5 font-semibold text-indigo-950">Strobed Input / Output</td>
                     <td className="p-2.5 font-semibold text-indigo-950">Strobed Input / Output</td>
-                    <td className="p-2.5 font-mono text-indigo-900">Handshake &amp; Interrupt lines (STB#, IBF, OBF#, ACK#, INTR)</td>
+                    <td className="p-2.5 font-mono text-indigo-900">Handshake &amp; Interrupt lines (S̅T̅B̅, IBF, O̅B̅F̅, A̅C̅K̅, INTR)</td>
                     <td className="p-2.5 font-bold text-indigo-700">Yes</td>
                     <td className="p-2.5">Centronics printer interface, ADC/DAC synchronisation, keyboard encoders.</td>
                   </tr>
@@ -505,9 +577,6 @@ export default function PPI8255ModesOfOperation() {
                 Bit Set / Reset (BSR) Mode Format (D7 = 0)
               </h4>
             </div>
-            <p className="text-xs text-amber-900 leading-relaxed">
-              BSR mode is used exclusively to set or reset any single bit of <strong>Port C (PC0 to PC7)</strong> without affecting any other bits in Port C or any bits in Port A or Port B.
-            </p>
 
             {/* BSR Bit Structure Visualizer */}
             <div className="bg-white p-3 rounded-xl border border-amber-200 space-y-2">
@@ -597,7 +666,7 @@ export default function PPI8255ModesOfOperation() {
                 </button>
               </div>
 
-              {/* Current Port C Live Status */}
+            {/* Current Port C Live Status */}
               <div className="space-y-1 pt-1">
                 <span className="text-[10px] text-slate-500 block uppercase font-bold">
                   Resulting Port C Logic Levels (PC7 down to PC0):
@@ -616,6 +685,59 @@ export default function PPI8255ModesOfOperation() {
                       <span className="text-sm font-black">{val}</span>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              {/* BSR Bit-Selection Decoding Table & Key Rules */}
+              <div className="pt-2 border-t border-amber-200 grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 space-y-1.5">
+                  <span className="text-[11px] font-bold text-slate-800 block">
+                    Port C Bit Select Decoding Table (D3, D2, D1):
+                  </span>
+                  <div className="grid grid-cols-4 gap-1 text-[10px] font-mono text-center">
+                    <div className="bg-amber-100/70 p-1 rounded border border-amber-200">
+                      <span className="text-slate-500 block text-[9px]">000</span>
+                      <strong className="text-amber-950">PC0</strong>
+                    </div>
+                    <div className="bg-amber-100/70 p-1 rounded border border-amber-200">
+                      <span className="text-slate-500 block text-[9px]">001</span>
+                      <strong className="text-amber-950">PC1</strong>
+                    </div>
+                    <div className="bg-amber-100/70 p-1 rounded border border-amber-200">
+                      <span className="text-slate-500 block text-[9px]">010</span>
+                      <strong className="text-amber-950">PC2</strong>
+                    </div>
+                    <div className="bg-amber-100/70 p-1 rounded border border-amber-200">
+                      <span className="text-slate-500 block text-[9px]">011</span>
+                      <strong className="text-amber-950">PC3</strong>
+                    </div>
+                    <div className="bg-amber-100/70 p-1 rounded border border-amber-200">
+                      <span className="text-slate-500 block text-[9px]">100</span>
+                      <strong className="text-amber-950">PC4</strong>
+                    </div>
+                    <div className="bg-amber-100/70 p-1 rounded border border-amber-200">
+                      <span className="text-slate-500 block text-[9px]">101</span>
+                      <strong className="text-amber-950">PC5</strong>
+                    </div>
+                    <div className="bg-amber-100/70 p-1 rounded border border-amber-200">
+                      <span className="text-slate-500 block text-[9px]">110</span>
+                      <strong className="text-amber-950">PC6</strong>
+                    </div>
+                    <div className="bg-amber-100/70 p-1 rounded border border-amber-200">
+                      <span className="text-slate-500 block text-[9px]">111</span>
+                      <strong className="text-amber-950">PC7</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-[11px] text-slate-700 space-y-1">
+                  <span className="text-[11px] font-bold text-slate-900 block">
+                    Essential BSR Mode Rules:
+                  </span>
+                  <div>• <strong>D7 = 0:</strong> Identifies the control word strictly as a BSR command.</div>
+                  <div>• <strong>D6, D5, D4:</strong> Don't Care bits (conventionally written as 000).</div>
+                  <div>• <strong>D0:</strong> Bit action — <strong>1 = SET</strong> (logic high), <strong>0 = RESET</strong> (logic low).</div>
+                  <div>• <strong>Port Independence:</strong> Does NOT disturb Port A or Port B modes/data.</div>
                 </div>
               </div>
             </div>
@@ -645,10 +767,6 @@ export default function PPI8255ModesOfOperation() {
                 {showConfigTable ? 'Hide 16 Configurations Table' : 'View All 16 Possible Configurations'}
               </button>
             </div>
-
-            <p className="text-xs text-emerald-900 leading-relaxed">
-              Mode 0 provides simple input and output operations for each of the three ports without handshaking signals. Data is simply written to or read from the specified port.
-            </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="bg-white p-3.5 rounded-xl border border-emerald-150 space-y-2">
@@ -731,10 +849,10 @@ export default function PPI8255ModesOfOperation() {
                         Trigger / Strobe
                       </td>
                       <td className="p-2 font-medium text-slate-700 border-r border-slate-200">
-                        Enabled by Read Strobe (<code className="bg-slate-100 px-1 py-0.5 rounded text-blue-800 font-mono text-[10px]">RD#=0</code>)
+                        Enabled by Read Strobe (<code className="bg-slate-100 px-1 py-0.5 rounded text-blue-800 font-mono text-[10px]"><span style={{ textDecoration: 'overline' }}>RD</span>=0</code>)
                       </td>
                       <td className="p-2 font-medium text-emerald-950">
-                        Clocked by Write Strobe (<code className="bg-emerald-100 px-1 py-0.5 rounded text-emerald-900 font-mono text-[10px]">WR#=0</code>)
+                        Clocked by Write Strobe (<code className="bg-emerald-100 px-1 py-0.5 rounded text-emerald-900 font-mono text-[10px]"><span style={{ textDecoration: 'overline' }}>WR</span>=0</code>)
                       </td>
                     </tr>
                     <tr className="hover:bg-slate-50/60">
@@ -839,10 +957,6 @@ export default function PPI8255ModesOfOperation() {
               </div>
             </div>
 
-            <p className="text-xs text-indigo-900 leading-relaxed">
-              Mode 1 synchronizes data transfers between the high-speed 8086 CPU and asynchronous external peripherals using dedicated hardware control lines from Port C.
-            </p>
-
             {/* Handshake Stepper Interactive Player */}
             {(() => {
               const steps = mode1Type === 'input' ? mode1InputSteps : mode1OutputSteps;
@@ -905,11 +1019,11 @@ export default function PPI8255ModesOfOperation() {
                         <div className="flex justify-around text-[10px] font-mono pt-1 text-slate-500 border-t border-slate-100">
                           {mode1Type === 'input' ? (
                             <span className={curStep.rd === 0 ? 'text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200' : 'text-slate-500'}>
-                              RD# = {curStep.rd}
+                              <span style={{ textDecoration: 'overline' }}>RD</span> = {curStep.rd}
                             </span>
                           ) : (
                             <span className={curStep.wr === 0 ? 'text-amber-700 font-bold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200' : 'text-slate-500'}>
-                              WR# = {curStep.wr}
+                              <span style={{ textDecoration: 'overline' }}>WR</span> = {curStep.wr}
                             </span>
                           )}
                           <span className={curStep.intr === 1 ? 'text-rose-700 font-bold bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200 animate-pulse' : 'text-slate-500'}>
@@ -928,7 +1042,7 @@ export default function PPI8255ModesOfOperation() {
                           {mode1Type === 'input' ? (
                             <>
                               <span className={curStep.stb === 0 ? 'text-amber-800 font-bold bg-amber-100/80 px-1 py-0.5 rounded border border-amber-300' : 'text-slate-500'}>
-                                STB#={curStep.stb}
+                                <span style={{ textDecoration: 'overline' }}>STB</span>={curStep.stb}
                               </span>
                               <span className={curStep.ibf === 1 ? 'text-cyan-800 font-bold bg-cyan-100/80 px-1 py-0.5 rounded border border-cyan-300' : 'text-slate-500'}>
                                 IBF={curStep.ibf}
@@ -940,10 +1054,10 @@ export default function PPI8255ModesOfOperation() {
                           ) : (
                             <>
                               <span className={curStep.obf === 0 ? 'text-cyan-800 font-bold bg-cyan-100/80 px-1 py-0.5 rounded border border-cyan-300' : 'text-slate-500'}>
-                                OBF#={curStep.obf}
+                                <span style={{ textDecoration: 'overline' }}>OBF</span>={curStep.obf}
                               </span>
                               <span className={curStep.ack === 0 ? 'text-amber-800 font-bold bg-amber-100/80 px-1 py-0.5 rounded border border-amber-300' : 'text-slate-500'}>
-                                ACK#={curStep.ack}
+                                <span style={{ textDecoration: 'overline' }}>ACK</span>={curStep.ack}
                               </span>
                               <span className={curStep.intr === 1 ? 'text-rose-800 font-bold bg-rose-100/80 px-1 py-0.5 rounded border border-rose-300' : 'text-slate-500'}>
                                 INTR={curStep.intr}
@@ -964,11 +1078,11 @@ export default function PPI8255ModesOfOperation() {
                         <div className="flex justify-around text-[10px] font-mono pt-1 text-slate-500 border-t border-slate-100">
                           {mode1Type === 'input' ? (
                             <span className={curStep.stb === 0 ? 'text-amber-700 font-bold bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200' : 'text-slate-500'}>
-                              STB# (PC4) = {curStep.stb}
+                              <span style={{ textDecoration: 'overline' }}>STB</span> (PC4) = {curStep.stb}
                             </span>
                           ) : (
                             <span className={curStep.ack === 0 ? 'text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200' : 'text-slate-500'}>
-                              ACK# (PC6) = {curStep.ack}
+                              <span style={{ textDecoration: 'overline' }}>ACK</span> (PC6) = {curStep.ack}
                             </span>
                           )}
                         </div>
@@ -981,7 +1095,7 @@ export default function PPI8255ModesOfOperation() {
                     {mode1Type === 'input' ? (
                       <>
                         <div className="p-2 bg-slate-50 rounded-lg border border-slate-200">
-                          <strong className="text-indigo-900 block font-mono">PC4: STB_A#</strong>
+                          <strong className="text-indigo-900 block font-mono">PC4: S̅T̅B̅_A</strong>
                           <span className="text-[11px] text-slate-600">Strobe input from device to latch data</span>
                         </div>
                         <div className="p-2 bg-slate-50 rounded-lg border border-slate-200">
@@ -1000,11 +1114,11 @@ export default function PPI8255ModesOfOperation() {
                     ) : (
                       <>
                         <div className="p-2 bg-slate-50 rounded-lg border border-slate-200">
-                          <strong className="text-indigo-900 block font-mono">PC7: OBF_A#</strong>
+                          <strong className="text-indigo-900 block font-mono">PC7: O̅B̅F̅_A</strong>
                           <span className="text-[11px] text-slate-600">Output buffer full strobe to peripheral</span>
                         </div>
                         <div className="p-2 bg-slate-50 rounded-lg border border-slate-200">
-                          <strong className="text-indigo-900 block font-mono">PC6: ACK_A#</strong>
+                          <strong className="text-indigo-900 block font-mono">PC6: A̅C̅K̅_A</strong>
                           <span className="text-[11px] text-slate-600">Acknowledge input from peripheral</span>
                         </div>
                         <div className="p-2 bg-slate-50 rounded-lg border border-slate-200">
@@ -1070,10 +1184,6 @@ export default function PPI8255ModesOfOperation() {
                 </button>
               </div>
             </div>
-
-            <p className="text-xs text-purple-900 leading-relaxed">
-              Mode 2 transforms <strong>Port A (PA0–PA7)</strong> into an 8-bit bidirectional data bus capable of both input and output operations with full hardware handshaking using 5 Port C lines (<strong>PC3–PC7</strong>).
-            </p>
 
             {/* Interactive Mode 2 Workflow Demonstration */}
             {(() => {
@@ -1147,11 +1257,11 @@ export default function PPI8255ModesOfOperation() {
                       <div className="grid grid-cols-5 gap-1.5 text-center font-mono text-[11px]">
                         <div className={`p-1.5 rounded border ${mode2Dir === 'tx' && curStep.obfa === 0 ? 'bg-amber-100 border-amber-400 text-amber-900 font-bold shadow-2xs' : 'bg-white border-slate-200 text-slate-400'}`}>
                           <div className="text-[9px] text-slate-500">PC7</div>
-                          <div className="font-bold">OBF_A#</div>
+                          <div className="font-bold"><span style={{ textDecoration: 'overline' }}>OBF</span>_A</div>
                         </div>
                         <div className={`p-1.5 rounded border ${mode2Dir === 'tx' && curStep.acka === 0 ? 'bg-cyan-100 border-cyan-400 text-cyan-900 font-bold shadow-2xs' : 'bg-white border-slate-200 text-slate-400'}`}>
                           <div className="text-[9px] text-slate-500">PC6</div>
-                          <div className="font-bold">ACK_A#</div>
+                          <div className="font-bold"><span style={{ textDecoration: 'overline' }}>ACK</span>_A</div>
                         </div>
                         <div className={`p-1.5 rounded border ${mode2Dir === 'rx' && curStep.ibfa === 1 ? 'bg-cyan-100 border-cyan-400 text-cyan-900 font-bold shadow-2xs' : 'bg-white border-slate-200 text-slate-400'}`}>
                           <div className="text-[9px] text-slate-500">PC5</div>
@@ -1159,7 +1269,7 @@ export default function PPI8255ModesOfOperation() {
                         </div>
                         <div className={`p-1.5 rounded border ${mode2Dir === 'rx' && curStep.stba === 0 ? 'bg-amber-100 border-amber-400 text-amber-900 font-bold shadow-2xs' : 'bg-white border-slate-200 text-slate-400'}`}>
                           <div className="text-[9px] text-slate-500">PC4</div>
-                          <div className="font-bold">STB_A#</div>
+                          <div className="font-bold"><span style={{ textDecoration: 'overline' }}>STB</span>_A</div>
                         </div>
                         <div className={`p-1.5 rounded border ${curStep.intra === 1 ? 'bg-rose-100 border-rose-400 text-rose-900 font-bold shadow-2xs animate-pulse' : 'bg-white border-slate-200 text-slate-400'}`}>
                           <div className="text-[9px] text-slate-500">PC3</div>
@@ -1174,7 +1284,7 @@ export default function PPI8255ModesOfOperation() {
                     <div className="bg-purple-50 p-3 rounded-lg border border-purple-150 space-y-1">
                       <h6 className="font-bold text-xs text-purple-950">How Bus Contention is Prevented:</h6>
                       <p className="text-[11px] text-slate-600 leading-relaxed">
-                        Port A output drivers are strictly tri-stated (High-Z) until the external device explicitly pulls <code className="font-mono text-purple-900 font-bold">ACK_A# = 0</code>. This prevents electrical shorts with external drivers.
+                        Port A output drivers are strictly tri-stated (High-Z) until the external device explicitly pulls <code className="font-mono text-purple-900 font-bold"><span style={{ textDecoration: 'overline' }}>ACK</span>_A = 0</code>. This prevents electrical shorts with external drivers.
                       </p>
                     </div>
 

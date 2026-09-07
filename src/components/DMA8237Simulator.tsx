@@ -45,19 +45,8 @@ export default function DMA8237Simulator() {
 
   return (
     <div className="bg-white text-slate-800 p-4 md:p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4 text-xs font-sans">
-      {/* Top Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
-        <div className="flex items-center gap-2">
-          <div className="p-2 bg-indigo-50 rounded-xl border border-indigo-200 text-indigo-600">
-            <Zap className="w-4 h-4" />
-          </div>
-          <div>
-            <h3 className="font-bold text-sm text-slate-900">Intel 8237A Programmable DMA Controller</h3>
-            <p className="text-[11px] text-slate-500">HRQ / HLDA Bus Master Handshake Protocol &amp; 4 Independent Channels</p>
-          </div>
-        </div>
-
-        {/* Tab Switcher */}
+      {/* Tab Switcher */}
+      <div className="flex flex-wrap items-center justify-end gap-2 border-b border-slate-100 pb-3">
         <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 gap-1">
           <button
             onClick={() => setActiveTab('handshake')}

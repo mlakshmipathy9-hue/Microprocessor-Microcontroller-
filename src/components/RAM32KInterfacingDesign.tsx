@@ -12,7 +12,11 @@ import {
   Info,
   Radio,
   FileSpreadsheet,
-  CircuitBoard
+  CircuitBoard,
+  Settings,
+  ChevronDown,
+  ChevronUp,
+  RotateCcw
 } from 'lucide-react';
 import MemorySchematicDiagram from './MemorySchematicDiagram';
 
@@ -24,14 +28,36 @@ const Overline = ({ children }: { children: React.ReactNode }) => (
 
 export default function RAM32KInterfacingDesign() {
   const [activeStep, setActiveStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(1);
+  const [baseAddress, setBaseAddress] = useState<string>('00000');
+  const [customInputHex, setCustomInputHex] = useState<string>('00000');
   const [testAddressHex, setTestAddressHex] = useState<string>('00100');
   const [accessMode, setAccessMode] = useState<'byte' | 'word'>('word');
   const [opMode, setOpMode] = useState<'read' | 'write'>('write');
 
+  // Base address calculations (32 KB boundary aligned = bits A19..A15)
+  const baseVal = parseInt(baseAddress || '0', 16) & 0xF8000;
+  const expectedA19 = ((baseVal >> 19) & 1) as 0 | 1;
+  const expectedA18 = ((baseVal >> 18) & 1) as 0 | 1;
+  const expectedA17 = ((baseVal >> 17) & 1) as 0 | 1;
+  const expectedA16 = ((baseVal >> 16) & 1) as 0 | 1;
+  const expectedA15 = ((baseVal >> 15) & 1) as 0 | 1;
+
+  const startAddrVal = baseVal;
+  const endAddrVal = baseVal + 0x07FFF;
+  const startHexStr = startAddrVal.toString(16).toUpperCase().padStart(5, '0') + 'H';
+  const endHexStr = endAddrVal.toString(16).toUpperCase().padStart(5, '0') + 'H';
+  const rangeLabel = `${startHexStr} – ${endHexStr}`;
+  const evenStartHex = startHexStr;
+  const evenSecondHex = (startAddrVal + 2).toString(16).toUpperCase().padStart(5, '0') + 'H';
+  const evenEndHex = (endAddrVal - 1).toString(16).toUpperCase().padStart(5, '0') + 'H';
+  const oddStartHex = (startAddrVal + 1).toString(16).toUpperCase().padStart(5, '0') + 'H';
+  const oddSecondHex = (startAddrVal + 3).toString(16).toUpperCase().padStart(5, '0') + 'H';
+  const oddEndHex = endHexStr;
+
   // Compute test address values
   const addrVal = parseInt(testAddressHex || '0', 16);
   const clampedAddr = isNaN(addrVal) ? 0 : addrVal;
-  const isWithin32K = clampedAddr >= 0x00000 && clampedAddr <= 0x07FFF;
+  const isWithin32K = clampedAddr >= startAddrVal && clampedAddr <= endAddrVal;
   const isEven = (clampedAddr % 2) === 0;
 
   // Signal calculations for 32 KB RAM interfacing with absolute decoding
@@ -45,7 +71,7 @@ export default function RAM32KInterfacingDesign() {
   const a16 = (clampedAddr >> 16) & 1;
   const a15 = (clampedAddr >> 15) & 1;
 
-  // Absolute Decoding logic: All A15..A19 must be 0 for range 00000H - 07FFFH
+  // Absolute Decoding logic
   const isCsAsserted = isWithin32K; // CS# = 0 (Active LOW)
   const csBar = isCsAsserted ? 0 : 1;
 
@@ -57,24 +83,50 @@ export default function RAM32KInterfacingDesign() {
   const rdBar = opMode === 'read' ? 0 : 1;
   const wrBar = opMode === 'write' ? 0 : 1;
 
+  // Decoder lines configuration
+  const decLines = [
+    { name: 'A19', bit: expectedA19, idx: 19 as const, y: 25, textY: 30 },
+    { name: 'A18', bit: expectedA18, idx: 18 as const, y: 50, textY: 55 },
+    { name: 'A17', bit: expectedA17, idx: 17 as const, y: 75, textY: 80 },
+    { name: 'A16', bit: expectedA16, idx: 16 as const, y: 100, textY: 105 },
+    { name: 'A15', bit: expectedA15, idx: 15 as const, y: 125, textY: 130 },
+  ];
+  const directLines = decLines.filter(l => l.bit === 1);
+  const inverterLines = decLines.filter(l => l.bit === 0);
+  const inverterCount = inverterLines.length;
+  const directCount = directLines.length;
+
+  const handleBaseAddressChange = (newBase: string) => {
+    const parsed = parseInt(newBase || '0', 16) & 0xF8000;
+    const cleanHex = parsed.toString(16).toUpperCase().padStart(5, '0');
+    setBaseAddress(cleanHex);
+    setCustomInputHex(cleanHex);
+    // Align test address into range
+    const offset = parseInt(testAddressHex || '0', 16) & 0x07FFF;
+    const newTest = (parsed + (isNaN(offset) ? 0x100 : offset)).toString(16).toUpperCase().padStart(5, '0');
+    setTestAddressHex(newTest);
+  };
+
+  const toggleCsBit = (bitIndex: 19 | 18 | 17 | 16 | 15) => {
+    const mask = 1 << bitIndex;
+    const newBaseVal = (baseVal ^ mask) & 0xF8000;
+    handleBaseAddressChange(newBaseVal.toString(16).toUpperCase().padStart(5, '0'));
+  };
+
+  const applyCustomHexInput = () => {
+    const parsed = parseInt(customInputHex.replace(/[^0-9A-Fa-f]/g, '') || '0', 16);
+    if (!isNaN(parsed)) {
+      handleBaseAddressChange(parsed.toString(16));
+    }
+  };
+
   return (
     <div className="bg-white text-slate-800 p-4 md:p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4 text-xs font-sans">
       {/* Question / Design Problem Statement Banner */}
-      <div className="bg-gradient-to-r from-indigo-50 via-blue-50 to-indigo-100/70 text-slate-800 p-4 rounded-xl border border-indigo-200 shadow-2xs space-y-2">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="px-2.5 py-0.5 bg-indigo-100 border border-indigo-300 text-indigo-800 rounded-full font-bold uppercase tracking-wider text-[10px]">
-            Design Problem 1 • University & Lab Examination Standard
-          </span>
-          <span className="text-[11px] font-mono text-indigo-900 font-bold">
-            Target MPU: Intel 8086 • Address Range: 00000H – 07FFFH
-          </span>
-        </div>
+      <div className="bg-gradient-to-r from-indigo-50 via-purple-50/50 to-indigo-100/70 text-slate-800 p-3.5 rounded-xl border border-indigo-200 shadow-2xs">
         <h2 className="text-sm md:text-base font-bold text-indigo-950 leading-snug">
           Q. 1: Interface 32 KB of RAM memory to the 8086 microprocessor system using absolute decoding with the suitable address.
         </h2>
-        <p className="text-[11px] text-slate-700 leading-relaxed">
-          Systematic step-by-step hardware design breakdown: Memory bank division, address line budgeting, binary decoding table, absolute NAND gate decoding logic, and complete 8086 bus interfacing schematic.
-        </p>
       </div>
 
       {/* 6-Step Process Interactive Navigation Tabs */}
@@ -83,7 +135,7 @@ export default function RAM32KInterfacingDesign() {
           { step: 1, title: 'Step 1: Bank Division', desc: 'Capacity & ICs' },
           { step: 2, title: 'Step 2: Address Lines', desc: 'A0–A14 & Decoders' },
           { step: 3, title: 'Step 3: Decoding Table', desc: '20-Bit Binary Map' },
-          { step: 4, title: 'Step 4: Chip Select Logic', desc: 'Absolute NAND/OR' },
+          { step: 4, title: 'Step 4: Chip Select Logic', desc: 'Configure CS & Gates ⚙️' },
           { step: 5, title: 'Step 5: Architecture', desc: 'Block Diagram' },
           { step: 6, title: 'Step 6: Schematic Circuit', desc: 'Full 8086 Wiring 📐' },
         ].map((item) => {
@@ -200,8 +252,8 @@ export default function RAM32KInterfacingDesign() {
                     </tr>
                     <tr>
                       <td className="p-2 font-medium text-slate-600">Memory Range</td>
-                      <td className="p-2 font-mono text-slate-600">00000H, 00002H, ... 07FFEH</td>
-                      <td className="p-2 font-mono text-slate-600">00001H, 00003H, ... 07FFFH</td>
+                      <td className="p-2 font-mono text-slate-600">{evenStartHex}, {evenSecondHex}, ... {evenEndHex}</td>
+                      <td className="p-2 font-mono text-slate-600">{oddStartHex}, {oddSecondHex}, ... {oddEndHex}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -228,7 +280,7 @@ export default function RAM32KInterfacingDesign() {
               </span>
               <div>
                 <h4 className="font-bold text-slate-900 text-xs">Step 2: Number of Address Lines Required</h4>
-                <p className="text-[10px] text-slate-500">Address line budget breakdown from 20-bit 8086 system bus</p>
+                <p className="text-[10px] text-slate-500">Address line budget breakdown from 20-bit 8086 system bus ({rangeLabel})</p>
               </div>
             </div>
 
@@ -259,7 +311,7 @@ export default function RAM32KInterfacingDesign() {
                 <div className="text-slate-600 text-[10px] space-y-0.5 pt-1 border-t border-slate-100">
                   <div>• Unused high lines = <strong>5 lines</strong></div>
                   <div>• Address lines: <strong className="text-purple-600">A15, A16, A17, A18, A19</strong></div>
-                  <div>• Decoded for absolute <Overline>CS</Overline> signal</div>
+                  <div>• Decoded for absolute <Overline>CS</Overline> ({directLines.length > 0 ? `${directLines.map(d => `${d.name}=1`).join(', ')}` : ''}{directLines.length > 0 && inverterLines.length > 0 ? ', ' : ''}{inverterLines.length > 0 ? `${inverterLines.map(i => `${i.name}=0`).join(', ')}` : ''})</div>
                 </div>
               </div>
             </div>
@@ -267,7 +319,7 @@ export default function RAM32KInterfacingDesign() {
             {/* Visual Bus Routing Diagram */}
             <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-2">
               <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider block">
-                20-Bit 8086 Address Bus Pin Allocation Diagram
+                20-Bit 8086 Address Bus Pin Allocation Diagram ({rangeLabel})
               </span>
               <div className="grid grid-cols-20 gap-0.5 text-center font-mono text-[9px]">
                 {/* A19..A15 */}
@@ -291,7 +343,7 @@ export default function RAM32KInterfacingDesign() {
               <div className="grid grid-cols-3 gap-2 text-[10px] pt-1">
                 <div className="flex items-center gap-1.5 text-purple-900 font-medium">
                   <span className="w-3 h-3 bg-purple-200 border border-purple-400 rounded-xs inline-block"></span>
-                  <span><strong>A19–A15 (5 Lines)</strong>: Absolute Decoder (All 0)</span>
+                  <span><strong>A19–A15 (5 Lines)</strong>: Absolute Decoder ({directLines.length > 0 ? `${directLines.map(d => `${d.name}=1`).join(', ')}` : ''}{directLines.length > 0 && inverterLines.length > 0 ? ', ' : ''}{inverterLines.length > 0 ? `${inverterLines.map(i => `${i.name}=0`).join(', ')}` : ''})</span>
                 </div>
                 <div className="flex items-center gap-1.5 text-indigo-900 font-medium">
                   <span className="w-3 h-3 bg-indigo-200 border border-indigo-400 rounded-xs inline-block"></span>
@@ -318,7 +370,7 @@ export default function RAM32KInterfacingDesign() {
                 </span>
                 <div>
                   <h4 className="font-bold text-slate-900 text-xs">Step 3: Binary Address Decoding Table</h4>
-                  <p className="text-[10px] text-slate-500">Full 20-bit binary address mapping for 32 KB RAM (00000H – 07FFFH)</p>
+                  <p className="text-[10px] text-slate-500">Full 20-bit binary address mapping for 32 KB RAM ({rangeLabel})</p>
                 </div>
               </div>
 
@@ -329,7 +381,7 @@ export default function RAM32KInterfacingDesign() {
                   maxLength={5}
                   value={testAddressHex}
                   onChange={(e) => setTestAddressHex(e.target.value.toUpperCase())}
-                  placeholder="00100"
+                  placeholder={startHexStr.slice(0, 5)}
                   className="w-20 px-2 py-1 bg-white border border-slate-300 rounded font-mono text-center font-bold text-xs focus:ring-1 focus:ring-indigo-500"
                 />
                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${isWithin32K ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'}`}>
@@ -374,12 +426,12 @@ export default function RAM32KInterfacingDesign() {
                     <td className="p-1.5 text-left font-sans font-bold text-slate-800 border-r border-slate-200">
                       Starting Address (Min)
                     </td>
-                    <td className="p-1.5 font-bold text-indigo-600 border-r border-slate-200">00000H</td>
-                    <td className="p-1 bg-purple-50/30 font-bold">0</td>
-                    <td className="p-1 bg-purple-50/30 font-bold">0</td>
-                    <td className="p-1 bg-purple-50/30 font-bold">0</td>
-                    <td className="p-1 bg-purple-50/30 font-bold">0</td>
-                    <td className="p-1 bg-purple-50/30 font-bold border-r border-slate-200">0</td>
+                    <td className="p-1.5 font-bold text-indigo-600 border-r border-slate-200">{startHexStr}</td>
+                    <td className="p-1 bg-purple-50/30 font-bold">{expectedA19}</td>
+                    <td className="p-1 bg-purple-50/30 font-bold">{expectedA18}</td>
+                    <td className="p-1 bg-purple-50/30 font-bold">{expectedA17}</td>
+                    <td className="p-1 bg-purple-50/30 font-bold">{expectedA16}</td>
+                    <td className="p-1 bg-purple-50/30 font-bold border-r border-slate-200">{expectedA15}</td>
                     {Array.from({ length: 14 }).map((_, i) => (
                       <td key={i} className={`p-1 bg-indigo-50/20 ${i === 13 ? 'border-r border-slate-200' : ''}`}>0</td>
                     ))}
@@ -392,12 +444,12 @@ export default function RAM32KInterfacingDesign() {
                     <td className="p-1.5 text-left font-sans font-bold text-slate-800 border-r border-slate-200">
                       Ending Address (Max)
                     </td>
-                    <td className="p-1.5 font-bold text-indigo-600 border-r border-slate-200">07FFFH</td>
-                    <td className="p-1 bg-purple-50/30 font-bold">0</td>
-                    <td className="p-1 bg-purple-50/30 font-bold">0</td>
-                    <td className="p-1 bg-purple-50/30 font-bold">0</td>
-                    <td className="p-1 bg-purple-50/30 font-bold">0</td>
-                    <td className="p-1 bg-purple-50/30 font-bold border-r border-slate-200">0</td>
+                    <td className="p-1.5 font-bold text-indigo-600 border-r border-slate-200">{endHexStr}</td>
+                    <td className="p-1 bg-purple-50/30 font-bold">{expectedA19}</td>
+                    <td className="p-1 bg-purple-50/30 font-bold">{expectedA18}</td>
+                    <td className="p-1 bg-purple-50/30 font-bold">{expectedA17}</td>
+                    <td className="p-1 bg-purple-50/30 font-bold">{expectedA16}</td>
+                    <td className="p-1 bg-purple-50/30 font-bold border-r border-slate-200">{expectedA15}</td>
                     {Array.from({ length: 14 }).map((_, i) => (
                       <td key={i} className={`p-1 bg-indigo-50/20 font-bold ${i === 13 ? 'border-r border-slate-200' : ''}`}>1</td>
                     ))}
@@ -411,11 +463,11 @@ export default function RAM32KInterfacingDesign() {
                       Current Test Address
                     </td>
                     <td className="p-1.5 text-amber-900 border-r border-slate-200">{testAddressHex.padStart(5, '0')}H</td>
-                    <td className={`p-1 ${a19 === 0 ? 'text-purple-700' : 'text-red-600'}`}>{a19}</td>
-                    <td className={`p-1 ${a18 === 0 ? 'text-purple-700' : 'text-red-600'}`}>{a18}</td>
-                    <td className={`p-1 ${a17 === 0 ? 'text-purple-700' : 'text-red-600'}`}>{a17}</td>
-                    <td className={`p-1 ${a16 === 0 ? 'text-purple-700' : 'text-red-600'}`}>{a16}</td>
-                    <td className={`p-1 border-r border-slate-200 ${a15 === 0 ? 'text-purple-700' : 'text-red-600'}`}>{a15}</td>
+                    <td className={`p-1 ${a19 === expectedA19 ? 'text-purple-700' : 'text-red-600'}`}>{a19}</td>
+                    <td className={`p-1 ${a18 === expectedA18 ? 'text-purple-700' : 'text-red-600'}`}>{a18}</td>
+                    <td className={`p-1 ${a17 === expectedA17 ? 'text-purple-700' : 'text-red-600'}`}>{a17}</td>
+                    <td className={`p-1 ${a16 === expectedA16 ? 'text-purple-700' : 'text-red-600'}`}>{a16}</td>
+                    <td className={`p-1 border-r border-slate-200 ${a15 === expectedA15 ? 'text-purple-700' : 'text-red-600'}`}>{a15}</td>
                     {Array.from({ length: 14 }).map((_, i) => {
                       const bitIndex = 14 - i;
                       const bitVal = (clampedAddr >> bitIndex) & 1;
@@ -465,6 +517,142 @@ export default function RAM32KInterfacingDesign() {
       {/* STEP 4: GENERATION OF CHIP SELECT LOGIC */}
       {activeStep === 4 && (
         <div className="space-y-3">
+          {/* Dedicated Chip Select Address Decoder Configurator (Exclusively Available in Step 4) */}
+          <div className="bg-purple-50/50 border-2 border-purple-300/80 p-3.5 rounded-xl space-y-3 shadow-xs">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-purple-200/70 pb-2">
+              <div className="flex items-center gap-2">
+                <span className="p-1.5 bg-purple-600 text-white rounded-lg shadow-2xs">
+                  <Settings className="w-4 h-4" />
+                </span>
+                <div>
+                  <h4 className="font-bold text-slate-900 text-xs flex items-center gap-2">
+                    <span>Configure Chip Select Decoder Lines (A19–A15)</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-200 text-purple-900 font-mono font-bold">
+                      Target: {rangeLabel}
+                    </span>
+                  </h4>
+                  <p className="text-[10px] text-slate-500">
+                    Change the required memory base address below or toggle individual bits (A19–A15) to configure the 74LS04 (NOT) and 74LS30 (NAND) logic gates.
+                  </p>
+                </div>
+              </div>
+
+              {/* Direct Hex Input */}
+              <div className="flex items-center gap-1.5 bg-white p-1 rounded-lg border border-purple-200 shadow-2xs">
+                <span className="text-[10px] font-bold text-purple-900 px-1">Hex Base:</span>
+                <input
+                  type="text"
+                  maxLength={5}
+                  value={customInputHex}
+                  onChange={(e) => setCustomInputHex(e.target.value.toUpperCase())}
+                  onKeyDown={(e) => e.key === 'Enter' && applyCustomHexInput()}
+                  placeholder="e.g. 80000"
+                  className="w-20 px-2 py-0.5 bg-purple-50/50 border border-purple-300 rounded font-mono text-center font-bold text-xs focus:ring-1 focus:ring-purple-500 text-purple-950"
+                />
+                <button
+                  onClick={applyCustomHexInput}
+                  className="px-2 py-0.5 bg-purple-600 hover:bg-purple-700 text-white rounded text-[10px] font-bold transition-all cursor-pointer shadow-2xs"
+                >
+                  Set Base
+                </button>
+              </div>
+            </div>
+
+            {/* Quick Preset Buttons */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Quick Presets:</span>
+              <div className="flex flex-wrap items-center gap-1.5 font-mono text-[10px]">
+                {[
+                  { label: '00000H–07FFFH (Default)', val: '00000' },
+                  { label: '20000H–27FFFH', val: '20000' },
+                  { label: '40000H–47FFFH', val: '40000' },
+                  { label: '80000H–87FFFH (Custom Range)', val: '80000' },
+                  { label: 'A0000H–A7FFFH', val: 'A0000' },
+                  { label: 'C0000H–C7FFFH', val: 'C0000' },
+                  { label: 'F8000H–FFFFFH (Top 32K)', val: 'F8000' },
+                ].map((preset) => (
+                  <button
+                    key={preset.val}
+                    onClick={() => handleBaseAddressChange(preset.val)}
+                    className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer border ${
+                      baseAddress === preset.val
+                        ? 'bg-purple-600 text-white border-purple-700 shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-200 hover:bg-purple-50 hover:text-purple-900'
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 5-Bit Gate Switcher */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">
+                  Interactive 5-Bit Gate Decoder Switcher (A19 – A15):
+                </span>
+                <span className="text-[10px] text-slate-500">
+                  Click any pin below to toggle between 74LS04 Inverter (Bit=0) and Direct Wire (Bit=1)
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 font-mono text-xs">
+                {decLines.map((line) => (
+                  <button
+                    key={line.name}
+                    onClick={() => toggleCsBit(line.idx)}
+                    className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all shadow-2xs ${
+                      line.bit === 1
+                        ? 'bg-purple-700 text-white border-purple-800'
+                        : 'bg-white text-slate-800 border-purple-200 hover:bg-purple-50/70'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between font-bold">
+                      <span className="text-sm">{line.name}</span>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                        line.bit === 1 ? 'bg-purple-900 text-white' : 'bg-purple-100 text-purple-900'
+                      }`}>
+                        Bit = {line.bit}
+                      </span>
+                    </div>
+                    <div className={`text-[10px] font-sans mt-1.5 font-medium ${line.bit === 1 ? 'text-purple-100' : 'text-slate-500'}`}>
+                      {line.bit === 1 ? 'Direct Wire to NAND (No Inverter)' : 'Passes through 74LS04 NOT Inverter'}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Live Circuit Hardware Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px] bg-white p-2.5 rounded-xl border border-purple-200">
+              <div className="space-y-0.5 font-mono">
+                <div className="text-purple-950 font-bold">Hardware Bill of Materials for this Chip Select:</div>
+                <div className="text-slate-600 text-[10px]">
+                  • <strong>{inverterCount}× Inverters (74LS04):</strong> for {inverterLines.map(l => l.name).join(', ') || 'none'}
+                </div>
+                <div className="text-slate-600 text-[10px]">
+                  • <strong>{directCount}× Direct Lines:</strong> for {directLines.map(l => l.name).join(', ') || 'none'} straight to NAND
+                </div>
+                <div className="text-slate-600 text-[10px]">
+                  • <strong>1× 74LS30:</strong> 8-Input / 6-Input NAND gate to generate Master <Overline>CS</Overline>
+                </div>
+                <div className="text-slate-600 text-[10px]">
+                  • <strong>2× 74LS32:</strong> 2-Input OR gates for <Overline>CE1</Overline> (Even) &amp; <Overline>CE2</Overline> (Odd)
+                </div>
+              </div>
+
+              <div className="space-y-1 font-mono text-right flex flex-col justify-center">
+                <div className="text-[10px] text-slate-500">Active Boolean Chip Select Equation:</div>
+                <div className="p-1 bg-purple-50 rounded border border-purple-200 font-bold text-purple-900 text-center text-[10px]">
+                  <Overline>CS</Overline> = NOT ( {decLines.map(l => l.bit === 1 ? l.name : `NOT(${l.name})`).join(' • ')} • M/<Overline>IO</Overline> )
+                </div>
+                <div className="text-[10px] text-slate-500 text-center">
+                  Even Bank: {evenStartHex}–{evenEndHex} | Odd Bank: {oddStartHex}–{oddEndHex}
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* Logic Equation & Gate Breakdown */}
             <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2.5 shadow-2xs">
@@ -482,10 +670,10 @@ export default function RAM32KInterfacingDesign() {
                 <div className="text-slate-700">
                   <span className="text-[10px] font-bold text-purple-700 uppercase block font-sans">1. Main Chip Select Logic (<Overline>CS</Overline>)</span>
                   <div className="p-1.5 bg-slate-50 rounded border border-slate-100 font-bold text-slate-900 mt-1">
-                    <Overline>CS</Overline> = NOT (NOT(A19) • NOT(A18) • NOT(A17) • NOT(A16) • NOT(A15) • M/<Overline>IO</Overline>)
+                    <span><Overline>CS</Overline> = NOT ({decLines.map(l => l.bit === 1 ? l.name : `NOT(${l.name})`).join(' • ')} • M/<Overline>IO</Overline>)</span>
                   </div>
                   <p className="text-[10px] text-slate-500 font-sans mt-0.5">
-                    Implemented using 5 inverters (74LS04) + 6-input NAND gate (74LS30) with M/<Overline>IO</Overline> connected to enable memory cycles only.
+                    {`Implemented using ${inverterCount} inverter${inverterCount === 1 ? '' : 's'} (74LS04) for ${inverterLines.map(l => l.name).join(', ') || 'none'}, with ${directLines.length > 0 ? directLines.map(l => l.name).join(', ') : 'no lines'} directly wired to the 6-input NAND gate (74LS30), and M/IO to enable memory cycles only.`}
                   </p>
                 </div>
 
@@ -511,7 +699,7 @@ export default function RAM32KInterfacingDesign() {
               </div>
 
               <div className="p-2 bg-purple-50 rounded-lg border border-purple-100 text-[11px] text-purple-900">
-                <strong>Why Absolute Decoding?</strong> In absolute decoding, every single high address line (A15–A19) is decoded. This guarantees that 32 KB RAM occupies <em>strictly</em> 00000H–07FFFH without ghost/mirror addresses.
+                <strong>Why Absolute Decoding?</strong> In absolute decoding, every single high address line (A15–A19) is decoded. This guarantees that 32 KB RAM occupies <em>strictly</em> {rangeLabel} without ghost/mirror addresses.
               </div>
             </div>
 
@@ -540,25 +728,28 @@ export default function RAM32KInterfacingDesign() {
 
                   {/* Input Lines A19..A15 */}
                   <g className="font-mono text-[10px] font-bold" fill="#334155">
-                    <text x="15" y="30">A19 (0)</text>
-                    <text x="15" y="55">A18 (0)</text>
-                    <text x="15" y="80">A17 (0)</text>
-                    <text x="15" y="105">A16 (0)</text>
-                    <text x="15" y="130">A15 (0)</text>
+                    {decLines.map((line) => (
+                      <g key={line.name}>
+                        <text x="15" y={line.textY}>{line.name} ({line.bit})</text>
+                        {line.bit === 1 ? (
+                          <g>
+                            <line x1="60" y1={line.y} x2="140" y2={line.y} stroke="#7e22ce" strokeWidth="2" />
+                            <rect x="68" y={line.y - 10} width="64" height="11" rx="2" fill="#faf5ff" stroke="#c084fc" strokeWidth="0.75" />
+                            <text x="71" y={line.y - 2} fill="#6b21a8" fontSize="6.5" fontFamily="monospace" fontWeight="bold">Direct (No NOT)</text>
+                          </g>
+                        ) : (
+                          <g>
+                            <line x1="60" y1={line.y} x2="80" y2={line.y} stroke="#64748b" strokeWidth="1.5" />
+                            <polygon points={`80,${line.y-6} 95,${line.y} 80,${line.y+6}`} fill="#e2e8f0" stroke="#475569" strokeWidth="1.5" />
+                            <circle cx="98" cy={line.y} r="2.5" fill="white" stroke="#475569" strokeWidth="1.5" />
+                            <line x1="101" y1={line.y} x2="140" y2={line.y} stroke="#64748b" strokeWidth="1.5" />
+                          </g>
+                        )}
+                      </g>
+                    ))}
                     <text x="15" y="155">M/<tspan textDecoration="overline">IO</tspan> (1)</text>
+                    <line x1="75" y1="150" x2="140" y2="150" stroke="#64748b" strokeWidth="1.5" />
                   </g>
-
-                  {/* Inverter Triangles */}
-                  {[25, 50, 75, 100, 125].map((y, idx) => (
-                    <g key={idx}>
-                      <line x1="60" y1={y} x2="80" y2={y} stroke="#64748b" strokeWidth="1.5" />
-                      <polygon points={`80,${y-6} 95,${y} 80,${y+6}`} fill="#e2e8f0" stroke="#475569" strokeWidth="1.5" />
-                      <circle cx="98" cy={y} r="2.5" fill="white" stroke="#475569" strokeWidth="1.5" />
-                      <line x1="101" y1={y} x2="140" y2={y} stroke="#64748b" strokeWidth="1.5" />
-                    </g>
-                  ))}
-                  {/* Direct M/IO line */}
-                  <line x1="75" y1="150" x2="140" y2="150" stroke="#64748b" strokeWidth="1.5" />
 
                   {/* 6-Input NAND Gate */}
                   <rect x="140" y="15" width="45" height="145" rx="5" fill="#f8fafc" stroke="#4338ca" strokeWidth="2" />
@@ -605,7 +796,7 @@ export default function RAM32KInterfacingDesign() {
 
               <div className="grid grid-cols-2 gap-1.5 text-[10px] font-mono">
                 <div className="bg-indigo-50 p-1.5 rounded border border-indigo-100 text-indigo-900">
-                  • 74LS04 Hex Inverters<br />
+                  • {inverterCount}x Inverters ({inverterLines.map(l => l.name).join(', ') || 'None'})<br />
                   • 74LS30 8-Input NAND
                 </div>
                 <div className="bg-emerald-50 p-1.5 rounded border border-emerald-100 text-emerald-900">
@@ -755,7 +946,7 @@ export default function RAM32KInterfacingDesign() {
                     </span>
                   </div>
                   <p className="text-slate-600 text-[10px]">
-                    Decodes A15–A19 (all 0) → generates <strong className="text-purple-800 font-mono"><Overline>CS</Overline></strong>, and ORs with A0 / <Overline>BHE</Overline> for <strong className="text-indigo-700 font-mono"><Overline>CE1</Overline></strong> and <strong className="text-amber-700 font-mono"><Overline>CE2</Overline></strong>.
+                    Decodes A15–A19 ({directLines.length > 0 ? directLines.map(d => `${d.name}=1`).join(', ') : ''}{directLines.length > 0 && inverterLines.length > 0 ? ', ' : ''}{inverterLines.length > 0 ? inverterLines.map(i => `${i.name}=0`).join(', ') : ''}) → generates <strong className="text-purple-800 font-mono"><Overline>CS</Overline></strong>, and ORs with A0 / <Overline>BHE</Overline> for <strong className="text-indigo-700 font-mono"><Overline>CE1</Overline></strong> and <strong className="text-amber-700 font-mono"><Overline>CE2</Overline></strong>.
                   </p>
                 </div>
 
@@ -812,7 +1003,7 @@ export default function RAM32KInterfacingDesign() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[10px]">
                 <div>1. <strong>A0 Shift Rule:</strong> Memory chip address lines A0–A13 connect to 8086 system lines A1–A14.</div>
                 <div>2. <strong>Bank Isolation:</strong> A0 gates Even Bank (D0–D7) while <Overline>BHE</Overline> gates Odd Bank (D8–D15).</div>
-                <div>3. <strong>Absolute Decoding:</strong> A15–A19 all equal 0 restricts RAM strictly to 00000H–07FFFH.</div>
+                <div>3. <strong>Absolute Decoding:</strong> {directLines.length > 0 ? directLines.map(d => `${d.name}=1`).join(', ') : ''}{directLines.length > 0 && inverterLines.length > 0 ? ' and ' : ''}{inverterLines.length > 0 ? `${inverterLines.map(i => `${i.name}=0`).join(', ')}` : ''} restricts RAM strictly to {rangeLabel}.</div>
                 <div>4. <strong>Single Cycle Word Transfer:</strong> Aligned 16-bit word at even address enables both RAM_1 and RAM_2 simultaneously!</div>
               </div>
             </div>
@@ -831,7 +1022,7 @@ export default function RAM32KInterfacingDesign() {
               <div>
                 <h4 className="font-bold text-xs text-indigo-950">Step 6: Complete 8086 32 KB RAM Interfacing Circuit Schematic</h4>
                 <p className="text-[10px] text-slate-600">
-                  Direct continuation of Steps 1–5: Minimum Mode 8086 MPU, 3× 74LS373 Latches, Absolute NAND Decoder (00000H–07FFFH), Bank OR Gates, 2× 74LS245 Transceivers, and 2× 16 KB RAM ICs (Even &amp; Odd Banks).
+                  Direct continuation of Steps 1–5: Minimum Mode 8086 MPU, 3× 74LS373 Latches, Absolute NAND Decoder ({rangeLabel}), Bank OR Gates, 2× 74LS245 Transceivers, and 2× 16 KB RAM ICs (Even &amp; Odd Banks).
                 </p>
               </div>
             </div>
@@ -840,7 +1031,10 @@ export default function RAM32KInterfacingDesign() {
             </span>
           </div>
 
-          <MemorySchematicDiagram />
+          <MemorySchematicDiagram 
+            initialBaseAddress={baseAddress} 
+            onBaseAddressChange={(newBase) => handleBaseAddressChange(newBase)}
+          />
         </div>
       )}
     </div>
