@@ -88,19 +88,20 @@ export default function DisplaySchematicDiagram({
   const chipInfo: Record<string, { title: string; subtitle: string; desc: string; pins: { pin: string; func: string }[] }> = {
     u1: {
       title: 'U1: Intel 8086 16-Bit Microprocessor',
-      subtitle: 'Minimum Mode Controller (5 MHz)',
+      subtitle: 'Part: 8086 • Component: Microprocessor (CPU)',
       desc: 'Executes 7-segment display driver software, outputs BCD/hex lookup segment patterns via OUT 80H, AL, and generates multiplexing digit strobe controls on Port C.',
       pins: [
         { pin: 'Pin 33 (MN/MX#)', func: 'Tied to +5V VCC to configure 8086 in Minimum Mode.' },
         { pin: 'Pin 25 (ALE)', func: 'Address Latch Enable connected to 74LS373 Pin 11 (LE) to latch lower address bits A0–A7.' },
         { pin: 'Pin 28 (M/IO#)', func: 'Outputs LOW (0V) during I/O operations to enable 74LS138 decoder.' },
         { pin: 'Pin 29 (WR#)', func: 'Active-low write strobe connected to 8255 WR# (Pin 36).' },
-        { pin: 'AD0–AD7', func: 'Multiplexed address/data bus connected to 74LS373 inputs and 8255 D0–D7 lines.' }
+        { pin: 'Pin 32 (RD#)', func: 'Active-low read strobe connected to 8255 RD# (Pin 5).' },
+        { pin: 'Pins AD0–AD7', func: 'Multiplexed address/data bus connected to 74LS373 inputs and 8255 D0–D7 lines.' }
       ]
     },
     u2: {
       title: 'U2: 74LS373 Octal Transparent D-Latch',
-      subtitle: 'Lower Address Demultiplexer',
+      subtitle: 'Part: 74LS373 • Component: Octal Address Latch',
       desc: 'Captures and holds stable address lines A0, A1, A2 from AD0–AD7 when ALE pulses HIGH during clock cycle T1.',
       pins: [
         { pin: 'Pin 11 (LE)', func: 'Connected to 8086 ALE (Pin 25).' },
@@ -110,7 +111,7 @@ export default function DisplaySchematicDiagram({
     },
     u3: {
       title: 'U3: 74LS138 3-to-8 Line Address Decoder',
-      subtitle: 'I/O Port Chip Select Generator (Base 80H)',
+      subtitle: 'Part: 74LS138 • Component: 3-to-8 Address Decoder',
       desc: 'Decodes upper address lines (A2–A7) and M/IO# to generate active-low CS# for the 8255 PPI at base I/O address 80H–86H.',
       pins: [
         { pin: 'Pin 6 (G1)', func: 'Active-HIGH enable tied to +5V VCC.' },
@@ -120,7 +121,7 @@ export default function DisplaySchematicDiagram({
     },
     u4: {
       title: 'U4: Intel 8255A Programmable Peripheral Interface (PPI)',
-      subtitle: 'Parallel Port Interface in Mode 0',
+      subtitle: 'Part: 8255A • Component: Programmable Peripheral Interface (PPI)',
       desc: 'Initialized with Control Word 80H (Mode 0, all ports output). Port A (PA0–PA7) drives 7-segment data (a–g, dp). Port C (PC0–PC3) drives digit enable switching transistors.',
       pins: [
         { pin: 'Pins 34–27 (D0–D7)', func: '8-bit bidirectional data bus from 8086 CPU.' },
@@ -131,7 +132,7 @@ export default function DisplaySchematicDiagram({
     },
     rn1: {
       title: 'RN1: 8 × 330Ω Current-Limiting Resistor Array',
-      subtitle: 'LED Segment Protection Network',
+      subtitle: 'Part: RN1 (8×330Ω) • Component: Resistor Network Pack',
       desc: 'Limits forward LED segment current to safe levels (~10 mA per segment at 2.0V forward drop: R = (5.0V - 2.0V) / 10mA = 300Ω → standard 330Ω). Protects 8255 output buffers and display LEDs from thermal overload.',
       pins: [
         { pin: 'Pins 1–8 (Inputs)', func: 'Connected to 8255 Port A pins PA0–PA7.' },
@@ -140,7 +141,7 @@ export default function DisplaySchematicDiagram({
     },
     disp: {
       title: 'DISP1: 7-Segment LED Display Unit',
-      subtitle: displayType === 'cathode' ? 'Common Cathode (CC) Configuration' : 'Common Anode (CA) Configuration',
+      subtitle: displayType === 'cathode' ? 'Part: DISP1 • Component: Common Cathode (CC) Display' : 'Part: DISP1 • Component: Common Anode (CA) Display',
       desc: displayType === 'cathode'
         ? 'Common Cathode: All LED cathodes tied to GND (0V) or switched via NPN transistor (BC547). Segment illuminated by driving corresponding anode pin HIGH (+5V).'
         : 'Common Anode: All LED anodes tied to +5V VCC or switched via PNP transistor (BC557). Segment illuminated by driving corresponding cathode pin LOW (0V).',
@@ -151,7 +152,7 @@ export default function DisplaySchematicDiagram({
     },
     trans: {
       title: 'Q1–Q4: Digit Multiplexing Transistors',
-      subtitle: displayType === 'cathode' ? 'BC547 NPN Common-Cathode Drivers' : 'BC557 PNP Common-Anode Drivers',
+      subtitle: displayType === 'cathode' ? 'Part: BC547 • Component: NPN Common-Cathode Drivers' : 'Part: BC557 • Component: PNP Common-Anode Drivers',
       desc: 'Allows 4 distinct digits to be time-multiplexed using a single 8-bit segment data bus. Each digit is energized in rapid succession (~50–200 Hz), relying on persistence of vision (POV) to create a flicker-free multi-digit display.',
       pins: [
         { pin: 'Base (B)', func: 'Driven by 8255 Port C pins (PC0–PC3) through 1kΩ base resistors.' },
@@ -267,9 +268,9 @@ export default function DisplaySchematicDiagram({
       <div className="relative bg-slate-50/50 rounded-xl border border-slate-200 overflow-x-auto overflow-y-hidden shadow-inner p-2">
         <div 
           style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top left' }}
-          className="transition-transform duration-200 min-w-[920px] bg-white p-3 rounded-lg border border-slate-200"
+          className="transition-transform duration-200 min-w-[960px] bg-white p-3 rounded-lg border border-slate-200"
         >
-          <svg viewBox="0 0 960 480" className="w-full h-auto select-none font-mono text-[10px]">
+          <svg viewBox="0 0 1080 500" className="w-full h-auto select-none font-mono text-[10px]">
             {/* Grid Pattern Background */}
             <defs>
               <pattern id="edaGridDisp" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -285,264 +286,313 @@ export default function DisplaySchematicDiagram({
               </filter>
             </defs>
 
-            <rect width="960" height="480" fill="url(#edaGridDisp)" />
+            <rect width="1080" height="500" fill="url(#edaGridDisp)" />
 
             {/* ============================================================== */}
             {/* 1. POWER RAILS & BUS TRACES                                    */}
             {/* ============================================================== */}
             {/* +5V VCC Top Bus */}
-            <line x1="30" y1="25" x2="990" y2="25" stroke="#ef4444" strokeWidth="2" strokeDasharray="5,2" />
-            <text x="40" y="20" fill="#dc2626" fontSize="9" fontWeight="bold">+5V VCC (System Power Rail)</text>
+            <line x1="25" y1="20" x2="1055" y2="20" stroke="#ef4444" strokeWidth="2" strokeDasharray="5,2" />
+            <text x="35" y="15" fill="#dc2626" fontSize="9" fontWeight="bold">+5V VCC (System Power Rail)</text>
 
             {/* GND Bottom Bus */}
-            <line x1="30" y1="465" x2="990" y2="465" stroke="#2563eb" strokeWidth="2" />
-            <text x="40" y="460" fill="#1d4ed8" fontSize="9" fontWeight="bold">GND (0V Common Reference)</text>
+            <line x1="25" y1="480" x2="1055" y2="480" stroke="#2563eb" strokeWidth="2" />
+            <text x="35" y="475" fill="#1d4ed8" fontSize="9" fontWeight="bold">GND (0V Common Reference)</text>
 
             {/* ============================================================== */}
             {/* 2. CHIP U1: 8086 CPU                                           */}
             {/* ============================================================== */}
             <g 
               onClick={() => setSelectedChip('u1')}
-              className="cursor-pointer transition-all"
-              transform="translate(30, 60)"
+              className="cursor-pointer transition-all group"
+              transform="translate(25, 45)"
             >
+              <title>U1: Intel 8086 16-Bit Microprocessor (CPU)</title>
               <rect
                 x="0"
                 y="0"
-                width="135"
-                height="360"
+                width="145"
+                height="380"
                 rx="6"
                 fill="#ffffff"
                 stroke={selectedChip === 'u1' ? '#4f46e5' : '#94a3b8'}
                 strokeWidth={selectedChip === 'u1' ? '2.5' : '1.5'}
               />
-              <rect x="0" y="0" width="135" height="26" rx="6" fill="#eef2ff" stroke="#c7d2fe" strokeWidth="1" />
-              <text x="67.5" y="17" fill="#4338ca" fontWeight="bold" textAnchor="middle" fontSize="11">U1: 8086 CPU</text>
-              <text x="67.5" y="38" fill="#64748b" fontSize="8" textAnchor="middle">MIN MODE (MN/MX#=1)</text>
+              <rect x="0" y="0" width="145" height="30" rx="6" fill="#eef2ff" stroke="#c7d2fe" strokeWidth="1" />
+              <text x="72.5" y="13" fill="#312e81" fontWeight="bold" textAnchor="middle" fontSize="10.5">U1 : 8086</text>
+              <text x="72.5" y="24" fill="#4338ca" fontWeight="bold" textAnchor="middle" fontSize="7.5">16-BIT MICROPROCESSOR (CPU)</text>
 
-              {/* Pin Labels */}
-              <text x="10" y="70" fill="#dc2626" fontWeight="bold">AD0–AD7</text>
-              <text x="10" y="95" fill="#dc2626">AD8–AD15</text>
-              <text x="10" y="120" fill="#059669" fontWeight="bold">ALE (Pin 25)</text>
-              <text x="10" y="145" fill="#d97706" fontWeight="bold">M/IO# (Pin 28)</text>
-              <text x="10" y="170" fill="#d97706">WR# (Pin 29)</text>
-              <text x="10" y="195" fill="#d97706">RD# (Pin 32)</text>
-              <text x="10" y="220" fill="#64748b">A16–A19</text>
-              <text x="10" y="245" fill="#64748b">CLK (5MHz)</text>
-              <text x="10" y="270" fill="#64748b">RESET / READY</text>
-              <text x="10" y="310" fill="#4338ca" fontSize="8.5" fontWeight="bold">I/O Base: 80H</text>
-              <text x="10" y="330" fill="#1e293b" fontSize="8.5" fontWeight="bold">OUT 80H, AL</text>
+              {/* Mode & Operational Info */}
+              <text x="10" y="46" fill="#64748b" fontSize="8" fontWeight="bold">MIN MODE (MN/MX#=1)</text>
+              <text x="10" y="58" fill="#64748b" fontSize="8">CLK: 5MHz • VCC: +5V</text>
 
-              {/* Right Output Terminals */}
-              {[70, 95, 120, 145, 170, 195].map((y, i) => (
-                <circle key={i} cx="135" cy={y} r="3" fill="#4f46e5" />
+              <text x="10" y="325" fill="#4338ca" fontSize="8.5" fontWeight="bold">I/O Base: 80H</text>
+              <text x="10" y="342" fill="#1e293b" fontSize="8.5" fontWeight="bold">OUT 80H, AL</text>
+              <text x="10" y="358" fill="#64748b" fontSize="7.5">7-Seg Segment Data</text>
+
+              {/* Right Pin Labels (Aligned with Interconnect Traces) */}
+              <text x="135" y="84" fill="#dc2626" fontWeight="bold" textAnchor="end">AD0–AD7</text>
+              <text x="135" y="114" fill="#dc2626" textAnchor="end">AD8–AD15</text>
+              <text x="135" y="144" fill="#059669" fontWeight="bold" textAnchor="end">ALE (Pin 25)</text>
+              <text x="135" y="174" fill="#d97706" fontWeight="bold" textAnchor="end">M/IO# (Pin 28)</text>
+              <text x="135" y="204" fill="#d97706" fontWeight="bold" textAnchor="end">WR# (Pin 29)</text>
+              <text x="135" y="234" fill="#d97706" textAnchor="end">RD# (Pin 32)</text>
+              <text x="135" y="264" fill="#64748b" textAnchor="end">RESET (Pin 21)</text>
+
+              {/* Right Pin Output Terminals */}
+              {[80, 110, 140, 170, 200, 230, 260].map((y, i) => (
+                <circle key={i} cx="145" cy={y} r="3" fill="#4f46e5" />
               ))}
             </g>
 
             {/* ============================================================== */}
-            {/* 3. CHIP U2: 74LS373 LATCH                                      */}
+            {/* 3. CHIP U2: 74LS373 OCTAL ADDRESS LATCH                        */}
             {/* ============================================================== */}
             <g 
               onClick={() => setSelectedChip('u2')}
-              className="cursor-pointer transition-all"
-              transform="translate(195, 60)"
+              className="cursor-pointer transition-all group"
+              transform="translate(245, 45)"
             >
+              <title>U2: 74LS373 Octal Transparent D-Type Latch</title>
               <rect
                 x="0"
                 y="0"
-                width="125"
-                height="150"
+                width="165"
+                height="165"
                 rx="6"
                 fill="#ffffff"
                 stroke={selectedChip === 'u2' ? '#4f46e5' : '#94a3b8'}
                 strokeWidth={selectedChip === 'u2' ? '2.5' : '1.5'}
               />
-              <rect x="0" y="0" width="125" height="24" rx="6" fill="#f0fdf4" stroke="#bbf7d0" strokeWidth="1" />
-              <text x="62.5" y="16" fill="#15803d" fontWeight="bold" textAnchor="middle" fontSize="10.5">U2: 74LS373</text>
-              <text x="62.5" y="34" fill="#64748b" fontSize="8" textAnchor="middle">OCTAL LATCH</text>
+              <rect x="0" y="0" width="165" height="30" rx="6" fill="#f0fdf4" stroke="#bbf7d0" strokeWidth="1" />
+              <text x="82.5" y="13" fill="#14532d" fontWeight="bold" textAnchor="middle" fontSize="10.5">U2 : 74LS373</text>
+              <text x="82.5" y="24" fill="#15803d" fontWeight="bold" textAnchor="middle" fontSize="7.5">OCTAL ADDRESS LATCH</text>
 
-              <text x="8" y="55" fill="#dc2626" fontWeight="bold">AD0–AD7</text>
-              <text x="8" y="80" fill="#059669" fontWeight="bold">LE (Pin 11)</text>
-              <text x="8" y="105" fill="#64748b">OE# (GND)</text>
+              {/* Left Inputs */}
+              <text x="10" y="84" fill="#dc2626" fontWeight="bold">AD0–AD7</text>
+              <text x="10" y="114" fill="#64748b">OE# (Pin 1: GND)</text>
+              <text x="10" y="144" fill="#059669" fontWeight="bold">LE (Pin 11)</text>
 
-              <text x="117" y="55" fill="#2563eb" textAnchor="end" fontWeight="bold">A0 (Q0)</text>
-              <text x="117" y="80" fill="#2563eb" textAnchor="end" fontWeight="bold">A1 (Q1)</text>
-              <text x="117" y="105" fill="#2563eb" textAnchor="end">A2–A7</text>
+              {/* Right Outputs (Spaced and Un-overlapping) */}
+              <text x="155" y="84" fill="#2563eb" textAnchor="end" fontWeight="bold">A0 (Q0: Pin 2)</text>
+              <text x="155" y="114" fill="#2563eb" textAnchor="end" fontWeight="bold">A1 (Q1: Pin 5)</text>
+              <text x="155" y="144" fill="#2563eb" textAnchor="end">A2–A7 (Q2–Q7)</text>
 
-              {/* Pins */}
-              <circle cx="0" cy="55" r="3" fill="#dc2626" />
-              <circle cx="0" cy="80" r="3" fill="#059669" />
-              <circle cx="125" cy="55" r="3" fill="#2563eb" />
-              <circle cx="125" cy="80" r="3" fill="#2563eb" />
-              <circle cx="125" cy="105" r="3" fill="#2563eb" />
+              {/* Input Pin Dots */}
+              <circle cx="0" cy="80" r="3" fill="#dc2626" />
+              <circle cx="0" cy="110" r="2.5" fill="#64748b" />
+              <circle cx="0" cy="140" r="3" fill="#059669" />
+
+              {/* Output Pin Dots */}
+              <circle cx="165" cy="80" r="3" fill="#2563eb" />
+              <circle cx="165" cy="110" r="3" fill="#2563eb" />
+              <circle cx="165" cy="140" r="3" fill="#2563eb" />
             </g>
 
             {/* ============================================================== */}
-            {/* 4. CHIP U3: 74LS138 3-to-8 DECODER                             */}
+            {/* 4. CHIP U3: 74LS138 3-to-8 ADDRESS DECODER                     */}
             {/* ============================================================== */}
             <g 
               onClick={() => setSelectedChip('u3')}
-              className="cursor-pointer transition-all"
-              transform="translate(195, 240)"
+              className="cursor-pointer transition-all group"
+              transform="translate(245, 235)"
             >
+              <title>U3: 74LS138 3-to-8 Line Address Decoder</title>
               <rect
                 x="0"
                 y="0"
-                width="125"
-                height="180"
+                width="165"
+                height="190"
                 rx="6"
                 fill="#ffffff"
                 stroke={selectedChip === 'u3' ? '#4f46e5' : '#94a3b8'}
                 strokeWidth={selectedChip === 'u3' ? '2.5' : '1.5'}
               />
-              <rect x="0" y="0" width="125" height="24" rx="6" fill="#fffbeb" stroke="#fef08a" strokeWidth="1" />
-              <text x="62.5" y="16" fill="#b45309" fontWeight="bold" textAnchor="middle" fontSize="10.5">U3: 74LS138</text>
-              <text x="62.5" y="34" fill="#64748b" fontSize="8" textAnchor="middle">ADDR DECODER</text>
+              <rect x="0" y="0" width="165" height="30" rx="6" fill="#fffbeb" stroke="#fef08a" strokeWidth="1" />
+              <text x="82.5" y="13" fill="#78350f" fontWeight="bold" textAnchor="middle" fontSize="10.5">U3 : 74LS138</text>
+              <text x="82.5" y="24" fill="#b45309" fontWeight="bold" textAnchor="middle" fontSize="7.5">3-TO-8 ADDRESS DECODER</text>
 
-              <text x="8" y="55" fill="#d97706" fontWeight="bold">A2, A3, A4</text>
-              <text x="8" y="80" fill="#d97706">G1 (+5V)</text>
-              <text x="8" y="105" fill="#d97706">G2A# (M/IO#)</text>
-              <text x="8" y="130" fill="#d97706">G2B# (A7)</text>
+              {/* Left Inputs */}
+              <text x="10" y="54" fill="#d97706" fontWeight="bold">A2, A3, A4</text>
+              <text x="10" y="84" fill="#d97706">G1 (Pin 6: +5V)</text>
+              <text x="10" y="114" fill="#d97706" fontWeight="bold">G2A# (Pin 4: M/IO#)</text>
+              <text x="10" y="144" fill="#d97706">G2B# (Pin 5: A7)</text>
 
-              <text x="117" y="75" fill="#059669" textAnchor="end" fontWeight="bold">Y0# (80H)</text>
-              <text x="117" y="115" fill="#94a3b8" textAnchor="end">Y1#–Y7#</text>
+              {/* Right Outputs (Clear vertical and horizontal clearance) */}
+              <text x="155" y="74" fill="#059669" textAnchor="end" fontWeight="bold">Y0# (Pin 15: 80H)</text>
+              <text x="155" y="124" fill="#94a3b8" textAnchor="end">Y1#–Y7# (Unused)</text>
 
-              <circle cx="0" cy="55" r="3" fill="#d97706" />
-              <circle cx="0" cy="105" r="3" fill="#d97706" />
-              <circle cx="125" cy="75" r="3" fill="#059669" />
+              <circle cx="0" cy="50" r="3" fill="#d97706" />
+              <circle cx="0" cy="80" r="2.5" fill="#d97706" />
+              <circle cx="0" cy="110" r="3" fill="#d97706" />
+              <circle cx="0" cy="140" r="2.5" fill="#d97706" />
+              <circle cx="165" cy="70" r="3" fill="#059669" />
+              <circle cx="165" cy="120" r="2.5" fill="#94a3b8" />
             </g>
 
             {/* ============================================================== */}
             {/* 5. INTERCONNECT WIRES: CPU -> LATCH & DECODER                  */}
             {/* ============================================================== */}
-            {/* ALE wire */}
-            <path d="M 165 180 L 180 180 L 180 140 L 195 140" fill="none" stroke="#059669" strokeWidth="1.5" />
-            {/* AD bus to Latch */}
-            <path d="M 165 130 L 195 115" fill="none" stroke="#dc2626" strokeWidth="2" />
-            {/* M/IO# wire to Decoder */}
-            <path d="M 165 205 L 180 205 L 180 345 L 195 345" fill="none" stroke="#d97706" strokeWidth="1.5" />
+            {/* AD0–AD7 Bus: 100% Horizontal from U1 (y=125) to U2 (y=125) */}
+            <line x1="170" y1="125" x2="245" y2="125" stroke="#dc2626" strokeWidth="2.5" />
+            {/* Junction dot on AD bus for 8255 D0-D7 branch */}
+            <circle cx="205" cy="125" r="3.5" fill="#dc2626" />
+
+            {/* D0-D7 branch bypassing over U2 to 8255 Pin D0-D7 (y=95) */}
+            <path d="M 205 125 L 205 38 L 450 38 L 450 95 L 475 95" fill="none" stroke="#dc2626" strokeWidth="2" strokeDasharray="6,2" />
+            <text x="328" y="34" fill="#dc2626" fontSize="7.5" fontWeight="bold" textAnchor="middle">D0–D7 (Bidirectional Data Bus)</text>
+
+            {/* ALE wire: 100% Horizontal from U1 (y=185) to U2 LE (y=185) */}
+            <line x1="170" y1="185" x2="245" y2="185" stroke="#059669" strokeWidth="2" />
+            <text x="207" y="180" fill="#059669" fontSize="8" fontWeight="bold" textAnchor="middle">ALE</text>
+
+            {/* M/IO# wire: Clean 90-degree orthogonal path from U1 (y=215) down to U3 G2A# (y=345) */}
+            <path d="M 170 215 L 195 215 L 195 345 L 245 345" fill="none" stroke="#d97706" strokeWidth="1.5" />
+            <text x="180" y="275" fill="#d97706" fontSize="8" fontWeight="bold" textAnchor="middle">M/IO#</text>
+
+            {/* Latched Address A2-A7 wire from U2 to U3 */}
+            <path d="M 410 185 L 425 185 L 425 220 L 230 220 L 230 285 L 245 285" fill="none" stroke="#2563eb" strokeWidth="1.5" strokeDasharray="4,2" />
 
             {/* ============================================================== */}
             {/* 6. CHIP U4: INTEL 8255A PPI                                    */}
             {/* ============================================================== */}
             <g 
               onClick={() => setSelectedChip('u4')}
-              className="cursor-pointer transition-all"
-              transform="translate(355, 60)"
+              className="cursor-pointer transition-all group"
+              transform="translate(475, 45)"
             >
+              <title>U4: Intel 8255A Programmable Peripheral Interface (PPI)</title>
               <rect
                 x="0"
                 y="0"
-                width="185"
-                height="360"
+                width="190"
+                height="380"
                 rx="6"
                 fill="#ffffff"
                 stroke={selectedChip === 'u4' ? '#4f46e5' : '#818cf8'}
                 strokeWidth={selectedChip === 'u4' ? '2.5' : '2'}
               />
-              <rect x="0" y="0" width="185" height="26" rx="6" fill="#eef2ff" stroke="#c7d2fe" strokeWidth="1" />
-              <text x="92.5" y="17" fill="#3730a3" fontWeight="bold" textAnchor="middle" fontSize="11">U4: 8255A PPI</text>
-              <text x="92.5" y="38" fill="#4f46e5" fontSize="8" textAnchor="middle">MODE 0 (CW = 80H)</text>
+              <rect x="0" y="0" width="190" height="30" rx="6" fill="#eef2ff" stroke="#c7d2fe" strokeWidth="1" />
+              <text x="95" y="13" fill="#312e81" fontWeight="bold" textAnchor="middle" fontSize="10.5">U4 : 8255A</text>
+              <text x="95" y="24" fill="#4338ca" fontWeight="bold" textAnchor="middle" fontSize="7">PROGRAMMABLE PERIPHERAL INTERFACE (PPI)</text>
+              <text x="95" y="42" fill="#4f46e5" fontSize="8" fontWeight="bold" textAnchor="middle">MODE 0 (CW = 80H) • Base: 80H</text>
 
               {/* Left Control & Bus Inputs */}
-              <text x="10" y="55" fill="#dc2626" fontWeight="bold">D0–D7 (Bus)</text>
-              <text x="10" y="80" fill="#2563eb" fontWeight="bold">A0 (Pin 9)</text>
-              <text x="10" y="105" fill="#2563eb" fontWeight="bold">A1 (Pin 8)</text>
-              <text x="10" y="135" fill="#059669" fontWeight="bold">CS# (Pin 6)</text>
-              <text x="10" y="160" fill="#d97706">WR# (Pin 36)</text>
-              <text x="10" y="185" fill="#d97706">RD# (Pin 5)</text>
-              <text x="10" y="210" fill="#64748b">RESET = 0</text>
-              <text x="10" y="240" fill="#4f46e5" fontSize="8.5" fontWeight="bold">Base Port: 80H</text>
+              <text x="10" y="54" fill="#dc2626" fontWeight="bold">D0–D7 (Pins 34–27)</text>
+              <text x="10" y="84" fill="#2563eb" fontWeight="bold">A0 (Pin 9)</text>
+              <text x="10" y="114" fill="#2563eb" fontWeight="bold">A1 (Pin 8)</text>
+              <text x="10" y="144" fill="#059669" fontWeight="bold">CS# (Pin 6: 80H)</text>
+              <text x="10" y="174" fill="#d97706" fontWeight="bold">WR# (Pin 36)</text>
+              <text x="10" y="204" fill="#d97706">RD# (Pin 5)</text>
+              <text x="10" y="234" fill="#64748b">RESET (Pin 35 = 0)</text>
 
-              {/* Right Output Ports */}
-              <text x="175" y="55" fill="#059669" fontWeight="bold" textAnchor="end">PA0 (a)</text>
-              <text x="175" y="80" fill="#059669" fontWeight="bold" textAnchor="end">PA1 (b)</text>
-              <text x="175" y="105" fill="#059669" fontWeight="bold" textAnchor="end">PA2 (c)</text>
-              <text x="175" y="130" fill="#059669" fontWeight="bold" textAnchor="end">PA3 (d)</text>
-              <text x="175" y="155" fill="#059669" fontWeight="bold" textAnchor="end">PA4 (e)</text>
-              <text x="175" y="180" fill="#059669" fontWeight="bold" textAnchor="end">PA5 (f)</text>
-              <text x="175" y="205" fill="#059669" fontWeight="bold" textAnchor="end">PA6 (g)</text>
-              <text x="175" y="230" fill="#059669" fontWeight="bold" textAnchor="end">PA7 (dp)</text>
+              {/* Right Output Ports (Port A Segments a..dp) */}
+              <text x="180" y="54" fill="#059669" fontWeight="bold" textAnchor="end">PA0 (a)</text>
+              <text x="180" y="78" fill="#059669" fontWeight="bold" textAnchor="end">PA1 (b)</text>
+              <text x="180" y="102" fill="#059669" fontWeight="bold" textAnchor="end">PA2 (c)</text>
+              <text x="180" y="126" fill="#059669" fontWeight="bold" textAnchor="end">PA3 (d)</text>
+              <text x="180" y="150" fill="#059669" fontWeight="bold" textAnchor="end">PA4 (e)</text>
+              <text x="180" y="174" fill="#059669" fontWeight="bold" textAnchor="end">PA5 (f)</text>
+              <text x="180" y="198" fill="#059669" fontWeight="bold" textAnchor="end">PA6 (g)</text>
+              <text x="180" y="222" fill="#059669" fontWeight="bold" textAnchor="end">PA7 (dp)</text>
 
-              {/* Port C Digit Strobes (for Multiplexing) */}
-              <text x="175" y="275" fill="#7c3aed" textAnchor="end" fontWeight="bold">PC0 (DIG 1)</text>
-              <text x="175" y="295" fill="#7c3aed" textAnchor="end" fontWeight="bold">PC1 (DIG 2)</text>
-              <text x="175" y="315" fill="#7c3aed" textAnchor="end" fontWeight="bold">PC2 (DIG 3)</text>
-              <text x="175" y="335" fill="#7c3aed" textAnchor="end" fontWeight="bold">PC3 (DIG 4)</text>
+              {/* Right Port C Digit Strobes (for Multiplexing) */}
+              <text x="180" y="274" fill="#7c3aed" textAnchor="end" fontWeight="bold">PC0 (DIG 1)</text>
+              <text x="180" y="296" fill="#7c3aed" textAnchor="end" fontWeight="bold">PC1 (DIG 2)</text>
+              <text x="180" y="318" fill="#7c3aed" textAnchor="end" fontWeight="bold">PC2 (DIG 3)</text>
+              <text x="180" y="340" fill="#7c3aed" textAnchor="end" fontWeight="bold">PC3 (DIG 4)</text>
 
               {/* Input Pins dots */}
-              <circle cx="0" cy="55" r="3" fill="#dc2626" />
+              <circle cx="0" cy="50" r="3" fill="#dc2626" />
               <circle cx="0" cy="80" r="3" fill="#2563eb" />
-              <circle cx="0" cy="105" r="3" fill="#2563eb" />
-              <circle cx="0" cy="135" r="3" fill="#059669" />
+              <circle cx="0" cy="110" r="3" fill="#2563eb" />
+              <circle cx="0" cy="140" r="3" fill="#059669" />
+              <circle cx="0" cy="170" r="3" fill="#d97706" />
+              <circle cx="0" cy="200" r="2.5" fill="#d97706" />
+              <circle cx="0" cy="230" r="2.5" fill="#64748b" />
 
               {/* Output Pins dots */}
-              {[55, 80, 105, 130, 155, 180, 205, 230, 275, 295, 315, 335].map((y, i) => (
-                <circle key={i} cx="185" cy={y} r="3" fill={i < 8 ? '#059669' : '#7c3aed'} />
+              {[50, 74, 98, 122, 146, 170, 194, 218].map((y, i) => (
+                <circle key={i} cx="190" cy={y} r="3" fill="#059669" />
+              ))}
+              {[270, 292, 314, 336].map((y, i) => (
+                <circle key={i} cx="190" cy={y} r="3" fill="#7c3aed" />
               ))}
             </g>
 
-            {/* Wires to 8255 */}
-            {/* Latch Q0/Q1 to A0/A1 */}
-            <path d="M 320 115 L 338 115 L 338 140 L 355 140" fill="none" stroke="#2563eb" strokeWidth="1.5" />
-            <path d="M 320 140 L 338 140 L 338 165 L 355 165" fill="none" stroke="#2563eb" strokeWidth="1.5" />
-            {/* Decoder Y0# to 8255 CS# */}
-            <path d="M 320 315 L 338 315 L 338 195 L 355 195" fill="none" stroke="#059669" strokeWidth="2" />
+            {/* Interconnects between U2, U3 and U4 */}
+            {/* Latch Q0 to 8255 A0: 100% Straight Horizontal Line at y=125 */}
+            <line x1="410" y1="125" x2="475" y2="125" stroke="#2563eb" strokeWidth="2" />
+            <text x="442" y="120" fill="#2563eb" fontSize="7.5" fontWeight="bold" textAnchor="middle">A0</text>
+
+            {/* Latch Q1 to 8255 A1: 100% Straight Horizontal Line at y=155 */}
+            <line x1="410" y1="155" x2="475" y2="155" stroke="#2563eb" strokeWidth="2" />
+            <text x="442" y="150" fill="#2563eb" fontSize="7.5" fontWeight="bold" textAnchor="middle">A1</text>
+
+            {/* Decoder Y0# to 8255 CS#: Clean Orthogonal Route */}
+            <path d="M 410 305 L 440 305 L 440 185 L 475 185" fill="none" stroke="#059669" strokeWidth="2" />
+            <text x="446" y="248" fill="#059669" fontSize="7.5" fontWeight="bold">CS#</text>
+
+            {/* CPU WR# to 8255 WR#: Clean Orthogonal Route */}
+            <path d="M 170 245 L 205 245 L 205 228 L 460 228 L 460 215 L 475 215" fill="none" stroke="#d97706" strokeWidth="1.5" strokeDasharray="5,2" />
 
             {/* ============================================================== */}
             {/* 7. RN1: CURRENT LIMITING RESISTORS (8x 330Ω)                   */}
             {/* ============================================================== */}
             <g 
               onClick={() => setSelectedChip('rn1')}
-              className="cursor-pointer transition-all"
-              transform="translate(580, 95)"
+              className="cursor-pointer transition-all group"
+              transform="translate(705, 45)"
             >
+              <title>RN1: 8 × 330Ω Current-Limiting Resistor Array</title>
               <rect
                 x="0"
                 y="0"
                 width="65"
-                height="215"
+                height="235"
                 rx="4"
                 fill="#f8fafc"
                 stroke={selectedChip === 'rn1' ? '#4f46e5' : '#cbd5e1'}
                 strokeWidth="1.5"
               />
-              <text x="32.5" y="16" fill="#b45309" fontWeight="bold" textAnchor="middle" fontSize="9">RN1</text>
-              <text x="32.5" y="28" fill="#64748b" fontSize="8" textAnchor="middle">8×330Ω</text>
+              {/* Header Box spaced completely above all resistors */}
+              <rect x="0" y="0" width="65" height="28" rx="4" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1" />
+              <text x="32.5" y="12" fill="#b45309" fontWeight="bold" textAnchor="middle" fontSize="8">RN1 : 330Ω</text>
+              <text x="32.5" y="23" fill="#64748b" fontSize="6.5" textAnchor="middle" fontWeight="bold">RESISTOR ARRAY</text>
 
-              {/* Resistor zigzags */}
-              {[20, 45, 70, 95, 120, 145, 170, 195].map((y, idx) => (
+              {/* 8 Resistors with perfectly matched Y spacing aligned with PA0-PA7 */}
+              {[50, 74, 98, 122, 146, 170, 194, 218].map((y, idx) => (
                 <g key={idx}>
-                  <line x1="5" y1={y} x2="15" y2={y} stroke="#64748b" strokeWidth="1.5" />
-                  <rect x="15" y={y - 5} width="35" height="10" rx="2" fill="#e2e8f0" stroke="#94a3b8" strokeWidth="1" />
-                  <text x="32.5" y={y + 3} fill="#0f172a" fontSize="7" textAnchor="middle" fontWeight="bold">330Ω</text>
+                  <line x1="5" y1={y} x2="14" y2={y} stroke="#64748b" strokeWidth="1.5" />
+                  <rect x="14" y={y - 6} width="36" height="12" rx="2" fill="#e2e8f0" stroke="#94a3b8" strokeWidth="1" />
+                  <text x="32" y={y + 3.5} fill="#0f172a" fontSize="7.5" textAnchor="middle" fontWeight="bold">330Ω</text>
                   <line x1="50" y1={y} x2="60" y2={y} stroke="#64748b" strokeWidth="1.5" />
                 </g>
               ))}
             </g>
 
-            {/* Wires from 8255 PA0-PA7 to Resistor Pack */}
+            {/* Wires from 8255 PA0-PA7 to RN1 Resistors: 100% Straight Horizontal Lines */}
             {[
-              { y: 115, active: curSegA, label: 'a' },
-              { y: 140, active: curSegB, label: 'b' },
-              { y: 165, active: curSegC, label: 'c' },
-              { y: 190, active: curSegD, label: 'd' },
-              { y: 215, active: curSegE, label: 'e' },
-              { y: 240, active: curSegF, label: 'f' },
-              { y: 265, active: curSegG, label: 'g' },
-              { y: 290, active: curSegDP, label: 'dp' }
+              { y: 95, active: curSegA, label: 'a' },
+              { y: 119, active: curSegB, label: 'b' },
+              { y: 143, active: curSegC, label: 'c' },
+              { y: 167, active: curSegD, label: 'd' },
+              { y: 191, active: curSegE, label: 'e' },
+              { y: 215, active: curSegF, label: 'f' },
+              { y: 239, active: curSegG, label: 'g' },
+              { y: 263, active: curSegDP, label: 'dp' }
             ].map((wire, idx) => (
               <g key={idx}>
                 <line 
-                  x1="540" 
+                  x1="665" 
                   y1={wire.y} 
-                  x2="580" 
+                  x2="705" 
                   y2={wire.y} 
                   stroke={wire.active ? '#059669' : '#cbd5e1'} 
-                  strokeWidth={wire.active ? '2' : '1'} 
+                  strokeWidth={wire.active ? '2' : '1.2'} 
                 />
                 {wire.active && (
-                  <circle cx="560" cy={wire.y} r="2.5" fill="#059669" filter="url(#ledGlow)" />
+                  <circle cx="685" cy={wire.y} r="2.5" fill="#059669" filter="url(#ledGlow)" />
                 )}
               </g>
             ))}
@@ -552,31 +602,43 @@ export default function DisplaySchematicDiagram({
             {/* ============================================================== */}
             <g 
               onClick={() => setSelectedChip('disp')}
-              className="cursor-pointer transition-all"
-              transform="translate(685, 60)"
+              className="cursor-pointer transition-all group"
+              transform="translate(805, 45)"
             >
+              <title>DISP1: 7-Segment LED Display Module</title>
               {/* Outer Display Enclosure */}
               <rect
                 x="0"
                 y="0"
-                width={circuitMode === 'single' ? 190 : 265}
-                height="290"
-                rx="10"
+                width="255"
+                height="285"
+                rx="8"
                 fill="#ffffff"
                 stroke={selectedChip === 'disp' ? '#4f46e5' : '#cbd5e1'}
                 strokeWidth={selectedChip === 'disp' ? '2.5' : '2'}
               />
-              <rect x="0" y="0" width={circuitMode === 'single' ? 190 : 265} height="26" rx="10" fill="#f1f5f9" stroke="#e2e8f0" strokeWidth="1" />
-              <text x={circuitMode === 'single' ? 95 : 132.5} y="17" fill="#0f172a" fontWeight="bold" textAnchor="middle" fontSize="10.5">
+              <rect x="0" y="0" width="255" height="26" rx="8" fill="#f1f5f9" stroke="#e2e8f0" strokeWidth="1" />
+              <text x="127.5" y="17" fill="#0f172a" fontWeight="bold" textAnchor="middle" fontSize="10.5">
                 {circuitMode === 'single' ? 'DISP1: 7-SEGMENT LED' : 'DISP: 4-DIGIT MULTIPLEXED ARRAY'}
               </text>
-              <text x={circuitMode === 'single' ? 95 : 132.5} y="38" fill={displayType === 'cathode' ? '#059669' : '#db2777'} fontSize="8" textAnchor="middle" fontWeight="bold">
+              <text x="127.5" y="38" fill={displayType === 'cathode' ? '#059669' : '#db2777'} fontSize="8" textAnchor="middle" fontWeight="bold">
                 {displayType === 'cathode' ? 'COMMON CATHODE (Active HIGH)' : 'COMMON ANODE (Active LOW)'}
               </text>
 
+              {/* Segment Input Pins on Left Edge */}
+              {['a', 'b', 'c', 'd', 'e', 'f', 'g', 'dp'].map((seg, sIdx) => {
+                const yPos = 50 + sIdx * 24;
+                return (
+                  <g key={seg}>
+                    <circle cx="0" cy={yPos} r="3" fill="#059669" />
+                    <text x="8" y={yPos + 3} fill="#059669" fontSize="7.5" fontWeight="bold">{seg}</text>
+                  </g>
+                );
+              })}
+
               {/* In Single Mode: Large 7-Segment SVG */}
               {circuitMode === 'single' ? (
-                <g transform="translate(45, 60)">
+                <g transform="translate(75, 55)">
                   {/* Segment a (top) */}
                   <polygon 
                     points="15,10 75,10 65,22 25,22" 
@@ -646,7 +708,7 @@ export default function DisplaySchematicDiagram({
                 </g>
               ) : (
                 /* Multiplexed 4-Digit Array Visual */
-                <g transform="translate(15, 60)">
+                <g transform="translate(18, 55)">
                   {[0, 1, 2, 3].map((digIdx) => {
                     const isDigActive = activeMuxDigit === digIdx;
                     const charVal = muxDigits[digIdx];
@@ -661,7 +723,7 @@ export default function DisplaySchematicDiagram({
                     const sG = displayType === 'cathode' ? ((p >> 6) & 1) === 1 : ((p >> 6) & 1) === 0;
 
                     return (
-                      <g key={digIdx} transform={`translate(${digIdx * 55}, 0)`}>
+                      <g key={digIdx} transform={`translate(${digIdx * 54}, 0)`}>
                         <rect
                           x="2"
                           y="0"
@@ -700,9 +762,9 @@ export default function DisplaySchematicDiagram({
               )}
             </g>
 
-            {/* Wires from Resistor Pack to 7-Segment Display Inputs */}
-            {[115, 140, 165, 190, 215, 240, 265, 290].map((y, idx) => (
-              <line key={idx} x1="645" y1={y} x2="685" y2={y} stroke="#059669" strokeWidth="1.5" />
+            {/* Wires from Resistor Pack to 7-Segment Display Inputs: 100% Straight Horizontal Lines */}
+            {[95, 119, 143, 167, 191, 215, 239, 263].map((y, idx) => (
+              <line key={idx} x1="770" y1={y} x2="805" y2={y} stroke="#059669" strokeWidth="1.5" />
             ))}
 
             {/* ============================================================== */}
@@ -710,34 +772,35 @@ export default function DisplaySchematicDiagram({
             {/* ============================================================== */}
             <g 
               onClick={() => setSelectedChip('trans')}
-              className="cursor-pointer transition-all"
-              transform="translate(685, 375)"
+              className="cursor-pointer transition-all group"
+              transform="translate(805, 345)"
             >
+              <title>Q1–Q4: Digit Multiplexing Transistors</title>
               <rect
                 x="0"
                 y="0"
-                width={circuitMode === 'single' ? 190 : 265}
-                height="70"
+                width="255"
+                height="80"
                 rx="6"
                 fill="#ffffff"
                 stroke={selectedChip === 'trans' ? '#4f46e5' : '#cbd5e1'}
                 strokeWidth="1.5"
               />
-              <text x={circuitMode === 'single' ? 95 : 132.5} y="16" fill="#7c3aed" fontWeight="bold" textAnchor="middle" fontSize="9">
+              <text x="127.5" y="16" fill="#7c3aed" fontWeight="bold" textAnchor="middle" fontSize="9">
                 {displayType === 'cathode' ? 'Q1–Q4: BC547 NPN DRIVERS (CC)' : 'Q1–Q4: BC557 PNP DRIVERS (CA)'}
               </text>
-              <text x={circuitMode === 'single' ? 95 : 132.5} y="30" fill="#64748b" fontSize="7.5" textAnchor="middle">
+              <text x="127.5" y="30" fill="#64748b" fontSize="7.5" textAnchor="middle">
                 Driven by 8255 Port C (PC0–PC3) via 1kΩ Base Resistors
               </text>
 
               {/* Transistor Symbols */}
               {[0, 1, 2, 3].map((tIdx) => {
-                const xPos = circuitMode === 'single' ? 30 + tIdx * 42 : 40 + tIdx * 58;
+                const xPos = 25 + tIdx * 58;
                 const isTActive = activeMuxDigit === tIdx;
                 return (
-                  <g key={tIdx} transform={`translate(${xPos}, 35)`}>
-                    <circle cx="10" cy="15" r="10" fill="#f8fafc" stroke={isTActive ? '#059669' : '#cbd5e1'} strokeWidth="1.5" />
-                    <text x="10" y="18" fill={isTActive ? '#059669' : '#64748b'} fontSize="7" textAnchor="middle" fontWeight="bold">
+                  <g key={tIdx} transform={`translate(${xPos}, 38)`}>
+                    <circle cx="12" cy="14" r="11" fill="#f8fafc" stroke={isTActive ? '#059669' : '#cbd5e1'} strokeWidth="1.5" />
+                    <text x="12" y="17.5" fill={isTActive ? '#059669' : '#64748b'} fontSize="7.5" textAnchor="middle" fontWeight="bold">
                       Q{tIdx + 1}
                     </text>
                   </g>
@@ -745,13 +808,13 @@ export default function DisplaySchematicDiagram({
               })}
             </g>
 
-            {/* Port C Wires down to Transistors */}
+            {/* Port C Wires down to Transistors: Clean stepped bus bracket */}
             <path 
-              d={`M 540 335 L 560 335 L 560 410 L 685 410`} 
+              d="M 665 330 L 685 330 L 685 385 L 805 385" 
               fill="none" 
               stroke="#7c3aed" 
-              strokeWidth="1.5" 
-              strokeDasharray="4,2"
+              strokeWidth="2" 
+              strokeDasharray="5,2"
             />
           </svg>
         </div>

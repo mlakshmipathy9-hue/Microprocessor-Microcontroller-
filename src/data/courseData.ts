@@ -1587,20 +1587,6 @@ export const courseData: Module[] = [
         ]
       },
       {
-        id: 'm14-s5',
-        title: '6. 8255 Control Word Formats & Detailed Specifications ⚙️',
-        moduleTitle: 'Module 14: Intel 8255 Programmable Peripheral Interface',
-        moduleId: 'm14',
-        interactiveType: 'ppi-8255',
-        points: [
-          '1. I/O Mode Set Control Word (D7 = 1) — Mode & Port Direction Configuration',
-          '2. BSR Control Word (D7 = 0) — Bit Set / Reset for Port C',
-          '3. Mode 0: Basic / Simple I/O (Unlatched Inputs, Latched Outputs)',
-          '4. Mode 1: Strobed / Handshake I/O (Ports A & B with Port C Handshakes)',
-          '5. Mode 2: Strobed Bi-directional Bus (Port A with 5 Port C Handshakes)'
-        ]
-      },
-      {
         id: 'm14-quiz',
         title: 'Module 14 Recap Quiz',
         moduleTitle: 'Module 14: Intel 8255 Programmable Peripheral Interface',
@@ -2477,14 +2463,20 @@ export const courseData: Module[] = [
     slides: [
       {
         id: 'm21-s1',
-        title: '1. Introduction to Microcontrollers & 8051 Overview',
+        title: '1. Introduction to Microcontrollers & Features of 8051 Microcontroller',
         moduleTitle: 'Module 21: 8051 Microcontroller Architecture',
         moduleId: 'm21',
         points: [
-          'Microprocessor vs. Microcontroller: A Microprocessor (like 8086) contains only CPU core components (ALU, Registers) and requires external RAM, ROM, Timers, and I/O chips on the motherboard. A Microcontroller (like 8051) integrates CPU, RAM, ROM, Timers, Serial Port, and Parallel I/O ports on a single silicon die.',
-          'Intel 8051 Core Features: 8-bit CPU optimized for control applications, Harvard Architecture (separate 64 KB Program ROM and 64 KB Data RAM address spaces).',
-          'On-Chip Resources: 128 Bytes Internal RAM, 4 KB On-Chip Flash/EPROM ROM, Two 16-bit Timers/Counters (Timer 0 & Timer 1), Full-Duplex Serial UART Port, Four 8-bit Parallel I/O Ports (32 I/O lines), and 5-source Interrupt Controller with 2 priority levels.',
-          'Oscillator & Clock: On-chip oscillator circuit driven by an external quartz crystal (typically 11.0592 MHz or 12 MHz). 1 Machine Cycle = 12 Clock Cycles (1 μs period at 12 MHz).'
+          '4 KB On-Chip Program Memory (ROM): Contains 4 KB of internal Program Memory (Mask ROM in 8051, EPROM in 8751, or Flash EEPROM in AT89C51) for storing instructions and firmware, externally expandable up to 64 KB using the EA (External Access) pin and PSEN (Program Store Enable) strobe.',
+          '128 Bytes On-Chip Data Memory (RAM): 128 bytes internal RAM (addresses 00H–7FH) organized into three distinct zones: 32 bytes of Working Registers (4 switchable banks of R0–R7: 00H–1FH), 16 bytes of Bit-Addressable RAM (128 individual bits: 20H–2FH), and 80 bytes of General-Purpose Scratchpad RAM (30H–7FH). Expandable up to 64 KB of external data RAM.',
+          'Four 8-Bit Parallel I/O Ports (32 I/O Lines): Ports P0, P1, P2, and P3 provide 32 bidirectional, individually bit-addressable I/O lines. Port 0 serves as multiplexed low-order address/data bus (AD0–AD7), Port 2 provides high-order address bus (A8–A15), and Port 3 provides alternate control functions (RXD, TXD, INT0, INT1, T0, T1, WR, RD).',
+          'Two 16-Bit Timers/Counters (Timer 0 & Timer 1): Two independently programmable 16-bit timer/counter units supporting 4 operating modes (Mode 0: 13-bit timer, Mode 1: 16-bit timer, Mode 2: 8-bit auto-reload, Mode 3: split timer) for generating precise timing intervals, baud rates, and external event counting.',
+          'Full-Duplex UART Serial Port: On-chip serial communication interface supporting full-duplex transmission and reception (SBUF register, TXD on P3.1, RXD on P3.0). Supports 4 programmable operating modes with standard baud rates derived from Timer 1 overflow.',
+          'Six Interrupt Sources with 2 Priority Levels: 5 vector interrupt sources in standard 8051 — Two External Hardware Interrupts (INT0 at P3.2, INT1 at P3.3), Two Timer Overflow Interrupts (TF0, TF1), and One Serial Port Interrupt (RI/TI) — plus Power-on Reset, with independently programmable high/low priority levels (IP register).',
+          'Harvard Architecture with Dual 64 KB Address Spaces: Employs Harvard architecture with physically separate address maps for Program Memory (up to 64 KB addressed by 16-bit PC using MOVC) and Data Memory (up to 64 KB addressed by 16-bit DPTR using MOVX).',
+          '16-Bit Program Counter & Data Pointer (DPTR): Features a 16-bit Program Counter (PC) that sequences instruction fetching from ROM, and a 16-bit Data Pointer (DPTR = DPH:DPL) used as a base register for accessing external data RAM and on-chip lookup tables.',
+          'On-Chip Oscillator & Clock Timing: Driven by an external quartz crystal (typically 11.0592 MHz or 12 MHz) connected across XTAL1 and XTAL2. 1 Machine Cycle = 12 Oscillator Clock Periods (States S1P1 to S6P2; execution period of exactly 1.0 μs at 12 MHz or 1.085 μs at 11.0592 MHz).',
+          '21 Special Function Registers (SFRs) & Power Modes: 21 dedicated 8-bit control and status registers mapped in upper address space (80H–FFH), including ACC, B, PSW, SP, DPTR, and port latches. CMOS variants (80C51 / AT89C51) feature Idle Mode (CPU halted, peripherals running) and Power-Down Mode (oscillator halted, standby current < 5 μA).'
         ]
       },
       {
@@ -2493,10 +2485,36 @@ export const courseData: Module[] = [
         moduleTitle: 'Module 21: 8051 Microcontroller Architecture',
         moduleId: 'm21',
         points: [
-          'Interactive 8051 Block Diagram: Click any internal hardware block to inspect functional capabilities, registers, and interconnect buses.',
-          'Arithmetic Logic Unit (ALU): Performs 8-bit addition, subtraction, multiplication (MUL AB), division (DIV AB), BCD adjustment (DA A), and bitwise logic operations.',
-          'Accumulator (A / ACC) & B Register: Primary 8-bit registers residing at SFR addresses E0H and F0H.',
-          'Program Counter (PC) & Data Pointer (DPTR): PC is a 16-bit register holding the ROM instruction address. DPTR is a 16-bit register (split into DPH at 83H and DPL at 82H) used for external memory data transfer.'
+          '8051 Family Internal Architecture (Slide 11 of 50): Features the authoritative family block diagram illustrating on-chip CPU, on-chip oscillator/crystal, 5/6 interrupt controller with external interrupt pins, internal bus, bus control, 4 I/O ports (P0, P2, P1, P3), full-duplex UART serial port (RXD, TXD), and Timers 0, 1, and 2 with external counter inputs.',
+          '8051 Family ROM & RAM Scaling: ROM capacities span 8051 (4 KB), 8052 (8 KB), and 8031 (ROMless / none, requiring external ROM). RAM capacities span 8051 (128 bytes), 8052 (256 bytes), and 80750 (64 bytes).',
+          'Timers & Counter Inputs: Timer 0 and Timer 1 on standard 8051, enhanced with 16-bit Timer 2 on 8052 for higher precision timing, auto-reload, and baud-rate clock generation.',
+          'Detailed Hardware Schematic & Architecture Views: Toggle between the 8051 Family Architecture diagram (Slide 11 of 50) and the Detailed Hardware Schematic (Slide 10 of 50) to inspect hardware registers, buses, and pin alternate functions.'
+        ],
+        interactiveType: 'mcu-8051'
+      },
+      {
+        id: 'm21-s3',
+        title: '3. 8051 SFRs, Ports, Instructions & ALP Simulator',
+        moduleTitle: 'Module 21: 8051 Microcontroller Architecture',
+        moduleId: 'm21',
+        points: [
+          'Special Function Registers (SFRs) & Internal RAM: Interactive map spanning 128-byte internal RAM (Register Banks 0–3, bit-addressable RAM, scratchpad) and the 80H–FFH SFR space including ACC, B, PSW, SP, DPTR, PCON, and TCON.',
+          'Interactive Program Status Word (PSW): Toggle CY, AC, F0, RS1, RS0, OV, and P flags to observe active register bank switching (Banks 0–3) and arithmetic status in real time.',
+          'Parallel I/O Ports & Pinout: Inspect the 40-pin DIP package layout and test the Port 0–3 latch circuits with pull-up resistors and bidirectional open-drain behavior.',
+          'Instruction Set & Assembly Simulator: Explore 8051 instruction groups (Data Transfer, Arithmetic, Logic, Boolean, Branch) and assemble/step through 8051 assembly code with live register updates.'
+        ],
+        interactiveType: 'mcu-8051'
+      },
+      {
+        id: 'm21-s4',
+        title: '4. 8051 SFRs, Ports, Instructions & ALP Simulator',
+        moduleTitle: 'Module 21: 8051 Microcontroller Architecture',
+        moduleId: 'm21',
+        points: [
+          'Special Function Registers (SFRs) & Internal RAM: Interactive map spanning 128-byte internal RAM (Register Banks 0–3, bit-addressable RAM, scratchpad) and the 80H–FFH SFR space including ACC, B, PSW, SP, DPTR, PCON, and TCON.',
+          'Interactive Program Status Word (PSW): Toggle CY, AC, F0, RS1, RS0, OV, and P flags to observe active register bank switching (Banks 0–3) and arithmetic status in real time.',
+          'Parallel I/O Ports & Pinout: Inspect the 40-pin DIP package layout and test the Port 0–3 latch circuits with pull-up resistors and bidirectional open-drain behavior.',
+          'Instruction Set & Assembly Simulator: Explore 8051 instruction groups (Data Transfer, Arithmetic, Logic, Boolean, Branch) and assemble/step through 8051 assembly code with live register updates.'
         ],
         interactiveType: 'mcu-8051'
       },
@@ -2539,12 +2557,14 @@ export const courseData: Module[] = [
         moduleTitle: 'Module 22: Special Function Registers (SFRs) & Memory',
         moduleId: 'm22',
         points: [
-          'Internal RAM Structure (00H to 7FH - 128 Bytes): Divided into 3 distinct zones:',
-          '1) Register Banks 0–3 (00H–1FH): 32 bytes arranged into 4 switchable banks, each containing registers R0 through R7.',
-          '2) Bit Addressable RAM (20H–2FH): 16 bytes containing 128 individually addressable bits (bit addresses 00H through 7FH). Allows Boolean operations without affecting adjacent bits.',
-          '3) General Purpose Scratchpad RAM (30H–7FH): 80 bytes for general variables and the internal hardware stack.',
+          'Slide 13 of 50 — 128-Byte On-Chip RAM Architecture (00H to 7FH): Divided into 3 fundamental zones:',
+          '1) Working Registers (32 Bytes • 00H–1FH): 4 switchable banks (Bank 0 [00H–07H], Bank 1 [08H–0FH], Bank 2 [10H–17H], Bank 3 [18H–1FH]), each with 8 registers (R0–R7). Active bank selected by RS1 & RS0 in PSW.',
+          '2) Bit Addressable RAM (16 Bytes • 20H–2FH): 16 bytes containing 128 individually addressable bits (bit addresses 00H to 7FH; e.g. 20H holds bits 00H–07H, 2FH holds bits 78H–7FH). Supports direct Boolean bit instructions (SETB, CLR, CPL, JB, JNB).',
+          '3) General Purpose RAM (80 Bytes • 30H–7FH): Continuous scratchpad storage for variables and user stack (SP recommended to be set to 2FH/30H).',
+          'Exact RAM Memory Equation: 32 Bytes (Working Registers) + 16 Bytes (Bit Addressable) + 80 Bytes (General Purpose) = 128 Bytes Total RAM.',
           'Upper 128 Bytes RAM Space (80H–FFH): Dedicated to Special Function Registers (SFRs).'
-        ]
+        ],
+        interactiveType: 'ram-organization'
       },
       {
         id: 'm22-s2',
@@ -2627,6 +2647,7 @@ export const courseData: Module[] = [
         moduleId: 'm23',
         points: [
           'Four 8-bit Parallel Ports (32 Bidirectional Lines): Port 0 (Pins 32–39), Port 1 (Pins 1–8), Port 2 (Pins 21–28), Port 3 (Pins 10–17).',
+          'PORT 1 (Slide 25 of 50 - I/O Ports 2/4): Pure dedicated I/O port spanning Pins 1 to 8 (P1.0 to P1.7). Key rule: It has NO multiple functionality in standard 8051 and is used only for I/O operations with built-in internal FET pull-up resistors.',
           'Port 0 Circuit: True Open-Drain bidirectional port without internal pull-up resistors. Requires external 10kΩ pull-up resistor array for general digital I/O. Functions as multiplexed low-order address/data bus (AD0–AD7) during external memory expansion.',
           'Ports 1, 2, 3 Circuits: Quasi-bidirectional ports with internal FET pull-up resistors. Must write 1s to port latches before reading external inputs.',
           'Port 2 Circuit: Outputs high-order address byte (A8–A15) when interfacing with external ROM/RAM.'

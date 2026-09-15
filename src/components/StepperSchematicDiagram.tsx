@@ -61,7 +61,7 @@ export default function StepperSchematicDiagram({
   const chipInfo: Record<string, { title: string; subtitle: string; desc: string; pins: { pin: string; func: string }[] }> = {
     u2: {
       title: 'U2: Intel 8086 16-Bit Microprocessor',
-      subtitle: 'Minimum Mode Master Controller',
+      subtitle: 'Part: 8086 • Component: Microprocessor (CPU)',
       desc: 'Configured in Minimum Mode by connecting Pin 33 (MN/MX#) to +5V VCC. Generates multiplexed address/data on AD[0..15], ALE (Pin 25) for address demultiplexing, RD# (Pin 32), WR# (Pin 29), and M/IO# (Pin 28) for 8255 I/O port mapping.',
       pins: [
         { pin: 'Pin 33 (MN/MX#)', func: 'Tied to +5V VCC to set Minimum Mode operation.' },
@@ -73,7 +73,7 @@ export default function StepperSchematicDiagram({
     },
     u3: {
       title: 'U3: 74HC373 Octal Transparent D-Latch',
-      subtitle: 'Lower Address Demultiplexer',
+      subtitle: 'Part: 74HC373 • Component: Octal Address Latch',
       desc: 'Latches lower address bits from multiplexed AD0–AD7 during T1 clock state using the ALE strobe on LE (Pin 11). Provides steady demultiplexed address outputs A0 (from Q1) and A1 (from Q2) to the 8255.',
       pins: [
         { pin: 'Pin 11 (LE)', func: 'Latch Enable driven by 8086 ALE (Pin 25).' },
@@ -85,7 +85,7 @@ export default function StepperSchematicDiagram({
     },
     u4: {
       title: 'U4: Intel 8255A Programmable Peripheral Interface (PPI)',
-      subtitle: 'Parallel Port Expansion Interface',
+      subtitle: 'Part: 8255A • Component: Programmable Peripheral Interface (PPI)',
       desc: 'Operates in Mode 0 (Basic I/O). Port A (PA0–PA3) is configured as an output port to issue the 4-phase unipolar stepper motor excitation sequence to the ULN2003 driver.',
       pins: [
         { pin: 'Pins 34–27 (D0–D7)', func: 'Bidirectional data bus wired to 8086 AD0–AD7.' },
@@ -96,7 +96,7 @@ export default function StepperSchematicDiagram({
     },
     u5: {
       title: 'U5: ULN2003A Darlington Driver Array',
-      subtitle: 'High-Current Motor Driver with Clamping Diodes',
+      subtitle: 'Part: ULN2003A • Component: Darlington Motor Driver Array',
       desc: 'Contains 7 high-voltage, high-current Darlington pairs (500mA sink capability per channel). Boosts 5V TTL logic levels from 8255 Port A to sink high coil current from the +12V stepper motor. Pin 9 (COM) is connected to +12V for inductive kickback protection.',
       pins: [
         { pin: 'Pins 1–4 (1B–4B)', func: 'Base inputs driven by 8255 PA0–PA3.' },
@@ -107,7 +107,7 @@ export default function StepperSchematicDiagram({
     },
     motor: {
       title: 'Unipolar 4-Phase Stepper Motor',
-      subtitle: 'Actuator with Center-Tapped Stator Windings',
+      subtitle: 'Part: M1 • Component: 4-Phase Unipolar Stepper Motor Actuator',
       desc: 'Has center-tapped coils tied directly to +12V DC Battery (B1). When ULN2003 drivers switch ON, current sinks through each phase winding in sequence, causing the permanent-magnet rotor to rotate precisely.',
       pins: [
         { pin: 'Center Tap', func: 'Connected to +12V DC power rail.' },
@@ -119,7 +119,7 @@ export default function StepperSchematicDiagram({
     },
     b1: {
       title: 'B1: 12V DC Power Source',
-      subtitle: 'Motor Excitation Supply',
+      subtitle: 'Part: B1 • Component: +12V DC Power Supply',
       desc: 'Delivers +12V DC power to the stepper motor common coil tap and the ULN2003 COM free-wheeling diode bus.',
       pins: [
         { pin: 'Positive (+12V)', func: 'Connected to Motor center tap & ULN2003 Pin 9 (COM).' },
@@ -264,16 +264,18 @@ export default function StepperSchematicDiagram({
 
             {/* ======================================================== */}
             {/* COMPONENT 1: U2 (8086 CPU)                                */}
-            {/* x = 80, y = 140, width = 240, height = 400               */}
+            {/* x = 80, y = 136, width = 240, height = 404               */}
             {/* ======================================================== */}
             <g 
               className="cursor-pointer group"
               onClick={() => setSelectedChip('u2')}
             >
+              <title>U2: Intel 8086 16-Bit Microprocessor (CPU)</title>
               {/* Chip Headers */}
-              <rect x="80" y="140" width="240" height="400" fill="#ffffff" stroke="#78350f" strokeWidth="2.5" rx="4" />
-              <rect x="80" y="140" width="240" height="26" fill="#fef3c7" stroke="#78350f" strokeWidth="2.5" rx="3" />
-              <text x="200" y="158" textAnchor="middle" className="font-mono font-extrabold text-sm fill-amber-950">U2 : 8086</text>
+              <rect x="80" y="136" width="240" height="404" fill="#ffffff" stroke="#78350f" strokeWidth="2.5" rx="4" />
+              <rect x="80" y="136" width="240" height="30" fill="#fef3c7" stroke="#78350f" strokeWidth="2.5" rx="3" />
+              <text x="200" y="149" textAnchor="middle" className="font-mono font-black text-xs fill-amber-950">U2 : 8086</text>
+              <text x="200" y="161" textAnchor="middle" className="font-sans font-extrabold text-[9.5px] fill-amber-900 tracking-wider uppercase">16-Bit Microprocessor (CPU)</text>
 
               {/* LEFT PINS: Dedicated Lead Wire + Clear Pin Number + Inside Name */}
               {[
@@ -353,15 +355,17 @@ export default function StepperSchematicDiagram({
 
             {/* ======================================================== */}
             {/* COMPONENT 2: U3 (74HC373 Octal Transparent Latch)         */}
-            {/* x = 470, y = 140, width = 150, height = 340               */}
+            {/* x = 470, y = 136, width = 150, height = 344               */}
             {/* ======================================================== */}
             <g 
               className="cursor-pointer group"
               onClick={() => setSelectedChip('u3')}
             >
-              <rect x="470" y="140" width="150" height="340" fill="#ffffff" stroke="#78350f" strokeWidth="2.5" rx="4" />
-              <rect x="470" y="140" width="150" height="26" fill="#fef3c7" stroke="#78350f" strokeWidth="2.5" rx="3" />
-              <text x="545" y="158" textAnchor="middle" className="font-mono font-extrabold text-sm fill-amber-950">U3 : 74HC373</text>
+              <title>U3: 74HC373 Octal Transparent Address Latch</title>
+              <rect x="470" y="136" width="150" height="344" fill="#ffffff" stroke="#78350f" strokeWidth="2.5" rx="4" />
+              <rect x="470" y="136" width="150" height="30" fill="#fef3c7" stroke="#78350f" strokeWidth="2.5" rx="3" />
+              <text x="545" y="149" textAnchor="middle" className="font-mono font-black text-xs fill-amber-950">U3 : 74HC373</text>
+              <text x="545" y="161" textAnchor="middle" className="font-sans font-extrabold text-[8.5px] fill-amber-900 tracking-wider uppercase">Octal Address Latch</text>
 
               {/* 74HC373 Inputs D0..D7 */}
               {[
@@ -427,15 +431,17 @@ export default function StepperSchematicDiagram({
 
             {/* ======================================================== */}
             {/* COMPONENT 3: U4 (Intel 8255A PPI)                         */}
-            {/* x = 790, y = 140, width = 190, height = 440               */}
+            {/* x = 790, y = 136, width = 190, height = 444               */}
             {/* ======================================================== */}
             <g 
               className="cursor-pointer group"
               onClick={() => setSelectedChip('u4')}
             >
-              <rect x="790" y="140" width="190" height="440" fill="#ffffff" stroke="#78350f" strokeWidth="2.5" rx="4" />
-              <rect x="790" y="140" width="190" height="26" fill="#fef3c7" stroke="#78350f" strokeWidth="2.5" rx="3" />
-              <text x="885" y="158" textAnchor="middle" className="font-mono font-extrabold text-sm fill-amber-950">U4 : 8255A</text>
+              <title>U4: Intel 8255A Programmable Peripheral Interface (PPI)</title>
+              <rect x="790" y="136" width="190" height="444" fill="#ffffff" stroke="#78350f" strokeWidth="2.5" rx="4" />
+              <rect x="790" y="136" width="190" height="30" fill="#fef3c7" stroke="#78350f" strokeWidth="2.5" rx="3" />
+              <text x="885" y="149" textAnchor="middle" className="font-mono font-black text-xs fill-amber-950">U4 : 8255A</text>
+              <text x="885" y="161" textAnchor="middle" className="font-sans font-extrabold text-[8px] fill-amber-900 tracking-wider uppercase">Programmable Peripheral Interface (PPI)</text>
 
               {/* 8255 Inputs D0..D7 */}
               {[
@@ -536,15 +542,17 @@ export default function StepperSchematicDiagram({
 
             {/* ======================================================== */}
             {/* COMPONENT 4: U5 (ULN2003A Darlington Driver)              */}
-            {/* x = 1110, y = 140, width = 140, height = 320              */}
+            {/* x = 1110, y = 136, width = 140, height = 324              */}
             {/* ======================================================== */}
             <g 
               className="cursor-pointer group"
               onClick={() => setSelectedChip('u5')}
             >
-              <rect x="1110" y="140" width="140" height="320" fill="#ffffff" stroke="#78350f" strokeWidth="2.5" rx="4" />
-              <rect x="1110" y="140" width="140" height="26" fill="#fef3c7" stroke="#78350f" strokeWidth="2.5" rx="3" />
-              <text x="1180" y="158" textAnchor="middle" className="font-mono font-extrabold text-sm fill-amber-950">U5 : ULN2003A</text>
+              <title>U5: ULN2003A High-Current Darlington Transistor Driver Array</title>
+              <rect x="1110" y="136" width="140" height="324" fill="#ffffff" stroke="#78350f" strokeWidth="2.5" rx="4" />
+              <rect x="1110" y="136" width="140" height="30" fill="#fef3c7" stroke="#78350f" strokeWidth="2.5" rx="3" />
+              <text x="1180" y="149" textAnchor="middle" className="font-mono font-black text-xs fill-amber-950">U5 : ULN2003A</text>
+              <text x="1180" y="161" textAnchor="middle" className="font-sans font-extrabold text-[8px] fill-amber-900 tracking-wider uppercase">Darlington Driver Array</text>
 
               {/* ULN2003 Inputs 1B..7B */}
               {[
@@ -617,8 +625,9 @@ export default function StepperSchematicDiagram({
               className="cursor-pointer group"
               onClick={() => setSelectedChip('b1')}
             >
-              <text x="1360" y="55" className="font-mono font-black text-sm fill-slate-900">B1</text>
-              <text x="1360" y="90" className="font-mono font-bold text-xs fill-slate-700">12V</text>
+              <title>B1: +12V DC Motor Power Supply</title>
+              <text x="1360" y="52" className="font-mono font-black text-xs fill-slate-900">B1 : +12V</text>
+              <text x="1360" y="93" className="font-sans font-bold text-[8.5px] fill-slate-600 uppercase tracking-wider">DC Power Supply</text>
 
               {/* Battery cell plates */}
               <line x1="1350" y1="65" x2="1350" y2="80" stroke="#16a34a" strokeWidth="3" />
@@ -648,10 +657,12 @@ export default function StepperSchematicDiagram({
               className="cursor-pointer group"
               onClick={() => setSelectedChip('motor')}
             >
+              <title>M1: Unipolar 4-Phase Stepper Motor Actuator</title>
               {/* Stepper Outer Body Frame */}
-              <rect x="1350" y="160" width="160" height="230" fill="#ffffff" stroke="#78350f" strokeWidth="2.5" rx="5" />
-              <rect x="1350" y="160" width="160" height="26" fill="#fef3c7" stroke="#78350f" strokeWidth="2.5" rx="4" />
-              <text x="1430" y="178" textAnchor="middle" className="font-mono font-extrabold text-sm fill-amber-950">STEPPER MOTOR</text>
+              <rect x="1350" y="156" width="160" height="234" fill="#ffffff" stroke="#78350f" strokeWidth="2.5" rx="5" />
+              <rect x="1350" y="156" width="160" height="30" fill="#fef3c7" stroke="#78350f" strokeWidth="2.5" rx="4" />
+              <text x="1430" y="169" textAnchor="middle" className="font-mono font-black text-xs fill-amber-950">M1 : STEPPER MOTOR</text>
+              <text x="1430" y="181" textAnchor="middle" className="font-sans font-extrabold text-[8px] fill-amber-900 tracking-wider uppercase">4-Phase Unipolar Actuator</text>
 
               {/* Digital LED Angle Display */}
               <rect x="1360" y="195" width="16" height="42" fill="#15803d" rx="3" />

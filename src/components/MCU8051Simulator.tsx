@@ -18,20 +18,50 @@ import {
   MemoryStick,
   ToggleLeft,
   ToggleRight,
-  Sparkles
+  Sparkles,
+  LayoutGrid,
+  Split,
+  Database
 } from 'lucide-react';
+import MCU8051SchematicDiagram from './MCU8051SchematicDiagram';
+import MCU8051FamilyDiagram from './MCU8051FamilyDiagram';
+import MCU8051PinoutDiagram from './MCU8051PinoutDiagram';
+import MCU8051RAMDiagram from './MCU8051RAMDiagram';
 
 interface MCU8051SimulatorProps {
   initialTab?: 'architecture' | 'sfr' | 'pins' | 'instructions' | 'alp';
+  hideArchitecture?: boolean;
+  hideAlp?: boolean;
+  hideInstructions?: boolean;
+  hideSfr?: boolean;
+  hidePins?: boolean;
+  hideModularBreakdown?: boolean;
 }
 
-export default function MCU8051Simulator({ initialTab = 'architecture' }: MCU8051SimulatorProps) {
-  const [activeTab, setActiveTab] = useState<'architecture' | 'sfr' | 'pins' | 'instructions' | 'alp'>(initialTab);
+export default function MCU8051Simulator({
+  initialTab = 'architecture',
+  hideArchitecture = false,
+  hideAlp = false,
+  hideInstructions = false,
+  hideSfr = false,
+  hidePins = false,
+  hideModularBreakdown = false,
+}: MCU8051SimulatorProps) {
+  const [activeTab, setActiveTab] = useState<'architecture' | 'sfr' | 'pins' | 'instructions' | 'alp'>(() => {
+    if (hideArchitecture && initialTab === 'architecture') return 'sfr';
+    if (hideAlp && initialTab === 'alp') return 'architecture';
+    if (hideInstructions && initialTab === 'instructions') return 'architecture';
+    if (hideSfr && initialTab === 'sfr') return 'architecture';
+    if (hidePins && initialTab === 'pins') return 'architecture';
+    return initialTab;
+  });
 
   // Architecture state
+  const [archViewMode, setArchViewMode] = useState<'schematic' | 'family' | 'cards'>('family');
   const [selectedArchBlock, setSelectedArchBlock] = useState<string>('cpu');
 
-  // SFR state
+  // SFR & RAM state
+  const [sfrViewMode, setSfrViewMode] = useState<'ram-map' | 'sfr-map'>('ram-map');
   const [sfrSearch, setSfrSearch] = useState<string>('');
   const [selectedSfr, setSelectedSfr] = useState<string>('ACC');
   const [pswBits, setPswBits] = useState<{ [key: string]: boolean }>({
@@ -45,6 +75,7 @@ export default function MCU8051Simulator({ initialTab = 'architecture' }: MCU805
   });
 
   // Pins state
+  const [pinViewMode, setPinViewMode] = useState<'pinout' | 'ports'>('pinout');
   const [selectedPort, setSelectedPort] = useState<'P0' | 'P1' | 'P2' | 'P3'>('P0');
   const [portValues, setPortValues] = useState<{ [key: string]: number }>({
     P0: 0xff,
@@ -278,390 +309,563 @@ export default function MCU8051Simulator({ initialTab = 'architecture' }: MCU805
           </div>
           <div>
             <h2 className="text-base font-bold text-slate-900 font-display">
-              8051 Microcontroller Interactive Suite
+              {hideSfr && hidePins ? '8051 Microcontroller Architecture' : '8051 Microcontroller Interactive Suite'}
             </h2>
-            <p className="text-xs text-slate-500 font-mono">
-              UNIT IV • Architecture, SFRs, I/O Ports, Instruction Set & Assembly
-            </p>
           </div>
         </div>
 
-        {/* Tab Buttons */}
-        <div className="flex flex-wrap items-center bg-slate-100 p-1 rounded-xl border border-slate-200 gap-1">
-          <button
-            onClick={() => setActiveTab('architecture')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'architecture'
-                ? 'bg-indigo-600 text-white shadow-xs font-bold'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-            }`}
-          >
-            <Cpu className="w-3.5 h-3.5" />
-            1. Architecture
-          </button>
-          <button
-            onClick={() => setActiveTab('sfr')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'sfr'
-                ? 'bg-indigo-600 text-white shadow-xs font-bold'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-            }`}
-          >
-            <HardDrive className="w-3.5 h-3.5" />
-            2. SFR & Memory
-          </button>
-          <button
-            onClick={() => setActiveTab('pins')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'pins'
-                ? 'bg-indigo-600 text-white shadow-xs font-bold'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-            }`}
-          >
-            <Layers className="w-3.5 h-3.5" />
-            3. Ports & Pins
-          </button>
-          <button
-            onClick={() => setActiveTab('instructions')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'instructions'
-                ? 'bg-indigo-600 text-white shadow-xs font-bold'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-            }`}
-          >
-            <Sliders className="w-3.5 h-3.5" />
-            4. Instructions
-          </button>
-          <button
-            onClick={() => setActiveTab('alp')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
-              activeTab === 'alp'
-                ? 'bg-indigo-600 text-white shadow-xs font-bold'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-            }`}
-          >
-            <Code2 className="w-3.5 h-3.5" />
-            5. ALP Simulator
-          </button>
-        </div>
+        {/* Tab Buttons - rendered when multiple tabs are available */}
+        {(!hideSfr || !hidePins || !hideInstructions || !hideAlp) && (
+          <div className="flex flex-wrap items-center bg-slate-100 p-1 rounded-xl border border-slate-200 gap-1">
+            {!hideArchitecture && (
+              <button
+                onClick={() => setActiveTab('architecture')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'architecture'
+                    ? 'bg-indigo-600 text-white shadow-xs font-bold'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                }`}
+              >
+                <Cpu className="w-3.5 h-3.5" />
+                1. Architecture
+              </button>
+            )}
+            {!hideSfr && (
+              <button
+                onClick={() => setActiveTab('sfr')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'sfr'
+                    ? 'bg-indigo-600 text-white shadow-xs font-bold'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                }`}
+              >
+                <HardDrive className="w-3.5 h-3.5" />
+                {hideArchitecture ? '1. SFR & Memory' : '2. SFR & Memory'}
+              </button>
+            )}
+            {!hidePins && (
+              <button
+                onClick={() => setActiveTab('pins')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'pins'
+                    ? 'bg-indigo-600 text-white shadow-xs font-bold'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5" />
+                {hideArchitecture ? '2. Ports & Pins' : '3. Ports & Pins'}
+              </button>
+            )}
+            {!hideInstructions && (
+              <button
+                onClick={() => setActiveTab('instructions')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'instructions'
+                    ? 'bg-indigo-600 text-white shadow-xs font-bold'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                }`}
+              >
+                <Sliders className="w-3.5 h-3.5" />
+                {hideArchitecture ? '3. Instructions' : '4. Instructions'}
+              </button>
+            )}
+            {!hideAlp && (
+              <button
+                onClick={() => setActiveTab('alp')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer ${
+                  activeTab === 'alp'
+                    ? 'bg-indigo-600 text-white shadow-xs font-bold'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                }`}
+              >
+                <Code2 className="w-3.5 h-3.5" />
+                {hideArchitecture
+                  ? (hideInstructions ? '3. ALP Simulator' : '4. ALP Simulator')
+                  : (hideInstructions ? '4. ALP Simulator' : '5. ALP Simulator')}
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* TAB 1: ARCHITECTURE BLOCK DIAGRAM */}
-      {activeTab === 'architecture' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-7 bg-slate-50/80 p-5 rounded-2xl border border-slate-200 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider font-mono flex items-center gap-2">
-                <Box className="w-4 h-4 text-indigo-600" />
-                8051 Microcontroller Internal Block Diagram
-              </h3>
-              <span className="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-200 font-mono">
-                Click any component to inspect
+      {activeTab === 'architecture' && !hideArchitecture && (
+        <div className="space-y-4">
+          {/* View Mode Toggle Bar */}
+          <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-slate-200">
+            <div className="flex items-center gap-2">
+              <span className="p-1.5 bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-100">
+                <Box className="w-4 h-4" />
+              </span>
+              <span className="text-xs font-bold text-slate-700 uppercase tracking-wider font-mono">
+                Architecture Views:
               </span>
             </div>
 
-            {/* Interactive Block Diagram Cards */}
-            <div className="grid grid-cols-2 gap-3">
-              {Object.keys(archBlocks).map(key => {
-                const block = archBlocks[key];
-                const IconComponent = block.icon;
-                const isSelected = selectedArchBlock === key;
-
-                return (
-                  <button
-                    key={key}
-                    onClick={() => setSelectedArchBlock(key)}
-                    className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
-                      isSelected
-                        ? 'bg-indigo-600 text-white border-indigo-700 shadow-md ring-2 ring-indigo-300'
-                        : 'bg-white text-slate-800 border-slate-200 hover:border-indigo-300 hover:bg-slate-100/60'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <IconComponent className={`w-4 h-4 ${isSelected ? 'text-indigo-100' : 'text-indigo-600'}`} />
-                      <span className="font-bold text-xs">{block.title.split('(')[0]}</span>
-                    </div>
-                    <p className={`text-[11px] line-clamp-2 ${isSelected ? 'text-indigo-100' : 'text-slate-500'}`}>
-                      {block.desc}
-                    </p>
-                  </button>
-                );
-              })}
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+              <button
+                onClick={() => setArchViewMode('family')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                  archViewMode === 'family'
+                    ? 'bg-white text-blue-700 shadow-2xs font-bold'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Split className="w-3.5 h-3.5" />
+                Family Internal Architecture
+              </button>
+              <button
+                onClick={() => setArchViewMode('schematic')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                  archViewMode === 'schematic'
+                    ? 'bg-white text-indigo-700 shadow-2xs font-bold'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Cpu className="w-3.5 h-3.5" />
+                Hardware Schematic Diagram (10 of 50)
+              </button>
+              {!hideModularBreakdown && (
+                <button
+                  onClick={() => setArchViewMode('cards')}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                    archViewMode === 'cards'
+                      ? 'bg-white text-indigo-700 shadow-2xs font-bold'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" />
+                  Modular Unit Breakdown
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Block Inspection Detail Card */}
-          <div className="lg:col-span-5 bg-white p-5 rounded-2xl border border-slate-200 space-y-4 shadow-2xs">
-            <div className="flex items-center gap-2 text-indigo-600 border-b border-slate-100 pb-3">
-              <Sparkles className="w-4 h-4" />
-              <h4 className="font-bold text-sm text-slate-900 font-display">
-                {archBlocks[selectedArchBlock]?.title}
-              </h4>
-            </div>
+          {/* View 1: 8051 Family Architecture Diagram matching Slide 11 of 50 */}
+          {archViewMode === 'family' && (
+            <MCU8051FamilyDiagram />
+          )}
 
-            <p className="text-xs text-slate-600 leading-relaxed font-sans">
-              {archBlocks[selectedArchBlock]?.desc}
-            </p>
+          {/* View 2: Complete Interactive Schematic matching Page 10 of 50 Textbook figure */}
+          {archViewMode === 'schematic' && (
+            <MCU8051SchematicDiagram />
+          )}
 
-            <div className="space-y-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider font-mono text-slate-400 block">
-                Architectural Breakdown:
-              </span>
-              {archBlocks[selectedArchBlock]?.details.map((item, idx) => (
-                <div key={idx} className="flex items-start gap-2 text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-slate-700">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 mt-0.5 shrink-0" />
-                  <span>{item}</span>
+          {/* View 3: Modular Cards Breakdown */}
+          {archViewMode === 'cards' && !hideModularBreakdown && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="lg:col-span-7 bg-slate-50/80 p-5 rounded-2xl border border-slate-200 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider font-mono flex items-center gap-2">
+                    <Box className="w-4 h-4 text-indigo-600" />
+                    8051 Core Modules
+                  </h3>
+                  <span className="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-200 font-mono">
+                    Click any component to inspect
+                  </span>
                 </div>
-              ))}
+
+                {/* Interactive Block Diagram Cards */}
+                <div className="grid grid-cols-2 gap-3">
+                  {Object.keys(archBlocks).map(key => {
+                    const block = archBlocks[key];
+                    const IconComponent = block.icon;
+                    const isSelected = selectedArchBlock === key;
+
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => setSelectedArchBlock(key)}
+                        className={`p-3.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
+                          isSelected
+                            ? 'bg-indigo-600 text-white border-indigo-700 shadow-md ring-2 ring-indigo-300'
+                            : 'bg-white text-slate-800 border-slate-200 hover:border-indigo-300 hover:bg-slate-100/60'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <IconComponent className={`w-4 h-4 ${isSelected ? 'text-indigo-100' : 'text-indigo-600'}`} />
+                          <span className="font-bold text-xs">{block.title.split('(')[0]}</span>
+                        </div>
+                        <p className={`text-[11px] line-clamp-2 ${isSelected ? 'text-indigo-100' : 'text-slate-500'}`}>
+                          {block.desc}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Block Inspection Detail Card */}
+              <div className="lg:col-span-5 bg-white p-5 rounded-2xl border border-slate-200 space-y-4 shadow-2xs">
+                <div className="flex items-center gap-2 text-indigo-600 border-b border-slate-100 pb-3">
+                  <Sparkles className="w-4 h-4" />
+                  <h4 className="font-bold text-sm text-slate-900 font-display">
+                    {archBlocks[selectedArchBlock]?.title}
+                  </h4>
+                </div>
+
+                <p className="text-xs text-slate-600 leading-relaxed font-sans">
+                  {archBlocks[selectedArchBlock]?.desc}
+                </p>
+
+                <div className="space-y-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider font-mono text-slate-400 block">
+                    Architectural Breakdown:
+                  </span>
+                  {archBlocks[selectedArchBlock]?.details.map((item, idx) => (
+                    <div key={idx} className="flex items-start gap-2 text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-slate-700">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 mt-0.5 shrink-0" />
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
       {/* TAB 2: SFR & MEMORY MAP */}
-      {activeTab === 'sfr' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-7 bg-slate-50/80 p-5 rounded-2xl border border-slate-200 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider font-mono flex items-center gap-2">
-                <HardDrive className="w-4 h-4 text-indigo-600" />
-                Special Function Registers (SFRs) Map (80H – FFH)
-              </h3>
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 absolute left-2.5 top-2 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Filter SFRs..."
-                  value={sfrSearch}
-                  onChange={(e) => setSfrSearch(e.target.value)}
-                  className="pl-8 pr-3 py-1 text-xs bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-indigo-500 w-40"
-                />
-              </div>
-            </div>
-
-            {/* SFR Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[380px] overflow-y-auto pr-1">
-              {sfrList
-                .filter(s => s.name.toLowerCase().includes(sfrSearch.toLowerCase()) || s.addr.toLowerCase().includes(sfrSearch.toLowerCase()))
-                .map((sfr) => {
-                  const isSel = selectedSfr === sfr.name;
-                  return (
-                    <button
-                      key={sfr.name}
-                      onClick={() => setSelectedSfr(sfr.name)}
-                      className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all ${
-                        isSel
-                          ? 'bg-indigo-600 text-white border-indigo-700 shadow-2xs font-bold'
-                          : 'bg-white text-slate-800 border-slate-200 hover:border-indigo-300 hover:bg-slate-100/60'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono text-xs font-bold">{sfr.name}</span>
-                        <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${isSel ? 'bg-indigo-700 text-indigo-100' : 'bg-slate-100 text-slate-600'}`}>
-                          {sfr.addr}
-                        </span>
-                      </div>
-                      <span className={`text-[9px] block mt-1 font-mono ${isSel ? 'text-indigo-200' : 'text-slate-400'}`}>
-                        {sfr.bitAddr ? 'Bit-Addressable' : 'Byte-Only'}
-                      </span>
-                    </button>
-                  );
-                })}
-            </div>
-          </div>
-
-          {/* Program Status Word (PSW) Bit Interactive Inspector */}
-          <div className="lg:col-span-5 bg-white p-5 rounded-2xl border border-slate-200 space-y-4 shadow-2xs">
-            <div className="border-b border-slate-100 pb-3">
-              <span className="text-[10px] font-mono uppercase text-indigo-600 font-bold tracking-wider">
-                Interactive Bit-Level Inspector
+      {activeTab === 'sfr' && !hideSfr && (
+        <div className="space-y-4">
+          {/* View Mode Toggle Bar */}
+          <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-slate-200">
+            <div className="flex items-center gap-2">
+              <span className="p-1.5 bg-amber-50 text-amber-700 rounded-lg border border-amber-200">
+                <HardDrive className="w-4 h-4" />
               </span>
-              <h4 className="text-sm font-bold text-slate-900 font-display mt-0.5">
-                Program Status Word (PSW Register @ D0H)
-              </h4>
+              <span className="text-xs font-bold text-slate-700 uppercase tracking-wider font-mono">
+                8051 Memory Views:
+              </span>
             </div>
 
-            <p className="text-xs text-slate-600">
-              Click individual PSW flag bits below to simulate 8086/8051 ALU status updates and register bank selection:
-            </p>
-
-            {/* PSW Bit Buttons */}
-            <div className="grid grid-cols-7 gap-1 text-center font-mono text-xs">
-              {['CY', 'AC', 'F0', 'RS1', 'RS0', 'OV', 'P'].map((bit) => {
-                const isActive = pswBits[bit];
-                return (
-                  <button
-                    key={bit}
-                    onClick={() => setPswBits(prev => ({ ...prev, [bit]: !prev[bit] }))}
-                    className={`py-2 rounded-lg border font-bold cursor-pointer transition-all ${
-                      isActive
-                        ? 'bg-indigo-600 text-white border-indigo-700 shadow-2xs'
-                        : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200/60'
-                    }`}
-                  >
-                    <span className="block text-[10px] text-slate-400">{bit}</span>
-                    <span>{isActive ? '1' : '0'}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2 text-xs">
-              <div className="flex justify-between items-center text-slate-700 font-mono">
-                <span>Selected Register Bank:</span>
-                <span className="font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
-                  Bank {((pswBits.RS1 ? 2 : 0) + (pswBits.RS0 ? 1 : 0))} (RAM Addresses {
-                    ((pswBits.RS1 ? 2 : 0) + (pswBits.RS0 ? 1 : 0)) === 0 ? '00H–07H' :
-                    ((pswBits.RS1 ? 2 : 0) + (pswBits.RS0 ? 1 : 0)) === 1 ? '08H–0FH' :
-                    ((pswBits.RS1 ? 2 : 0) + (pswBits.RS0 ? 1 : 0)) === 2 ? '10H–17H' : '18H–1FH'
-                  })
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center text-slate-700 font-mono">
-                <span>Carry Flag (CY):</span>
-                <span className={`font-bold ${pswBits.CY ? 'text-emerald-600' : 'text-slate-400'}`}>
-                  {pswBits.CY ? 'Set (1) - Arithmetic Carry/Borrow' : 'Cleared (0)'}
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center text-slate-700 font-mono">
-                <span>Parity Flag (P):</span>
-                <span className={`font-bold ${pswBits.P ? 'text-indigo-600' : 'text-slate-400'}`}>
-                  {pswBits.P ? 'Odd Parity in Accumulator' : 'Even Parity'}
-                </span>
-              </div>
-            </div>
-
-            <div className="pt-2 border-t border-slate-100 text-[11px] text-slate-500 space-y-1">
-              <strong>Selected SFR Description:</strong>
-              <p className="font-mono text-slate-700 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                {sfrList.find(s => s.name === selectedSfr)?.desc}
-              </p>
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+              <button
+                onClick={() => setSfrViewMode('ram-map')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                  sfrViewMode === 'ram-map'
+                    ? 'bg-white text-amber-800 shadow-2xs font-bold'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Database className="w-3.5 h-3.5 text-amber-600" />
+                128-Byte RAM Organization (Slide 13 of 50)
+              </button>
+              <button
+                onClick={() => setSfrViewMode('sfr-map')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                  sfrViewMode === 'sfr-map'
+                    ? 'bg-white text-indigo-700 shadow-2xs font-bold'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Sliders className="w-3.5 h-3.5" />
+                SFR Map (80H–FFH) &amp; PSW Bit Inspector
+              </button>
             </div>
           </div>
+
+          {/* View 1: 128-Byte RAM Organization (Slide 13 of 50) */}
+          {sfrViewMode === 'ram-map' && (
+            <MCU8051RAMDiagram />
+          )}
+
+          {/* View 2: SFR Memory Map and PSW Bit Inspector */}
+          {sfrViewMode === 'sfr-map' && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="lg:col-span-7 bg-slate-50/80 p-5 rounded-2xl border border-slate-200 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider font-mono flex items-center gap-2">
+                    <HardDrive className="w-4 h-4 text-indigo-600" />
+                    Special Function Registers (SFRs) Map (80H – FFH)
+                  </h3>
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 absolute left-2.5 top-2 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Filter SFRs..."
+                      value={sfrSearch}
+                      onChange={(e) => setSfrSearch(e.target.value)}
+                      className="pl-8 pr-3 py-1 text-xs bg-white border border-slate-200 rounded-lg text-slate-800 focus:outline-none focus:border-indigo-500 w-40"
+                    />
+                  </div>
+                </div>
+
+                {/* SFR Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[380px] overflow-y-auto pr-1">
+                  {sfrList
+                    .filter(s => s.name.toLowerCase().includes(sfrSearch.toLowerCase()) || s.addr.toLowerCase().includes(sfrSearch.toLowerCase()))
+                    .map((sfr) => {
+                      const isSel = selectedSfr === sfr.name;
+                      return (
+                        <button
+                          key={sfr.name}
+                          onClick={() => setSelectedSfr(sfr.name)}
+                          className={`p-2.5 rounded-xl border text-left cursor-pointer transition-all ${
+                            isSel
+                              ? 'bg-indigo-600 text-white border-indigo-700 shadow-2xs font-bold'
+                              : 'bg-white text-slate-800 border-slate-200 hover:border-indigo-300 hover:bg-slate-100/60'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-mono text-xs font-bold">{sfr.name}</span>
+                            <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${isSel ? 'bg-indigo-700 text-indigo-100' : 'bg-slate-100 text-slate-600'}`}>
+                              {sfr.addr}
+                            </span>
+                          </div>
+                          <span className={`text-[9px] block mt-1 font-mono ${isSel ? 'text-indigo-200' : 'text-slate-400'}`}>
+                            {sfr.bitAddr ? 'Bit-Addressable' : 'Byte-Only'}
+                          </span>
+                        </button>
+                      );
+                    })}
+                </div>
+              </div>
+
+              {/* Program Status Word (PSW) Bit Interactive Inspector */}
+              <div className="lg:col-span-5 bg-white p-5 rounded-2xl border border-slate-200 space-y-4 shadow-2xs">
+                <div className="border-b border-slate-100 pb-3">
+                  <span className="text-[10px] font-mono uppercase text-indigo-600 font-bold tracking-wider">
+                    Interactive Bit-Level Inspector
+                  </span>
+                  <h4 className="text-sm font-bold text-slate-900 font-display mt-0.5">
+                    Program Status Word (PSW Register @ D0H)
+                  </h4>
+                </div>
+
+                <p className="text-xs text-slate-600">
+                  Click individual PSW flag bits below to simulate 8086/8051 ALU status updates and register bank selection:
+                </p>
+
+                {/* PSW Bit Buttons */}
+                <div className="grid grid-cols-7 gap-1 text-center font-mono text-xs">
+                  {['CY', 'AC', 'F0', 'RS1', 'RS0', 'OV', 'P'].map((bit) => {
+                    const isActive = pswBits[bit];
+                    return (
+                      <button
+                        key={bit}
+                        onClick={() => setPswBits(prev => ({ ...prev, [bit]: !prev[bit] }))}
+                        className={`py-2 rounded-lg border font-bold cursor-pointer transition-all ${
+                          isActive
+                            ? 'bg-indigo-600 text-white border-indigo-700 shadow-2xs'
+                            : 'bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200/60'
+                        }`}
+                      >
+                        <span className="block text-[10px] text-slate-400">{bit}</span>
+                        <span>{isActive ? '1' : '0'}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2 text-xs">
+                  <div className="flex justify-between items-center text-slate-700 font-mono">
+                    <span>Selected Register Bank:</span>
+                    <span className="font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                      Bank {((pswBits.RS1 ? 2 : 0) + (pswBits.RS0 ? 1 : 0))} (RAM Addresses {
+                        ((pswBits.RS1 ? 2 : 0) + (pswBits.RS0 ? 1 : 0)) === 0 ? '00H–07H' :
+                        ((pswBits.RS1 ? 2 : 0) + (pswBits.RS0 ? 1 : 0)) === 1 ? '08H–0FH' :
+                        ((pswBits.RS1 ? 2 : 0) + (pswBits.RS0 ? 1 : 0)) === 2 ? '10H–17H' : '18H–1FH'
+                      })
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center text-slate-700 font-mono">
+                    <span>Carry Flag (CY):</span>
+                    <span className={`font-bold ${pswBits.CY ? 'text-emerald-600' : 'text-slate-400'}`}>
+                      {pswBits.CY ? 'Set (1) - Arithmetic Carry/Borrow' : 'Cleared (0)'}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center text-slate-700 font-mono">
+                    <span>Parity Flag (P):</span>
+                    <span className={`font-bold ${pswBits.P ? 'text-indigo-600' : 'text-slate-400'}`}>
+                      {pswBits.P ? 'Odd Parity in Accumulator' : 'Even Parity'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-slate-100 text-[11px] text-slate-500 space-y-1">
+                  <strong>Selected SFR Description:</strong>
+                  <p className="font-mono text-slate-700 bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                    {sfrList.find(s => s.name === selectedSfr)?.desc}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
       {/* TAB 3: PORTS & PINS */}
-      {activeTab === 'pins' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-7 bg-slate-50/80 p-5 rounded-2xl border border-slate-200 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider font-mono flex items-center gap-2">
-                <Layers className="w-4 h-4 text-indigo-600" />
-                8051 40-Pin DIP Package & Parallel I/O Ports
-              </h3>
-              <div className="flex items-center gap-1">
-                {(['P0', 'P1', 'P2', 'P3'] as const).map(p => (
-                  <button
-                    key={p}
-                    onClick={() => setSelectedPort(p)}
-                    className={`px-2.5 py-1 text-xs font-bold font-mono rounded-lg border cursor-pointer ${
-                      selectedPort === p
-                        ? 'bg-indigo-600 text-white border-indigo-700'
-                        : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
-                    }`}
-                  >
-                    {p}
-                  </button>
-                ))}
-              </div>
+      {activeTab === 'pins' && !hidePins && (
+        <div className="space-y-4">
+          {/* View Mode Toggle Bar */}
+          <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-slate-200">
+            <div className="flex items-center gap-2">
+              <span className="p-1.5 bg-indigo-50 text-indigo-700 rounded-lg border border-indigo-100">
+                <Layers className="w-4 h-4" />
+              </span>
+              <span className="text-xs font-bold text-slate-700 uppercase tracking-wider font-mono">
+                Port &amp; Pin Views:
+              </span>
             </div>
 
-            {/* Port Circuit & Pin Simulator */}
-            <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
-              <div className="flex items-center justify-between font-mono text-xs">
-                <span className="font-bold text-slate-800">
-                  {selectedPort} Output Latch State (0x{portValues[selectedPort].toString(16).toUpperCase().padStart(2, '0')}):
-                </span>
-                <span className="text-indigo-600 font-semibold">
-                  {selectedPort === 'P0' ? 'Open-Drain AD0–AD7' : 'Internal FET + Pull-Up'}
-                </span>
-              </div>
-
-              {/* Bit LED Controls */}
-              <div className="grid grid-cols-8 gap-1.5 text-center font-mono">
-                {[7, 6, 5, 4, 3, 2, 1, 0].map(bit => {
-                  const bitVal = (portValues[selectedPort] >> bit) & 1;
-                  return (
-                    <button
-                      key={bit}
-                      onClick={() => {
-                        const newPortVal = portValues[selectedPort] ^ (1 << bit);
-                        setPortValues(prev => ({ ...prev, [selectedPort]: newPortVal }));
-                      }}
-                      className={`p-2 rounded-lg border flex flex-col items-center justify-center cursor-pointer transition-all ${
-                        bitVal === 1
-                          ? 'bg-emerald-500 text-white border-emerald-600 shadow-2xs font-bold'
-                          : 'bg-slate-100 text-slate-400 border-slate-200'
-                      }`}
-                    >
-                      <span className="text-[9px] text-slate-500 font-semibold">{selectedPort}.{bit}</span>
-                      <span className="text-sm mt-0.5">{bitVal}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 text-xs">
-              <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-1">
-                <span className="font-bold text-slate-800 block">Port 0 (Pins 32–39):</span>
-                <p className="text-slate-500 text-[11px]">
-                  Dual function: True open-drain bidirectional port for I/O; multiplexed address/data bus (AD0–AD7) during external memory operations.
-                </p>
-              </div>
-              <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-1">
-                <span className="font-bold text-slate-800 block">Port 3 Alternate Functions:</span>
-                <p className="text-slate-500 text-[11px]">
-                  P3.0 (RXD), P3.1 (TXD), P3.2 (INT0#), P3.3 (INT1#), P3.4 (T0), P3.5 (T1), P3.6 (WR#), P3.7 (RD#).
-                </p>
-              </div>
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+              <button
+                onClick={() => setPinViewMode('pinout')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                  pinViewMode === 'pinout'
+                    ? 'bg-white text-blue-700 shadow-2xs font-bold'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Cpu className="w-3.5 h-3.5" />
+                40-Pin DIP Package &amp; Port 1 (Slide 25 of 50)
+              </button>
+              <button
+                onClick={() => setPinViewMode('ports')}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                  pinViewMode === 'ports'
+                    ? 'bg-white text-indigo-700 shadow-2xs font-bold'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Sliders className="w-3.5 h-3.5" />
+                Interactive Port Latch &amp; Circuit Simulator
+              </button>
             </div>
           </div>
 
-          {/* Pin Summary Inspector */}
-          <div className="lg:col-span-5 bg-white p-5 rounded-2xl border border-slate-200 space-y-4 shadow-2xs">
-            <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider font-mono border-b border-slate-100 pb-2">
-              Critical Control Signal Pins
-            </h4>
+          {/* View 1: 40-Pin DIP Package & Port 1 matching Slide 25 of 50 */}
+          {pinViewMode === 'pinout' && (
+            <MCU8051PinoutDiagram initialPort="P1" highlightSlide25={true} />
+          )}
 
-            <div className="space-y-2.5 text-xs">
-              <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                <span className="font-mono font-bold text-indigo-700 block">EA# / VPP (Pin 31 - External Access):</span>
-                <p className="text-slate-600 text-[11px] mt-0.5">
-                  Held LOW (0V) to force execution from external ROM (0000H–FFFFH); tied HIGH (+5V) to execute from internal 4KB ROM first.
-                </p>
+          {/* View 2: Interactive Port Latch & Circuit Simulator */}
+          {pinViewMode === 'ports' && (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="lg:col-span-7 bg-slate-50/80 p-5 rounded-2xl border border-slate-200 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider font-mono flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-indigo-600" />
+                    8051 Parallel I/O Ports Latch &amp; Circuits
+                  </h3>
+                  <div className="flex items-center gap-1">
+                    {(['P0', 'P1', 'P2', 'P3'] as const).map(p => (
+                      <button
+                        key={p}
+                        onClick={() => setSelectedPort(p)}
+                        className={`px-2.5 py-1 text-xs font-bold font-mono rounded-lg border cursor-pointer ${
+                          selectedPort === p
+                            ? 'bg-indigo-600 text-white border-indigo-700'
+                            : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Port Circuit & Pin Simulator */}
+                <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
+                  <div className="flex items-center justify-between font-mono text-xs">
+                    <span className="font-bold text-slate-800">
+                      {selectedPort} Output Latch State (0x{portValues[selectedPort].toString(16).toUpperCase().padStart(2, '0')}):
+                    </span>
+                    <span className="text-indigo-600 font-semibold">
+                      {selectedPort === 'P0' ? 'Open-Drain AD0–AD7' : 'Internal FET + Pull-Up'}
+                    </span>
+                  </div>
+
+                  {/* Bit LED Controls */}
+                  <div className="grid grid-cols-8 gap-1.5 text-center font-mono">
+                    {[7, 6, 5, 4, 3, 2, 1, 0].map(bit => {
+                      const bitVal = (portValues[selectedPort] >> bit) & 1;
+                      return (
+                        <button
+                          key={bit}
+                          onClick={() => {
+                            const newPortVal = portValues[selectedPort] ^ (1 << bit);
+                            setPortValues(prev => ({ ...prev, [selectedPort]: newPortVal }));
+                          }}
+                          className={`p-2 rounded-lg border flex flex-col items-center justify-center cursor-pointer transition-all ${
+                            bitVal === 1
+                              ? 'bg-emerald-500 text-white border-emerald-600 shadow-2xs font-bold'
+                              : 'bg-slate-100 text-slate-400 border-slate-200'
+                          }`}
+                        >
+                          <span className="text-[9px] text-slate-500 font-semibold">{selectedPort}.{bit}</span>
+                          <span className="text-sm mt-0.5">{bitVal}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-1">
+                    <span className="font-bold text-slate-800 block">Port 0 (Pins 32–39):</span>
+                    <p className="text-slate-500 text-[11px]">
+                      Dual function: True open-drain bidirectional port for I/O; multiplexed address/data bus (AD0–AD7) during external memory operations.
+                    </p>
+                  </div>
+                  <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-1">
+                    <span className="font-bold text-slate-800 block">Port 3 Alternate Functions:</span>
+                    <p className="text-slate-500 text-[11px]">
+                      P3.0 (RXD), P3.1 (TXD), P3.2 (INT0#), P3.3 (INT1#), P3.4 (T0), P3.5 (T1), P3.6 (WR#), P3.7 (RD#).
+                    </p>
+                  </div>
+                </div>
               </div>
 
-              <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                <span className="font-mono font-bold text-indigo-700 block">ALE / PROG# (Pin 30 - Address Latch Enable):</span>
-                <p className="text-slate-600 text-[11px] mt-0.5">
-                  Pulses HIGH at 1/6th clock frequency to demultiplex Port 0 address (A0–A7) into external latch ICs (like 74LS373).
-                </p>
-              </div>
+              {/* Pin Summary Inspector */}
+              <div className="lg:col-span-5 bg-white p-5 rounded-2xl border border-slate-200 space-y-4 shadow-2xs">
+                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider font-mono border-b border-slate-100 pb-2">
+                  Critical Control Signal Pins
+                </h4>
 
-              <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                <span className="font-mono font-bold text-indigo-700 block">PSEN# (Pin 29 - Program Store Enable):</span>
-                <p className="text-slate-600 text-[11px] mt-0.5">
-                  Active LOW output signal enabling external EPROM code reads during instruction fetches.
-                </p>
-              </div>
+                <div className="space-y-2.5 text-xs">
+                  <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                    <span className="font-mono font-bold text-indigo-700 block">EA# / VPP (Pin 31 - External Access):</span>
+                    <p className="text-slate-600 text-[11px] mt-0.5">
+                      Held LOW (0V) to force execution from external ROM (0000H–FFFFH); tied HIGH (+5V) to execute from internal 4KB ROM first.
+                    </p>
+                  </div>
 
-              <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                <span className="font-mono font-bold text-indigo-700 block">RESET (Pin 9):</span>
-                <p className="text-slate-600 text-[11px] mt-0.5">
-                  Active HIGH input requiring at least 2 machine cycles to initialize PC to 0000H and reset SFRs.
-                </p>
+                  <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                    <span className="font-mono font-bold text-indigo-700 block">ALE / PROG# (Pin 30 - Address Latch Enable):</span>
+                    <p className="text-slate-600 text-[11px] mt-0.5">
+                      Pulses HIGH at 1/6th clock frequency to demultiplex Port 0 address (A0–A7) into external latch ICs (like 74LS373).
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                    <span className="font-mono font-bold text-indigo-700 block">PSEN# (Pin 29 - Program Store Enable):</span>
+                    <p className="text-slate-600 text-[11px] mt-0.5">
+                      Active LOW output signal enabling external EPROM code reads during instruction fetches.
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
+                    <span className="font-mono font-bold text-indigo-700 block">RESET (Pin 9):</span>
+                    <p className="text-slate-600 text-[11px] mt-0.5">
+                      Active HIGH input requiring at least 2 machine cycles to initialize PC to 0000H and reset SFRs.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
       {/* TAB 4: INSTRUCTION SET & ADDRESSING MODES */}
-      {activeTab === 'instructions' && (
+      {activeTab === 'instructions' && !hideInstructions && (
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
             <div className="flex flex-wrap items-center gap-1.5">
@@ -721,7 +925,7 @@ export default function MCU8051Simulator({ initialTab = 'architecture' }: MCU805
       )}
 
       {/* TAB 5: ALP SIMULATOR SANDBOX */}
-      {activeTab === 'alp' && (
+      {activeTab === 'alp' && !hideAlp && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-7 space-y-3">
             <div className="flex items-center justify-between">

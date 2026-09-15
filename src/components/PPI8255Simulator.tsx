@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Cpu, Sliders, CheckCircle2, Zap, ArrowRight, ToggleLeft, ToggleRight, Settings, Layers, Hash, Info, Eye, Sparkles } from 'lucide-react';
+import { Cpu, Sliders, CheckCircle2, Zap, ArrowRight, ToggleLeft, ToggleRight, Settings, Layers, Hash, Info, Eye, Sparkles, ArrowDown, ArrowUp, RefreshCw, Play, AlertCircle, Radio, RotateCcw, CornerDownRight, Check } from 'lucide-react';
 import PPI8255ArchitectureDiagram from './PPI8255ArchitectureDiagram';
 import PPI8255ModesOfOperation from './PPI8255ModesOfOperation';
 
@@ -27,6 +27,7 @@ export default function PPI8255Simulator({
   }, [initialTab]);
 
   // I/O Mode Config state
+  const [ioSubTab, setIoSubTab] = useState<'generator' | 'mode0' | 'mode1' | 'mode2' | 'table'>('generator');
   const [groupAMode, setGroupAMode] = useState<'mode0' | 'mode1' | 'mode2'>('mode0');
   const [portADir, setPortADir] = useState<'input' | 'output'>('output');
   const [portCUpperDir, setPortCUpperDir] = useState<'input' | 'output'>('output');
@@ -39,10 +40,56 @@ export default function PPI8255Simulator({
   const [bsrBit, setBsrBit] = useState<number>(0); // 0 to 7
   const [bsrSetReset, setBsrSetReset] = useState<number>(1); // 1 = Set, 0 = Reset
 
-  // Interactive Port Data Values
-  const [portAVal, setPortAVal] = useState<number>(0xAA);
-  const [portBVal, setPortBVal] = useState<number>(0x55);
-  const [portCVal, setPortCVal] = useState<number>(0x0F);
+  // Interactive Port Data Values & Latches
+  const [portAOutputLatch, setPortAOutputLatch] = useState<number>(0xAA);
+  const [portBOutputLatch, setPortBOutputLatch] = useState<number>(0x55);
+  const [portCOutputLatch, setPortCOutputLatch] = useState<number>(0xF0);
+
+  const [portAExtInput, setPortAExtInput] = useState<number>(0x3C);
+  const [portBExtInput, setPortBExtInput] = useState<number>(0x96);
+  const [portCExtInput, setPortCExtInput] = useState<number>(0x0F);
+
+  // Effective Port Pin Values based on direction:
+  const effectivePortAPins = portADir === 'input' ? portAExtInput : portAOutputLatch;
+  const effectivePortBPins = portBDir === 'input' ? portBExtInput : portBOutputLatch;
+  const effectivePortCPins =
+    ((portCUpperDir === 'input' ? portCExtInput : portCOutputLatch) & 0xF0) |
+    ((portCLowerDir === 'input' ? portCExtInput : portCOutputLatch) & 0x0F);
+
+  const [portAVal, setPortAVal] = useState<number>(effectivePortAPins);
+  const [portBVal, setPortBVal] = useState<number>(effectivePortBPins);
+  const [portCVal, setPortCVal] = useState<number>(effectivePortCPins);
+
+  // Synchronize portAVal, portBVal, portCVal with effective pins
+  useEffect(() => {
+    setPortAVal(effectivePortAPins);
+  }, [effectivePortAPins]);
+
+  useEffect(() => {
+    setPortBVal(effectivePortBPins);
+  }, [effectivePortBPins]);
+
+  useEffect(() => {
+    setPortCVal(effectivePortCPins);
+  }, [effectivePortCPins]);
+
+  // Hardware Bus Control Signals state (Pins 5, 6, 8, 9, 36)
+  const [sigCS, setSigCS] = useState<number>(0); // Chip Select (Pin 6): 0 = Enabled (Active LOW), 1 = Disabled
+  const [sigA1, setSigA1] = useState<number>(0); // Address Pin 9: 0 or 1
+  const [sigA0, setSigA0] = useState<number>(0); // Address Pin 8: 0 or 1
+  const [sigRD, setSigRD] = useState<number>(1); // Read Strobe Pin 5: 0 = Active, 1 = Idle
+  const [sigWR, setSigWR] = useState<number>(1); // Write Strobe Pin 36: 0 = Active, 1 = Idle
+  const [cpuDataBus, setCpuDataBus] = useState<number>(0x55); // 8-bit CPU Data Bus (D7–D0)
+
+  const [busCycleLog, setBusCycleLog] = useState<{
+    type: 'read' | 'write' | 'warning' | 'reset' | 'idle';
+    title: string;
+    details: string;
+  }>({
+    type: 'idle',
+    title: 'Bus Idle (CS#=0, RD#=1, WR#=1)',
+    details: 'Select a target port address (A1, A0) and execute a CPU Read (RD#=0) or Write (WR#=0) cycle.',
+  });
 
   // Compute 8255 I/O Control Word Byte
   let d6d5 = 0;
@@ -62,14 +109,292 @@ export default function PPI8255Simulator({
   const bsrControlWordByte = (bsrBit << 1) | bsrSetReset;
   const bsrControlWordHex = bsrControlWordByte.toString(16).toUpperCase().padStart(2, '0') + 'H';
 
+  // Decode & apply full control word byte
+  const applyControlWordByte = (byte: number) => {
+    const val = byte & 0xff;
+    if ((val & 0x80) !== 0) {
+      // D7 = 1: I/O Mode
+      const d6d5Bits = (val >> 5) & 0x03;
+      if (d6d5Bits === 0) setGroupAMode('mode0');
+      else if (d6d5Bits === 1) setGroupAMode('mode1');
+      else setGroupAMode('mode2');
+
+      setPortADir((val & 0x10) ? 'input' : 'output');
+      setPortCUpperDir((val & 0x08) ? 'input' : 'output');
+      setGroupBMode((val & 0x04) ? 'mode1' : 'mode0');
+      setPortBDir((val & 0x02) ? 'input' : 'output');
+      setPortCLowerDir((val & 0x01) ? 'input' : 'output');
+      setActiveTab('iomode');
+    } else {
+      // D7 = 0: BSR Mode
+      const bit = (val >> 1) & 0x07;
+      const sr = val & 0x01;
+      setBsrBit(bit);
+      setBsrSetReset(sr);
+      setActiveTab('bsr');
+    }
+  };
+
+  // Toggle individual bit in I/O Mode control word
+  const handleToggleIoBit = (bitIndex: number) => {
+    if (bitIndex === 7) {
+      // D7 toggles to 0 -> switch to BSR Mode
+      setActiveTab('bsr');
+      return;
+    }
+    if (bitIndex === 6) {
+      // Toggle D6 (Group A Mode bit 1)
+      if (groupAMode === 'mode2') {
+        setGroupAMode('mode0');
+      } else {
+        setGroupAMode('mode2');
+      }
+      return;
+    }
+    if (bitIndex === 5) {
+      // Toggle D5 (Group A Mode bit 0)
+      if (groupAMode === 'mode1') {
+        setGroupAMode('mode0');
+      } else if (groupAMode === 'mode0') {
+        setGroupAMode('mode1');
+      } else {
+        // From mode 2 to mode 1
+        setGroupAMode('mode1');
+      }
+      return;
+    }
+    if (bitIndex === 4) {
+      setPortADir((prev) => (prev === 'input' ? 'output' : 'input'));
+      return;
+    }
+    if (bitIndex === 3) {
+      setPortCUpperDir((prev) => (prev === 'input' ? 'output' : 'input'));
+      return;
+    }
+    if (bitIndex === 2) {
+      setGroupBMode((prev) => (prev === 'mode1' ? 'mode0' : 'mode1'));
+      return;
+    }
+    if (bitIndex === 1) {
+      setPortBDir((prev) => (prev === 'input' ? 'output' : 'input'));
+      return;
+    }
+    if (bitIndex === 0) {
+      setPortCLowerDir((prev) => (prev === 'input' ? 'output' : 'input'));
+      return;
+    }
+  };
+
+  // Toggle individual bit in BSR Mode control word
+  const handleToggleBsrBit = (bitIndex: number) => {
+    if (bitIndex === 7) {
+      // D7 toggles to 1 -> switch to I/O Mode
+      setActiveTab('iomode');
+      return;
+    }
+    if (bitIndex === 0) {
+      setBsrSetReset((prev) => (prev === 1 ? 0 : 1));
+      return;
+    }
+    if (bitIndex >= 1 && bitIndex <= 3) {
+      const shift = bitIndex - 1;
+      const mask = 1 << shift;
+      setBsrBit((prev) => prev ^ mask);
+      return;
+    }
+  };
+
   const handleApplyBSR = () => {
-    let newPortC = portCVal;
+    let newPortC = portCOutputLatch;
     if (bsrSetReset === 1) {
       newPortC |= (1 << bsrBit);
     } else {
       newPortC &= ~(1 << bsrBit);
     }
+    setPortCOutputLatch(newPortC);
     setPortCVal(newPortC);
+    setBusCycleLog({
+      type: 'write',
+      title: `⚙️ BSR Executed: Port C Bit PC${bsrBit} → ${bsrSetReset === 1 ? 'SET (1)' : 'RESET (0)'}`,
+      details: `BSR Control Word ${((bsrBit << 1) | bsrSetReset).toString(16).toUpperCase().padStart(2, '0')}H modified Port C bit PC${bsrBit}.`,
+    });
+  };
+
+  // Microprocessor Bus Cycle Handlers
+  const executeCpuRead = (overrideA1?: number, overrideA0?: number) => {
+    const a1Val = overrideA1 !== undefined ? overrideA1 : sigA1;
+    const a0Val = overrideA0 !== undefined ? overrideA0 : sigA0;
+    if (overrideA1 !== undefined) setSigA1(overrideA1);
+    if (overrideA0 !== undefined) setSigA0(overrideA0);
+    setSigCS(0);
+    setSigRD(0);
+    setSigWR(1);
+
+    if (sigCS === 1 && overrideA1 === undefined) {
+      setBusCycleLog({
+        type: 'warning',
+        title: '⚠️ Read Ignored: Chip Disabled (CS# = 1)',
+        details: 'When CS# is HIGH (+5V), internal 8255 bus buffers remain in high-impedance state (tri-state).',
+      });
+      return;
+    }
+
+    if (a1Val === 0 && a0Val === 0) {
+      // Port A (80H)
+      const dataRead = portADir === 'input' ? portAExtInput : portAOutputLatch;
+      setCpuDataBus(dataRead);
+      setBusCycleLog({
+        type: 'read',
+        title: `🔵 [IN AL, 80H / Port A]: CS#=0, RD#=0, WR#=1, A1=0, A0=0 → Read 0x${dataRead.toString(16).toUpperCase().padStart(2, '0')} (${dataRead.toString(2).padStart(8, '0')}b)`,
+        details: portADir === 'input'
+          ? `Port A is configured as INPUT (D4=1). CPU placed 8255 external pin inputs (PA7–PA0) onto CPU Data Bus lines (D7–D0).`
+          : `Port A is configured as OUTPUT (D4=0). CPU read the current latched output value from Port A output register onto Data Bus.`,
+      });
+    } else if (a1Val === 0 && a0Val === 1) {
+      // Port B (81H)
+      const dataRead = portBDir === 'input' ? portBExtInput : portBOutputLatch;
+      setCpuDataBus(dataRead);
+      setBusCycleLog({
+        type: 'read',
+        title: `🔵 [IN AL, 81H / Port B]: CS#=0, RD#=0, WR#=1, A1=0, A0=1 → Read 0x${dataRead.toString(16).toUpperCase().padStart(2, '0')} (${dataRead.toString(2).padStart(8, '0')}b)`,
+        details: portBDir === 'input'
+          ? `Port B is configured as INPUT (D1=1). External peripheral signals on PB7–PB0 transferred to CPU Data Bus.`
+          : `Port B is configured as OUTPUT (D1=0). Current latched value transferred to CPU Data Bus.`,
+      });
+    } else if (a1Val === 1 && a0Val === 0) {
+      // Port C (82H)
+      const dataRead = effectivePortCPins;
+      setCpuDataBus(dataRead);
+      const upDesc = portCUpperDir === 'input' ? 'PC7–PC4 from external pins' : 'PC7–PC4 from output latch';
+      const lowDesc = portCLowerDir === 'input' ? 'PC3–PC0 from external pins' : 'PC3–PC0 from output latch';
+      setBusCycleLog({
+        type: 'read',
+        title: `🔵 [IN AL, 82H / Port C]: CS#=0, RD#=0, WR#=1, A1=1, A0=0 → Read 0x${dataRead.toString(16).toUpperCase().padStart(2, '0')} (${dataRead.toString(2).padStart(8, '0')}b)`,
+        details: `Split Read: ${upDesc}, and ${lowDesc}. Transferred onto CPU Data Bus lines D7–D0.`,
+      });
+    } else {
+      // Control Register (83H)
+      setBusCycleLog({
+        type: 'warning',
+        title: `⚠️ Read Blocked: Control Register (A1=1, A0=1) is WRITE-ONLY`,
+        details: `In Intel 8255 architecture, reading from Control Register Address (A1=1, A0=1 with RD#=0) is illegal. The internal control word is not readable; bus enters High-Z / float.`,
+      });
+    }
+  };
+
+  const executeCpuWrite = (overrideA1?: number, overrideA0?: number, overrideData?: number) => {
+    const a1Val = overrideA1 !== undefined ? overrideA1 : sigA1;
+    const a0Val = overrideA0 !== undefined ? overrideA0 : sigA0;
+    const dataToWrite = overrideData !== undefined ? overrideData : cpuDataBus;
+    if (overrideA1 !== undefined) setSigA1(overrideA1);
+    if (overrideA0 !== undefined) setSigA0(overrideA0);
+    setSigCS(0);
+    setSigWR(0);
+    setSigRD(1);
+
+    if (sigCS === 1 && overrideA1 === undefined) {
+      setBusCycleLog({
+        type: 'warning',
+        title: '⚠️ Write Aborted: Chip Disabled (CS# = 1)',
+        details: 'When CS# is HIGH (+5V), internal write strobes are blocked. Port registers remain unchanged.',
+      });
+      return;
+    }
+
+    if (a1Val === 0 && a0Val === 0) {
+      // Port A (80H)
+      if (portADir === 'output') {
+        setPortAOutputLatch(dataToWrite);
+        setBusCycleLog({
+          type: 'write',
+          title: `🟢 [OUT 80H, AL / Port A]: CS#=0, WR#=0, RD#=1, A1=0, A0=0 → Latched 0x${dataToWrite.toString(16).toUpperCase().padStart(2, '0')} (${dataToWrite.toString(2).padStart(8, '0')}b)`,
+          details: `Port A is OUTPUT (D4=0). Latched byte from CPU Data Bus into Port A register. Pins PA7–PA0 are actively driving this value.`,
+        });
+      } else {
+        setBusCycleLog({
+          type: 'warning',
+          title: `⚠️ Write Ignored: Port A is configured as INPUT (D4=1)`,
+          details: `Port A is in input mode. Pins are driven by external peripheral devices. CPU writes have no effect on input pins.`,
+        });
+      }
+    } else if (a1Val === 0 && a0Val === 1) {
+      // Port B (81H)
+      if (portBDir === 'output') {
+        setPortBOutputLatch(dataToWrite);
+        setBusCycleLog({
+          type: 'write',
+          title: `🟢 [OUT 81H, AL / Port B]: CS#=0, WR#=0, RD#=1, A1=0, A0=1 → Latched 0x${dataToWrite.toString(16).toUpperCase().padStart(2, '0')} (${dataToWrite.toString(2).padStart(8, '0')}b)`,
+          details: `Port B is OUTPUT (D1=0). Latched byte from CPU Data Bus into Port B register. Pins PB7–PB0 are actively driving this value.`,
+        });
+      } else {
+        setBusCycleLog({
+          type: 'warning',
+          title: `⚠️ Write Ignored: Port B is configured as INPUT (D1=1)`,
+          details: `Port B is in input mode. CPU cannot write to external input lines.`,
+        });
+      }
+    } else if (a1Val === 1 && a0Val === 0) {
+      // Port C (82H)
+      let newLatch = portCOutputLatch;
+      let writeOccurred = false;
+      let detailsText = '';
+
+      if (portCUpperDir === 'output') {
+        newLatch = (newLatch & 0x0F) | (dataToWrite & 0xF0);
+        writeOccurred = true;
+        detailsText += 'Upper nibble (PC7–PC4) latched from D7–D4. ';
+      } else {
+        detailsText += 'Upper nibble is INPUT (protected from CPU write). ';
+      }
+
+      if (portCLowerDir === 'output') {
+        newLatch = (newLatch & 0xF0) | (dataToWrite & 0x0F);
+        writeOccurred = true;
+        detailsText += 'Lower nibble (PC3–PC0) latched from D3–D0.';
+      } else {
+        detailsText += 'Lower nibble is INPUT (protected from CPU write).';
+      }
+
+      if (writeOccurred) {
+        setPortCOutputLatch(newLatch);
+        setBusCycleLog({
+          type: 'write',
+          title: `🟢 [OUT 82H, AL / Port C]: CS#=0, WR#=0 → Latched 0x${dataToWrite.toString(16).toUpperCase().padStart(2, '0')}`,
+          details: detailsText,
+        });
+      } else {
+        setBusCycleLog({
+          type: 'warning',
+          title: `⚠️ Write Ignored: Entire Port C is configured as INPUT`,
+          details: `Both Upper (D3=1) and Lower (D0=1) Port C are inputs. CPU write has no destination output latch.`,
+        });
+      }
+    } else {
+      // Control Register (83H)
+      applyControlWordByte(dataToWrite);
+      setBusCycleLog({
+        type: 'write',
+        title: `⚙️ [OUT 83H, AL / Control Register]: CS#=0, WR#=0 → Written 0x${dataToWrite.toString(16).toUpperCase().padStart(2, '0')}`,
+        details: (dataToWrite & 0x80) !== 0
+          ? `I/O Mode Set Control Word written (D7=1). Group A & B operating modes and port I/O directions updated!`
+          : `BSR Control Word written (D7=0). Port C bit ${(dataToWrite >> 1) & 7} ${dataToWrite & 1 ? 'SET to 1' : 'RESET to 0'}.`,
+      });
+    }
+  };
+
+  const executeReset = () => {
+    setSigCS(0);
+    setSigRD(1);
+    setSigWR(1);
+    applyControlWordByte(0x9B); // Standard 8255 reset state: All ports Input, Mode 0
+    setPortAOutputLatch(0x00);
+    setPortBOutputLatch(0x00);
+    setPortCOutputLatch(0x00);
+    setBusCycleLog({
+      type: 'reset',
+      title: '🔄 [RESET PULSE] Intel 8255 Hardware Reset Asserted',
+      details: 'Pin 35 pulsed HIGH. Control word initialized to 9BH (All ports Input, Mode 0). All output latches cleared to 00H.',
+    });
   };
 
   // 40-Pin DIP Pinout Definition for Intel 8255 PPI
@@ -176,7 +501,7 @@ export default function PPI8255Simulator({
 
   const displayedTabs = allowedTabs && allowedTabs.length > 0
     ? allowedTabs
-    : (['diagram', 'pins', 'architecture', 'iomode', 'bsr', 'registers'] as PPI8255Tab[]);
+    : (['diagram', 'pins', 'architecture', 'iomode', 'bsr'] as PPI8255Tab[]);
 
   const currentTabInfo = tabLabels[activeTab] || tabLabels.pins;
 
@@ -644,6 +969,200 @@ export default function PPI8255Simulator({
       {/* ========================================================================= */}
       {activeTab === 'iomode' && (
         <div className="space-y-4">
+          {/* Sub-Navigation Bar for I/O Modes */}
+          <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-100 p-1.5 rounded-xl border border-slate-200 shadow-2xs">
+            <div className="flex items-center gap-1.5 px-1 text-[11px] font-bold text-slate-700">
+              <Layers className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Select Mode View:</span>
+            </div>
+            <div className="flex flex-wrap gap-1">
+              {[
+                { id: 'generator', label: 'I/O Control Word Byte & Simulator' },
+                { id: 'mode0', label: 'Mode 0 (Basic I/O)' },
+                { id: 'mode1', label: 'Mode 1 (Handshake)' },
+                { id: 'mode2', label: 'Mode 2 (Bi-directional)' },
+                { id: 'table', label: 'Comparison Matrix' },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setIoSubTab(tab.id as any)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    ioSubTab === tab.id
+                      ? 'bg-indigo-600 text-white shadow-2xs'
+                      : 'bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-slate-200'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {ioSubTab === 'generator' && (
+            <div className="space-y-4">
+              {/* Control Word Byte Bit Breakdown - Positioned at Top */}
+          <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-xs text-slate-900 uppercase tracking-wider">
+                    Calculated I/O Control Word Byte Register
+                  </span>
+                  <span className="text-[10px] bg-indigo-50 text-indigo-700 font-bold px-2 py-0.5 rounded-full border border-indigo-200 inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                    Click bits to toggle
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-base font-extrabold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-lg border border-indigo-200 shadow-xs">
+                  {controlWordHex}
+                </span>
+                <span className="text-[11px] font-mono text-slate-500 font-semibold">
+                  ({controlWordByte.toString(2).padStart(8, '0')}b)
+                </span>
+              </div>
+            </div>
+
+            {/* Interactive 8-Bit Register Bar */}
+            <div className="grid grid-cols-8 gap-1.5 font-mono text-center">
+              {/* D7 */}
+              <button
+                type="button"
+                onClick={() => handleToggleIoBit(7)}
+                title="D7: Mode Set Flag (1 = I/O Mode, 0 = BSR Mode). Click to toggle to BSR Mode (D7=0)."
+                className="group p-2 rounded-lg border cursor-pointer transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 bg-indigo-600 text-white border-indigo-700 shadow-xs hover:ring-2 hover:ring-indigo-300"
+              >
+                <div className="font-bold text-[10px] text-indigo-200">D7</div>
+                <div className="font-black text-sm my-0.5">1</div>
+                <div className="text-[9px] font-sans font-semibold text-indigo-100 truncate">I/O Set</div>
+                <div className="text-[8px] font-sans text-indigo-200 opacity-0 group-hover:opacity-100 transition-opacity">Flip</div>
+              </button>
+
+              {/* D6 */}
+              <button
+                type="button"
+                onClick={() => handleToggleIoBit(6)}
+                title={`D6: Group A Mode Select MSB. Current bit: ${((d6d5 >> 1) & 1)}. Click to toggle.`}
+                className={`group p-2 rounded-lg border cursor-pointer transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 hover:ring-2 hover:ring-indigo-300 ${
+                  ((d6d5 >> 1) & 1) === 1
+                    ? 'bg-indigo-600 text-white border-indigo-700 shadow-xs'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                <div className={`font-bold text-[10px] ${((d6d5 >> 1) & 1) === 1 ? 'text-indigo-200' : 'text-slate-500'}`}>D6</div>
+                <div className="font-black text-sm my-0.5">{((d6d5 >> 1) & 1)}</div>
+                <div className="text-[9px] font-sans font-semibold truncate">Grp A Mode</div>
+                <div className={`text-[8px] font-sans opacity-0 group-hover:opacity-100 transition-opacity ${((d6d5 >> 1) & 1) === 1 ? 'text-indigo-200' : 'text-slate-400'}`}>Flip</div>
+              </button>
+
+              {/* D5 */}
+              <button
+                type="button"
+                onClick={() => handleToggleIoBit(5)}
+                title={`D5: Group A Mode Select LSB. Current bit: ${(d6d5 & 1)}. Click to toggle.`}
+                className={`group p-2 rounded-lg border cursor-pointer transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 hover:ring-2 hover:ring-indigo-300 ${
+                  (d6d5 & 1) === 1
+                    ? 'bg-indigo-600 text-white border-indigo-700 shadow-xs'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                <div className={`font-bold text-[10px] ${(d6d5 & 1) === 1 ? 'text-indigo-200' : 'text-slate-500'}`}>D5</div>
+                <div className="font-black text-sm my-0.5">{(d6d5 & 1)}</div>
+                <div className="text-[9px] font-sans font-semibold truncate">Grp A Mode</div>
+                <div className={`text-[8px] font-sans opacity-0 group-hover:opacity-100 transition-opacity ${(d6d5 & 1) === 1 ? 'text-indigo-200' : 'text-slate-400'}`}>Flip</div>
+              </button>
+
+              {/* D4 */}
+              <button
+                type="button"
+                onClick={() => handleToggleIoBit(4)}
+                title={`D4: Port A Direction (${d4 === 1 ? 'Input 1' : 'Output 0'}). Click to toggle to ${d4 === 1 ? 'Output (0)' : 'Input (1)'}.`}
+                className={`group p-2 rounded-lg border cursor-pointer transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 hover:ring-2 hover:ring-indigo-300 ${
+                  d4 === 1
+                    ? 'bg-blue-600 text-white border-blue-700 shadow-xs'
+                    : 'bg-emerald-600 text-white border-emerald-700 shadow-xs'
+                }`}
+              >
+                <div className="font-bold text-[10px] text-white/80">D4</div>
+                <div className="font-black text-sm my-0.5">{d4}</div>
+                <div className="text-[9px] font-sans font-semibold truncate">{d4 === 1 ? 'PA In' : 'PA Out'}</div>
+                <div className="text-[8px] font-sans text-white/70 opacity-0 group-hover:opacity-100 transition-opacity">Flip</div>
+              </button>
+
+              {/* D3 */}
+              <button
+                type="button"
+                onClick={() => handleToggleIoBit(3)}
+                title={`D3: Port C Upper Direction (${d3 === 1 ? 'Input 1' : 'Output 0'}). Click to toggle to ${d3 === 1 ? 'Output (0)' : 'Input (1)'}.`}
+                className={`group p-2 rounded-lg border cursor-pointer transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 hover:ring-2 hover:ring-indigo-300 ${
+                  d3 === 1
+                    ? 'bg-blue-600 text-white border-blue-700 shadow-xs'
+                    : 'bg-emerald-600 text-white border-emerald-700 shadow-xs'
+                }`}
+              >
+                <div className="font-bold text-[10px] text-white/80">D3</div>
+                <div className="font-black text-sm my-0.5">{d3}</div>
+                <div className="text-[9px] font-sans font-semibold truncate">{d3 === 1 ? 'PC Up In' : 'PC Up Out'}</div>
+                <div className="text-[8px] font-sans text-white/70 opacity-0 group-hover:opacity-100 transition-opacity">Flip</div>
+              </button>
+
+              {/* D2 */}
+              <button
+                type="button"
+                onClick={() => handleToggleIoBit(2)}
+                title={`D2: Group B Mode (${d2 === 1 ? 'Mode 1 Strobe' : 'Mode 0 Basic'}). Click to toggle.`}
+                className={`group p-2 rounded-lg border cursor-pointer transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 hover:ring-2 hover:ring-indigo-300 ${
+                  d2 === 1
+                    ? 'bg-indigo-600 text-white border-indigo-700 shadow-xs'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                <div className={`font-bold text-[10px] ${d2 === 1 ? 'text-indigo-200' : 'text-slate-500'}`}>D2</div>
+                <div className="font-black text-sm my-0.5">{d2}</div>
+                <div className="text-[9px] font-sans font-semibold truncate">{d2 === 1 ? 'Grp B M1' : 'Grp B M0'}</div>
+                <div className={`text-[8px] font-sans opacity-0 group-hover:opacity-100 transition-opacity ${d2 === 1 ? 'text-indigo-200' : 'text-slate-400'}`}>Flip</div>
+              </button>
+
+              {/* D1 */}
+              <button
+                type="button"
+                onClick={() => handleToggleIoBit(1)}
+                title={`D1: Port B Direction (${d1 === 1 ? 'Input 1' : 'Output 0'}). Click to toggle to ${d1 === 1 ? 'Output (0)' : 'Input (1)'}.`}
+                className={`group p-2 rounded-lg border cursor-pointer transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 hover:ring-2 hover:ring-indigo-300 ${
+                  d1 === 1
+                    ? 'bg-blue-600 text-white border-blue-700 shadow-xs'
+                    : 'bg-emerald-600 text-white border-emerald-700 shadow-xs'
+                }`}
+              >
+                <div className="font-bold text-[10px] text-white/80">D1</div>
+                <div className="font-black text-sm my-0.5">{d1}</div>
+                <div className="text-[9px] font-sans font-semibold truncate">{d1 === 1 ? 'PB In' : 'PB Out'}</div>
+                <div className="text-[8px] font-sans text-white/70 opacity-0 group-hover:opacity-100 transition-opacity">Flip</div>
+              </button>
+
+              {/* D0 */}
+              <button
+                type="button"
+                onClick={() => handleToggleIoBit(0)}
+                title={`D0: Port C Lower Direction (${d0 === 1 ? 'Input 1' : 'Output 0'}). Click to toggle to ${d0 === 1 ? 'Output (0)' : 'Input (1)'}.`}
+                className={`group p-2 rounded-lg border cursor-pointer transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 hover:ring-2 hover:ring-indigo-300 ${
+                  d0 === 1
+                    ? 'bg-blue-600 text-white border-blue-700 shadow-xs'
+                    : 'bg-emerald-600 text-white border-emerald-700 shadow-xs'
+                }`}
+              >
+                <div className="font-bold text-[10px] text-white/80">D0</div>
+                <div className="font-black text-sm my-0.5">{d0}</div>
+                <div className="text-[9px] font-sans font-semibold truncate">{d0 === 1 ? 'PC Low In' : 'PC Low Out'}</div>
+                <div className="text-[8px] font-sans text-white/70 opacity-0 group-hover:opacity-100 transition-opacity">Flip</div>
+              </button>
+            </div>
+          </div>
+
+          {/* Group A and Group B Configurations - Positioned Below */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* GROUP A CONTROLS */}
             <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
@@ -808,71 +1327,780 @@ export default function PPI8255Simulator({
             </div>
           </div>
 
-          {/* Control Word Byte Bit Breakdown */}
-          <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-xs text-slate-800 uppercase">Calculated I/O Control Word Byte</span>
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-base font-extrabold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-200">
-                  {controlWordHex}
-                </span>
-                <span className="text-[10px] font-mono text-slate-500">
-                  ({controlWordByte.toString(2).padStart(8, '0')}b)
-                </span>
+          {/* ========================================================================= */}
+          {/* INTERACTIVE PORT REGISTERS & BUS CONTROL SIGNALS (READ / WRITE)           */}
+          {/* ========================================================================= */}
+          <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-4">
+            {/* Header */}
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <Cpu className="w-5 h-5 text-indigo-600" />
+                  <h3 className="font-bold text-sm text-slate-900 uppercase tracking-wider">
+                    8255 Port Registers & Bus Control Signals (Read / Write)
+                  </h3>
+                  <span className="text-[10px] bg-indigo-50 text-indigo-800 font-bold px-2 py-0.5 rounded-full border border-indigo-200">
+                    Live Hardware Bus Simulation
+                  </span>
+                </div>
+              </div>
+
+              {/* Reset Button */}
+              <button
+                type="button"
+                onClick={executeReset}
+                title="Assert Pin 35 RESET HIGH: Restores 8255 to default power-on state (9BH, all ports input)."
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg cursor-pointer transition-all shadow-2xs"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-slate-600" />
+                Reset 8255 (Pin 35)
+              </button>
+            </div>
+
+            {/* Hardware Bus Control Console */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+              {/* Address Decoding (A1, A0) - 4 cols */}
+              <div className="lg:col-span-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                    1. Target Address Select (A1, A0)
+                  </span>
+                  <span className="text-[10px] font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                    A1={sigA1} • A0={sigA0}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-1.5 font-mono text-xs">
+                  {[
+                    { a1: 0, a0: 0, name: 'Port A', addr: '80H' },
+                    { a1: 0, a0: 1, name: 'Port B', addr: '81H' },
+                    { a1: 1, a0: 0, name: 'Port C', addr: '82H' },
+                    { a1: 1, a0: 1, name: 'Control Reg', addr: '83H' },
+                  ].map((item) => {
+                    const isSelected = sigA1 === item.a1 && sigA0 === item.a0;
+                    return (
+                      <button
+                        key={item.addr}
+                        type="button"
+                        onClick={() => {
+                          setSigA1(item.a1);
+                          setSigA0(item.a0);
+                        }}
+                        className={`p-2 rounded-lg border text-left cursor-pointer transition-all ${
+                          isSelected
+                            ? 'bg-indigo-600 text-white border-indigo-700 shadow-xs ring-2 ring-indigo-200'
+                            : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                        }`}
+                      >
+                        <div className="flex justify-between items-center">
+                          <span className="font-bold text-xs">{item.name}</span>
+                          <span className={`text-[10px] ${isSelected ? 'text-indigo-200' : 'text-slate-400'}`}>
+                            {item.addr}
+                          </span>
+                        </div>
+                        <div className={`text-[9px] mt-0.5 ${isSelected ? 'text-indigo-200' : 'text-slate-500'}`}>
+                          A1={item.a1}, A0={item.a0}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Bus Control Strobes (CS#, RD#, WR#) - 4 cols */}
+              <div className="lg:col-span-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                    2. Bus Strobes (CS#, RD#, WR#)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setSigCS((prev) => (prev === 0 ? 1 : 0))}
+                    className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border cursor-pointer transition-all ${
+                      sigCS === 0
+                        ? 'bg-emerald-100 text-emerald-900 border-emerald-300'
+                        : 'bg-rose-100 text-rose-900 border-rose-300'
+                    }`}
+                  >
+                    CS#={sigCS} ({sigCS === 0 ? 'Chip Enabled' : 'Disabled / High-Z'})
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  {/* RD# Button */}
+                  <button
+                    type="button"
+                    onClick={() => executeCpuRead()}
+                    title="Assert RD# LOW (Pin 5): CPU reads from addressed port/pins into CPU Data Bus (IN AL, [Port])."
+                    className="p-2.5 rounded-lg border cursor-pointer transition-all flex flex-col items-center justify-center gap-1 bg-blue-600 hover:bg-blue-700 text-white border-blue-700 shadow-xs hover:-translate-y-0.5 active:translate-y-0"
+                  >
+                    <div className="flex items-center gap-1 font-bold text-xs">
+                      <ArrowDown className="w-3.5 h-3.5" />
+                      READ (RD# = 0)
+                    </div>
+                    <span className="text-[9px] text-blue-100">IN AL, [Port]</span>
+                  </button>
+
+                  {/* WR# Button */}
+                  <button
+                    type="button"
+                    onClick={() => executeCpuWrite()}
+                    title="Assert WR# LOW (Pin 36): CPU writes CPU Data Bus value into addressed port latch (OUT [Port], AL)."
+                    className="p-2.5 rounded-lg border cursor-pointer transition-all flex flex-col items-center justify-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-700 shadow-xs hover:-translate-y-0.5 active:translate-y-0"
+                  >
+                    <div className="flex items-center gap-1 font-bold text-xs">
+                      <ArrowUp className="w-3.5 h-3.5" />
+                      WRITE (WR# = 0)
+                    </div>
+                    <span className="text-[9px] text-emerald-100">OUT [Port], AL</span>
+                  </button>
+                </div>
+
+                <div className="text-[10px] text-slate-500 bg-white p-2 rounded-lg border border-slate-200">
+                  <span className="font-semibold text-slate-700">Active Signals: </span>
+                  <span className="font-mono">
+                    CS#={sigCS} • RD#={sigRD} • WR#={sigWR}
+                  </span>
+                  {sigRD === 0 && <span className="text-blue-600 font-bold ml-1">● READING</span>}
+                  {sigWR === 0 && <span className="text-emerald-600 font-bold ml-1">● WRITING</span>}
+                  {sigRD === 1 && sigWR === 1 && <span className="text-slate-400 ml-1">● IDLE</span>}
+                </div>
+              </div>
+
+              {/* CPU Data Bus Buffer (D7-D0) - 4 cols */}
+              <div className="lg:col-span-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                    3. CPU Data Bus (D7–D0)
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-mono font-extrabold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                      0x{cpuDataBus.toString(16).toUpperCase().padStart(2, '0')}
+                    </span>
+                    <span className="text-[10px] font-mono text-slate-500">
+                      ({cpuDataBus.toString(2).padStart(8, '0')}b)
+                    </span>
+                  </div>
+                </div>
+
+                {/* 8-bit interactive bus toggles */}
+                <div className="grid grid-cols-8 gap-1 font-mono text-center">
+                  {Array.from({ length: 8 }, (_, i) => {
+                    const bitIdx = 7 - i;
+                    const bitVal = (cpuDataBus >> bitIdx) & 1;
+                    return (
+                      <button
+                        key={bitIdx}
+                        type="button"
+                        onClick={() => setCpuDataBus((prev) => prev ^ (1 << bitIdx))}
+                        title={`Data Bus D${bitIdx}: ${bitVal}. Click to toggle before writing.`}
+                        className={`py-1 rounded border text-[10px] font-bold cursor-pointer transition-all ${
+                          bitVal === 1
+                            ? 'bg-indigo-600 text-white border-indigo-700 shadow-2xs'
+                            : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-100'
+                        }`}
+                      >
+                        <span className="text-[8px] block text-slate-400">D{bitIdx}</span>
+                        <span>{bitVal}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Quick Data Bus Presets */}
+                <div className="flex flex-wrap items-center gap-1 pt-1 text-[10px]">
+                  <span className="text-slate-500 font-semibold mr-1">Presets:</span>
+                  {[
+                    { label: '55H', val: 0x55 },
+                    { label: 'AAH', val: 0xAA },
+                    { label: 'FFH', val: 0xFF },
+                    { label: '00H', val: 0x00 },
+                    { label: '80H', val: 0x80 },
+                    { label: '9BH', val: 0x9B },
+                  ].map((preset) => (
+                    <button
+                      key={preset.label}
+                      type="button"
+                      onClick={() => setCpuDataBus(preset.val)}
+                      className={`px-1.5 py-0.5 rounded font-mono font-bold cursor-pointer transition-all ${
+                        cpuDataBus === preset.val
+                          ? 'bg-indigo-700 text-white'
+                          : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-8 gap-1 font-mono text-center text-[10px]">
-              <div className="bg-indigo-50 p-2 rounded border border-indigo-200">
-                <div className="font-bold text-indigo-900">D7</div>
-                <div className="text-indigo-700 font-extrabold text-xs">1</div>
-                <div className="text-[8px] text-slate-500">I/O Set</div>
+            {/* Live Bus Cycle Feedback Banner */}
+            <div
+              className={`p-3 rounded-xl border flex items-start gap-2.5 transition-all ${
+                busCycleLog.type === 'read'
+                  ? 'bg-blue-50/80 border-blue-200 text-blue-900'
+                  : busCycleLog.type === 'write'
+                  ? 'bg-emerald-50/80 border-emerald-200 text-emerald-900'
+                  : busCycleLog.type === 'warning'
+                  ? 'bg-amber-50/80 border-amber-200 text-amber-900'
+                  : busCycleLog.type === 'reset'
+                  ? 'bg-purple-50/80 border-purple-200 text-purple-900'
+                  : 'bg-slate-50 border-slate-200 text-slate-700'
+              }`}
+            >
+              {busCycleLog.type === 'read' && <ArrowDown className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />}
+              {busCycleLog.type === 'write' && <ArrowUp className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />}
+              {busCycleLog.type === 'warning' && <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />}
+              {busCycleLog.type === 'reset' && <RotateCcw className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />}
+              {busCycleLog.type === 'idle' && <Info className="w-4 h-4 text-slate-500 shrink-0 mt-0.5" />}
+              <div className="space-y-0.5">
+                <div className="font-bold text-xs font-mono">{busCycleLog.title}</div>
+                <div className="text-[11px] opacity-90 leading-relaxed">{busCycleLog.details}</div>
               </div>
-              <div className="bg-slate-50 p-2 rounded border border-slate-200">
-                <div className="font-bold text-slate-700">D6</div>
-                <div className="text-slate-900 font-extrabold text-xs">{(d6d5 >> 1) & 1}</div>
-                <div className="text-[8px] text-slate-500">Grp A Mode</div>
+            </div>
+
+            {/* Quick Assembly Instruction Shortcuts */}
+            <div className="flex flex-wrap items-center gap-1.5 text-xs bg-slate-50 p-2 rounded-lg border border-slate-200">
+              <span className="text-[11px] font-bold text-slate-700 mr-1 uppercase tracking-wider">
+                Quick 8086 Instructions:
+              </span>
+              <button
+                type="button"
+                onClick={() => executeCpuRead(0, 0)}
+                className="px-2 py-1 bg-white hover:bg-blue-50 border border-blue-200 hover:border-blue-400 text-blue-700 rounded-md font-mono text-[11px] font-bold cursor-pointer transition-all shadow-2xs"
+              >
+                IN AL, 80H (Read PA)
+              </button>
+              <button
+                type="button"
+                onClick={() => executeCpuWrite(0, 0)}
+                className="px-2 py-1 bg-white hover:bg-emerald-50 border border-emerald-200 hover:border-emerald-400 text-emerald-700 rounded-md font-mono text-[11px] font-bold cursor-pointer transition-all shadow-2xs"
+              >
+                OUT 80H, AL (Write PA)
+              </button>
+              <button
+                type="button"
+                onClick={() => executeCpuRead(0, 1)}
+                className="px-2 py-1 bg-white hover:bg-blue-50 border border-blue-200 hover:border-blue-400 text-blue-700 rounded-md font-mono text-[11px] font-bold cursor-pointer transition-all shadow-2xs"
+              >
+                IN AL, 81H (Read PB)
+              </button>
+              <button
+                type="button"
+                onClick={() => executeCpuWrite(0, 1)}
+                className="px-2 py-1 bg-white hover:bg-emerald-50 border border-emerald-200 hover:border-emerald-400 text-emerald-700 rounded-md font-mono text-[11px] font-bold cursor-pointer transition-all shadow-2xs"
+              >
+                OUT 81H, AL (Write PB)
+              </button>
+              <button
+                type="button"
+                onClick={() => executeCpuRead(1, 0)}
+                className="px-2 py-1 bg-white hover:bg-blue-50 border border-blue-200 hover:border-blue-400 text-blue-700 rounded-md font-mono text-[11px] font-bold cursor-pointer transition-all shadow-2xs"
+              >
+                IN AL, 82H (Read PC)
+              </button>
+              <button
+                type="button"
+                onClick={() => executeCpuWrite(1, 0)}
+                className="px-2 py-1 bg-white hover:bg-emerald-50 border border-emerald-200 hover:border-emerald-400 text-emerald-700 rounded-md font-mono text-[11px] font-bold cursor-pointer transition-all shadow-2xs"
+              >
+                OUT 82H, AL (Write PC)
+              </button>
+              <button
+                type="button"
+                onClick={() => executeCpuWrite(1, 1)}
+                className="px-2 py-1 bg-white hover:bg-indigo-50 border border-indigo-200 hover:border-indigo-400 text-indigo-700 rounded-md font-mono text-[11px] font-bold cursor-pointer transition-all shadow-2xs"
+              >
+                OUT 83H, AL (Write Control Word)
+              </button>
+            </div>
+
+            {/* 3 Interactive Port Register Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+              {/* Port A Card */}
+              <div
+                className={`p-3.5 rounded-xl border transition-all ${
+                  sigA1 === 0 && sigA0 === 0
+                    ? 'bg-white border-indigo-500 shadow-md ring-2 ring-indigo-200'
+                    : 'bg-white border-slate-200 shadow-2xs'
+                }`}
+              >
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2.5">
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <strong className="text-slate-900 text-xs font-bold">Port A (PA0–PA7)</strong>
+                      {sigA1 === 0 && sigA0 === 0 && (
+                        <span className="text-[9px] bg-indigo-100 text-indigo-800 font-bold px-1.5 py-0.2 rounded">
+                          Selected (80H)
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-slate-500 font-mono">Pins 1–4, 37–40 • Addr 80H</span>
+                  </div>
+
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border inline-flex items-center gap-1 ${
+                      portADir === 'input'
+                        ? 'bg-blue-50 text-blue-700 border-blue-200'
+                        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    }`}
+                  >
+                    {portADir === 'input' ? <ArrowDown className="w-3 h-3" /> : <ArrowUp className="w-3 h-3" />}
+                    {portADir === 'input' ? 'INPUT (D4=1)' : 'OUTPUT (D4=0)'}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] text-slate-500 font-semibold">
+                    {portADir === 'input' ? 'External Pins State:' : 'Latched Output State:'}
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono text-xs font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                      0x{effectivePortAPins.toString(16).toUpperCase().padStart(2, '0')}
+                    </span>
+                    <span className="font-mono text-[10px] text-slate-500">
+                      ({effectivePortAPins.toString(2).padStart(8, '0')}b)
+                    </span>
+                  </div>
+                </div>
+
+                {/* 8-bit pin bar */}
+                <div className="grid grid-cols-8 gap-1 font-mono text-center mb-2.5">
+                  {Array.from({ length: 8 }, (_, i) => {
+                    const bitIdx = 7 - i;
+                    const bitVal = (effectivePortAPins >> bitIdx) & 1;
+                    return (
+                      <button
+                        key={bitIdx}
+                        type="button"
+                        onClick={() => {
+                          if (portADir === 'input') {
+                            setPortAExtInput((prev) => prev ^ (1 << bitIdx));
+                          } else {
+                            setPortAOutputLatch((prev) => prev ^ (1 << bitIdx));
+                          }
+                        }}
+                        title={
+                          portADir === 'input'
+                            ? `PA${bitIdx} (External Input Pin): ${bitVal}. Click to toggle simulated external signal.`
+                            : `PA${bitIdx} (Output Pin): ${bitVal}. Latched from 8255. Click to flip.`
+                        }
+                        className={`py-1.5 rounded text-[10px] font-bold border cursor-pointer transition-all ${
+                          bitVal === 1
+                            ? portADir === 'input'
+                              ? 'bg-blue-600 text-white border-blue-700 shadow-2xs'
+                              : 'bg-emerald-600 text-white border-emerald-700 shadow-2xs'
+                            : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
+                        }`}
+                      >
+                        <span className="text-[8px] block opacity-75">PA{bitIdx}</span>
+                        <span>{bitVal}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <p className="text-[10px] text-slate-500 leading-tight">
+                  {portADir === 'input'
+                    ? 'Pins represent external inputs (sensors/switches). Click pins to change signals, then execute READ (RD#=0).'
+                    : 'Pins driven by internal output latch. Load CPU Data Bus and execute WRITE (WR#=0) to update.'}
+                </p>
               </div>
-              <div className="bg-slate-50 p-2 rounded border border-slate-200">
-                <div className="font-bold text-slate-700">D5</div>
-                <div className="text-slate-900 font-extrabold text-xs">{d6d5 & 1}</div>
-                <div className="text-[8px] text-slate-500">Grp A Mode</div>
+
+              {/* Port B Card */}
+              <div
+                className={`p-3.5 rounded-xl border transition-all ${
+                  sigA1 === 0 && sigA0 === 1
+                    ? 'bg-white border-indigo-500 shadow-md ring-2 ring-indigo-200'
+                    : 'bg-white border-slate-200 shadow-2xs'
+                }`}
+              >
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2.5">
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <strong className="text-slate-900 text-xs font-bold">Port B (PB0–PB7)</strong>
+                      {sigA1 === 0 && sigA0 === 1 && (
+                        <span className="text-[9px] bg-indigo-100 text-indigo-800 font-bold px-1.5 py-0.2 rounded">
+                          Selected (81H)
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-slate-500 font-mono">Pins 18–25 • Addr 81H</span>
+                  </div>
+
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border inline-flex items-center gap-1 ${
+                      portBDir === 'input'
+                        ? 'bg-blue-50 text-blue-700 border-blue-200'
+                        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    }`}
+                  >
+                    {portBDir === 'input' ? <ArrowDown className="w-3 h-3" /> : <ArrowUp className="w-3 h-3" />}
+                    {portBDir === 'input' ? 'INPUT (D1=1)' : 'OUTPUT (D1=0)'}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] text-slate-500 font-semibold">
+                    {portBDir === 'input' ? 'External Pins State:' : 'Latched Output State:'}
+                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono text-xs font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                      0x{effectivePortBPins.toString(16).toUpperCase().padStart(2, '0')}
+                    </span>
+                    <span className="font-mono text-[10px] text-slate-500">
+                      ({effectivePortBPins.toString(2).padStart(8, '0')}b)
+                    </span>
+                  </div>
+                </div>
+
+                {/* 8-bit pin bar */}
+                <div className="grid grid-cols-8 gap-1 font-mono text-center mb-2.5">
+                  {Array.from({ length: 8 }, (_, i) => {
+                    const bitIdx = 7 - i;
+                    const bitVal = (effectivePortBPins >> bitIdx) & 1;
+                    return (
+                      <button
+                        key={bitIdx}
+                        type="button"
+                        onClick={() => {
+                          if (portBDir === 'input') {
+                            setPortBExtInput((prev) => prev ^ (1 << bitIdx));
+                          } else {
+                            setPortBOutputLatch((prev) => prev ^ (1 << bitIdx));
+                          }
+                        }}
+                        title={
+                          portBDir === 'input'
+                            ? `PB${bitIdx} (External Input Pin): ${bitVal}. Click to toggle simulated input.`
+                            : `PB${bitIdx} (Output Pin): ${bitVal}. Latched from 8255. Click to flip.`
+                        }
+                        className={`py-1.5 rounded text-[10px] font-bold border cursor-pointer transition-all ${
+                          bitVal === 1
+                            ? portBDir === 'input'
+                              ? 'bg-blue-600 text-white border-blue-700 shadow-2xs'
+                              : 'bg-emerald-600 text-white border-emerald-700 shadow-2xs'
+                            : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
+                        }`}
+                      >
+                        <span className="text-[8px] block opacity-75">PB{bitIdx}</span>
+                        <span>{bitVal}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <p className="text-[10px] text-slate-500 leading-tight">
+                  {portBDir === 'input'
+                    ? 'Pins represent external inputs. Click pins to toggle, then execute READ (RD#=0).'
+                    : 'Pins driven by internal output latch. Load CPU Data Bus and execute WRITE (WR#=0).'}
+                </p>
               </div>
-              <div className="bg-emerald-50 p-2 rounded border border-emerald-200">
-                <div className="font-bold text-emerald-900">D4</div>
-                <div className="text-emerald-700 font-extrabold text-xs">{d4}</div>
-                <div className="text-[8px] text-slate-500">Port A</div>
-              </div>
-              <div className="bg-amber-50 p-2 rounded border border-amber-200">
-                <div className="font-bold text-amber-900">D3</div>
-                <div className="text-amber-700 font-extrabold text-xs">{d3}</div>
-                <div className="text-[8px] text-slate-500">Port C Up</div>
-              </div>
-              <div className="bg-slate-50 p-2 rounded border border-slate-200">
-                <div className="font-bold text-slate-700">D2</div>
-                <div className="text-slate-900 font-extrabold text-xs">{d2}</div>
-                <div className="text-[8px] text-slate-500">Grp B Mode</div>
-              </div>
-              <div className="bg-indigo-50 p-2 rounded border border-indigo-200">
-                <div className="font-bold text-indigo-900">D1</div>
-                <div className="text-indigo-700 font-extrabold text-xs">{d1}</div>
-                <div className="text-[8px] text-slate-500">Port B</div>
-              </div>
-              <div className="bg-amber-50 p-2 rounded border border-amber-200">
-                <div className="font-bold text-amber-900">D0</div>
-                <div className="text-amber-700 font-extrabold text-xs">{d0}</div>
-                <div className="text-[8px] text-slate-500">Port C Low</div>
+
+              {/* Port C Card (Split Upper / Lower) */}
+              <div
+                className={`p-3.5 rounded-xl border transition-all ${
+                  sigA1 === 1 && sigA0 === 0
+                    ? 'bg-white border-indigo-500 shadow-md ring-2 ring-indigo-200'
+                    : 'bg-white border-slate-200 shadow-2xs'
+                }`}
+              >
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-2.5">
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <strong className="text-slate-900 text-xs font-bold">Port C (PC0–PC7)</strong>
+                      {sigA1 === 1 && sigA0 === 0 && (
+                        <span className="text-[9px] bg-indigo-100 text-indigo-800 font-bold px-1.5 py-0.2 rounded">
+                          Selected (82H)
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-slate-500 font-mono">Pins 14–17, 10–13 • Addr 82H</span>
+                  </div>
+
+                  {/* Split direction badges */}
+                  <div className="flex gap-1">
+                    <span
+                      className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${
+                        portCUpperDir === 'input'
+                          ? 'bg-blue-50 text-blue-700 border-blue-200'
+                          : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      }`}
+                    >
+                      PC7–4: {portCUpperDir === 'input' ? 'IN' : 'OUT'}
+                    </span>
+                    <span
+                      className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${
+                        portCLowerDir === 'input'
+                          ? 'bg-blue-50 text-blue-700 border-blue-200'
+                          : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      }`}
+                    >
+                      PC3–0: {portCLowerDir === 'input' ? 'IN' : 'OUT'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] text-slate-500 font-semibold">Port C Pin State:</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono text-xs font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                      0x{effectivePortCPins.toString(16).toUpperCase().padStart(2, '0')}
+                    </span>
+                    <span className="font-mono text-[10px] text-slate-500">
+                      ({effectivePortCPins.toString(2).padStart(8, '0')}b)
+                    </span>
+                  </div>
+                </div>
+
+                {/* 8-bit pin bar with split between Upper (7-4) and Lower (3-0) */}
+                <div className="grid grid-cols-8 gap-1 font-mono text-center mb-2.5">
+                  {Array.from({ length: 8 }, (_, i) => {
+                    const bitIdx = 7 - i;
+                    const isUpper = bitIdx >= 4;
+                    const isInput = isUpper ? portCUpperDir === 'input' : portCLowerDir === 'input';
+                    const bitVal = (effectivePortCPins >> bitIdx) & 1;
+                    return (
+                      <button
+                        key={bitIdx}
+                        type="button"
+                        onClick={() => {
+                          if (isUpper) {
+                            if (portCUpperDir === 'input') {
+                              setPortCExtInput((prev) => prev ^ (1 << bitIdx));
+                            } else {
+                              setPortCOutputLatch((prev) => prev ^ (1 << bitIdx));
+                            }
+                          } else {
+                            if (portCLowerDir === 'input') {
+                              setPortCExtInput((prev) => prev ^ (1 << bitIdx));
+                            } else {
+                              setPortCOutputLatch((prev) => prev ^ (1 << bitIdx));
+                            }
+                          }
+                        }}
+                        title={`PC${bitIdx} (${isUpper ? 'Upper' : 'Lower'}, ${isInput ? 'INPUT' : 'OUTPUT'}): ${bitVal}. Click to toggle.`}
+                        className={`py-1.5 rounded text-[10px] font-bold border cursor-pointer transition-all ${
+                          bitVal === 1
+                            ? isInput
+                              ? 'bg-blue-600 text-white border-blue-700 shadow-2xs'
+                              : 'bg-emerald-600 text-white border-emerald-700 shadow-2xs'
+                            : 'bg-slate-100 text-slate-500 border-slate-200 hover:bg-slate-200'
+                        } ${bitIdx === 4 ? 'border-r-2 border-r-slate-400' : ''}`}
+                      >
+                        <span className="text-[8px] block opacity-75">PC{bitIdx}</span>
+                        <span>{bitVal}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <p className="text-[10px] text-slate-500 leading-tight">
+                  Independent nibbles: PC7–PC4 (<strong className="text-slate-700">{portCUpperDir}</strong>), PC3–PC0 (<strong className="text-slate-700">{portCLowerDir}</strong>). Also directly settable via BSR Mode.
+                </p>
               </div>
             </div>
           </div>
         </div>
       )}
 
+      {ioSubTab === 'mode0' && (
+        <PPI8255ModesOfOperation hideSubNav={true} selectedSubView="mode0" />
+      )}
+
+      {ioSubTab === 'mode1' && (
+        <PPI8255ModesOfOperation hideSubNav={true} selectedSubView="mode1" />
+      )}
+
+      {ioSubTab === 'mode2' && (
+        <PPI8255ModesOfOperation hideSubNav={true} selectedSubView="mode2" />
+      )}
+
+      {ioSubTab === 'table' && (
+        <PPI8255ModesOfOperation hideSubNav={true} selectedSubView="table" />
+      )}
+    </div>
+  )}
+
       {/* ========================================================================= */}
       {/* TAB 4: BSR MODE                                                           */}
       {/* ========================================================================= */}
       {activeTab === 'bsr' && (
         <div className="space-y-4">
+          {/* BSR Control Word Byte Bit Breakdown - Positioned at Top */}
+          <div className="bg-white p-4 rounded-xl border border-amber-200 shadow-xs space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-xs text-slate-900 uppercase tracking-wider">
+                    Calculated BSR Control Word Byte Register
+                  </span>
+                  <span className="text-[10px] bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded-full border border-amber-300 inline-flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse"></span>
+                    Click bits to toggle
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-base font-extrabold text-amber-900 bg-amber-100 px-3 py-1 rounded-lg border border-amber-300 shadow-xs">
+                  {bsrControlWordHex}
+                </span>
+                <span className="text-[11px] font-mono text-slate-500 font-semibold">
+                  ({bsrControlWordByte.toString(2).padStart(8, '0')}b)
+                </span>
+              </div>
+            </div>
+
+            {/* Interactive 8-Bit BSR Register Bar */}
+            <div className="grid grid-cols-8 gap-1.5 font-mono text-center">
+              {/* D7 */}
+              <button
+                type="button"
+                onClick={() => handleToggleBsrBit(7)}
+                title="D7: Mode Set Flag (0 = BSR Mode, 1 = I/O Mode). Click to switch to I/O Mode (D7=1)."
+                className="group p-2 rounded-lg border cursor-pointer transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 bg-amber-500 text-white border-amber-600 shadow-xs hover:ring-2 hover:ring-amber-300"
+              >
+                <div className="font-bold text-[10px] text-amber-100">D7</div>
+                <div className="font-black text-sm my-0.5">0</div>
+                <div className="text-[9px] font-sans font-semibold truncate">BSR Mode</div>
+                <div className="text-[8px] font-sans text-amber-100 opacity-0 group-hover:opacity-100 transition-opacity">Flip</div>
+              </button>
+
+              {/* D6 */}
+              <div
+                title="D6: Don't care in BSR mode (X / 0)"
+                className="p-2 rounded-lg border bg-slate-50 text-slate-400 border-slate-200 select-none"
+              >
+                <div className="font-bold text-slate-400 text-[10px]">D6</div>
+                <div className="font-black text-sm my-0.5">0</div>
+                <div className="text-[9px] font-sans font-medium truncate">X (Care)</div>
+              </div>
+
+              {/* D5 */}
+              <div
+                title="D5: Don't care in BSR mode (X / 0)"
+                className="p-2 rounded-lg border bg-slate-50 text-slate-400 border-slate-200 select-none"
+              >
+                <div className="font-bold text-slate-400 text-[10px]">D5</div>
+                <div className="font-black text-sm my-0.5">0</div>
+                <div className="text-[9px] font-sans font-medium truncate">X (Care)</div>
+              </div>
+
+              {/* D4 */}
+              <div
+                title="D4: Don't care in BSR mode (X / 0)"
+                className="p-2 rounded-lg border bg-slate-50 text-slate-400 border-slate-200 select-none"
+              >
+                <div className="font-bold text-slate-400 text-[10px]">D4</div>
+                <div className="font-black text-sm my-0.5">0</div>
+                <div className="text-[9px] font-sans font-medium truncate">X (Care)</div>
+              </div>
+
+              {/* D3 */}
+              <button
+                type="button"
+                onClick={() => handleToggleBsrBit(3)}
+                title={`D3: Bit select B2. Current bit: ${((bsrBit >> 2) & 1)}. Click to toggle.`}
+                className={`group p-2 rounded-lg border cursor-pointer transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 hover:ring-2 hover:ring-indigo-300 ${
+                  ((bsrBit >> 2) & 1) === 1
+                    ? 'bg-indigo-600 text-white border-indigo-700 shadow-xs'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                <div className={`font-bold text-[10px] ${((bsrBit >> 2) & 1) === 1 ? 'text-indigo-200' : 'text-slate-500'}`}>D3</div>
+                <div className="font-black text-sm my-0.5">{((bsrBit >> 2) & 1)}</div>
+                <div className="text-[9px] font-sans font-semibold truncate">Bit Sel B2</div>
+                <div className={`text-[8px] font-sans opacity-0 group-hover:opacity-100 transition-opacity ${((bsrBit >> 2) & 1) === 1 ? 'text-indigo-200' : 'text-slate-400'}`}>Flip</div>
+              </button>
+
+              {/* D2 */}
+              <button
+                type="button"
+                onClick={() => handleToggleBsrBit(2)}
+                title={`D2: Bit select B1. Current bit: ${((bsrBit >> 1) & 1)}. Click to toggle.`}
+                className={`group p-2 rounded-lg border cursor-pointer transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 hover:ring-2 hover:ring-indigo-300 ${
+                  ((bsrBit >> 1) & 1) === 1
+                    ? 'bg-indigo-600 text-white border-indigo-700 shadow-xs'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                <div className={`font-bold text-[10px] ${((bsrBit >> 1) & 1) === 1 ? 'text-indigo-200' : 'text-slate-500'}`}>D2</div>
+                <div className="font-black text-sm my-0.5">{((bsrBit >> 1) & 1)}</div>
+                <div className="text-[9px] font-sans font-semibold truncate">Bit Sel B1</div>
+                <div className={`text-[8px] font-sans opacity-0 group-hover:opacity-100 transition-opacity ${((bsrBit >> 1) & 1) === 1 ? 'text-indigo-200' : 'text-slate-400'}`}>Flip</div>
+              </button>
+
+              {/* D1 */}
+              <button
+                type="button"
+                onClick={() => handleToggleBsrBit(1)}
+                title={`D1: Bit select B0. Current bit: ${(bsrBit & 1)}. Click to toggle.`}
+                className={`group p-2 rounded-lg border cursor-pointer transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 hover:ring-2 hover:ring-indigo-300 ${
+                  (bsrBit & 1) === 1
+                    ? 'bg-indigo-600 text-white border-indigo-700 shadow-xs'
+                    : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                }`}
+              >
+                <div className={`font-bold text-[10px] ${(bsrBit & 1) === 1 ? 'text-indigo-200' : 'text-slate-500'}`}>D1</div>
+                <div className="font-black text-sm my-0.5">{(bsrBit & 1)}</div>
+                <div className="text-[9px] font-sans font-semibold truncate">Bit Sel B0</div>
+                <div className={`text-[8px] font-sans opacity-0 group-hover:opacity-100 transition-opacity ${(bsrBit & 1) === 1 ? 'text-indigo-200' : 'text-slate-400'}`}>Flip</div>
+              </button>
+
+              {/* D0 */}
+              <button
+                type="button"
+                onClick={() => handleToggleBsrBit(0)}
+                title={`D0: S/R Action (${bsrSetReset === 1 ? 'SET 1' : 'RESET 0'}). Click to toggle.`}
+                className={`group p-2 rounded-lg border cursor-pointer transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 hover:ring-2 hover:ring-indigo-300 ${
+                  bsrSetReset === 1
+                    ? 'bg-emerald-600 text-white border-emerald-700 shadow-xs'
+                    : 'bg-rose-600 text-white border-rose-700 shadow-xs'
+                }`}
+              >
+                <div className="font-bold text-[10px] text-white/80">D0</div>
+                <div className="font-black text-sm my-0.5">{bsrSetReset}</div>
+                <div className="text-[9px] font-sans font-semibold truncate">{bsrSetReset === 1 ? 'SET (1)' : 'RESET (0)'}</div>
+                <div className="text-[8px] font-sans text-white/70 opacity-0 group-hover:opacity-100 transition-opacity">Flip</div>
+              </button>
+            </div>
+
+            {/* Quick BSR Presets Bar */}
+            <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-slate-100 text-[10px]">
+              <span className="font-bold text-slate-500 uppercase tracking-wider mr-1">Quick Presets:</span>
+              {[
+                { bit: 0, sr: 1, label: '01H: Set PC0' },
+                { bit: 0, sr: 0, label: '00H: Reset PC0' },
+                { bit: 3, sr: 1, label: '07H: Set PC3' },
+                { bit: 3, sr: 0, label: '06H: Reset PC3' },
+                { bit: 7, sr: 1, label: '0FH: Set PC7' },
+                { bit: 7, sr: 0, label: '0EH: Reset PC7' },
+              ].map((preset) => {
+                const isSelected = bsrBit === preset.bit && bsrSetReset === preset.sr;
+                return (
+                  <button
+                    key={preset.label}
+                    type="button"
+                    onClick={() => {
+                      setBsrBit(preset.bit);
+                      setBsrSetReset(preset.sr);
+                    }}
+                    className={`px-2 py-0.5 rounded-md font-mono font-bold cursor-pointer transition-all ${
+                      isSelected
+                        ? 'bg-amber-600 text-white shadow-2xs'
+                        : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200'
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* BSR Configurator Controls - Positioned Below */}
           <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
             <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
               <span className="font-bold text-xs text-indigo-900 uppercase">Bit Set / Reset (BSR) Mode Configurator (D7 = 0)</span>
@@ -921,7 +2149,7 @@ export default function PPI8255Simulator({
 
           <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200 shadow-2xs">
             <div className="font-mono text-xs text-slate-700">
-              BSR Control Word: <strong className="text-indigo-700 font-bold">{bsrControlWordHex}</strong>
+              Selected BSR Control Word: <strong className="text-indigo-700 font-bold">{bsrControlWordHex}</strong>
             </div>
             <button
               onClick={handleApplyBSR}
@@ -939,26 +2167,86 @@ export default function PPI8255Simulator({
       {activeTab === 'registers' && (
         <div className="space-y-3">
           <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
-            <div className="font-bold text-indigo-950 text-xs uppercase tracking-wider">8255 Port Register Pin States</div>
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2">
+              <div>
+                <div className="font-bold text-indigo-950 text-xs uppercase tracking-wider">
+                  8255 Port Register Pin States & Control Signal Enforcement
+                </div>
+              </div>
+
+              {/* Quick RD#/WR# Status */}
+              <div className="flex items-center gap-1.5 font-mono text-[10px]">
+                <span className="px-2 py-0.5 bg-white rounded border border-slate-200 text-slate-600">
+                  CS#={sigCS}
+                </span>
+                <span className={`px-2 py-0.5 rounded border font-bold ${sigRD === 0 ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-white text-slate-600 border-slate-200'}`}>
+                  RD#={sigRD}
+                </span>
+                <span className={`px-2 py-0.5 rounded border font-bold ${sigWR === 0 ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-white text-slate-600 border-slate-200'}`}>
+                  WR#={sigWR}
+                </span>
+              </div>
+            </div>
 
             {/* Port A */}
-            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1.5 shadow-2xs">
+            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-2 shadow-2xs">
               <div className="flex justify-between items-center text-[10px]">
-                <strong className="text-emerald-800 font-bold">Port A (PA0–PA7)</strong>
-                <span className="font-mono text-slate-600 font-semibold">0x{portAVal.toString(16).toUpperCase().padStart(2, '0')}</span>
+                <div className="flex items-center gap-2">
+                  <strong className="text-slate-800 font-bold">Port A (PA0–PA7)</strong>
+                  <span
+                    className={`font-bold px-2 py-0.5 rounded-full border text-[9px] ${
+                      portADir === 'input'
+                        ? 'bg-blue-50 text-blue-700 border-blue-200'
+                        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    }`}
+                  >
+                    {portADir === 'input' ? 'INPUT MODE (D4=1)' : 'OUTPUT MODE (D4=0)'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-mono text-slate-700 font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                    0x{effectivePortAPins.toString(16).toUpperCase().padStart(2, '0')}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => executeCpuRead(0, 0)}
+                    className="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded font-bold border border-blue-200 text-[9px] cursor-pointer"
+                  >
+                    Read
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => executeCpuWrite(0, 0)}
+                    className="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded font-bold border border-emerald-200 text-[9px] cursor-pointer"
+                  >
+                    Write
+                  </button>
+                </div>
               </div>
               <div className="grid grid-cols-8 gap-1 font-mono text-center">
                 {Array.from({ length: 8 }, (_, i) => {
-                  const bit = (portAVal >> (7 - i)) & 1;
+                  const bitIdx = 7 - i;
+                  const bit = (effectivePortAPins >> bitIdx) & 1;
                   return (
                     <button
                       key={i}
-                      onClick={() => setPortAVal(portAVal ^ (1 << (7 - i)))}
+                      onClick={() => {
+                        if (portADir === 'input') {
+                          setPortAExtInput((prev) => prev ^ (1 << bitIdx));
+                        } else {
+                          setPortAOutputLatch((prev) => prev ^ (1 << bitIdx));
+                        }
+                      }}
+                      title={`PA${bitIdx}: ${bit} (${portADir === 'input' ? 'External Input' : 'Latched Output'}). Click to toggle.`}
                       className={`py-1.5 rounded font-bold text-[10px] cursor-pointer transition-all ${
-                        bit ? 'bg-emerald-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-500 border border-slate-200'
+                        bit
+                          ? portADir === 'input'
+                            ? 'bg-blue-600 text-white shadow-2xs'
+                            : 'bg-emerald-600 text-white shadow-2xs'
+                          : 'bg-slate-100 text-slate-500 border border-slate-200'
                       }`}
                     >
-                      PA{7 - i}: {bit}
+                      PA{bitIdx}: {bit}
                     </button>
                   );
                 })}
@@ -966,23 +2254,64 @@ export default function PPI8255Simulator({
             </div>
 
             {/* Port B */}
-            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1.5 shadow-2xs">
+            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-2 shadow-2xs">
               <div className="flex justify-between items-center text-[10px]">
-                <strong className="text-indigo-800 font-bold">Port B (PB0–PB7)</strong>
-                <span className="font-mono text-slate-600 font-semibold">0x{portBVal.toString(16).toUpperCase().padStart(2, '0')}</span>
+                <div className="flex items-center gap-2">
+                  <strong className="text-slate-800 font-bold">Port B (PB0–PB7)</strong>
+                  <span
+                    className={`font-bold px-2 py-0.5 rounded-full border text-[9px] ${
+                      portBDir === 'input'
+                        ? 'bg-blue-50 text-blue-700 border-blue-200'
+                        : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    }`}
+                  >
+                    {portBDir === 'input' ? 'INPUT MODE (D1=1)' : 'OUTPUT MODE (D1=0)'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-mono text-slate-700 font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                    0x{effectivePortBPins.toString(16).toUpperCase().padStart(2, '0')}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => executeCpuRead(0, 1)}
+                    className="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded font-bold border border-blue-200 text-[9px] cursor-pointer"
+                  >
+                    Read
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => executeCpuWrite(0, 1)}
+                    className="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded font-bold border border-emerald-200 text-[9px] cursor-pointer"
+                  >
+                    Write
+                  </button>
+                </div>
               </div>
               <div className="grid grid-cols-8 gap-1 font-mono text-center">
                 {Array.from({ length: 8 }, (_, i) => {
-                  const bit = (portBVal >> (7 - i)) & 1;
+                  const bitIdx = 7 - i;
+                  const bit = (effectivePortBPins >> bitIdx) & 1;
                   return (
                     <button
                       key={i}
-                      onClick={() => setPortBVal(portBVal ^ (1 << (7 - i)))}
+                      onClick={() => {
+                        if (portBDir === 'input') {
+                          setPortBExtInput((prev) => prev ^ (1 << bitIdx));
+                        } else {
+                          setPortBOutputLatch((prev) => prev ^ (1 << bitIdx));
+                        }
+                      }}
+                      title={`PB${bitIdx}: ${bit} (${portBDir === 'input' ? 'External Input' : 'Latched Output'}). Click to toggle.`}
                       className={`py-1.5 rounded font-bold text-[10px] cursor-pointer transition-all ${
-                        bit ? 'bg-indigo-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-500 border border-slate-200'
+                        bit
+                          ? portBDir === 'input'
+                            ? 'bg-blue-600 text-white shadow-2xs'
+                            : 'bg-emerald-600 text-white shadow-2xs'
+                          : 'bg-slate-100 text-slate-500 border border-slate-200'
                       }`}
                     >
-                      PB{7 - i}: {bit}
+                      PB{bitIdx}: {bit}
                     </button>
                   );
                 })}
@@ -990,23 +2319,68 @@ export default function PPI8255Simulator({
             </div>
 
             {/* Port C */}
-            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1.5 shadow-2xs">
+            <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-2 shadow-2xs">
               <div className="flex justify-between items-center text-[10px]">
-                <strong className="text-amber-800 font-bold">Port C (PC0–PC7)</strong>
-                <span className="font-mono text-slate-600 font-semibold">0x{portCVal.toString(16).toUpperCase().padStart(2, '0')}</span>
+                <div className="flex items-center gap-2">
+                  <strong className="text-slate-800 font-bold">Port C (PC0–PC7)</strong>
+                  <span className="font-bold px-1.5 py-0.5 rounded border text-[9px] bg-slate-100 text-slate-700">
+                    PC7–4: {portCUpperDir.toUpperCase()} • PC3–0: {portCLowerDir.toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-mono text-slate-700 font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                    0x{effectivePortCPins.toString(16).toUpperCase().padStart(2, '0')}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => executeCpuRead(1, 0)}
+                    className="px-2 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded font-bold border border-blue-200 text-[9px] cursor-pointer"
+                  >
+                    Read
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => executeCpuWrite(1, 0)}
+                    className="px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded font-bold border border-emerald-200 text-[9px] cursor-pointer"
+                  >
+                    Write
+                  </button>
+                </div>
               </div>
               <div className="grid grid-cols-8 gap-1 font-mono text-center">
                 {Array.from({ length: 8 }, (_, i) => {
-                  const bit = (portCVal >> (7 - i)) & 1;
+                  const bitIdx = 7 - i;
+                  const isUpper = bitIdx >= 4;
+                  const isInput = isUpper ? portCUpperDir === 'input' : portCLowerDir === 'input';
+                  const bit = (effectivePortCPins >> bitIdx) & 1;
                   return (
                     <button
                       key={i}
-                      onClick={() => setPortCVal(portCVal ^ (1 << (7 - i)))}
+                      onClick={() => {
+                        if (isUpper) {
+                          if (portCUpperDir === 'input') {
+                            setPortCExtInput((prev) => prev ^ (1 << bitIdx));
+                          } else {
+                            setPortCOutputLatch((prev) => prev ^ (1 << bitIdx));
+                          }
+                        } else {
+                          if (portCLowerDir === 'input') {
+                            setPortCExtInput((prev) => prev ^ (1 << bitIdx));
+                          } else {
+                            setPortCOutputLatch((prev) => prev ^ (1 << bitIdx));
+                          }
+                        }
+                      }}
+                      title={`PC${bitIdx}: ${bit} (${isUpper ? 'Upper' : 'Lower'}, ${isInput ? 'Input' : 'Output'}). Click to toggle.`}
                       className={`py-1.5 rounded font-bold text-[10px] cursor-pointer transition-all ${
-                        bit ? 'bg-amber-600 text-white shadow-2xs' : 'bg-slate-100 text-slate-500 border border-slate-200'
-                      }`}
+                        bit
+                          ? isInput
+                            ? 'bg-blue-600 text-white shadow-2xs'
+                            : 'bg-emerald-600 text-white shadow-2xs'
+                          : 'bg-slate-100 text-slate-500 border border-slate-200'
+                      } ${bitIdx === 4 ? 'border-r-2 border-r-slate-400' : ''}`}
                     >
-                      PC{7 - i}: {bit}
+                      PC{bitIdx}: {bit}
                     </button>
                   );
                 })}
@@ -1027,7 +2401,7 @@ export default function PPI8255Simulator({
       {/* TAB: MODES OF OPERATION                                                   */}
       {/* ========================================================================= */}
       {activeTab === 'modes' && (
-        <PPI8255ModesOfOperation />
+        <PPI8255ModesOfOperation hideSubNav={true} selectedSubView="overview" />
       )}
     </div>
   );

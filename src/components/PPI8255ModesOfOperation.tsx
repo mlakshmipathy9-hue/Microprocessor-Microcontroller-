@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import PPI8255Mode1Waveforms from './PPI8255Mode1Waveforms';
+import PPI8255Mode2Waveforms from './PPI8255Mode2Waveforms';
 import { 
   Zap, 
   Layers, 
@@ -24,62 +25,54 @@ import {
   Radio
 } from 'lucide-react';
 
-export default function PPI8255ModesOfOperation() {
-  const [selectedSubView, setSelectedSubView] = useState<'overview' | 'bsr' | 'mode0' | 'mode1' | 'mode2' | 'table'>('overview');
+export interface PPI8255ModesOfOperationProps {
+  initialSubView?: 'overview' | 'bsr' | 'mode0' | 'mode1' | 'mode2' | 'table';
+  allowedSubViews?: ('overview' | 'bsr' | 'mode0' | 'mode1' | 'mode2' | 'table')[];
+  selectedSubView?: 'overview' | 'bsr' | 'mode0' | 'mode1' | 'mode2' | 'table';
+  onSubViewChange?: (view: 'overview' | 'bsr' | 'mode0' | 'mode1' | 'mode2' | 'table') => void;
+  hideSubNav?: boolean;
+}
+
+export default function PPI8255ModesOfOperation({
+  initialSubView = 'overview',
+  allowedSubViews,
+  selectedSubView: controlledSubView,
+  onSubViewChange,
+  hideSubNav = false,
+}: PPI8255ModesOfOperationProps = {}) {
+  const [internalSubView, setInternalSubView] = useState<'overview' | 'bsr' | 'mode0' | 'mode1' | 'mode2' | 'table'>(initialSubView);
+
+  const selectedSubView = controlledSubView !== undefined ? controlledSubView : internalSubView;
+
+  const setSelectedSubView = (view: 'overview' | 'bsr' | 'mode0' | 'mode1' | 'mode2' | 'table') => {
+    if (onSubViewChange) {
+      onSubViewChange(view);
+    }
+    setInternalSubView(view);
+  };
   
-  // Interactive Mode 1 Handshake Stepper State
-  const [mode1Type, setMode1Type] = useState<'input' | 'output'>('input');
+  // Interactive Mode 1 Handshake Stepper State ('simple_signals' = The 4 Main Signals in Simple Words, 'input' = Strobed Input Handshake, 'output' = Strobed Output Handshake)
+  const [mode1Type, setMode1Type] = useState<'simple_signals' | 'input' | 'output'>('simple_signals');
   const [mode1Step, setMode1Step] = useState<number>(0);
 
   // Interactive Mode 2 Bidirectional State
   const [mode2Dir, setMode2Dir] = useState<'tx' | 'rx'>('tx');
   const [mode2Step, setMode2Step] = useState<number>(0);
 
+  const canDrillDown = !hideSubNav;
+
   // Show 16 Configurations Table in Mode 0
   const [showConfigTable, setShowConfigTable] = useState<boolean>(false);
 
-  // Interactive BSR Demo State (Direct D3, D2, D1, D0 with instant Port C reflection)
-  const [bsrD3, setBsrD3] = useState<number>(0);
-  const [bsrD2, setBsrD2] = useState<number>(1);
-  const [bsrD1, setBsrD1] = useState<number>(1); // 011 -> Bit 3 (PC3)
-  const [bsrD0, setBsrD0] = useState<number>(1); // 1 -> SET
-  const [demoPortCBits, setDemoPortCBits] = useState<number[]>([0, 0, 0, 1, 0, 0, 0, 0]); // PC0 to PC7
-  const [lastActionMsg, setLastActionMsg] = useState<string>('PC3 was SET to 1');
+  // Interactive BSR Demo
+  const [demoBsrBit, setDemoBsrBit] = useState<number>(3);
+  const [demoBsrVal, setDemoBsrVal] = useState<number>(1);
+  const [demoPortCBits, setDemoPortCBits] = useState<number[]>([0, 1, 0, 1, 0, 0, 1, 0]);
 
-  // Active target bit calculated directly from D3, D2, D1 (000=PC0 ... 111=PC7)
-  const activeBsrTargetBit = (bsrD3 << 2) | (bsrD2 << 1) | bsrD1;
-  const bsrControlWordByte = (bsrD3 << 3) | (bsrD2 << 2) | (bsrD1 << 1) | bsrD0;
-  const bsrControlWordHex = bsrControlWordByte.toString(16).toUpperCase().padStart(2, '0') + 'H';
-  const bsrControlWordBin = `0000 ${bsrD3}${bsrD2}${bsrD1}${bsrD0}`;
-
-  // Reactive updater: Whenever D0, D1, D2, or D3 changes, PORT C immediately reflects it!
-  const updateBsrBits = (newD3: number, newD2: number, newD1: number, newD0: number) => {
-    setBsrD3(newD3);
-    setBsrD2(newD2);
-    setBsrD1(newD1);
-    setBsrD0(newD0);
-    const target = (newD3 << 2) | (newD2 << 1) | newD1;
-    setDemoPortCBits(prev => {
-      const next = [...prev];
-      next[target] = newD0;
-      return next;
-    });
-    setLastActionMsg(`D3 D2 D1 = [${newD3}${newD2}${newD1}]₂ (PC${target}) • D0 = ${newD0} (${newD0 === 1 ? 'SET to 1' : 'RESET to 0'}) → Port C PC${target} is now ${newD0}`);
-  };
-
-  const selectPortCBit = (bitIndex: number) => {
-    const d3 = (bitIndex >> 2) & 1;
-    const d2 = (bitIndex >> 1) & 1;
-    const d1 = bitIndex & 1;
-    updateBsrBits(d3, d2, d1, bsrD0);
-  };
-
-  const toggleD0 = (newD0: number) => {
-    updateBsrBits(bsrD3, bsrD2, bsrD1, newD0);
-  };
-
-  const reapplyCurrentBsr = () => {
-    updateBsrBits(bsrD3, bsrD2, bsrD1, bsrD0);
+  const applyDemoBsr = () => {
+    const updated = [...demoPortCBits];
+    updated[demoBsrBit] = demoBsrVal;
+    setDemoPortCBits(updated);
   };
 
   // TypeScript Interfaces for Steppers
@@ -319,34 +312,38 @@ export default function PPI8255ModesOfOperation() {
   return (
     <div className="space-y-5 font-sans">
       {/* Sub-Navigation Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200 shadow-2xs">
-        <div className="flex items-center gap-1.5 px-1 text-[11px] font-bold text-slate-700">
-          <Layers className="w-3.5 h-3.5 text-indigo-600" />
-          <span>Select Mode View:</span>
+      {!hideSubNav && (
+        <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200 shadow-2xs">
+          <div className="flex items-center gap-1.5 px-1 text-[11px] font-bold text-slate-700">
+            <Layers className="w-3.5 h-3.5 text-indigo-600" />
+            <span>Select Mode View:</span>
+          </div>
+          <div className="flex flex-wrap gap-1">
+            {[
+              { id: 'overview', label: 'All Modes Bento' },
+              { id: 'bsr', label: 'BSR Mode (D7 = 0)' },
+              { id: 'mode0', label: 'Mode 0 (Basic I/O)' },
+              { id: 'mode1', label: 'Mode 1 (Handshake)' },
+              { id: 'mode2', label: 'Mode 2 (Bi-directional)' },
+              { id: 'table', label: 'Comparison Matrix' },
+            ]
+              .filter((item) => !allowedSubViews || allowedSubViews.includes(item.id as any))
+              .map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setSelectedSubView(item.id as any)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    selectedSubView === item.id
+                      ? 'bg-indigo-600 text-white shadow-2xs'
+                      : 'bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/80'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+          </div>
         </div>
-        <div className="flex flex-wrap gap-1">
-          {[
-            { id: 'overview', label: 'All Modes Bento' },
-            { id: 'bsr', label: 'BSR Mode (D7 = 0)' },
-            { id: 'mode0', label: 'Mode 0 (Basic I/O)' },
-            { id: 'mode1', label: 'Mode 1 (Handshake)' },
-            { id: 'mode2', label: 'Mode 2 (Bi-directional)' },
-            { id: 'table', label: 'Comparison Matrix' },
-          ].map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setSelectedSubView(item.id as any)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                selectedSubView === item.id
-                  ? 'bg-indigo-600 text-white shadow-2xs'
-                  : 'bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200/80'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* ========================================================================= */}
       {/* 1. OVERVIEW: BENTO GRID OF ALL 8255 MODES                                */}
@@ -374,134 +371,102 @@ export default function PPI8255ModesOfOperation() {
           </div>
 
           {/* Bento Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Card 1: BSR Mode */}
-            <div 
-              onClick={() => setSelectedSubView('bsr')}
-              className="bg-white p-4 rounded-xl border border-amber-200 hover:border-amber-400 hover:shadow-md transition-all cursor-pointer space-y-3 group"
-            >
-              <div className="flex justify-between items-center">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300">
-                  D7 = 0 • BIT SET / RESET
-                </span>
-                <span className="text-[11px] font-bold text-amber-600 group-hover:text-amber-700 flex items-center gap-1">
-                  Click for Interactive Simulator <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                </span>
-              </div>
-              <h5 className="font-bold text-sm text-slate-900 group-hover:text-amber-700 flex items-center justify-between">
-                <span>1. BSR (Bit Set / Reset) Mode</span>
-                <span className="font-mono text-xs font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">
-                  D7 = 0
-                </span>
-              </h5>
-
-              {/* BSR Bit Structure Mini Layout */}
-              <div className="bg-amber-50/70 p-2.5 rounded-lg border border-amber-200 space-y-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-900 block">
-                  BSR Control Word Format (Written to CWR at A1=1, A0=1):
-                </span>
-                <div className="grid grid-cols-8 gap-1 text-center font-mono text-[10px]">
-                  <div className="bg-amber-200/80 p-1 rounded border border-amber-400">
-                    <span className="text-[8px] text-amber-800 block">D7</span>
-                    <strong className="text-amber-950 font-black">0</strong>
-                    <span className="text-[7px] text-amber-700 block">BSR</span>
-                  </div>
-                  <div className="bg-slate-100 p-1 rounded border border-slate-200">
-                    <span className="text-[8px] text-slate-400 block">D6</span>
-                    <span className="text-slate-500 font-bold">X</span>
-                    <span className="text-[7px] text-slate-400 block">N/A</span>
-                  </div>
-                  <div className="bg-slate-100 p-1 rounded border border-slate-200">
-                    <span className="text-[8px] text-slate-400 block">D5</span>
-                    <span className="text-slate-500 font-bold">X</span>
-                    <span className="text-[7px] text-slate-400 block">N/A</span>
-                  </div>
-                  <div className="bg-slate-100 p-1 rounded border border-slate-200">
-                    <span className="text-[8px] text-slate-400 block">D4</span>
-                    <span className="text-slate-500 font-bold">X</span>
-                    <span className="text-[7px] text-slate-400 block">N/A</span>
-                  </div>
-                  <div className="bg-amber-100/90 p-1 rounded border border-amber-300 col-span-3">
-                    <span className="text-[8px] text-amber-800 block">D3 • D2 • D1</span>
-                    <strong className="text-amber-950 font-bold">B2 B1 B0</strong>
-                    <span className="text-[7px] text-amber-700 block">Bit (000–111)</span>
-                  </div>
-                  <div className="bg-amber-200/80 p-1 rounded border border-amber-400">
-                    <span className="text-[8px] text-amber-800 block">D0</span>
-                    <strong className="text-amber-950 font-black">S / R</strong>
-                    <span className="text-[7px] text-amber-700 block">1=Set, 0=Reset</span>
-                  </div>
+          {selectedSubView === 'overview' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Card 1: BSR Mode */}
+              <div 
+                onClick={canDrillDown ? () => setSelectedSubView('bsr') : undefined}
+                className={`bg-white p-4 rounded-xl border border-amber-200 transition-all space-y-2.5 ${
+                  canDrillDown ? 'hover:border-amber-400 hover:shadow-md cursor-pointer group' : 'shadow-2xs'
+                }`}
+              >
+                <div className="flex justify-between items-center">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300">
+                    D7 = 0 • BIT SET / RESET
+                  </span>
+                  {canDrillDown && <ArrowRight className="w-4 h-4 text-amber-500 group-hover:translate-x-1 transition-transform" />}
+                </div>
+                <h5 className={`font-bold text-sm text-slate-900 flex items-center justify-between ${canDrillDown ? 'group-hover:text-amber-700' : ''}`}>
+                  <span>1. BSR (Bit Set / Reset) Mode</span>
+                  <span className="font-mono text-xs font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">
+                    D7 = 0
+                  </span>
+                </h5>
+                <div className="bg-amber-50/60 p-2.5 rounded-lg text-[11px] text-amber-950 font-medium space-y-1 border border-amber-150">
+                  <div>🔑 <strong>Control Word Bit D7 = 0</strong> selects BSR mode.</div>
+                  <div>⚡ <strong>Operates on Port C only:</strong> Sets or resets any individual bit (PC0–PC7).</div>
+                  <div>🚫 <strong>No effect on Ports A or B.</strong></div>
+                  <div>🎯 <strong>Used for:</strong> Stepper motor pulses, LED toggling, generating handshake strobes.</div>
                 </div>
               </div>
 
-              <div className="bg-slate-50 p-2.5 rounded-lg text-[11px] text-slate-800 space-y-1 border border-slate-200">
-                <div>🔑 <strong>D7 = 0 activates BSR Mode:</strong> If D7 is 0, the control word is treated strictly as BSR.</div>
-                <div>🎯 <strong>Affects Port C Only (PC0–PC7):</strong> Sets or resets one individual bit at a time without disturbing the other 7 bits.</div>
-                <div>🚫 <strong>Ports A &amp; B Unaffected:</strong> Ports A &amp; B maintain their configured I/O states completely.</div>
-                <div>💡 <strong>Common Use Cases:</strong> Generating strobe pulses, toggling handshake lines, pulse train generation for stepper motors, turning on/off relays and LEDs.</div>
+              {/* Card 2: Mode 0 (Basic I/O) */}
+              <div 
+                onClick={canDrillDown ? () => setSelectedSubView('mode0') : undefined}
+                className={`bg-white p-4 rounded-xl border border-emerald-200 transition-all space-y-2.5 ${
+                  canDrillDown ? 'hover:border-emerald-400 hover:shadow-md cursor-pointer group' : 'shadow-2xs'
+                }`}
+              >
+                <div className="flex justify-between items-center">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-900 border border-emerald-300">
+                    D7 = 1 • Basic Simple I/O
+                  </span>
+                  {canDrillDown && <ArrowRight className="w-4 h-4 text-emerald-500 group-hover:translate-x-1 transition-transform" />}
+                </div>
+                <h5 className={`font-bold text-sm text-slate-900 ${canDrillDown ? 'group-hover:text-emerald-700' : ''}`}>
+                  2. Mode 0: Basic / Simple I/O
+                </h5>
+                <div className="bg-emerald-50/60 p-2.5 rounded-lg text-[11px] text-emerald-950 font-medium space-y-1 border border-emerald-150">
+                  <div>🔒 <strong>Outputs are latched;</strong> Inputs are buffered (unlatched).</div>
+                  <div>🧩 <strong>16 possible port combinations</strong> with 0 handshake lines needed.</div>
+                </div>
               </div>
-            </div>
 
-            {/* Card 2: Mode 0 (Basic I/O) */}
-            <div 
-              onClick={() => setSelectedSubView('mode0')}
-              className="bg-white p-4 rounded-xl border border-emerald-200 hover:border-emerald-400 hover:shadow-md transition-all cursor-pointer space-y-2.5 group"
-            >
-              <div className="flex justify-between items-center">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-900 border border-emerald-300">
-                  D7 = 1 • Basic Simple I/O
-                </span>
-                <ArrowRight className="w-4 h-4 text-emerald-500 group-hover:translate-x-1 transition-transform" />
+              {/* Card 3: Mode 1 (Strobed I/O) */}
+              <div 
+                onClick={canDrillDown ? () => setSelectedSubView('mode1') : undefined}
+                className={`bg-white p-4 rounded-xl border border-indigo-200 transition-all space-y-2.5 ${
+                  canDrillDown ? 'hover:border-indigo-400 hover:shadow-md cursor-pointer group' : 'shadow-2xs'
+                }`}
+              >
+                <div className="flex justify-between items-center">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-100 text-indigo-900 border border-indigo-300">
+                    D7 = 1 • Handshake I/O
+                  </span>
+                  {canDrillDown && <ArrowRight className="w-4 h-4 text-indigo-500 group-hover:translate-x-1 transition-transform" />}
+                </div>
+                <h5 className={`font-bold text-sm text-slate-900 ${canDrillDown ? 'group-hover:text-indigo-700' : ''}`}>
+                  3. Mode 1: Strobed / Handshake I/O
+                </h5>
+                <div className="bg-indigo-50/60 p-2.5 rounded-lg text-[11px] text-indigo-950 font-medium space-y-1 border border-indigo-150">
+                  <div>🔄 <strong>Input Handshake:</strong> S̅T̅B̅, IBF, INTR, INTE.</div>
+                  <div>📤 <strong>Output Handshake:</strong> O̅B̅F̅, A̅C̅K̅, INTR, INTE.</div>
+                </div>
               </div>
-              <h5 className="font-bold text-sm text-slate-900 group-hover:text-emerald-700">
-                2. Mode 0: Basic / Simple I/O
-              </h5>
-              <div className="bg-emerald-50/60 p-2.5 rounded-lg text-[11px] text-emerald-950 font-medium space-y-1 border border-emerald-150">
-                <div>🔒 <strong>Outputs are latched;</strong> Inputs are buffered (unlatched).</div>
-                <div>🧩 <strong>16 possible port combinations</strong> with 0 handshake lines needed.</div>
-              </div>
-            </div>
 
-            {/* Card 3: Mode 1 (Strobed I/O) */}
-            <div 
-              onClick={() => setSelectedSubView('mode1')}
-              className="bg-white p-4 rounded-xl border border-indigo-200 hover:border-indigo-400 hover:shadow-md transition-all cursor-pointer space-y-2.5 group"
-            >
-              <div className="flex justify-between items-center">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-indigo-100 text-indigo-900 border border-indigo-300">
-                  D7 = 1 • Handshake I/O
-                </span>
-                <ArrowRight className="w-4 h-4 text-indigo-500 group-hover:translate-x-1 transition-transform" />
-              </div>
-              <h5 className="font-bold text-sm text-slate-900 group-hover:text-indigo-700">
-                3. Mode 1: Strobed / Handshake I/O
-              </h5>
-              <div className="bg-indigo-50/60 p-2.5 rounded-lg text-[11px] text-indigo-950 font-medium space-y-1 border border-indigo-150">
-                <div>🔄 <strong>Input Handshake:</strong> S̅T̅B̅, IBF, INTR, INTE.</div>
-                <div>📤 <strong>Output Handshake:</strong> O̅B̅F̅, A̅C̅K̅, INTR, INTE.</div>
-              </div>
-            </div>
-
-            {/* Card 4: Mode 2 (Bi-directional Bus) */}
-            <div 
-              onClick={() => setSelectedSubView('mode2')}
-              className="bg-white p-4 rounded-xl border border-purple-200 hover:border-purple-400 hover:shadow-md transition-all cursor-pointer space-y-2.5 group"
-            >
-              <div className="flex justify-between items-center">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-100 text-purple-900 border border-purple-300">
-                  D7 = 1 • Port A Only
-                </span>
-                <ArrowRight className="w-4 h-4 text-purple-500 group-hover:translate-x-1 transition-transform" />
-              </div>
-              <h5 className="font-bold text-sm text-slate-900 group-hover:text-purple-700">
-                4. Mode 2: Strobed Bi-directional Bus
-              </h5>
-              <div className="bg-purple-50/60 p-2.5 rounded-lg text-[11px] text-purple-950 font-medium space-y-1 border border-purple-150">
-                <div>🔁 <strong>Port A:</strong> 8-bit bidirectional data bus (both in &amp; out).</div>
-                <div>📦 <strong>Port B:</strong> Remains in Mode 0 or Mode 1 with PC0–PC2.</div>
+              {/* Card 4: Mode 2 (Bi-directional Bus) */}
+              <div 
+                onClick={canDrillDown ? () => setSelectedSubView('mode2') : undefined}
+                className={`bg-white p-4 rounded-xl border border-purple-200 transition-all space-y-2.5 ${
+                  canDrillDown ? 'hover:border-purple-400 hover:shadow-md cursor-pointer group' : 'shadow-2xs'
+                }`}
+              >
+                <div className="flex justify-between items-center">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-purple-100 text-purple-900 border border-purple-300">
+                    D7 = 1 • Port A Only
+                  </span>
+                  {canDrillDown && <ArrowRight className="w-4 h-4 text-purple-500 group-hover:translate-x-1 transition-transform" />}
+                </div>
+                <h5 className={`font-bold text-sm text-slate-900 ${canDrillDown ? 'group-hover:text-purple-700' : ''}`}>
+                  4. Mode 2: Strobed Bi-directional Bus
+                </h5>
+                <div className="bg-purple-50/60 p-2.5 rounded-lg text-[11px] text-purple-950 font-medium space-y-1 border border-purple-150">
+                  <div>🔁 <strong>Port A:</strong> 8-bit bidirectional data bus (both in &amp; out).</div>
+                  <div>📦 <strong>Port B:</strong> Remains in Mode 0 or Mode 1 with PC0–PC2.</div>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Quick Comparison Summary Table */}
           <div className="bg-white rounded-xl border border-slate-200 shadow-2xs overflow-hidden">
@@ -578,44 +543,117 @@ export default function PPI8255ModesOfOperation() {
               </h4>
             </div>
 
-            {/* BSR Bit Structure Visualizer */}
+            {/* BSR Bit Structure Visualizer - Interactive Bit Register */}
             <div className="bg-white p-3 rounded-xl border border-amber-200 space-y-2">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                BSR Control Word Bit Layout:
-              </span>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider block">
+                  BSR Control Word Bit Register:
+                </span>
+                <span className="text-[10px] font-mono font-bold text-amber-900 bg-amber-100 px-2 py-0.5 rounded border border-amber-300">
+                  Byte: {((demoBsrBit << 1) | demoBsrVal).toString(16).toUpperCase().padStart(2, '0')}H ({(0).toString()}{'000'}{demoBsrBit.toString(2).padStart(3, '0')}{demoBsrVal}b)
+                </span>
+              </div>
               <div className="grid grid-cols-8 gap-1.5 text-center font-mono text-xs">
-                <div className="bg-amber-100 p-2 rounded border border-amber-300">
-                  <span className="text-[9px] text-amber-800 block">D7</span>
-                  <span className="font-extrabold text-amber-950">0</span>
-                  <span className="text-[8px] text-amber-700 block">BSR Flag</span>
+                {/* D7 */}
+                <div
+                  title="D7: Mode Set Flag (0 = BSR Mode)"
+                  className="bg-amber-100 p-2 rounded border border-amber-300 select-none"
+                >
+                  <span className="text-[9px] text-amber-800 block font-bold">D7</span>
+                  <span className="font-extrabold text-amber-950 text-sm">0</span>
+                  <span className="text-[8px] text-amber-700 block truncate">BSR Mode</span>
                 </div>
-                <div className="bg-slate-100 p-2 rounded border border-slate-200">
+                {/* D6 */}
+                <div
+                  title="D6: Don't care in BSR mode"
+                  className="bg-slate-100 p-2 rounded border border-slate-200 select-none"
+                >
                   <span className="text-[9px] text-slate-500 block">D6</span>
-                  <span className="font-bold text-slate-600">X</span>
-                  <span className="text-[8px] text-slate-400 block">Don't Care</span>
+                  <span className="font-bold text-slate-600 text-sm">X</span>
+                  <span className="text-[8px] text-slate-400 block truncate">Don't Care</span>
                 </div>
-                <div className="bg-slate-100 p-2 rounded border border-slate-200">
+                {/* D5 */}
+                <div
+                  title="D5: Don't care in BSR mode"
+                  className="bg-slate-100 p-2 rounded border border-slate-200 select-none"
+                >
                   <span className="text-[9px] text-slate-500 block">D5</span>
-                  <span className="font-bold text-slate-600">X</span>
-                  <span className="text-[8px] text-slate-400 block">Don't Care</span>
+                  <span className="font-bold text-slate-600 text-sm">X</span>
+                  <span className="text-[8px] text-slate-400 block truncate">Don't Care</span>
                 </div>
-                <div className="bg-slate-100 p-2 rounded border border-slate-200">
+                {/* D4 */}
+                <div
+                  title="D4: Don't care in BSR mode"
+                  className="bg-slate-100 p-2 rounded border border-slate-200 select-none"
+                >
                   <span className="text-[9px] text-slate-500 block">D4</span>
-                  <span className="font-bold text-slate-600">X</span>
-                  <span className="text-[8px] text-slate-400 block">Don't Care</span>
+                  <span className="font-bold text-slate-600 text-sm">X</span>
+                  <span className="text-[8px] text-slate-400 block truncate">Don't Care</span>
                 </div>
-                <div className="bg-amber-100 p-2 rounded border border-amber-300 col-span-3">
-                  <span className="text-[9px] text-amber-800 block">D3 • D2 • D1</span>
-                  <span className="font-extrabold text-amber-950">
-                    {demoBsrBit.toString(2).padStart(3, '0')} (Bit {demoBsrBit})
-                  </span>
-                  <span className="text-[8px] text-amber-700 block">Bit Select (PC0–PC7)</span>
-                </div>
-                <div className="bg-amber-200/80 p-2 rounded border border-amber-400">
-                  <span className="text-[9px] text-amber-900 block">D0</span>
-                  <span className="font-black text-amber-950">{demoBsrVal}</span>
-                  <span className="text-[8px] text-amber-800 block">{demoBsrVal === 1 ? '1 = SET' : '0 = RESET'}</span>
-                </div>
+
+                {/* D3 (B2) */}
+                <button
+                  type="button"
+                  onClick={() => setDemoBsrBit((prev) => prev ^ 4)}
+                  title={`D3: Bit select B2. Click to toggle.`}
+                  className={`p-2 rounded border cursor-pointer transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 ${
+                    ((demoBsrBit >> 2) & 1) === 1
+                      ? 'bg-indigo-600 text-white border-indigo-700 shadow-xs'
+                      : 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100'
+                  }`}
+                >
+                  <span className={`text-[9px] block ${((demoBsrBit >> 2) & 1) === 1 ? 'text-indigo-200 font-bold' : 'text-amber-800'}`}>D3 (B2)</span>
+                  <span className="font-black text-sm block">{((demoBsrBit >> 2) & 1)}</span>
+                  <span className={`text-[8px] block truncate ${((demoBsrBit >> 2) & 1) === 1 ? 'text-indigo-200' : 'text-amber-700'}`}>Toggle</span>
+                </button>
+
+                {/* D2 (B1) */}
+                <button
+                  type="button"
+                  onClick={() => setDemoBsrBit((prev) => prev ^ 2)}
+                  title={`D2: Bit select B1. Click to toggle.`}
+                  className={`p-2 rounded border cursor-pointer transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 ${
+                    ((demoBsrBit >> 1) & 1) === 1
+                      ? 'bg-indigo-600 text-white border-indigo-700 shadow-xs'
+                      : 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100'
+                  }`}
+                >
+                  <span className={`text-[9px] block ${((demoBsrBit >> 1) & 1) === 1 ? 'text-indigo-200 font-bold' : 'text-amber-800'}`}>D2 (B1)</span>
+                  <span className="font-black text-sm block">{((demoBsrBit >> 1) & 1)}</span>
+                  <span className={`text-[8px] block truncate ${((demoBsrBit >> 1) & 1) === 1 ? 'text-indigo-200' : 'text-amber-700'}`}>Toggle</span>
+                </button>
+
+                {/* D1 (B0) */}
+                <button
+                  type="button"
+                  onClick={() => setDemoBsrBit((prev) => prev ^ 1)}
+                  title={`D1: Bit select B0. Click to toggle.`}
+                  className={`p-2 rounded border cursor-pointer transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 ${
+                    (demoBsrBit & 1) === 1
+                      ? 'bg-indigo-600 text-white border-indigo-700 shadow-xs'
+                      : 'bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100'
+                  }`}
+                >
+                  <span className={`text-[9px] block ${(demoBsrBit & 1) === 1 ? 'text-indigo-200 font-bold' : 'text-amber-800'}`}>D1 (B0)</span>
+                  <span className="font-black text-sm block">{(demoBsrBit & 1)}</span>
+                  <span className={`text-[8px] block truncate ${(demoBsrBit & 1) === 1 ? 'text-indigo-200' : 'text-amber-700'}`}>Toggle</span>
+                </button>
+
+                {/* D0 (S/R) */}
+                <button
+                  type="button"
+                  onClick={() => setDemoBsrVal((prev) => (prev === 1 ? 0 : 1))}
+                  title={`D0: S/R Action (${demoBsrVal === 1 ? 'SET 1' : 'RESET 0'}). Click to toggle.`}
+                  className={`p-2 rounded border cursor-pointer transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 ${
+                    demoBsrVal === 1
+                      ? 'bg-emerald-600 text-white border-emerald-700 shadow-xs'
+                      : 'bg-rose-600 text-white border-rose-700 shadow-xs'
+                  }`}
+                >
+                  <span className="text-[9px] text-white/80 block font-bold">D0</span>
+                  <span className="font-black text-sm block">{demoBsrVal}</span>
+                  <span className="text-[8px] text-white/90 block truncate">{demoBsrVal === 1 ? 'SET (1)' : 'RESET (0)'}</span>
+                </button>
               </div>
             </div>
 
@@ -666,7 +704,7 @@ export default function PPI8255ModesOfOperation() {
                 </button>
               </div>
 
-            {/* Current Port C Live Status */}
+              {/* Current Port C Live Status */}
               <div className="space-y-1 pt-1">
                 <span className="text-[10px] text-slate-500 block uppercase font-bold">
                   Resulting Port C Logic Levels (PC7 down to PC0):
@@ -685,59 +723,6 @@ export default function PPI8255ModesOfOperation() {
                       <span className="text-sm font-black">{val}</span>
                     </div>
                   ))}
-                </div>
-              </div>
-
-              {/* BSR Bit-Selection Decoding Table & Key Rules */}
-              <div className="pt-2 border-t border-amber-200 grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 space-y-1.5">
-                  <span className="text-[11px] font-bold text-slate-800 block">
-                    Port C Bit Select Decoding Table (D3, D2, D1):
-                  </span>
-                  <div className="grid grid-cols-4 gap-1 text-[10px] font-mono text-center">
-                    <div className="bg-amber-100/70 p-1 rounded border border-amber-200">
-                      <span className="text-slate-500 block text-[9px]">000</span>
-                      <strong className="text-amber-950">PC0</strong>
-                    </div>
-                    <div className="bg-amber-100/70 p-1 rounded border border-amber-200">
-                      <span className="text-slate-500 block text-[9px]">001</span>
-                      <strong className="text-amber-950">PC1</strong>
-                    </div>
-                    <div className="bg-amber-100/70 p-1 rounded border border-amber-200">
-                      <span className="text-slate-500 block text-[9px]">010</span>
-                      <strong className="text-amber-950">PC2</strong>
-                    </div>
-                    <div className="bg-amber-100/70 p-1 rounded border border-amber-200">
-                      <span className="text-slate-500 block text-[9px]">011</span>
-                      <strong className="text-amber-950">PC3</strong>
-                    </div>
-                    <div className="bg-amber-100/70 p-1 rounded border border-amber-200">
-                      <span className="text-slate-500 block text-[9px]">100</span>
-                      <strong className="text-amber-950">PC4</strong>
-                    </div>
-                    <div className="bg-amber-100/70 p-1 rounded border border-amber-200">
-                      <span className="text-slate-500 block text-[9px]">101</span>
-                      <strong className="text-amber-950">PC5</strong>
-                    </div>
-                    <div className="bg-amber-100/70 p-1 rounded border border-amber-200">
-                      <span className="text-slate-500 block text-[9px]">110</span>
-                      <strong className="text-amber-950">PC6</strong>
-                    </div>
-                    <div className="bg-amber-100/70 p-1 rounded border border-amber-200">
-                      <span className="text-slate-500 block text-[9px]">111</span>
-                      <strong className="text-amber-950">PC7</strong>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-[11px] text-slate-700 space-y-1">
-                  <span className="text-[11px] font-bold text-slate-900 block">
-                    Essential BSR Mode Rules:
-                  </span>
-                  <div>• <strong>D7 = 0:</strong> Identifies the control word strictly as a BSR command.</div>
-                  <div>• <strong>D6, D5, D4:</strong> Don't Care bits (conventionally written as 000).</div>
-                  <div>• <strong>D0:</strong> Bit action — <strong>1 = SET</strong> (logic high), <strong>0 = RESET</strong> (logic low).</div>
-                  <div>• <strong>Port Independence:</strong> Does NOT disturb Port A or Port B modes/data.</div>
                 </div>
               </div>
             </div>
@@ -934,11 +919,20 @@ export default function PPI8255ModesOfOperation() {
                 </h4>
               </div>
 
-              {/* Toggle Input / Output Handshaking */}
+              {/* Toggle Sub-tabs: 4 Main Signals / Strobed Input / Strobed Output */}
               <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-indigo-200">
                 <button
+                  onClick={() => { setMode1Type('simple_signals'); }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                    mode1Type === 'simple_signals' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <Info className="w-3.5 h-3.5" />
+                  The 4 Main Signals in Simple Words
+                </button>
+                <button
                   onClick={() => { setMode1Type('input'); setMode1Step(0); }}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                     mode1Type === 'input' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
@@ -947,7 +941,7 @@ export default function PPI8255ModesOfOperation() {
                 </button>
                 <button
                   onClick={() => { setMode1Type('output'); setMode1Step(0); }}
-                  className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
                     mode1Type === 'output' ? 'bg-indigo-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
@@ -956,6 +950,183 @@ export default function PPI8255ModesOfOperation() {
                 </button>
               </div>
             </div>
+
+            {/* Sub-view 1: The 4 Main Signals in Simple Words */}
+            {mode1Type === 'simple_signals' && (
+              <div className="bg-white rounded-xl border border-indigo-200 p-4 shadow-sm space-y-4">
+                <div className="flex items-center justify-between flex-wrap gap-2 border-b border-indigo-100 pb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="p-1.5 bg-indigo-100 text-indigo-700 rounded-md">
+                      <Info className="w-4 h-4" />
+                    </span>
+                    <div>
+                      <h5 className="font-extrabold text-slate-900 text-base">
+                        The 4 Main Handshake Signals in Simple Words
+                      </h5>
+                      <p className="text-xs text-slate-500">
+                        Whenever two devices talk asynchronously, they use status signals as traffic lights so data is neither missed nor overwritten.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-[11px] font-mono text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-200 font-semibold">
+                    Port C Handshake Protocol
+                  </span>
+                </div>
+
+                {/* 2 Directional Columns */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                  {/* 1. Computer SENDS data (Output Handshake) */}
+                  <div className="bg-amber-50/50 rounded-xl border border-amber-200 p-4 space-y-3">
+                    <div className="flex items-center gap-2 border-b border-amber-200/60 pb-2">
+                      <span className="p-1.5 bg-amber-600 text-white rounded-md">
+                        <ArrowUpRight className="w-4 h-4" />
+                      </span>
+                      <div>
+                        <h6 className="font-extrabold text-sm text-amber-950">
+                          1. When the Computer SENDS Data (Output Handshake)
+                        </h6>
+                        <span className="text-[11px] text-amber-800">Used for: Printers, DACs, Displays</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 text-xs">
+                      {/* OBF# */}
+                      <div className="bg-white p-3 rounded-lg border border-amber-200/80 shadow-2xs space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono font-bold text-cyan-800 bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200 text-xs">
+                            O̅B̅F̅ (Output Buffer Full)
+                          </span>
+                          <span className="text-[11px] font-semibold text-slate-500">
+                            8255 &rarr; Device
+                          </span>
+                        </div>
+                        <p className="text-slate-800 font-medium text-xs leading-relaxed">
+                          <strong className="text-cyan-950 font-bold">Meaning: </strong>
+                          &ldquo;Hey Device, there is new data waiting on the pins for you.&rdquo;
+                        </p>
+                        <p className="text-[11px] text-slate-500">
+                          Generated automatically when CPU writes data (<span style={{ textDecoration: 'overline' }}>WR</span> &uarr;). Tells peripheral to pick it up.
+                        </p>
+                      </div>
+
+                      {/* ACK# */}
+                      <div className="bg-white p-3 rounded-lg border border-amber-200/80 shadow-2xs space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 text-xs">
+                            A̅C̅K̅ (Acknowledge)
+                          </span>
+                          <span className="text-[11px] font-semibold text-slate-500">
+                            Device &rarr; 8255
+                          </span>
+                        </div>
+                        <p className="text-slate-800 font-medium text-xs leading-relaxed">
+                          <strong className="text-amber-950 font-bold">Meaning: </strong>
+                          &ldquo;Thank you, I have taken the data. You can clear the lines.&rdquo;
+                        </p>
+                        <p className="text-[11px] text-slate-500">
+                          Pulsed LOW by peripheral once read. Resets <span style={{ textDecoration: 'overline' }}>OBF</span> back to HIGH.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 2. Computer RECEIVES data (Input Handshake) */}
+                  <div className="bg-emerald-50/50 rounded-xl border border-emerald-200 p-4 space-y-3">
+                    <div className="flex items-center gap-2 border-b border-emerald-200/60 pb-2">
+                      <span className="p-1.5 bg-emerald-600 text-white rounded-md">
+                        <ArrowDownLeft className="w-4 h-4" />
+                      </span>
+                      <div>
+                        <h6 className="font-extrabold text-sm text-emerald-950">
+                          2. When the Computer RECEIVES Data (Input Handshake)
+                        </h6>
+                        <span className="text-[11px] text-emerald-800">Used for: Keyboards, ADCs, Sensors</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 text-xs">
+                      {/* STB# */}
+                      <div className="bg-white p-3 rounded-lg border border-emerald-200/80 shadow-2xs space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 text-xs">
+                            S̅T̅B̅ (Strobe)
+                          </span>
+                          <span className="text-[11px] font-semibold text-slate-500">
+                            Device &rarr; 8255
+                          </span>
+                        </div>
+                        <p className="text-slate-800 font-medium text-xs leading-relaxed">
+                          <strong className="text-amber-950 font-bold">Meaning: </strong>
+                          &ldquo;Hey 8255, here is a byte for you. Catch it and lock it inside your memory!&rdquo;
+                        </p>
+                        <p className="text-[11px] text-slate-500">
+                          Pulsed LOW by peripheral to latch data into 8255 input register.
+                        </p>
+                      </div>
+
+                      {/* IBF */}
+                      <div className="bg-white p-3 rounded-lg border border-emerald-200/80 shadow-2xs space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono font-bold text-cyan-800 bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200 text-xs">
+                            IBF (Input Buffer Full)
+                          </span>
+                          <span className="text-[11px] font-semibold text-slate-500">
+                            8255 &rarr; Device
+                          </span>
+                        </div>
+                        <p className="text-slate-800 font-medium text-xs leading-relaxed">
+                          <strong className="text-cyan-950 font-bold">Meaning: </strong>
+                          &ldquo;Wait! My box is full. Do NOT send anything else until the CPU reads this.&rdquo;
+                        </p>
+                        <p className="text-[11px] text-slate-500">
+                          Asserted HIGH immediately when data is latched; clears back to 0 once 8086 reads the byte (<span style={{ textDecoration: 'overline' }}>RD</span> &uarr;).
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Real Life Analogy & INTR Note */}
+                <div className="bg-slate-50 rounded-xl border border-slate-200 p-3.5 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-1 bg-purple-100 text-purple-800 rounded font-bold text-xs font-mono">
+                      INTR Signal
+                    </span>
+                    <p className="text-slate-700 text-xs">
+                      <strong className="text-slate-900">Interrupt (INTR):</strong> Sent by 8255 &rarr; 8086 CPU: <em>&ldquo;Attention CPU: I/O buffer needs servicing (read byte or write next byte)!&rdquo;</em>
+                    </p>
+                  </div>
+                  <div className="text-xs text-indigo-700 font-medium bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-200 shrink-0">
+                    💡 Analogy: Traffic lights coordinating a fast CPU and slow peripheral
+                  </div>
+                </div>
+
+                {/* Quick Switch to Demonstrations */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-indigo-100">
+                  <span className="text-xs text-slate-500 font-medium">Ready to see these signals in live step-by-step action?</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => { setMode1Type('input'); setMode1Step(0); }}
+                      className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 rounded-lg text-xs font-bold cursor-pointer flex items-center gap-1.5 border border-indigo-200"
+                    >
+                      <ArrowDownLeft className="w-3.5 h-3.5" />
+                      Try Strobed Input Demo &rarr;
+                    </button>
+                    <button
+                      onClick={() => { setMode1Type('output'); setMode1Step(0); }}
+                      className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 rounded-lg text-xs font-bold cursor-pointer flex items-center gap-1.5 border border-indigo-200"
+                    >
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                      Try Strobed Output Demo &rarr;
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Sub-views 2 & 3: Interactive Steppers and Waveforms for Input / Output */}
+            {mode1Type !== 'simple_signals' && (
+              <>
 
             {/* Handshake Stepper Interactive Player */}
             {(() => {
@@ -1139,11 +1310,13 @@ export default function PPI8255ModesOfOperation() {
             {/* Integrated Digital Oscilloscope / Timing Waveform Analyzer */}
             <div className="pt-2">
               <PPI8255Mode1Waveforms 
-                initialType={mode1Type} 
+                initialType={mode1Type === 'output' ? 'output' : 'input'} 
                 currentStep={mode1Step} 
                 onStepChange={(st) => setMode1Step(st)} 
               />
             </div>
+          </>
+        )}
           </div>
         </div>
       )}
@@ -1298,6 +1471,15 @@ export default function PPI8255ModesOfOperation() {
                 </div>
               );
             })()}
+
+            {/* Integrated Digital Oscilloscope / Timing Waveform Analyzer for Mode 2 */}
+            <div className="pt-2">
+              <PPI8255Mode2Waveforms 
+                initialType={mode2Dir}
+                currentStep={mode2Step}
+                onStepChange={(st) => setMode2Step(st)}
+              />
+            </div>
           </div>
         </div>
       )}

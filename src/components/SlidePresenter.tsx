@@ -46,7 +46,7 @@ function renderWithOverbars(str: string): React.ReactNode {
   });
 }
 
-function SlidePointContent({ text }: { text: string }) {
+function SlidePointContent({ text, className = 'text-left' }: { text: string; className?: string }) {
   if (text.includes('\n')) {
     const lines = text.split('\n');
     const firstLine = lines[0];
@@ -54,9 +54,9 @@ function SlidePointContent({ text }: { text: string }) {
     const isCode = rest.includes(';') || rest.includes('MOV ') || rest.includes('OUT ') || rest.includes('IN ') || rest.includes('DB ') || rest.includes('.MODEL');
     
     return (
-      <div className="flex-1 space-y-1.5 text-left">
+      <div className={`flex-1 space-y-1.5 ${className}`}>
         {firstLine && (
-          <p className="text-slate-800 text-[13.5px] md:text-[14px] font-semibold leading-relaxed text-left">
+          <p className={`text-slate-800 text-[13.5px] md:text-[14px] font-semibold leading-relaxed ${className}`}>
             {renderWithOverbars(firstLine)}
           </p>
         )}
@@ -65,9 +65,9 @@ function SlidePointContent({ text }: { text: string }) {
             {rest}
           </pre>
         ) : (
-          <div className="text-slate-700 text-[13px] md:text-[13.5px] space-y-1 pl-1 text-left">
+          <div className={`text-slate-700 text-[13px] md:text-[13.5px] space-y-1 pl-1 ${className}`}>
             {lines.slice(1).map((line, lIdx) => (
-              <p key={lIdx} className="leading-relaxed text-left">{renderWithOverbars(line)}</p>
+              <p key={lIdx} className={`leading-relaxed ${className}`}>{renderWithOverbars(line)}</p>
             ))}
           </div>
         )}
@@ -80,7 +80,7 @@ function SlidePointContent({ text }: { text: string }) {
     const label = text.slice(0, colonIndex + 1);
     const content = text.slice(colonIndex + 1);
     return (
-      <p className="text-slate-800 text-[13.5px] md:text-[14px] font-medium leading-relaxed text-left flex-1">
+      <p className={`text-slate-800 text-[13.5px] md:text-[14px] font-medium leading-relaxed flex-1 ${className}`}>
         <strong className="font-bold text-slate-950 mr-1">{renderWithOverbars(label)}</strong>
         <span className="text-slate-700">{renderWithOverbars(content)}</span>
       </p>
@@ -88,7 +88,7 @@ function SlidePointContent({ text }: { text: string }) {
   }
 
   return (
-    <p className="text-slate-800 text-[13.5px] md:text-[14px] font-medium leading-relaxed text-left flex-1">
+    <p className={`text-slate-800 text-[13.5px] md:text-[14px] font-medium leading-relaxed flex-1 ${className}`}>
       {renderWithOverbars(text)}
     </p>
   );
@@ -227,6 +227,7 @@ const DMA8237Simulator = lazyWithRetry(() => import('./DMA8237Simulator'));
 // Unit IV & V Simulators
 const MCU8051Simulator = lazyWithRetry(() => import('./MCU8051Simulator'));
 const MCU8051InterfacingSimulator = lazyWithRetry(() => import('./MCU8051InterfacingSimulator'));
+const MCU8051RAMDiagram = lazyWithRetry(() => import('./MCU8051RAMDiagram'));
 
 interface SlidePresenterProps {
   slide: Slide;
@@ -270,6 +271,7 @@ export default function SlidePresenter({
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [isExplanationOpen, setIsExplanationOpen] = useState(false);
+  const [m21SlideTab, setM21SlideTab] = useState<'definition' | 'differences' | 'features'>('definition');
 
   // Video embedding custom overrides state
   const [customVideoOverrides, setCustomVideoOverrides] = useState<Record<string, { url: string; title: string }>>(() => {
@@ -658,11 +660,7 @@ export default function SlidePresenter({
           component = <PPI8255RegistersOverview />;
         } else if (slide.id === 'm14-s4') {
           initialTab = 'modes';
-          allowedTabs = ['modes', 'iomode', 'bsr', 'registers'];
-          component = <PPI8255Simulator initialTab={initialTab} allowedTabs={allowedTabs} pinsVariant={pinsVariant} />;
-        } else if (slide.id === 'm14-s5') {
-          initialTab = 'iomode';
-          allowedTabs = ['iomode', 'bsr', 'registers', 'modes'];
+          allowedTabs = ['modes', 'iomode', 'bsr'];
           component = <PPI8255Simulator initialTab={initialTab} allowedTabs={allowedTabs} pinsVariant={pinsVariant} />;
         } else {
           component = <PPI8255Simulator initialTab={initialTab} allowedTabs={allowedTabs} pinsVariant={pinsVariant} />;
@@ -713,7 +711,20 @@ export default function SlidePresenter({
         component = <DMA8237Simulator />;
         break;
       case 'mcu-8051':
-        component = <MCU8051Simulator initialTab="architecture" />;
+        component = (
+          <MCU8051Simulator
+            initialTab={slide.id === 'm21-s3' || slide.id === 'm21-s4' ? 'sfr' : 'architecture'}
+            hideArchitecture={slide.id === 'm21-s3' || slide.id === 'm21-s4'}
+            hideAlp={slide.id === 'm21-s2'}
+            hideInstructions={slide.id === 'm21-s2'}
+            hideModularBreakdown={slide.id === 'm21-s2'}
+            hideSfr={slide.id === 'm21-s2'}
+            hidePins={slide.id === 'm21-s2'}
+          />
+        );
+        break;
+      case 'ram-organization':
+        component = <MCU8051RAMDiagram />;
         break;
       case 'sfr-memory':
         component = <MCU8051Simulator initialTab="sfr" />;
@@ -983,6 +994,288 @@ export default function SlidePresenter({
                               </p>
                             </div>
                           </div>
+                        </div>
+                      ) : slide.id === 'm21-s1' ? (
+                        /* Module 21 Slide 1: 3 Tabs (Definition, Differences, Features of 8051) in a Single Card */
+                        <div className="bg-slate-50/80 rounded-2xl border border-slate-200/90 p-4 md:p-5 shadow-2xs space-y-4">
+                          {/* Single Card Header & Tab Controls */}
+                          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-slate-200">
+                            <div>
+                              <h3 className="text-xs font-bold text-slate-900 uppercase font-mono tracking-wider flex items-center gap-1.5">
+                                <Cpu className="w-4 h-4 text-indigo-600" />
+                                8051 Microcontroller Foundations
+                              </h3>
+                              <p className="text-[11px] text-slate-500 font-medium">
+                                Core concepts, architectural comparisons, and salient 8051 hardware features
+                              </p>
+                            </div>
+
+                            {/* 3 Tabs Navigation */}
+                            <div className="flex flex-wrap items-center gap-1 bg-slate-200/70 p-1 rounded-xl border border-slate-200/80 self-start lg:self-auto">
+                              <button
+                                onClick={() => setM21SlideTab('definition')}
+                                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                                  m21SlideTab === 'definition'
+                                    ? 'bg-white text-indigo-700 shadow-2xs font-bold'
+                                    : 'text-slate-600 hover:text-slate-900'
+                                }`}
+                              >
+                                <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
+                                1. Definition
+                              </button>
+                              <button
+                                onClick={() => setM21SlideTab('differences')}
+                                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                                  m21SlideTab === 'differences'
+                                    ? 'bg-white text-indigo-700 shadow-2xs font-bold'
+                                    : 'text-slate-600 hover:text-slate-900'
+                                }`}
+                              >
+                                <Layers className="w-3.5 h-3.5 text-amber-600" />
+                                2. Differences (MPU vs MCU)
+                              </button>
+                              <button
+                                onClick={() => setM21SlideTab('features')}
+                                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                                  m21SlideTab === 'features'
+                                    ? 'bg-white text-indigo-700 shadow-2xs font-bold'
+                                    : 'text-slate-600 hover:text-slate-900'
+                                }`}
+                              >
+                                <Cpu className="w-3.5 h-3.5 text-emerald-600" />
+                                3. Features of 8051
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Tab 1: Definition of Microcontroller */}
+                          {m21SlideTab === 'definition' && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="space-y-4 text-justify"
+                            >
+                              {/* Formal Definition Banner */}
+                              <div className="p-4 rounded-xl bg-indigo-50/70 border border-indigo-150 space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-600 text-white uppercase tracking-wider">
+                                    Academic Definition
+                                  </span>
+                                  <h4 className="text-sm font-bold text-indigo-950 font-display">
+                                    What is a Microcontroller (MCU)?
+                                  </h4>
+                                </div>
+                                <p className="text-[13.5px] md:text-[14px] leading-relaxed text-slate-800 text-justify">
+                                  A <strong className="font-bold text-indigo-950">Microcontroller (MCU)</strong> is a compact, highly integrated single-chip microcomputer specifically designed and optimized to control dedicated electromechanical operations within an embedded system. It houses a complete functional computer on a single monolithic silicon die—incorporating a <strong className="text-slate-900 font-semibold">Central Processing Unit (CPU)</strong>, <strong className="text-slate-900 font-semibold">Program Memory (ROM/Flash)</strong>, <strong className="text-slate-900 font-semibold">Data Memory (RAM)</strong>, <strong className="text-slate-900 font-semibold">Programmable Timers/Counters</strong>, <strong className="text-slate-900 font-semibold">Parallel Digital I/O Ports</strong>, and <strong className="text-slate-900 font-semibold">Serial Communication Channels (UART)</strong>.
+                                </p>
+                              </div>
+
+                              {/* Single-column justified descriptive breakdown */}
+                              <div className="flex flex-col space-y-3 pt-1">
+                                <div className="flex items-start gap-3 group">
+                                  <div className="flex items-center justify-center w-3.5 h-3.5 shrink-0 mt-1">
+                                    <span className="w-2 h-2 rounded-full bg-indigo-600" />
+                                  </div>
+                                  <p className="text-slate-800 text-[13.5px] md:text-[14px] leading-relaxed text-justify flex-1">
+                                    <strong className="font-bold text-slate-950 mr-1">System-on-Chip (SoC) Integration:</strong>
+                                    Unlike general-purpose microprocessors that require dozens of external integrated circuits (memory chips, bus latches, interrupt controllers, and parallel port adapters) mounted on a motherboard, a microcontroller integrates all primary computing and peripheral subsystems on a single piece of silicon. This eliminates the necessity for external address and data buses for standard operations, drastically slashing board size, manufacturing cost, and electromagnetic interference (EMI).
+                                  </p>
+                                </div>
+
+                                <div className="flex items-start gap-3 group">
+                                  <div className="flex items-center justify-center w-3.5 h-3.5 shrink-0 mt-1">
+                                    <span className="w-2 h-2 rounded-full bg-indigo-600" />
+                                  </div>
+                                  <p className="text-slate-800 text-[13.5px] md:text-[14px] leading-relaxed text-justify flex-1">
+                                    <strong className="font-bold text-slate-950 mr-1">Dedicated Task &amp; Embedded Focus:</strong>
+                                    Microcontrollers are engineered for task-specific, closed-loop real-time control rather than arbitrary multi-user software execution. A microcontroller typically runs a single specialized control program permanently stored in on-chip ROM/Flash firmware that executes immediately upon power-up, continually sampling real-world inputs (sensors, switches) and reacting with rapid, deterministic control signals to actuators, displays, and motors.
+                                  </p>
+                                </div>
+
+                                <div className="flex items-start gap-3 group">
+                                  <div className="flex items-center justify-center w-3.5 h-3.5 shrink-0 mt-1">
+                                    <span className="w-2 h-2 rounded-full bg-indigo-600" />
+                                  </div>
+                                  <p className="text-slate-800 text-[13.5px] md:text-[14px] leading-relaxed text-justify flex-1">
+                                    <strong className="font-bold text-slate-950 mr-1">Bit-Level Control Capabilities:</strong>
+                                    A defining hallmark of microcontrollers is their native Boolean/bit-processing engine. Where microprocessors prioritize wide 32-bit/64-bit numerical computations, microcontrollers feature rich instruction sets capable of testing, setting, clearing, inverting, and branching on individual single-bit status registers or I/O pins within a single machine cycle, enabling instantaneous response to external digital stimuli.
+                                  </p>
+                                </div>
+
+                                <div className="flex items-start gap-3 group">
+                                  <div className="flex items-center justify-center w-3.5 h-3.5 shrink-0 mt-1">
+                                    <span className="w-2 h-2 rounded-full bg-indigo-600" />
+                                  </div>
+                                  <p className="text-slate-800 text-[13.5px] md:text-[14px] leading-relaxed text-justify flex-1">
+                                    <strong className="font-bold text-slate-950 mr-1">Primary Real-World Applications:</strong>
+                                    Microcontrollers power virtually all modern automated devices, including automotive Electronic Control Units (engine management, anti-lock braking systems, airbag deployment), industrial process automation (PLC modules, robotic arms), consumer home appliances (microwave ovens, washing machines, air conditioners), biomedical monitoring implants, smart IoT sensors, and aerospace telemetry equipment.
+                                  </p>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+
+                          {/* Tab 2: Differences (Microprocessor vs Microcontroller) */}
+                          {m21SlideTab === 'differences' && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="space-y-4"
+                            >
+                              {/* Comparison Table */}
+                              <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-2xs">
+                                <table className="w-full text-left text-xs border-collapse">
+                                  <thead>
+                                    <tr className="bg-slate-100/90 border-b border-slate-200">
+                                      <th className="py-2.5 px-3 font-bold text-slate-900 font-mono uppercase text-[11px] w-1/4">
+                                        Feature / Parameter
+                                      </th>
+                                      <th className="py-2.5 px-3 font-bold text-indigo-900 bg-indigo-50/50 border-x border-slate-200 text-[11px] w-3/8">
+                                        Microprocessor (e.g., Intel 8086)
+                                      </th>
+                                      <th className="py-2.5 px-3 font-bold text-emerald-900 bg-emerald-50/50 text-[11px] w-3/8">
+                                        Microcontroller (e.g., Intel 8051)
+                                      </th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-slate-200 bg-white">
+                                    <tr className="hover:bg-slate-50/80 transition-colors">
+                                      <td className="py-2.5 px-3 font-semibold text-slate-900 font-mono text-[11px]">
+                                        1. Chip Architecture
+                                      </td>
+                                      <td className="py-2.5 px-3 text-slate-700 border-x border-slate-200 text-justify leading-relaxed">
+                                        Contains only the CPU core (ALU, general registers, EU, BIU). Has no on-chip RAM, ROM, I/O ports, or timers.
+                                      </td>
+                                      <td className="py-2.5 px-3 text-slate-700 text-justify leading-relaxed">
+                                        Contains CPU, RAM, ROM, timers/counters, serial UART, and parallel I/O ports fabricated together on a single silicon die.
+                                      </td>
+                                    </tr>
+                                    <tr className="hover:bg-slate-50/80 transition-colors">
+                                      <td className="py-2.5 px-3 font-semibold text-slate-900 font-mono text-[11px]">
+                                        2. Primary Purpose
+                                      </td>
+                                      <td className="py-2.5 px-3 text-slate-700 border-x border-slate-200 text-justify leading-relaxed">
+                                        General-purpose computing (PCs, servers, workstations) handling diverse, dynamic software applications.
+                                      </td>
+                                      <td className="py-2.5 px-3 text-slate-700 text-justify leading-relaxed">
+                                        Application-specific, dedicated embedded control (automobiles, consumer appliances, industrial machinery).
+                                      </td>
+                                    </tr>
+                                    <tr className="hover:bg-slate-50/80 transition-colors">
+                                      <td className="py-2.5 px-3 font-semibold text-slate-900 font-mono text-[11px]">
+                                        3. Memory Architecture
+                                      </td>
+                                      <td className="py-2.5 px-3 text-slate-700 border-x border-slate-200 text-justify leading-relaxed">
+                                        Typically follows Von Neumann architecture where program code and data share common memory and external bus lines.
+                                      </td>
+                                      <td className="py-2.5 px-3 text-slate-700 text-justify leading-relaxed">
+                                        Employs Harvard architecture with physically separate address maps and buses for Program Memory (ROM) and Data Memory (RAM).
+                                      </td>
+                                    </tr>
+                                    <tr className="hover:bg-slate-50/80 transition-colors">
+                                      <td className="py-2.5 px-3 font-semibold text-slate-900 font-mono text-[11px]">
+                                        4. System Size &amp; Cost
+                                      </td>
+                                      <td className="py-2.5 px-3 text-slate-700 border-x border-slate-200 text-justify leading-relaxed">
+                                        Larger physical PCB area and higher overall system cost due to numerous external peripheral support ICs.
+                                      </td>
+                                      <td className="py-2.5 px-3 text-slate-700 text-justify leading-relaxed">
+                                        Extremely compact form factor and very low total bill of materials (BOM) cost because all peripherals are integrated on-chip.
+                                      </td>
+                                    </tr>
+                                    <tr className="hover:bg-slate-50/80 transition-colors">
+                                      <td className="py-2.5 px-3 font-semibold text-slate-900 font-mono text-[11px]">
+                                        5. Pin Multi-functionality
+                                      </td>
+                                      <td className="py-2.5 px-3 text-slate-700 border-x border-slate-200 text-justify leading-relaxed">
+                                        Most pins are dedicated to system bus lines (address, data, control). Very few pins have alternate peripheral roles.
+                                      </td>
+                                      <td className="py-2.5 px-3 text-slate-700 text-justify leading-relaxed">
+                                        Pins are highly multiplexed and multifunctional (e.g., Port 3 lines serve as standard digital I/O or UART, interrupts, timers).
+                                      </td>
+                                    </tr>
+                                    <tr className="hover:bg-slate-50/80 transition-colors">
+                                      <td className="py-2.5 px-3 font-semibold text-slate-900 font-mono text-[11px]">
+                                        6. Instruction Set Focus
+                                      </td>
+                                      <td className="py-2.5 px-3 text-slate-700 border-x border-slate-200 text-justify leading-relaxed">
+                                        Instruction set is optimized for complex numerical calculations, large multi-byte arithmetic, and high-volume data transfers.
+                                      </td>
+                                      <td className="py-2.5 px-3 text-slate-700 text-justify leading-relaxed">
+                                        Instruction set is optimized for control and single-bit Boolean manipulation (SETB, CLR, CPL, JB, JNB) with rapid I/O bit access.
+                                      </td>
+                                    </tr>
+                                    <tr className="hover:bg-slate-50/80 transition-colors">
+                                      <td className="py-2.5 px-3 font-semibold text-slate-900 font-mono text-[11px]">
+                                        7. Clock &amp; Power Consumption
+                                      </td>
+                                      <td className="py-2.5 px-3 text-slate-700 border-x border-slate-200 text-justify leading-relaxed">
+                                        High operating frequencies (hundreds of MHz to GHz) with substantial power dissipation, requiring active cooling heatsinks.
+                                      </td>
+                                      <td className="py-2.5 px-3 text-slate-700 text-justify leading-relaxed">
+                                        Moderate clock speeds (typically 12 MHz for 8051) with ultra-low power consumption and dedicated Idle/Power-Down standby modes.
+                                      </td>
+                                    </tr>
+                                    <tr className="hover:bg-slate-50/80 transition-colors">
+                                      <td className="py-2.5 px-3 font-semibold text-slate-900 font-mono text-[11px]">
+                                        8. Register Organization
+                                      </td>
+                                      <td className="py-2.5 px-3 text-slate-700 border-x border-slate-200 text-justify leading-relaxed">
+                                        Fixed register set (AX, BX, CX, DX, SI, DI, BP, SP); context saving during interrupts requires pushing registers to stack.
+                                      </td>
+                                      <td className="py-2.5 px-3 text-slate-700 text-justify leading-relaxed">
+                                        Four switchable working register banks (Bank 0–3, R0–R7) allowing instant context switching during interrupts by changing RS1:RS0.
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </div>
+                            </motion.div>
+                          )}
+
+                          {/* Tab 3: Features of 8051 */}
+                          {m21SlideTab === 'features' && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="space-y-3.5 text-justify"
+                            >
+                              {/* Quick Specs Chips */}
+                              <div className="flex flex-wrap items-center gap-1.5 pb-2 border-b border-slate-200 text-[10px] font-mono font-bold">
+                                <span className="px-2 py-0.5 rounded-full bg-white text-indigo-700 border border-slate-200 shadow-2xs">8-Bit CPU</span>
+                                <span className="px-2 py-0.5 rounded-full bg-white text-amber-700 border border-slate-200 shadow-2xs">4 KB ROM</span>
+                                <span className="px-2 py-0.5 rounded-full bg-white text-emerald-700 border border-slate-200 shadow-2xs">128 B RAM</span>
+                                <span className="px-2 py-0.5 rounded-full bg-white text-sky-700 border border-slate-200 shadow-2xs">32 I/O Lines</span>
+                                <span className="px-2 py-0.5 rounded-full bg-white text-purple-700 border border-slate-200 shadow-2xs">2 Timers</span>
+                                <span className="px-2 py-0.5 rounded-full bg-white text-rose-700 border border-slate-200 shadow-2xs">UART &amp; 6 Interrupts</span>
+                              </div>
+
+                              {/* Single Column Bullet Points with Justified Text */}
+                              <div className="flex flex-col space-y-3 pt-1 text-justify">
+                                {slide.points.map((pt, idx) => {
+                                  const isRevealed = !incrementalRevealEnabled || idx < revealedPointsCount;
+                                  if (!isRevealed) return null;
+                                  return (
+                                    <motion.div
+                                      key={idx}
+                                      initial={{ opacity: 0, y: 6 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      transition={{ duration: 0.25, delay: idx * 0.02 }}
+                                      className="flex items-start gap-3 group cursor-default"
+                                    >
+                                      <div className="flex items-center justify-center w-3.5 h-3.5 shrink-0 mt-1">
+                                        <span className="w-2 h-2 rounded-full bg-indigo-600 group-hover:scale-125 transition-transform" />
+                                      </div>
+                                      <SlidePointContent text={pt} className="text-justify" />
+                                    </motion.div>
+                                  );
+                                })}
+                              </div>
+                            </motion.div>
+                          )}
                         </div>
                       ) : (
                         <div className={`grid grid-cols-1 ${['m2-s3', 'm3-s2', 'm3-s3', 'm3-s4', 'm4-s1', 'm4-s2', 'm4-s3', 'm8-s1', 'm8-s4', 'm8-s5', 'm9-s1', 'm10-s1', 'm10-s2', 'm10-s3', 'm10-s4', 'm11-s1', 'm12-s1'].includes(slide.id) || slide.moduleId === 'm1' ? 'grid-cols-1' : 'md:grid-cols-2'} gap-1.5 md:gap-2 pr-1 text-left`}>

@@ -68,7 +68,7 @@ export default function KeypadSchematicDiagram({
   const chipInfo: Record<string, { title: string; subtitle: string; desc: string; pins: { pin: string; func: string }[] }> = {
     u1: {
       title: 'U1: Intel 8086 16-Bit Microprocessor',
-      subtitle: 'Minimum Mode Master Controller',
+      subtitle: 'Part: 8086 • Component: Microprocessor (CPU)',
       desc: 'Executes the matrix scanning software loop. Sends active-LOW row grounding masks to 8255 Port A (80H), reads Port B (82H) column inputs, and applies a 20 ms debounce delay subroutine before keycode translation.',
       pins: [
         { pin: 'Pin 33 (MN/MX#)', func: 'Tied to +5V VCC for Minimum Mode.' },
@@ -80,7 +80,7 @@ export default function KeypadSchematicDiagram({
     },
     u2: {
       title: 'U2: 74LS373 Octal Transparent D-Latch',
-      subtitle: 'Lower Address Demultiplexer',
+      subtitle: 'Part: 74LS373 • Component: Octal Address Latch',
       desc: 'Latches lower address bits A0–A7 from multiplexed AD0–AD7 when ALE pulses HIGH during clock cycle T1, providing stable A0 and A1 lines to select 8255 registers.',
       pins: [
         { pin: 'Pin 11 (LE)', func: 'Driven by 8086 ALE (Pin 25).' },
@@ -90,7 +90,7 @@ export default function KeypadSchematicDiagram({
     },
     u3: {
       title: 'U3: 74LS138 3-to-8 Line Decoder',
-      subtitle: 'Port Chip Select Generator (Base 80H)',
+      subtitle: 'Part: 74LS138 • Component: 3-to-8 Address Decoder',
       desc: 'Decodes upper address lines A2–A7 and M/IO# to assert active-low CS# (Pin 6) on the 8255 whenever an I/O instruction references port addresses 80H–87H.',
       pins: [
         { pin: 'Pin 6 (G1)', func: 'Tied to +5V VCC.' },
@@ -100,7 +100,7 @@ export default function KeypadSchematicDiagram({
     },
     u4: {
       title: 'U4: Intel 8255A Programmable Peripheral Interface (PPI)',
-      subtitle: 'Keypad Matrix Interface (Control Word = 82H)',
+      subtitle: 'Part: 8255A • Component: Programmable Peripheral Interface (PPI)',
       desc: 'Configured in Mode 0 (Basic I/O) with Control Word 82H (10000010b): Port A is initialized as an OUTPUT port (driving Rows R0–R3), and Port B is initialized as an INPUT port (reading Columns C0–C3).',
       pins: [
         { pin: 'Pins 4, 3, 2, 1 (PA0–PA3)', func: 'Outputs driving Keypad Rows R0, R1, R2, R3 (Active-LOW grounding).' },
@@ -111,7 +111,7 @@ export default function KeypadSchematicDiagram({
     },
     rp1: {
       title: 'RP1: 4 × 10kΩ Pull-Up Resistor Network',
-      subtitle: 'Column Input Line Stabilizer',
+      subtitle: 'Part: RP1 (4×10kΩ) • Component: Pull-Up Resistor Network',
       desc: 'Ties column lines C0–C3 to +5V VCC. Guarantees that when no key is pressed, all Port B column inputs read Logic HIGH (\'1\'). When a switch is pressed on an energized (grounded) row, it pulls that column input solidly to Logic LOW (0V).',
       pins: [
         { pin: 'Pin 1 (Common VCC)', func: 'Connected to +5V VCC power rail.' },
@@ -120,7 +120,7 @@ export default function KeypadSchematicDiagram({
     },
     matrix: {
       title: '4×4 Keypad Matrix Switch Grid',
-      subtitle: '16 Momentary Tactile SPST Pushbuttons',
+      subtitle: 'Part: 4×4 Matrix • Component: 16-Key Tactile Switch Grid',
       desc: 'Arranges 16 mechanical switches at the intersections of 4 rows and 4 columns, requiring only 8 microcontroller I/O pins instead of 16 dedicated wires. Pressing a key electrically bridges that specific Row and Column line.',
       pins: [
         { pin: 'Row Lines (R0–R3)', func: 'Horizontal bus lines driven by 8255 PA0–PA3.' },
@@ -233,9 +233,9 @@ export default function KeypadSchematicDiagram({
       <div className="relative bg-slate-50/50 rounded-xl border border-slate-200 overflow-x-auto overflow-y-hidden shadow-inner p-2">
         <div 
           style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top left' }}
-          className="transition-transform duration-200 min-w-[940px] bg-white p-3 rounded-lg border border-slate-200"
+          className="transition-transform duration-200 min-w-[960px] bg-white p-3 rounded-lg border border-slate-200"
         >
-          <svg viewBox="0 0 960 480" className="w-full h-auto select-none font-mono text-[10px]">
+          <svg viewBox="0 0 1080 500" className="w-full h-auto select-none font-mono text-[10px]">
             {/* Grid Pattern Background */}
             <defs>
               <pattern id="edaGridKeypad" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -250,267 +250,323 @@ export default function KeypadSchematicDiagram({
               </filter>
             </defs>
 
-            <rect width="960" height="480" fill="url(#edaGridKeypad)" />
+            <rect width="1080" height="500" fill="url(#edaGridKeypad)" />
 
             {/* Top +5V Power Rail */}
-            <line x1="30" y1="25" x2="990" y2="25" stroke="#ef4444" strokeWidth="2" strokeDasharray="5,2" />
-            <text x="40" y="20" fill="#dc2626" fontSize="9" fontWeight="bold">+5V VCC (Power Rail)</text>
+            <line x1="25" y1="20" x2="1055" y2="20" stroke="#ef4444" strokeWidth="2" strokeDasharray="5,2" />
+            <text x="35" y="15" fill="#dc2626" fontSize="9" fontWeight="bold">+5V VCC (Power Rail)</text>
 
             {/* Bottom GND Rail */}
-            <line x1="30" y1="465" x2="990" y2="465" stroke="#2563eb" strokeWidth="2" />
-            <text x="40" y="460" fill="#1d4ed8" fontSize="9" fontWeight="bold">GND (0V Reference)</text>
+            <line x1="25" y1="480" x2="1055" y2="480" stroke="#2563eb" strokeWidth="2" />
+            <text x="35" y="475" fill="#1d4ed8" fontSize="9" fontWeight="bold">GND (0V Reference)</text>
 
             {/* ============================================================== */}
             {/* 1. CHIP U1: 8086 CPU                                           */}
             {/* ============================================================== */}
             <g 
               onClick={() => setSelectedChip('u1')}
-              className="cursor-pointer transition-all"
-              transform="translate(30, 60)"
+              className="cursor-pointer transition-all group"
+              transform="translate(25, 45)"
             >
+              <title>U1: Intel 8086 16-Bit Microprocessor (CPU)</title>
               <rect
                 x="0"
                 y="0"
-                width="135"
-                height="360"
+                width="145"
+                height="380"
                 rx="6"
                 fill="#ffffff"
                 stroke={selectedChip === 'u1' ? '#4f46e5' : '#94a3b8'}
                 strokeWidth={selectedChip === 'u1' ? '2.5' : '1.5'}
               />
-              <rect x="0" y="0" width="135" height="26" rx="6" fill="#eef2ff" stroke="#c7d2fe" strokeWidth="1" />
-              <text x="67.5" y="17" fill="#4338ca" fontWeight="bold" textAnchor="middle" fontSize="11">U1: 8086 CPU</text>
-              <text x="67.5" y="38" fill="#64748b" fontSize="8" textAnchor="middle">MIN MODE (5 MHz)</text>
+              <rect x="0" y="0" width="145" height="30" rx="6" fill="#eef2ff" stroke="#c7d2fe" strokeWidth="1" />
+              <text x="72.5" y="13" fill="#312e81" fontWeight="bold" textAnchor="middle" fontSize="10.5">U1 : 8086</text>
+              <text x="72.5" y="24" fill="#4338ca" fontWeight="bold" textAnchor="middle" fontSize="7.5">16-BIT MICROPROCESSOR (CPU)</text>
 
-              {/* Pin Labels */}
-              <text x="10" y="70" fill="#dc2626" fontWeight="bold">AD0–AD7</text>
-              <text x="10" y="95" fill="#dc2626">AD8–AD15</text>
-              <text x="10" y="120" fill="#059669" fontWeight="bold">ALE (Pin 25)</text>
-              <text x="10" y="145" fill="#d97706" fontWeight="bold">M/IO# (Pin 28)</text>
-              <text x="10" y="170" fill="#d97706">WR# (Pin 29)</text>
-              <text x="10" y="195" fill="#d97706">RD# (Pin 32)</text>
-              <text x="10" y="225" fill="#64748b">A16–A19</text>
-              <text x="10" y="270" fill="#4338ca" fontSize="8.5" fontWeight="bold">Keypad ALP Scan:</text>
-              <text x="10" y="290" fill="#1e293b" fontSize="8">OUT 80H, AL (Rows)</text>
-              <text x="10" y="308" fill="#1e293b" fontSize="8">IN AL, 82H (Cols)</text>
-              <text x="10" y="326" fill="#6366f1" fontSize="8" fontWeight="bold">CALL DEBOUNCE</text>
+              {/* Mode & Operational Info */}
+              <text x="10" y="46" fill="#64748b" fontSize="8" fontWeight="bold">MIN MODE (MN/MX#=1)</text>
+              <text x="10" y="58" fill="#64748b" fontSize="8">CLK: 5MHz • VCC: +5V</text>
 
-              {[70, 95, 120, 145, 170, 195].map((y, i) => (
-                <circle key={i} cx="135" cy={y} r="3" fill="#4f46e5" />
+              <text x="10" y="280" fill="#4338ca" fontSize="8" fontWeight="bold">Keypad Scan Loop:</text>
+              <text x="10" y="298" fill="#1e293b" fontSize="7.5">OUT 80H, AL (Rows)</text>
+              <text x="10" y="314" fill="#1e293b" fontSize="7.5">IN AL, 82H (Cols)</text>
+              <text x="10" y="332" fill="#6366f1" fontSize="7.5" fontWeight="bold">CALL DEBOUNCE</text>
+
+              {/* Right Pin Labels (Aligned with Interconnect Traces) */}
+              <text x="135" y="84" fill="#dc2626" fontWeight="bold" textAnchor="end">AD0–AD7</text>
+              <text x="135" y="114" fill="#dc2626" textAnchor="end">AD8–AD15</text>
+              <text x="135" y="144" fill="#059669" fontWeight="bold" textAnchor="end">ALE (Pin 25)</text>
+              <text x="135" y="174" fill="#d97706" fontWeight="bold" textAnchor="end">M/IO# (Pin 28)</text>
+              <text x="135" y="204" fill="#d97706" fontWeight="bold" textAnchor="end">WR# (Pin 29)</text>
+              <text x="135" y="234" fill="#d97706" textAnchor="end">RD# (Pin 32)</text>
+              <text x="135" y="264" fill="#64748b" textAnchor="end">RESET (Pin 21)</text>
+
+              {[80, 110, 140, 170, 200, 230, 260].map((y, i) => (
+                <circle key={i} cx="145" cy={y} r="3" fill="#4f46e5" />
               ))}
             </g>
 
             {/* ============================================================== */}
-            {/* 2. CHIP U2: 74LS373 LATCH                                      */}
+            {/* 2. CHIP U2: 74LS373 OCTAL ADDRESS LATCH                        */}
             {/* ============================================================== */}
             <g 
               onClick={() => setSelectedChip('u2')}
-              className="cursor-pointer transition-all"
-              transform="translate(195, 60)"
+              className="cursor-pointer transition-all group"
+              transform="translate(245, 45)"
             >
+              <title>U2: 74LS373 Octal Transparent D-Type Latch</title>
               <rect
                 x="0"
                 y="0"
-                width="125"
-                height="150"
+                width="165"
+                height="165"
                 rx="6"
                 fill="#ffffff"
                 stroke={selectedChip === 'u2' ? '#4f46e5' : '#94a3b8'}
                 strokeWidth={selectedChip === 'u2' ? '2.5' : '1.5'}
               />
-              <rect x="0" y="0" width="125" height="24" rx="6" fill="#f0fdf4" stroke="#bbf7d0" strokeWidth="1" />
-              <text x="62.5" y="16" fill="#15803d" fontWeight="bold" textAnchor="middle" fontSize="10.5">U2: 74LS373</text>
-              <text x="62.5" y="34" fill="#64748b" fontSize="8" textAnchor="middle">OCTAL LATCH</text>
+              <rect x="0" y="0" width="165" height="30" rx="6" fill="#f0fdf4" stroke="#bbf7d0" strokeWidth="1" />
+              <text x="82.5" y="13" fill="#14532d" fontWeight="bold" textAnchor="middle" fontSize="10.5">U2 : 74LS373</text>
+              <text x="82.5" y="24" fill="#15803d" fontWeight="bold" textAnchor="middle" fontSize="7.5">OCTAL ADDRESS LATCH</text>
 
-              <text x="8" y="55" fill="#dc2626" fontWeight="bold">AD0–AD7</text>
-              <text x="8" y="80" fill="#059669" fontWeight="bold">LE (Pin 11)</text>
-              <text x="8" y="105" fill="#64748b">OE# (GND)</text>
+              {/* Left Inputs */}
+              <text x="10" y="84" fill="#dc2626" fontWeight="bold">AD0–AD7</text>
+              <text x="10" y="114" fill="#64748b">OE# (Pin 1: GND)</text>
+              <text x="10" y="144" fill="#059669" fontWeight="bold">LE (Pin 11)</text>
 
-              <text x="117" y="55" fill="#2563eb" textAnchor="end" fontWeight="bold">A0 (Q0)</text>
-              <text x="117" y="80" fill="#2563eb" textAnchor="end" fontWeight="bold">A1 (Q1)</text>
-              <text x="117" y="105" fill="#2563eb" textAnchor="end">A2–A7</text>
+              {/* Right Outputs (Spaced and Un-overlapping) */}
+              <text x="155" y="84" fill="#2563eb" textAnchor="end" fontWeight="bold">A0 (Q0: Pin 2)</text>
+              <text x="155" y="114" fill="#2563eb" textAnchor="end" fontWeight="bold">A1 (Q1: Pin 5)</text>
+              <text x="155" y="144" fill="#2563eb" textAnchor="end">A2–A7 (Q2–Q7)</text>
 
-              <circle cx="0" cy="55" r="3" fill="#dc2626" />
-              <circle cx="0" cy="80" r="3" fill="#059669" />
-              <circle cx="125" cy="55" r="3" fill="#2563eb" />
-              <circle cx="125" cy="80" r="3" fill="#2563eb" />
-              <circle cx="125" cy="105" r="3" fill="#2563eb" />
+              {/* Input Pin Dots */}
+              <circle cx="0" cy="80" r="3" fill="#dc2626" />
+              <circle cx="0" cy="110" r="2.5" fill="#64748b" />
+              <circle cx="0" cy="140" r="3" fill="#059669" />
+
+              {/* Output Pin Dots */}
+              <circle cx="165" cy="80" r="3" fill="#2563eb" />
+              <circle cx="165" cy="110" r="3" fill="#2563eb" />
+              <circle cx="165" cy="140" r="3" fill="#2563eb" />
             </g>
 
             {/* ============================================================== */}
-            {/* 3. CHIP U3: 74LS138 DECODER                                    */}
+            {/* 3. CHIP U3: 74LS138 3-to-8 ADDRESS DECODER                     */}
             {/* ============================================================== */}
             <g 
               onClick={() => setSelectedChip('u3')}
-              className="cursor-pointer transition-all"
-              transform="translate(195, 240)"
+              className="cursor-pointer transition-all group"
+              transform="translate(245, 235)"
             >
+              <title>U3: 74LS138 3-to-8 Line Address Decoder</title>
               <rect
                 x="0"
                 y="0"
-                width="125"
-                height="180"
+                width="165"
+                height="190"
                 rx="6"
                 fill="#ffffff"
                 stroke={selectedChip === 'u3' ? '#4f46e5' : '#94a3b8'}
                 strokeWidth={selectedChip === 'u3' ? '2.5' : '1.5'}
               />
-              <rect x="0" y="0" width="125" height="24" rx="6" fill="#fffbeb" stroke="#fef08a" strokeWidth="1" />
-              <text x="62.5" y="16" fill="#b45309" fontWeight="bold" textAnchor="middle" fontSize="10.5">U3: 74LS138</text>
-              <text x="62.5" y="34" fill="#64748b" fontSize="8" textAnchor="middle">DECODER (80H)</text>
+              <rect x="0" y="0" width="165" height="30" rx="6" fill="#fffbeb" stroke="#fef08a" strokeWidth="1" />
+              <text x="82.5" y="13" fill="#78350f" fontWeight="bold" textAnchor="middle" fontSize="10.5">U3 : 74LS138</text>
+              <text x="82.5" y="24" fill="#b45309" fontWeight="bold" textAnchor="middle" fontSize="7.5">3-TO-8 ADDRESS DECODER</text>
 
-              <text x="8" y="55" fill="#d97706" fontWeight="bold">A2, A3, A4</text>
-              <text x="8" y="80" fill="#d97706">G1 (+5V)</text>
-              <text x="8" y="105" fill="#d97706">G2A# (M/IO#)</text>
-              <text x="8" y="130" fill="#d97706">G2B# (A7)</text>
+              {/* Left Inputs */}
+              <text x="10" y="54" fill="#d97706" fontWeight="bold">A2, A3, A4</text>
+              <text x="10" y="84" fill="#d97706">G1 (Pin 6: +5V)</text>
+              <text x="10" y="114" fill="#d97706" fontWeight="bold">G2A# (Pin 4: M/IO#)</text>
+              <text x="10" y="144" fill="#d97706">G2B# (Pin 5: A7)</text>
 
-              <text x="117" y="75" fill="#059669" textAnchor="end" fontWeight="bold">Y0# (CS#)</text>
-              <text x="117" y="115" fill="#94a3b8" textAnchor="end">Y1#–Y7#</text>
+              {/* Right Outputs */}
+              <text x="155" y="74" fill="#059669" textAnchor="end" fontWeight="bold">Y0# (Pin 15: 80H)</text>
+              <text x="155" y="124" fill="#94a3b8" textAnchor="end">Y1#–Y7# (Unused)</text>
 
-              <circle cx="0" cy="55" r="3" fill="#d97706" />
-              <circle cx="0" cy="105" r="3" fill="#d97706" />
-              <circle cx="125" cy="75" r="3" fill="#059669" />
+              <circle cx="0" cy="50" r="3" fill="#d97706" />
+              <circle cx="0" cy="80" r="2.5" fill="#d97706" />
+              <circle cx="0" cy="110" r="3" fill="#d97706" />
+              <circle cx="0" cy="140" r="2.5" fill="#d97706" />
+              <circle cx="165" cy="70" r="3" fill="#059669" />
+              <circle cx="165" cy="120" r="2.5" fill="#94a3b8" />
             </g>
 
             {/* Wires CPU -> Latch & Decoder */}
-            <path d="M 165 180 L 180 180 L 180 140 L 195 140" fill="none" stroke="#059669" strokeWidth="1.5" />
-            <path d="M 165 130 L 195 115" fill="none" stroke="#dc2626" strokeWidth="2" />
-            <path d="M 165 205 L 180 205 L 180 345 L 195 345" fill="none" stroke="#d97706" strokeWidth="1.5" />
+            {/* AD0–AD7 Bus: 100% Horizontal from U1 (y=125) to U2 (y=125) */}
+            <line x1="170" y1="125" x2="245" y2="125" stroke="#dc2626" strokeWidth="2.5" />
+            <circle cx="205" cy="125" r="3.5" fill="#dc2626" />
+
+            {/* D0-D7 branch bypassing over U2 to 8255 Pin D0-D7 (y=95) */}
+            <path d="M 205 125 L 205 38 L 450 38 L 450 95 L 475 95" fill="none" stroke="#dc2626" strokeWidth="2" strokeDasharray="6,2" />
+            <text x="328" y="34" fill="#dc2626" fontSize="7.5" fontWeight="bold" textAnchor="middle">D0–D7 (Bidirectional Data Bus)</text>
+
+            {/* ALE wire: 100% Horizontal from U1 (y=185) to U2 LE (y=185) */}
+            <line x1="170" y1="185" x2="245" y2="185" stroke="#059669" strokeWidth="2" />
+            <text x="207" y="180" fill="#059669" fontSize="8" fontWeight="bold" textAnchor="middle">ALE</text>
+
+            {/* M/IO# wire to Decoder */}
+            <path d="M 170 215 L 195 215 L 195 345 L 245 345" fill="none" stroke="#d97706" strokeWidth="1.5" />
+            <text x="180" y="275" fill="#d97706" fontSize="8" fontWeight="bold" textAnchor="middle">M/IO#</text>
+
+            {/* Latched Address A2-A7 wire from U2 to U3 */}
+            <path d="M 410 185 L 425 185 L 425 220 L 230 220 L 230 285 L 245 285" fill="none" stroke="#2563eb" strokeWidth="1.5" strokeDasharray="4,2" />
 
             {/* ============================================================== */}
             {/* 4. CHIP U4: INTEL 8255A PPI                                    */}
             {/* ============================================================== */}
             <g 
               onClick={() => setSelectedChip('u4')}
-              className="cursor-pointer transition-all"
-              transform="translate(355, 60)"
+              className="cursor-pointer transition-all group"
+              transform="translate(475, 45)"
             >
+              <title>U4: Intel 8255A Programmable Peripheral Interface (PPI)</title>
               <rect
                 x="0"
                 y="0"
-                width="185"
-                height="360"
+                width="190"
+                height="380"
                 rx="6"
                 fill="#ffffff"
                 stroke={selectedChip === 'u4' ? '#4f46e5' : '#818cf8'}
                 strokeWidth={selectedChip === 'u4' ? '2.5' : '2'}
               />
-              <rect x="0" y="0" width="185" height="26" rx="6" fill="#eef2ff" stroke="#c7d2fe" strokeWidth="1" />
-              <text x="92.5" y="17" fill="#3730a3" fontWeight="bold" textAnchor="middle" fontSize="11">U4: 8255A PPI</text>
-              <text x="92.5" y="38" fill="#4f46e5" fontSize="8" textAnchor="middle">MODE 0 (CW = 82H)</text>
+              <rect x="0" y="0" width="190" height="30" rx="6" fill="#eef2ff" stroke="#c7d2fe" strokeWidth="1" />
+              <text x="95" y="13" fill="#312e81" fontWeight="bold" textAnchor="middle" fontSize="10.5">U4 : 8255A</text>
+              <text x="95" y="24" fill="#4338ca" fontWeight="bold" textAnchor="middle" fontSize="7">PROGRAMMABLE PERIPHERAL INTERFACE (PPI)</text>
+              <text x="95" y="42" fill="#4f46e5" fontSize="8" fontWeight="bold" textAnchor="middle">MODE 0 (CW = 82H) • Base: 80H</text>
 
               {/* Left Control & Bus Inputs */}
-              <text x="10" y="55" fill="#dc2626" fontWeight="bold">D0–D7 (Bus)</text>
-              <text x="10" y="80" fill="#2563eb" fontWeight="bold">A0 (Pin 9)</text>
-              <text x="10" y="105" fill="#2563eb" fontWeight="bold">A1 (Pin 8)</text>
-              <text x="10" y="135" fill="#059669" fontWeight="bold">CS# (Pin 6)</text>
-              <text x="10" y="160" fill="#d97706">WR# (Pin 36)</text>
-              <text x="10" y="185" fill="#d97706">RD# (Pin 5)</text>
-              <text x="10" y="210" fill="#64748b">RESET = 0</text>
-              <text x="10" y="240" fill="#4f46e5" fontSize="8.5" fontWeight="bold">Base Port: 80H</text>
+              <text x="10" y="54" fill="#dc2626" fontWeight="bold">D0–D7 (Pins 34–27)</text>
+              <text x="10" y="84" fill="#2563eb" fontWeight="bold">A0 (Pin 9)</text>
+              <text x="10" y="114" fill="#2563eb" fontWeight="bold">A1 (Pin 8)</text>
+              <text x="10" y="144" fill="#059669" fontWeight="bold">CS# (Pin 6: 80H)</text>
+              <text x="10" y="174" fill="#d97706" fontWeight="bold">WR# (Pin 36)</text>
+              <text x="10" y="204" fill="#d97706">RD# (Pin 5)</text>
+              <text x="10" y="234" fill="#64748b">RESET (Pin 35 = 0)</text>
 
               {/* Right Output Rows (Port A: PA0–PA3) */}
-              <text x="175" y="55" fill={rowBitActive[0] === 0 ? '#059669' : '#94a3b8'} fontWeight="bold" textAnchor="end">
+              <text x="180" y="54" fill={rowBitActive[0] === 0 ? '#059669' : '#94a3b8'} fontWeight="bold" textAnchor="end">
                 PA0 (R0) [{rowBitActive[0]}]
               </text>
-              <text x="175" y="80" fill={rowBitActive[1] === 0 ? '#059669' : '#94a3b8'} fontWeight="bold" textAnchor="end">
+              <text x="180" y="78" fill={rowBitActive[1] === 0 ? '#059669' : '#94a3b8'} fontWeight="bold" textAnchor="end">
                 PA1 (R1) [{rowBitActive[1]}]
               </text>
-              <text x="175" y="105" fill={rowBitActive[2] === 0 ? '#059669' : '#94a3b8'} fontWeight="bold" textAnchor="end">
+              <text x="180" y="102" fill={rowBitActive[2] === 0 ? '#059669' : '#94a3b8'} fontWeight="bold" textAnchor="end">
                 PA2 (R2) [{rowBitActive[2]}]
               </text>
-              <text x="175" y="130" fill={rowBitActive[3] === 0 ? '#059669' : '#94a3b8'} fontWeight="bold" textAnchor="end">
+              <text x="180" y="126" fill={rowBitActive[3] === 0 ? '#059669' : '#94a3b8'} fontWeight="bold" textAnchor="end">
                 PA3 (R3) [{rowBitActive[3]}]
               </text>
 
               {/* Right Input Columns (Port B: PB0–PB3) */}
-              <text x="175" y="180" fill={colBit[0] === 0 ? '#e11d48' : '#d97706'} fontWeight="bold" textAnchor="end">
+              <text x="180" y="184" fill={colBit[0] === 0 ? '#e11d48' : '#d97706'} fontWeight="bold" textAnchor="end">
                 PB0 (C0) [{colBit[0]}]
               </text>
-              <text x="175" y="205" fill={colBit[1] === 0 ? '#e11d48' : '#d97706'} fontWeight="bold" textAnchor="end">
+              <text x="180" y="208" fill={colBit[1] === 0 ? '#e11d48' : '#d97706'} fontWeight="bold" textAnchor="end">
                 PB1 (C1) [{colBit[1]}]
               </text>
-              <text x="175" y="230" fill={colBit[2] === 0 ? '#e11d48' : '#d97706'} fontWeight="bold" textAnchor="end">
+              <text x="180" y="232" fill={colBit[2] === 0 ? '#e11d48' : '#d97706'} fontWeight="bold" textAnchor="end">
                 PB2 (C2) [{colBit[2]}]
               </text>
-              <text x="175" y="255" fill={colBit[3] === 0 ? '#e11d48' : '#d97706'} fontWeight="bold" textAnchor="end">
+              <text x="180" y="256" fill={colBit[3] === 0 ? '#e11d48' : '#d97706'} fontWeight="bold" textAnchor="end">
                 PB3 (C3) [{colBit[3]}]
               </text>
 
-              <text x="92.5" y="305" fill="#059669" fontSize="8.5" fontWeight="bold" textAnchor="middle">Port A: Output (Rows)</text>
-              <text x="92.5" y="325" fill="#d97706" fontSize="8.5" fontWeight="bold" textAnchor="middle">Port B: Input (Cols)</text>
+              <text x="95" y="305" fill="#059669" fontSize="8" fontWeight="bold" textAnchor="middle">Port A (80H): Output (Rows)</text>
+              <text x="95" y="325" fill="#d97706" fontSize="8" fontWeight="bold" textAnchor="middle">Port B (81H): Input (Cols)</text>
 
               {/* Input Pins dots */}
-              <circle cx="0" cy="55" r="3" fill="#dc2626" />
+              <circle cx="0" cy="50" r="3" fill="#dc2626" />
               <circle cx="0" cy="80" r="3" fill="#2563eb" />
-              <circle cx="0" cy="105" r="3" fill="#2563eb" />
-              <circle cx="0" cy="135" r="3" fill="#059669" />
+              <circle cx="0" cy="110" r="3" fill="#2563eb" />
+              <circle cx="0" cy="140" r="3" fill="#059669" />
+              <circle cx="0" cy="170" r="3" fill="#d97706" />
+              <circle cx="0" cy="200" r="2.5" fill="#d97706" />
+              <circle cx="0" cy="230" r="2.5" fill="#64748b" />
 
-              {[55, 80, 105, 130, 180, 205, 230, 255].map((y, i) => (
-                <circle key={i} cx="185" cy={y} r="3" fill={i < 4 ? '#059669' : '#d97706'} />
+              {/* Output & Input Pins dots */}
+              {[50, 74, 98, 122].map((y, i) => (
+                <circle key={i} cx="190" cy={y} r="3" fill="#059669" />
+              ))}
+              {[180, 204, 228, 252].map((y, i) => (
+                <circle key={i} cx="190" cy={y} r="3" fill="#d97706" />
               ))}
             </g>
 
-            {/* Wires to 8255 */}
-            <path d="M 320 115 L 338 115 L 338 140 L 355 140" fill="none" stroke="#2563eb" strokeWidth="1.5" />
-            <path d="M 320 140 L 338 140 L 338 165 L 355 165" fill="none" stroke="#2563eb" strokeWidth="1.5" />
-            <path d="M 320 315 L 338 315 L 338 195 L 355 195" fill="none" stroke="#059669" strokeWidth="2" />
+            {/* Interconnects between U2, U3 and U4 */}
+            {/* Latch Q0 to 8255 A0: 100% Straight Horizontal Line at y=125 */}
+            <line x1="410" y1="125" x2="475" y2="125" stroke="#2563eb" strokeWidth="2" />
+            <text x="442" y="120" fill="#2563eb" fontSize="7.5" fontWeight="bold" textAnchor="middle">A0</text>
+
+            {/* Latch Q1 to 8255 A1: 100% Straight Horizontal Line at y=155 */}
+            <line x1="410" y1="155" x2="475" y2="155" stroke="#2563eb" strokeWidth="2" />
+            <text x="442" y="150" fill="#2563eb" fontSize="7.5" fontWeight="bold" textAnchor="middle">A1</text>
+
+            {/* Decoder Y0# to 8255 CS#: Clean Orthogonal Route */}
+            <path d="M 410 305 L 440 305 L 440 185 L 475 185" fill="none" stroke="#059669" strokeWidth="2" />
+            <text x="446" y="248" fill="#059669" fontSize="7.5" fontWeight="bold">CS#</text>
+
+            {/* CPU WR# to 8255 WR#: Clean Orthogonal Route */}
+            <path d="M 170 245 L 205 245 L 205 228 L 460 228 L 460 215 L 475 215" fill="none" stroke="#d97706" strokeWidth="1.5" strokeDasharray="5,2" />
 
             {/* ============================================================== */}
             {/* 5. RP1: 4x 10kΩ PULL-UP RESISTOR NETWORK (tied to +5V)         */}
             {/* ============================================================== */}
             <g 
               onClick={() => setSelectedChip('rp1')}
-              className="cursor-pointer transition-all"
-              transform="translate(570, 235)"
+              className="cursor-pointer transition-all group"
+              transform="translate(705, 205)"
             >
+              <title>RP1: 4 × 10kΩ Pull-Up Resistor Array</title>
               <rect
                 x="0"
                 y="0"
-                width="60"
-                height="130"
+                width="65"
+                height="145"
                 rx="4"
                 fill="#f8fafc"
                 stroke={selectedChip === 'rp1' ? '#4f46e5' : '#cbd5e1'}
-                strokeWidth="1.5"
+                strokeWidth={1.5}
               />
-              <text x="30" y="16" fill="#dc2626" fontWeight="bold" textAnchor="middle" fontSize="9">RP1 (10kΩ)</text>
-              <text x="30" y="28" fill="#64748b" fontSize="7.5" textAnchor="middle">PULL-UPS (+5V)</text>
+              <rect x="0" y="0" width="65" height="28" rx="4" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1" />
+              <text x="32.5" y="12" fill="#dc2626" fontWeight="bold" textAnchor="middle" fontSize="8">RP1 : 10kΩ</text>
+              <text x="32.5" y="23" fill="#64748b" fontSize="6.5" textAnchor="middle" fontWeight="bold">RESISTOR ARRAY</text>
 
-              {/* 4 Resistors */}
-              {[40, 65, 90, 115].map((y, idx) => (
+              {/* 4 Resistors aligned with Port B C0-C3 */}
+              {[45, 69, 93, 117].map((y, idx) => (
                 <g key={idx}>
-                  <line x1="5" y1={y} x2="12" y2={y} stroke="#ef4444" strokeWidth="1.5" />
-                  <rect x="12" y={y - 5} width="35" height="10" rx="2" fill="#e2e8f0" stroke="#94a3b8" strokeWidth="1" />
-                  <text x="29" y={y + 3} fill="#0f172a" fontSize="7" textAnchor="middle" fontWeight="bold">10k</text>
-                  <line x1="47" y1={y} x2="55" y2={y} stroke="#d97706" strokeWidth="1.5" />
+                  <line x1="5" y1={y} x2="14" y2={y} stroke="#ef4444" strokeWidth="1.5" />
+                  <rect x="14" y={y - 6} width="36" height="12" rx="2" fill="#e2e8f0" stroke="#94a3b8" strokeWidth="1" />
+                  <text x="32" y={y + 3.5} fill="#0f172a" fontSize="7.5" textAnchor="middle" fontWeight="bold">10k</text>
+                  <line x1="50" y1={y} x2="60" y2={y} stroke="#d97706" strokeWidth="1.5" />
                 </g>
               ))}
             </g>
 
             {/* Connect RP1 top pin to +5V Rail */}
-            <path d="M 575 235 L 575 25" fill="none" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="3,1" />
+            <path d="M 737 205 L 737 20" fill="none" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="4,2" />
 
             {/* ============================================================== */}
             {/* 6. 4×4 MATRIX KEYPAD GRID                                      */}
             {/* ============================================================== */}
             <g 
               onClick={() => setSelectedChip('matrix')}
-              className="cursor-pointer transition-all"
-              transform="translate(675, 60)"
+              className="cursor-pointer transition-all group"
+              transform="translate(805, 45)"
             >
+              <title>4×4 Matrix Keypad (16 Tactile Switches)</title>
               <rect
                 x="0"
                 y="0"
-                width="265"
-                height="360"
-                rx="10"
+                width="255"
+                height="380"
+                rx="8"
                 fill="#ffffff"
                 stroke={selectedChip === 'matrix' ? '#4f46e5' : '#cbd5e1'}
                 strokeWidth={selectedChip === 'matrix' ? '2.5' : '2'}
               />
-              <rect x="0" y="0" width="260" height="26" rx="10" fill="#f1f5f9" stroke="#e2e8f0" strokeWidth="1" />
-              <text x="130" y="17" fill="#0f172a" fontWeight="bold" textAnchor="middle" fontSize="10.5">
+              <rect x="0" y="0" width="255" height="26" rx="8" fill="#f1f5f9" stroke="#e2e8f0" strokeWidth="1" />
+              <text x="127.5" y="17" fill="#0f172a" fontWeight="bold" textAnchor="middle" fontSize="10.5">
                 4×4 MATRIX KEYPAD (16 KEYS)
               </text>
 
@@ -518,10 +574,10 @@ export default function KeypadSchematicDiagram({
               {['C0', 'C1', 'C2', 'C3'].map((cName, cIdx) => (
                 <text 
                   key={cIdx} 
-                  x={45 + cIdx * 55} 
-                  y="45" 
+                  x={45 + cIdx * 54} 
+                  y="46" 
                   fill={colBit[cIdx] === 0 ? '#e11d48' : '#d97706'} 
-                  fontSize="9" 
+                  fontSize="8.5" 
                   fontWeight="bold" 
                   textAnchor="middle"
                 >
@@ -532,16 +588,16 @@ export default function KeypadSchematicDiagram({
               {/* Matrix Switches */}
               {keyMatrix.map((row, rIdx) => {
                 const isRowActive = activeRowScan === rIdx;
-                const rowY = 70 + rIdx * 65;
+                const rowY = 65 + rIdx * 65;
 
                 return (
                   <g key={rIdx}>
                     {/* Row Label on left */}
                     <text 
-                      x="12" 
+                      x="10" 
                       y={rowY + 22} 
                       fill={isRowActive ? '#059669' : '#64748b'} 
-                      fontSize="9" 
+                      fontSize="8.5" 
                       fontWeight="bold"
                     >
                       R{rIdx}
@@ -549,9 +605,9 @@ export default function KeypadSchematicDiagram({
 
                     {/* Horizontal Row Wire */}
                     <line 
-                      x1="28" 
+                      x1="24" 
                       y1={rowY + 20} 
-                      x2="240" 
+                      x2="235" 
                       y2={rowY + 20} 
                       stroke={isRowActive ? '#059669' : '#cbd5e1'} 
                       strokeWidth={isRowActive ? '2' : '1'} 
@@ -559,7 +615,7 @@ export default function KeypadSchematicDiagram({
 
                     {/* 4 Keys on this row */}
                     {row.map((kLabel, cIdx) => {
-                      const keyX = 45 + cIdx * 55;
+                      const keyX = 45 + cIdx * 54;
                       const isThisKeyPressed = pressedKey && pressedKey.r === rIdx && pressedKey.c === cIdx;
                       const isBridged = isThisKeyPressed && isRowActive;
 
@@ -633,12 +689,12 @@ export default function KeypadSchematicDiagram({
               })}
 
               {/* Bottom Status Banner inside Keypad box */}
-              <rect x="15" y="325" width="230" height="25" rx="4" fill="#f8fafc" stroke="#e2e8f0" />
-              <text x="130" y="341" fill={keyDetected ? '#059669' : '#64748b'} fontSize="8.5" textAnchor="middle" fontWeight="bold">
+              <rect x="12" y="335" width="231" height="25" rx="4" fill="#f8fafc" stroke="#e2e8f0" />
+              <text x="127.5" y="351" fill={keyDetected ? '#059669' : '#64748b'} fontSize="8" textAnchor="middle" fontWeight="bold">
                 {keyDetected 
-                  ? `KEY HIT DETECTED: '${pressedKey?.label}' (Row ${pressedKey?.r} LOW, Col ${pressedKey?.c} = 0V)`
+                  ? `KEY HIT: '${pressedKey?.label}' (Row ${pressedKey?.r} LOW, Col ${pressedKey?.c} = 0V)`
                   : pressedKey 
-                    ? `Key '${pressedKey.label}' Held Down (Waiting for Row ${pressedKey.r} scan...)`
+                    ? `Key '${pressedKey.label}' Pressed (Waiting for Row ${pressedKey.r}...)`
                     : 'Click any key button above to simulate a keypress'}
               </text>
             </g>
@@ -648,14 +704,14 @@ export default function KeypadSchematicDiagram({
             {/* ============================================================== */}
             {/* Port A Row Output Wires (PA0–PA3) -> Keypad Rows R0–R3 */}
             {[
-              { y8255: 115, yKey: 150, active: rowBitActive[0] === 0 },
-              { y8255: 140, yKey: 215, active: rowBitActive[1] === 0 },
-              { y8255: 165, yKey: 280, active: rowBitActive[2] === 0 },
-              { y8255: 190, yKey: 345, active: rowBitActive[3] === 0 }
+              { y8255: 95, yKey: 130, active: rowBitActive[0] === 0 },
+              { y8255: 119, yKey: 195, active: rowBitActive[1] === 0 },
+              { y8255: 143, yKey: 260, active: rowBitActive[2] === 0 },
+              { y8255: 167, yKey: 325, active: rowBitActive[3] === 0 }
             ].map((w, idx) => (
               <path 
                 key={idx}
-                d={`M 540 ${w.y8255} L 555 ${w.y8255} L 555 ${w.yKey} L 675 ${w.yKey}`}
+                d={`M 665 ${w.y8255} L 685 ${w.y8255} L 685 ${w.yKey} L 805 ${w.yKey}`}
                 fill="none"
                 stroke={w.active ? '#059669' : '#cbd5e1'}
                 strokeWidth={w.active ? '2' : '1'}
@@ -664,25 +720,24 @@ export default function KeypadSchematicDiagram({
 
             {/* Port B Column Sense Wires (PB0–PB3) <- Pull-ups & Keypad Cols */}
             {[
-              { y8255: 240, yRp: 275, active: colBit[0] === 0 },
-              { y8255: 265, yRp: 300, active: colBit[1] === 0 },
-              { y8255: 290, yRp: 325, active: colBit[2] === 0 },
-              { y8255: 315, yRp: 350, active: colBit[3] === 0 }
+              { y8255: 229, yRp: 250, active: colBit[0] === 0 },
+              { y8255: 253, yRp: 274, active: colBit[1] === 0 },
+              { y8255: 277, yRp: 298, active: colBit[2] === 0 },
+              { y8255: 301, yRp: 322, active: colBit[3] === 0 }
             ].map((w, idx) => (
               <g key={idx}>
-                <line 
-                  x1="540" 
-                  y1={w.y8255} 
-                  x2="570" 
-                  y2={w.yRp} 
+                {/* 8255 to RP1 */}
+                <path 
+                  d={`M 665 ${w.y8255} L 685 ${w.y8255} L 685 ${w.yRp} L 705 ${w.yRp}`}
+                  fill="none"
                   stroke={w.active ? '#e11d48' : '#d97706'} 
                   strokeWidth={w.active ? '2' : '1.2'} 
                 />
-                {/* Wires from RP1 to Keypad */}
+                {/* RP1 to Keypad */}
                 <line 
-                  x1="630" 
+                  x1="770" 
                   y1={w.yRp} 
-                  x2="675" 
+                  x2="805" 
                   y2={w.yRp} 
                   stroke={w.active ? '#e11d48' : '#d97706'} 
                   strokeWidth={w.active ? '2' : '1.2'} 
