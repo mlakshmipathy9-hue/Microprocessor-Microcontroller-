@@ -173,7 +173,7 @@ export default function MemorySchematicDiagram({
   const a16 = (addrVal >> 16) & 1;
   const a15 = (addrVal >> 15) & 1;
 
-  // M/IO# signal (Memory = 1, I/O = 0 for 8086 Minimum Mode)
+  // M/I̅O̅ signal (Memory = 1, I/O = 0 for 8086 Minimum Mode)
   const mio = 1;
 
   // Absolute NAND Decoder check:
@@ -187,8 +187,8 @@ export default function MemorySchematicDiagram({
   const csBar = isAddressInRange ? 0 : 1; // Active LOW
 
   // Bank qualification using OR gates (74LS32):
-  // CE1# = CS# OR A0
-  // CE2# = CS# OR BHE#
+  // C̅E̅1̅ = C̅S̅ OR A0
+  // C̅E̅2̅ = C̅S̅ OR B̅H̅E̅
   const ce1Bar = (csBar === 0 && a0 === 0) ? 0 : 1;
   const ce2Bar = (csBar === 0 && bhe === 0) ? 0 : 1;
 
@@ -650,7 +650,7 @@ export default function MemorySchematicDiagram({
                 Intel 8086 MPU (U1)
               </text>
               <text x="150" y="78" textAnchor="middle" fill="#15803d" fontSize="9.5" fontWeight="bold">
-                MIN MODE (MN/MX# = +5V)
+                MIN MODE (MN/M̅X̅ = +5V)
               </text>
 
               {/* CPU Multiplexed Bus Pins */}

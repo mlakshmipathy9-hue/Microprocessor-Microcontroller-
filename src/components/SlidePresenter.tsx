@@ -31,20 +31,7 @@ function getVideoEmbed(url: string) {
   };
 }
 
-function renderWithOverbars(str: string): React.ReactNode {
-  if (!str.includes('\u0305')) return str;
-  const parts = str.split(/((?:[A-Za-z0-9_]\u0305)+)/g);
-  return parts.map((part, i) => {
-    if (part.includes('\u0305')) {
-      return (
-        <span key={i} className="overline decoration-current inline-block font-bold" style={{ textDecoration: 'overline' }}>
-          {part.replace(/\u0305/g, '')}
-        </span>
-      );
-    }
-    return part;
-  });
-}
+import { renderWithOverbars } from '../utils/textUtils';
 
 function SlidePointContent({ text, className = 'text-left' }: { text: string; className?: string }) {
   if (text.includes('\n')) {
@@ -798,7 +785,7 @@ export default function SlidePresenter({
                 {slide.moduleTitle || 'Academic Courseware'}
               </span>
               <h1 id="fullscreen-slide-title" className="text-xs sm:text-sm md:text-base font-bold text-white tracking-tight truncate">
-                {slide.title}
+                {renderWithOverbars(slide.title)}
               </h1>
             </div>
 
@@ -895,7 +882,7 @@ export default function SlidePresenter({
                           animate={{ opacity: 1, y: 0 }}
                           className="font-display text-lg md:text-2xl lg:text-2.5xl font-extrabold text-slate-900 tracking-tight leading-tight"
                         >
-                          {slide.title}
+                          {renderWithOverbars(slide.title)}
                         </motion.h2>
                         <div className="h-1 w-16 bg-gradient-to-r from-indigo-600 to-indigo-400 rounded-full mt-1 shadow-sm"></div>
                       </div>
@@ -1604,7 +1591,7 @@ export default function SlidePresenter({
 
                                   <h3 className="font-extrabold text-slate-950 text-[13px] md:text-base leading-relaxed flex gap-2">
                                     <span className="text-indigo-700 font-mono">Q{currentQuestionIdx + 1}.</span>
-                                    {slide.quizQuestions[currentQuestionIdx].question}
+                                    {renderWithOverbars(slide.quizQuestions[currentQuestionIdx].question)}
                                   </h3>
 
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1614,7 +1601,7 @@ export default function SlidePresenter({
                                         onClick={() => handleSelectAnswer(currentQuestionIdx, oIdx, slide.quizQuestions![currentQuestionIdx].correctAnswer)}
                                         className={`w-full text-left py-3 px-4 text-[13px] md:text-sm border rounded-xl transition-all cursor-pointer ${getQuizButtonColor(currentQuestionIdx, oIdx, slide.quizQuestions![currentQuestionIdx].correctAnswer)}`}
                                       >
-                                        {opt}
+                                        {renderWithOverbars(opt)}
                                       </button>
                                     ))}
                                   </div>
@@ -1628,7 +1615,7 @@ export default function SlidePresenter({
                                       <HelpCircle className="w-4 h-4 text-indigo-700 shrink-0 mt-0.5" />
                                       <div>
                                         <strong className="font-bold text-slate-950">Explanation: </strong>
-                                        {slide.quizQuestions[currentQuestionIdx].explanation}
+                                        {renderWithOverbars(slide.quizQuestions[currentQuestionIdx].explanation)}
                                       </div>
                                     </motion.div>
                                   )}
@@ -1876,7 +1863,7 @@ export default function SlidePresenter({
                       {slide.moduleTitle}
                     </span>
                     <h2 className="font-display text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight leading-tight">
-                      {slide.title}
+                      {renderWithOverbars(slide.title)}
                     </h2>
                   </div>
                   <button

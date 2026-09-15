@@ -194,7 +194,7 @@ export default function MemoryInterfacingSimulator({
 
   // A0 signal = LSB of address
   const a0 = isEvenAddress ? 0 : 1;
-  // BHE# signal: active low (0) when accessing odd bank (word access OR odd byte access)
+  // B̅H̅E̅ signal: active low (0) when accessing odd bank (word access OR odd byte access)
   const bhe = (transferType === 'word' || !isEvenAddress) ? 0 : 1;
 
   const evenBankActive = a0 === 0;

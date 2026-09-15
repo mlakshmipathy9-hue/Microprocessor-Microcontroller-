@@ -106,8 +106,8 @@ const BLOCK_DATA: Record<string, BlockInfo> = {
     desc: 'Internal non-volatile code memory residing at addresses 0000H to 0FFFH. Holds the compiled machine code instructions.',
     details: [
       'Internal Capacity: 4 KB (0000H to 0FFFH on standard 8051; flash variants like 89C51 have 4 KB/8 KB/16 KB).',
-      'EA# Pin Selection: When EA# (External Access) is tied to VCC (+5V), code from 0000H–0FFFH is fetched internally, and code above 0FFFH fetches from external ROM. If EA# is tied to GND, ALL code fetches occur from external memory starting at 0000H.',
-      'Interrupt Vector Locations: 0000H (Reset), 0003H (External Interrupt 0 / INT0#), 000BH (Timer 0 / TF0), 0013H (External Interrupt 1 / INT1#), 001BH (Timer 1 / TF1), 0023H (Serial Port / RI+TI).',
+      'E̅A̅ Pin Selection: When E̅A̅ (External Access) is tied to VCC (+5V), code from 0000H–0FFFH is fetched internally, and code above 0FFFH fetches from external ROM. If E̅A̅ is tied to GND, ALL code fetches occur from external memory starting at 0000H.',
+      'Interrupt Vector Locations: 0000H (Reset), 0003H (External Interrupt 0 / I̅N̅T̅0̅), 000BH (Timer 0 / TF0), 0013H (External Interrupt 1 / I̅N̅T̅1̅), 001BH (Timer 1 / TF1), 0023H (Serial Port / RI+TI).',
       'Connected to the internal 8-bit Data Bus and accessed via the 16-bit Address Bus.'
     ]
   },
@@ -142,7 +142,7 @@ const BLOCK_DATA: Record<string, BlockInfo> = {
     desc: 'True bidirectional open-drain 8-bit I/O port at SFR address 80H. Functions as multiplexed low-order Address/Data bus (AD0–AD7) in external memory systems.',
     details: [
       'Open-Drain Structure: Has no internal pull-up FETs. Requires external 10 kΩ pull-up resistor pack when used as general-purpose output port.',
-      'Multiplexed Bus (AD0–AD7): In external memory access, outputs low byte address A0–A7 during ALE=1, then switches to bidirectional data bus D0–D7 during RD#/WR# active.',
+      'Multiplexed Bus (AD0–AD7): In external memory access, outputs low byte address A0–A7 during ALE=1, then switches to bidirectional data bus D0–D7 during R̅D̅/W̅R̅ active.',
       'De-multiplexing: Uses ALE pin with external 74LS373 latch to separate address lines A0–A7 from data lines D0–D7.',
       'Writing 1 to latch configures pins as high-impedance inputs.'
     ]
@@ -179,12 +179,12 @@ const BLOCK_DATA: Record<string, BlockInfo> = {
     details: [
       'P3.0 (Pin 10): RXD (Serial Data Input for UART).',
       'P3.1 (Pin 11): TXD (Serial Data Output for UART).',
-      'P3.2 (Pin 12): INT0# (External Hardware Interrupt 0 input, active-LOW or falling-edge).',
-      'P3.3 (Pin 13): INT1# (External Hardware Interrupt 1 input, active-LOW or falling-edge).',
+      'P3.2 (Pin 12): I̅N̅T̅0̅ (External Hardware Interrupt 0 input, active-LOW or falling-edge).',
+      'P3.3 (Pin 13): I̅N̅T̅1̅ (External Hardware Interrupt 1 input, active-LOW or falling-edge).',
       'P3.4 (Pin 14): T0 (External Clock/Event Input for Timer 0 counter mode).',
       'P3.5 (Pin 15): T1 (External Clock/Event Input for Timer 1 counter mode).',
-      'P3.6 (Pin 16): WR# (External Data RAM Write Strobe, active-LOW).',
-      'P3.7 (Pin 17): RD# (External Data RAM Read Strobe, active-LOW).'
+      'P3.6 (Pin 16): W̅R̅ (External Data RAM Write Strobe, active-LOW).',
+      'P3.7 (Pin 17): R̅D̅ (External Data RAM Read Strobe, active-LOW).'
     ]
   },
   system_control: {
@@ -193,9 +193,9 @@ const BLOCK_DATA: Record<string, BlockInfo> = {
     category: 'control',
     desc: 'The central synchronization engine coordinating clock distribution, bus multiplexing, interrupt arbitrating, and external memory strobes.',
     details: [
-      'EA# / VPP (Pin 31): External Access Enable. Tied to VCC (+5V) for on-chip ROM execution; tied to GND for external ROM.',
-      'ALE / PROG# (Pin 30): Address Latch Enable pulses HIGH at 1/6th oscillator frequency to latch A0–A7 from Port 0 into 74LS373.',
-      'PSEN# (Pin 29): Program Store Enable is the active-LOW read strobe for external Program ROM (connected to OE# of external ROM).',
+      'E̅A̅ / VPP (Pin 31): External Access Enable. Tied to VCC (+5V) for on-chip ROM execution; tied to GND for external ROM.',
+      'ALE / P̅R̅O̅G̅ (Pin 30): Address Latch Enable pulses HIGH at 1/6th oscillator frequency to latch A0–A7 from Port 0 into 74LS373.',
+      'P̅S̅E̅N̅ (Pin 29): Program Store Enable is the active-LOW read strobe for external Program ROM (connected to O̅E̅ of external ROM).',
       'XTAL1 & XTAL2 (Pins 19, 18): Input/output pins for internal crystal oscillator inverter (typically 11.0592 MHz or 12 MHz with 33 pF capacitors).',
       'RST (Pin 9): Active-HIGH Reset input. Must remain HIGH for at least 2 machine cycles (24 oscillator periods) to initialize the 8051.',
       'VCC (Pin 40, +5V) & GND (Pin 20, 0V): Primary power supply rails.'
@@ -1081,7 +1081,7 @@ export default function MCU8051SchematicDiagram() {
                 filter={selectedBlockId === 'system_control' ? 'url(#glow-selected)' : undefined}
               >
                 {/* External Pin Lines on Left */}
-                {/* EA# */}
+                {/* E̅A̅ */}
                 <line x1="215" y1="410" x2="245" y2="410" stroke="#0f172a" strokeWidth="1.5" />
                 <text x="210" y="413" fontSize="9.5" fontWeight="bold" fill="#0f172a" textAnchor="end">
                   EA

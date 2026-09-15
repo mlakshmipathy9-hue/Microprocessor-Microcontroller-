@@ -72,12 +72,12 @@ export default function RAM32KInterfacingDesign() {
   const a15 = (clampedAddr >> 15) & 1;
 
   // Absolute Decoding logic
-  const isCsAsserted = isWithin32K; // CS# = 0 (Active LOW)
+  const isCsAsserted = isWithin32K; // C̅S̅ = 0 (Active LOW)
   const csBar = isCsAsserted ? 0 : 1;
 
-  // Chip Enable for Even Bank (RAM_1) = CS# OR A0
+  // Chip Enable for Even Bank (RAM_1) = C̅S̅ OR A0
   const ce1Bar = (csBar === 0 && a0 === 0) ? 0 : 1; // Active LOW when 0
-  // Chip Enable for Odd Bank (RAM_2) = CS# OR BHE#
+  // Chip Enable for Odd Bank (RAM_2) = C̅S̅ OR B̅H̅E̅
   const ce2Bar = (csBar === 0 && bhe === 0) ? 0 : 1; // Active LOW when 0
 
   const rdBar = opMode === 'read' ? 0 : 1;

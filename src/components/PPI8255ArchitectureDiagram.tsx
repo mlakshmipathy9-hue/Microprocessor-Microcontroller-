@@ -326,12 +326,12 @@ export default function PPI8255ArchitectureDiagram({ onSelectBlock, headerSlot }
 
               {/* Control Inputs on Left of Read/Write Logic */}
               <g>
-                {/* RD# */}
+                {/* R̅D̅ */}
                 <text x="35" y="340" fontSize="11" fontWeight="bold" fill="#1E293B">RD</text>
                 <line x1="35" y1="330" x2="52" y2="330" stroke="#1E293B" strokeWidth="1.5" />
                 <path d="M 55 337 L 115 337" fill="none" stroke="#1E293B" strokeWidth="1.2" markerEnd="url(#arrow-black)" />
 
-                {/* WR# */}
+                {/* W̅R̅ */}
                 <text x="32" y="365" fontSize="11" fontWeight="bold" fill="#1E293B">WR</text>
                 <line x1="32" y1="355" x2="53" y2="355" stroke="#1E293B" strokeWidth="1.5" />
                 <path d="M 55 362 L 115 362" fill="none" stroke="#1E293B" strokeWidth="1.2" markerEnd="url(#arrow-black)" />
@@ -348,7 +348,7 @@ export default function PPI8255ArchitectureDiagram({ onSelectBlock, headerSlot }
                 <text x="25" y="438" fontSize="10.5" fontWeight="bold" fill="#1E293B">Reset</text>
                 <path d="M 60 435 L 115 435" fill="none" stroke="#1E293B" strokeWidth="1.2" markerEnd="url(#arrow-black)" />
 
-                {/* CS# at bottom */}
+                {/* C̅S̅ at bottom */}
                 <text x="38" y="500" fontSize="11" fontWeight="bold" fill="#1E293B">CS</text>
                 <line x1="38" y1="490" x2="53" y2="490" stroke="#1E293B" strokeWidth="1.5" />
                 <path

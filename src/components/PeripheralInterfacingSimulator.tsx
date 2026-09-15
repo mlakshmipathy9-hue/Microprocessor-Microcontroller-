@@ -952,7 +952,7 @@ END MAIN                      ; End of assembly program`;
     circuit: {
       icon: <Activity className="w-5 h-5" />,
       title: '8086 Interfacing Circuit Architecture & Bus Decoding',
-      subtitle: '8086 CPU ↔ 74LS373 Latches ↔ 74LS138 Address Decoder (CS# = 80H) ↔ 8255 PPI ↔ ULN2003 Driver'
+      subtitle: '8086 CPU ↔ 74LS373 Latches ↔ 74LS138 Address Decoder (C̅S̅ = 80H) ↔ 8255 PPI ↔ ULN2003 Driver'
     },
     'stepper-types': {
       icon: <Component className="w-5 h-5" />,
@@ -977,7 +977,7 @@ END MAIN                      ; End of assembly program`;
     'display-circuit': {
       icon: <Activity className="w-5 h-5" />,
       title: '8086 Seven-Segment LED Display Interfacing Circuit & Architecture',
-      subtitle: '8086 CPU ↔ 74LS373 Latch ↔ 74LS138 Decoder (CS# = 80H) ↔ 8255 PPI Port A ↔ 330Ω Resistors ↔ 7-Segment Display'
+      subtitle: '8086 CPU ↔ 74LS373 Latch ↔ 74LS138 Decoder (C̅S̅ = 80H) ↔ 8255 PPI Port A ↔ 330Ω Resistors ↔ 7-Segment Display'
     },
     display: {
       icon: <Lightbulb className="w-5 h-5" />,
@@ -997,7 +997,7 @@ END MAIN                      ; End of assembly program`;
     'keypad-circuit': {
       icon: <Activity className="w-5 h-5" />,
       title: '8086 4x4 Matrix Keypad Interfacing Circuit & Architecture',
-      subtitle: '8086 CPU ↔ 74LS373 Latch ↔ 74LS138 Decoder (CS# = 80H) ↔ 8255 PPI (Port A Out: Rows, Port B In: Columns) ↔ 10kΩ Pull-Ups ↔ 4x4 Matrix'
+      subtitle: '8086 CPU ↔ 74LS373 Latch ↔ 74LS138 Decoder (C̅S̅ = 80H) ↔ 8255 PPI (Port A Out: Rows, Port B In: Columns) ↔ 10kΩ Pull-Ups ↔ 4x4 Matrix'
     },
     keypad: {
       icon: <Grid className="w-5 h-5" />,
@@ -1017,7 +1017,7 @@ END MAIN                      ; End of assembly program`;
     'traffic-circuit': {
       icon: <Activity className="w-5 h-5" />,
       title: '8086 Traffic Light Controller Circuit Architecture & Signal Bus',
-      subtitle: '8086 CPU ↔ 74LS373 Latch ↔ 74LS138 Decoder (CS# = 80H) ↔ 8255 PPI (Port A) ↔ 7407 Buffers ↔ Traffic Signal Heads'
+      subtitle: '8086 CPU ↔ 74LS373 Latch ↔ 74LS138 Decoder (C̅S̅ = 80H) ↔ 8255 PPI (Port A) ↔ 7407 Buffers ↔ Traffic Signal Heads'
     },
     traffic: {
       icon: <Timer className="w-5 h-5" />,
@@ -1142,7 +1142,7 @@ END MAIN                      ; End of assembly program`;
                     <span className="text-emerald-600 font-bold">Latch En</span>
                   </div>
                   <div className="flex justify-between items-center py-0.5 px-1 bg-slate-50 rounded">
-                    <span className="text-slate-600">M/IO#, RD#, WR#</span>
+                    <span className="text-slate-600">M/I̅O̅, R̅D̅, W̅R̅</span>
                     <span className="text-amber-600 font-bold">Control</span>
                   </div>
                 </div>
@@ -1178,7 +1178,7 @@ END MAIN                      ; End of assembly program`;
                     <span>A0, A1</span>
                   </div>
                   <div className="text-[9px] text-slate-500 bg-slate-50 p-1 rounded">
-                    OE# = 0 (GND) | CS# = 0 (Always ON)
+                    O̅E̅ = 0 (GND) | C̅S̅ = 0 (Always ON)
                   </div>
                 </div>
                 <div className="text-[9px] text-slate-500 border-t border-slate-100 pt-1 text-center">
@@ -1188,7 +1188,7 @@ END MAIN                      ; End of assembly program`;
 
               {/* ARROW 2: Latched Address & Data Bus */}
               <div className="flex flex-col items-center justify-center space-y-1 px-1">
-                <span className="text-[9px] font-mono text-emerald-600 font-bold">A0, A1 &amp; CS#=0</span>
+                <span className="text-[9px] font-mono text-emerald-600 font-bold">A0, A1 &amp; C̅S̅=0</span>
                 <div className="w-8 h-0.5 bg-emerald-400 relative">
                   <ArrowRight className="w-3.5 h-3.5 text-emerald-600 absolute -right-2 -top-1.5" />
                 </div>
@@ -1323,7 +1323,7 @@ END MAIN                      ; End of assembly program`;
                   <ul className="list-disc list-inside text-slate-600 space-y-0.5 font-mono">
                     <li><strong className="text-indigo-700">AD0–AD15:</strong> Multiplexed Address/Data bus lines.</li>
                     <li><strong className="text-emerald-700">ALE:</strong> Pulses HIGH in T1 to latch address into 74LS373.</li>
-                    <li><strong className="text-amber-700">M/IO#, RD#, WR#:</strong> Control bus signals for I/O write cycles.</li>
+                    <li><strong className="text-amber-700">M/I̅O̅, R̅D̅, W̅R̅:</strong> Control bus signals for I/O write cycles.</li>
                   </ul>
                 </div>
               </div>
@@ -1346,8 +1346,8 @@ END MAIN                      ; End of assembly program`;
                     <p className="text-slate-600">Q0 and Q1 connect directly to 8255 pins A0 (Pin 9) and A1 (Pin 8) to select Port A (00b), Port B (01b), Port C (10b), or Control Register (11b).</p>
                   </div>
                   <div className="bg-white p-2 rounded-lg border border-slate-200 space-y-0.5">
-                    <span className="font-bold text-emerald-900">Single 8255 System (CS# = Ground / Logic 0):</span>
-                    <p className="text-slate-600">When the 8255 is the sole peripheral, <code className="font-mono text-emerald-700">CS# (Pin 6)</code> and <code className="font-mono text-blue-700">OE# (Pin 1)</code> are tied directly to Ground (0V), making the 8255 always enabled without needing an extra 74LS138 decoder.</p>
+                    <span className="font-bold text-emerald-900">Single 8255 System (C̅S̅ = Ground / Logic 0):</span>
+                    <p className="text-slate-600">When the 8255 is the sole peripheral, <code className="font-mono text-emerald-700">C̅S̅ (Pin 6)</code> and <code className="font-mono text-blue-700">O̅E̅ (Pin 1)</code> are tied directly to Ground (0V), making the 8255 always enabled without needing an extra 74LS138 decoder.</p>
                   </div>
                   <div className="bg-white p-1.5 rounded-lg border border-slate-200 text-[10px] font-mono text-slate-700 flex justify-between flex-wrap gap-1">
                     <span>Port A (A1=0, A0=0)</span>
@@ -2092,7 +2092,7 @@ END MAIN                      ; End of assembly program`;
                     <span className="text-emerald-600 font-bold">Latch En</span>
                   </div>
                   <div className="flex justify-between items-center py-0.5 px-1 bg-slate-50 rounded">
-                    <span className="text-slate-600">M/IO#, WR#</span>
+                    <span className="text-slate-600">M/I̅O̅, W̅R̅</span>
                     <span className="text-amber-600 font-bold">I/O Write</span>
                   </div>
                   <div className="flex justify-between items-center py-0.5 px-1 bg-indigo-50/70 rounded">
@@ -2122,9 +2122,9 @@ END MAIN                      ; End of assembly program`;
                 </div>
                 <div className="space-y-1 font-mono text-[10px]">
                   <div className="text-slate-600">Inputs: <strong className="text-slate-800">A2, A3, A4</strong></div>
-                  <div className="text-slate-600">Enables: <strong className="text-slate-800">M/IO#, G1</strong></div>
+                  <div className="text-slate-600">Enables: <strong className="text-slate-800">M/I̅O̅, G1</strong></div>
                   <div className="py-1 px-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded text-[10px] font-bold flex justify-between">
-                    <span>Y0# (CS#)</span>
+                    <span>Y̅0̅ (C̅S̅)</span>
                     <span>0 (Active)</span>
                   </div>
                   <div className="text-slate-500 text-[9px]">A1=0, A0=0 → Port A</div>
@@ -2136,7 +2136,7 @@ END MAIN                      ; End of assembly program`;
 
               {/* ARROW 2: Chip Select & Bus */}
               <div className="flex flex-col items-center justify-center space-y-1 px-1">
-                <span className="text-[9px] font-mono text-emerald-600 font-bold">CS#, A0, A1</span>
+                <span className="text-[9px] font-mono text-emerald-600 font-bold">C̅S̅, A0, A1</span>
                 <div className="w-7 h-0.5 bg-emerald-400 relative">
                   <ArrowRight className="w-3.5 h-3.5 text-emerald-600 absolute -right-2 -top-1.5" />
                 </div>
@@ -2345,7 +2345,7 @@ END MAIN                      ; End of assembly program`;
                 Operates in <strong>Minimum Mode</strong> (+5V single phase clock). Translates numeric values using lookup tables via <code className="font-mono text-indigo-600 bg-white px-1 rounded">XLAT</code> or pointer indexing, and issues <code className="font-mono text-indigo-600 bg-white px-1 rounded">OUT 80H, AL</code> to transmit display patterns.
               </p>
               <div className="font-mono text-[9px] text-slate-500 bg-white p-1 rounded border border-slate-100">
-                Pins: AD0-AD15, ALE, M/IO#, WR#
+                Pins: AD0-AD15, ALE, M/I̅O̅, W̅R̅
               </div>
             </div>
 
@@ -2356,7 +2356,7 @@ END MAIN                      ; End of assembly program`;
                 <span>2. Demux & Decoder</span>
               </div>
               <p className="text-slate-600 leading-relaxed text-[10.5px]">
-                <strong>74LS373</strong> transparent latch captures lower 16-bit address on falling edge of <code className="font-mono text-emerald-600 bg-white px-1 rounded">ALE</code>. <strong>74LS138</strong> decodes lines A2–A7 with M/IO#=LOW to generate active-low chip select <code className="font-mono text-emerald-700 bg-white px-1 rounded">CS# = 80H</code>.
+                <strong>74LS373</strong> transparent latch captures lower 16-bit address on falling edge of <code className="font-mono text-emerald-600 bg-white px-1 rounded">ALE</code>. <strong>74LS138</strong> decodes lines A2–A7 with M/I̅O̅=LOW to generate active-low chip select <code className="font-mono text-emerald-700 bg-white px-1 rounded">C̅S̅ = 80H</code>.
               </p>
               <div className="font-mono text-[9px] text-slate-500 bg-white p-1 rounded border border-slate-100">
                 Port A = 80H (A1=0, A0=0)
@@ -2964,7 +2964,7 @@ END MAIN                      ; End of assembly program`;
                     <span className="text-emerald-600 font-bold">Latch En</span>
                   </div>
                   <div className="flex justify-between items-center py-0.5 px-1 bg-slate-50 rounded">
-                    <span className="text-slate-600">M/IO#, RD#, WR#</span>
+                    <span className="text-slate-600">M/I̅O̅, R̅D̅, W̅R̅</span>
                     <span className="text-amber-600 font-bold">I/O Bus</span>
                   </div>
                   <div className="flex justify-between items-center py-0.5 px-1 bg-indigo-50/70 rounded">
@@ -2998,7 +2998,7 @@ END MAIN                      ; End of assembly program`;
               <div className="w-48 bg-white border-2 border-slate-200 rounded-xl p-3 shadow-xs flex flex-col justify-between space-y-2">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
                   <span className="font-extrabold text-slate-800 font-mono text-xs">74LS373 / 138</span>
-                  <span className="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[9px] font-bold">Demux / CS#</span>
+                  <span className="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[9px] font-bold">Demux / C̅S̅</span>
                 </div>
                 <div className="space-y-1 font-mono text-[10px]">
                   <div className="flex justify-between items-center py-0.5 px-1 bg-slate-50 rounded">
@@ -3006,7 +3006,7 @@ END MAIN                      ; End of assembly program`;
                     <span className="text-slate-900 font-bold">80H Match</span>
                   </div>
                   <div className="flex justify-between items-center py-0.5 px-1 bg-emerald-50 rounded">
-                    <span className="text-emerald-900 font-bold">CS# (Chip Sel)</span>
+                    <span className="text-emerald-900 font-bold">C̅S̅ (Chip Sel)</span>
                     <span className="text-emerald-600 font-bold">0 (LOW)</span>
                   </div>
                   <div className="flex justify-between items-center py-0.5 px-1 bg-slate-50 rounded">
@@ -3026,7 +3026,7 @@ END MAIN                      ; End of assembly program`;
               {/* ARROW 2: Control & Address lines */}
               <div className="flex flex-col items-center justify-center px-1 text-slate-400">
                 <div className="font-mono text-[9px] text-slate-600 font-bold bg-slate-100 px-1 py-0.5 rounded border border-slate-200 mb-1">
-                  CS#, A0, A1
+                  C̅S̅, A0, A1
                 </div>
                 <div className="h-0.5 w-6 bg-slate-300 relative">
                   {keypadSignalsAnimating && (
@@ -3236,7 +3236,7 @@ END MAIN                      ; End of assembly program`;
                 <span className="font-bold text-slate-900">2. Demux &amp; Decoder</span>
               </div>
               <p className="text-slate-600 leading-relaxed">
-                <strong className="text-slate-800">74LS373</strong> latches lower address on <code className="font-mono text-indigo-600">ALE</code> falling edge. <strong className="text-slate-800">74LS138</strong> decodes <code className="font-mono text-indigo-600">A2–A7</code> with <code className="font-mono text-indigo-600">M/IO#=0</code> to assert active-LOW <code className="font-mono text-emerald-600">CS#</code> at base <strong className="text-slate-800">80H</strong>.
+                <strong className="text-slate-800">74LS373</strong> latches lower address on <code className="font-mono text-indigo-600">ALE</code> falling edge. <strong className="text-slate-800">74LS138</strong> decodes <code className="font-mono text-indigo-600">A2–A7</code> with <code className="font-mono text-indigo-600">M/I̅O̅=0</code> to assert active-LOW <code className="font-mono text-emerald-600">C̅S̅</code> at base <strong className="text-slate-800">80H</strong>.
               </p>
               <div className="font-mono text-[9px] text-slate-500 bg-slate-50 p-1 rounded">
                 • Port A: 80H | Port B: 82H<br />
@@ -3728,7 +3728,7 @@ END MAIN                      ; End of assembly program`;
                     <span className="text-emerald-600 font-bold">Latch En</span>
                   </div>
                   <div className="flex justify-between items-center py-0.5 px-1 bg-slate-50 rounded">
-                    <span className="text-slate-600">M/IO#, WR#</span>
+                    <span className="text-slate-600">M/I̅O̅, W̅R̅</span>
                     <span className="text-amber-600 font-bold">I/O Write</span>
                   </div>
                   <div className="flex justify-between items-center py-0.5 px-1 bg-indigo-50/70 rounded">
@@ -3758,9 +3758,9 @@ END MAIN                      ; End of assembly program`;
                 </div>
                 <div className="space-y-1 font-mono text-[10px]">
                   <div className="text-slate-600">Inputs: <strong className="text-slate-800">A2, A3, A4</strong></div>
-                  <div className="text-slate-600">Enables: <strong className="text-slate-800">M/IO#, G1</strong></div>
+                  <div className="text-slate-600">Enables: <strong className="text-slate-800">M/I̅O̅, G1</strong></div>
                   <div className="py-1 px-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded text-[10px] font-bold flex justify-between">
-                    <span>Y0# (CS#)</span>
+                    <span>Y̅0̅ (C̅S̅)</span>
                     <span>0 (Active)</span>
                   </div>
                   <div className="text-slate-500 text-[9px]">A1=0, A0=0 → Port A</div>
@@ -3772,7 +3772,7 @@ END MAIN                      ; End of assembly program`;
 
               {/* ARROW 2: Chip Select & Bus */}
               <div className="flex flex-col items-center justify-center space-y-1 px-1">
-                <span className="text-[9px] font-mono text-emerald-600 font-bold">CS#, A0, A1</span>
+                <span className="text-[9px] font-mono text-emerald-600 font-bold">C̅S̅, A0, A1</span>
                 <div className="w-7 h-0.5 bg-emerald-400 relative">
                   <ArrowRight className="w-3.5 h-3.5 text-emerald-600 absolute -right-2 -top-1.5" />
                 </div>
@@ -3892,7 +3892,7 @@ END MAIN                      ; End of assembly program`;
                 Executes the sequential state machine logic in assembly language. Writes bit patterns to Port A using <code className="font-mono text-indigo-600 bg-white px-1 rounded">OUT 80H, AL</code> and invokes nested software delay routines to maintain accurate phase intervals.
               </p>
               <div className="font-mono text-[9px] text-slate-500 bg-white p-1 rounded border border-slate-100">
-                Pins: AD0-AD15, ALE, M/IO#, WR#
+                Pins: AD0-AD15, ALE, M/I̅O̅, W̅R̅
               </div>
             </div>
 
@@ -3903,7 +3903,7 @@ END MAIN                      ; End of assembly program`;
                 <span>2. Demux & Decoder</span>
               </div>
               <p className="text-slate-600 leading-relaxed text-[10.5px]">
-                <strong>74LS373</strong> octal latch latches address lines A0–A15 on <code className="font-mono text-emerald-600 bg-white px-1 rounded">ALE</code>. <strong>74LS138</strong> 3-to-8 decoder asserts active-low chip select <code className="font-mono text-emerald-700 bg-white px-1 rounded">CS# = 80H</code> when A2–A7 match the base port address.
+                <strong>74LS373</strong> octal latch latches address lines A0–A15 on <code className="font-mono text-emerald-600 bg-white px-1 rounded">ALE</code>. <strong>74LS138</strong> 3-to-8 decoder asserts active-low chip select <code className="font-mono text-emerald-700 bg-white px-1 rounded">C̅S̅ = 80H</code> when A2–A7 match the base port address.
               </p>
               <div className="font-mono text-[9px] text-slate-500 bg-white p-1 rounded border border-slate-100">
                 Port A = 80H (A1=0, A0=0)

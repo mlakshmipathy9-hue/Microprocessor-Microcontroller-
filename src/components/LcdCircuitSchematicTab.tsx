@@ -386,11 +386,11 @@ export const LcdCircuitSchematicTab: React.FC<LcdCircuitSchematicTabProps> = ({
                 <text x="12" y="3.5" fill="#F8FAFC" fontSize="9" fontWeight="bold">40: VCC (+5V)</text>
               </g>
 
-              {/* Pin 31: EA#/VPP at y = 108 */}
+              {/* Pin 31: E̅A̅/VPP at y = 108 */}
               <g transform="translate(0, 108)">
                 <line x1="-25" y1="0" x2="0" y2="0" stroke="#DC2626" strokeWidth="2" />
                 <circle cx="-25" cy="0" r="3" fill="#DC2626" />
-                <text x="12" y="3.5" fill="#F8FAFC" fontSize="9">31: EA#/VPP (→ +5V)</text>
+                <text x="12" y="3.5" fill="#F8FAFC" fontSize="9">31: E̅A̅/VPP (→ +5V)</text>
               </g>
 
               {/* Pin 9: RST at y = 160 */}
@@ -507,7 +507,7 @@ export const LcdCircuitSchematicTab: React.FC<LcdCircuitSchematicTabProps> = ({
               <circle cx="36" cy="110" r="4" fill="#DC2626" />
               <text x="32" y="105" fill="#DC2626" fontSize="8" fontWeight="bold" textAnchor="end">+5V</text>
 
-              {/* Pin 31 EA#/VPP at y = 138 */}
+              {/* Pin 31 E̅A̅/VPP at y = 138 */}
               <circle cx="36" cy="138" r="4" fill="#DC2626" />
               <text x="32" y="134" fill="#DC2626" fontSize="8" fontWeight="bold" textAnchor="end">+5V</text>
 
@@ -1096,7 +1096,7 @@ export const LcdCircuitSchematicTab: React.FC<LcdCircuitSchematicTabProps> = ({
           <div className="p-2.5 rounded-xl bg-white border border-[#B8D4E8] space-y-1">
             <span className="text-[11px] font-bold text-[#2563EB] block">2. EA Pin Pull-Up</span>
             <p className="text-[11px] text-[#52799F] font-sans">
-              Pin 31 (EA#/VPP) of 8051 MUST be connected to +5V (VCC) to execute program from on-chip Flash ROM.
+              Pin 31 (E̅A̅/VPP) of 8051 MUST be connected to +5V (VCC) to execute program from on-chip Flash ROM.
             </p>
           </div>
 

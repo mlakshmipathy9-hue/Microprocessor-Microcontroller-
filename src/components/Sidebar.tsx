@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Module, Slide } from '../types';
 import { Cpu, ChevronRight, CheckCircle2, GraduationCap, Layout, Search, X } from 'lucide-react';
 import { labExperiments } from '../data/labExperimentsData';
+import { renderWithOverbars } from '../utils/textUtils';
 
 interface SidebarProps {
   modules: Module[];
@@ -261,7 +262,7 @@ export default function Sidebar({
                         >
                           <div className="flex items-start justify-between w-full gap-2">
                             <span className={`font-bold leading-tight ${isCurrentSlide ? 'text-white' : 'text-slate-900'}`}>
-                              {slide.title}
+                              {renderWithOverbars(slide.title)}
                             </span>
                             {isSlideCompleted && (
                               <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isCurrentSlide ? 'text-indigo-200' : 'text-emerald-600'}`} />
@@ -570,7 +571,7 @@ export default function Sidebar({
                                       >
                                         <span className="truncate pr-1 group-hover:translate-x-0.5 transition-transform duration-150 flex items-center gap-1.5">
                                           {isCurrentSlide && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />}
-                                          {slide.title}
+                                          {renderWithOverbars(slide.title)}
                                         </span>
                                         {isSlideCompleted && !isCurrentSlide && (
                                           <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />

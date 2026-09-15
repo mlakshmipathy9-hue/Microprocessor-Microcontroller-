@@ -59,13 +59,13 @@ const FAMILY_BLOCKS: Record<string, FamilyBlockInfo> = {
     specs: {
       part8051: '4 KB on-chip Mask ROM / Flash (addresses 0000H to 0FFFH)',
       part8052: '8 KB on-chip ROM / Flash (addresses 0000H to 1FFFH)',
-      part8031: 'None (ROMless) – all instruction fetching MUST come from external ROM (EA# tied to GND)',
+      part8031: 'None (ROMless) – all instruction fetching MUST come from external ROM (E̅A̅ tied to GND)',
       part8751_80750: '4 KB / 8 KB UV-erasable EPROM or One-Time Programmable (OTP) ROM'
     },
     details: [
       '8051 has 4 KB on-chip ROM, expandable up to 64 KB total program memory.',
       '8052 doubles internal ROM to 8 KB, accommodating larger embedded firmware without external memory chips.',
-      '8031 contains NO on-chip ROM; EA# (pin 31) must be tied to GND (0V), forcing CPU to fetch code from external EPROM/Flash via Port 0 (AD0–AD7) and Port 2 (A8–A15).',
+      '8031 contains NO on-chip ROM; E̅A̅ (pin 31) must be tied to GND (0V), forcing CPU to fetch code from external EPROM/Flash via Port 0 (AD0–AD7) and Port 2 (A8–A15).',
       'Interrupt vectors reside in lower ROM: 0003H (INT0), 000BH (T0), 0013H (INT1), 001BH (T1), 0023H (UART), 002BH (T2 on 8052).'
     ]
   },
@@ -117,7 +117,7 @@ const FAMILY_BLOCKS: Record<string, FamilyBlockInfo> = {
       part8751_80750: '5 Interrupt sources'
     },
     details: [
-      'External Interrupts: Active-LOW level or falling-edge sensitive pins INT0# (P3.2) and INT1# (P3.3).',
+      'External Interrupts: Active-LOW level or falling-edge sensitive pins I̅N̅T̅0̅ (P3.2) and I̅N̅T̅1̅ (P3.3).',
       'Timer Interrupts: Overflow flags TF0, TF1 (and TF2 on 8052) automatically trigger ISR vector jumps.',
       'Serial Interrupts: Logical OR of RI (Receive Interrupt) and TI (Transmit Interrupt) from UART.',
       'Controlled by IE (Interrupt Enable, A8H) and IP (Interrupt Priority, B8H) SFR registers.'
@@ -138,7 +138,7 @@ const FAMILY_BLOCKS: Record<string, FamilyBlockInfo> = {
       'Port 0 (80H): Open-drain bidirectional bus; multiplexes low-order address/data (AD0–AD7).',
       'Port 1 (90H): Quasi-bidirectional port with internal pull-ups. Pure I/O on 8051; handles T2/T2EX on 8052.',
       'Port 2 (A0H): Quasi-bidirectional port; emits high-order address bus (A8–A15) for external memory.',
-      'Port 3 (B0H): Quasi-bidirectional port; provides alternate functions (RXD, TXD, INT0#, INT1#, T0, T1, WR#, RD#).'
+      'Port 3 (B0H): Quasi-bidirectional port; provides alternate functions (RXD, TXD, I̅N̅T̅0̅, I̅N̅T̅1̅, T0, T1, W̅R̅, R̅D̅).'
     ]
   },
   serial_port: {
@@ -163,18 +163,18 @@ const FAMILY_BLOCKS: Record<string, FamilyBlockInfo> = {
     id: 'bus_control',
     title: 'Bus Control Unit',
     category: 'ports',
-    desc: 'Decodes CPU memory cycle requests and asserts external control strobes (ALE, PSEN#, RD#, WR#) to multiplex and demultiplex off-chip data/address buses.',
+    desc: 'Decodes CPU memory cycle requests and asserts external control strobes (ALE, P̅S̅E̅N̅, R̅D̅, W̅R̅) to multiplex and demultiplex off-chip data/address buses.',
     specs: {
-      part8051: 'ALE (Address Latch Enable), PSEN# (Program Store Enable), EA# (External Access)',
+      part8051: 'ALE (Address Latch Enable), P̅S̅E̅N̅ (Program Store Enable), E̅A̅ (External Access)',
       part8052: 'Identical bus control timings and pinouts',
-      part8031: 'Continuously active ALE and PSEN# since all instruction execution occurs externally',
+      part8031: 'Continuously active ALE and P̅S̅E̅N̅ since all instruction execution occurs externally',
       part8751_80750: 'Identical bus control'
     },
     details: [
       'ALE: Pulses at 1/6 oscillator frequency to latch address A0–A7 from Port 0 into 74LS373.',
-      'PSEN#: Active-LOW read strobe for external Program ROM.',
-      'RD# (P3.7) & WR# (P3.6): Read and write strobes for external Data RAM.',
-      'EA#: Tied to +5V for internal ROM execution; tied to GND to force external ROM fetch.'
+      'P̅S̅E̅N̅: Active-LOW read strobe for external Program ROM.',
+      'R̅D̅ (P3.7) & W̅R̅ (P3.6): Read and write strobes for external Data RAM.',
+      'E̅A̅: Tied to +5V for internal ROM execution; tied to GND to force external ROM fetch.'
     ]
   },
   oscillator: {

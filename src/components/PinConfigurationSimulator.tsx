@@ -29,35 +29,35 @@ export function ActiveLow({ children }: { children: React.ReactNode; key?: React
 
 export function PinLabel({ name }: { name: string }) {
   switch (name) {
-    case "TEST#":
+    case "T̅E̅S̅T̅":
       return <ActiveLow>TEST</ActiveLow>;
-    case "INTA#":
+    case "I̅N̅T̅A̅":
       return <ActiveLow>INTA</ActiveLow>;
-    case "DEN#":
+    case "D̅E̅N̅":
       return <ActiveLow>DEN</ActiveLow>;
-    case "WR#":
+    case "W̅R̅":
       return <ActiveLow>WR</ActiveLow>;
-    case "RD#":
+    case "R̅D̅":
       return <ActiveLow>RD</ActiveLow>;
-    case "LOCK#":
+    case "L̅O̅C̅K̅":
       return <ActiveLow>LOCK</ActiveLow>;
-    case "S0#":
+    case "S̅0̅":
       return <span><ActiveLow>S</ActiveLow><sub>0</sub></span>;
-    case "S1#":
+    case "S̅1̅":
       return <span><ActiveLow>S</ActiveLow><sub>1</sub></span>;
-    case "S2#":
+    case "S̅2̅":
       return <span><ActiveLow>S</ActiveLow><sub>2</sub></span>;
-    case "BHE#/S7":
+    case "B̅H̅E̅/S7":
       return <span><ActiveLow>BHE</ActiveLow> / S<sub>7</sub></span>;
-    case "DT/R#":
+    case "DT/R̅":
       return <span>DT / <ActiveLow>R</ActiveLow></span>;
-    case "M/IO#":
+    case "M/I̅O̅":
       return <span>M / <ActiveLow>IO</ActiveLow></span>;
-    case "MN/MX#":
+    case "MN/M̅X̅":
       return <span>MN / <ActiveLow>MX</ActiveLow></span>;
-    case "RQ#/GT0#":
+    case "R̅Q̅/G̅T̅0̅":
       return <span><ActiveLow>RQ</ActiveLow> / <ActiveLow>GT</ActiveLow><sub>0</sub></span>;
-    case "RQ#/GT1#":
+    case "R̅Q̅/G̅T̅1̅":
       return <span><ActiveLow>RQ</ActiveLow> / <ActiveLow>GT</ActiveLow><sub>1</sub></span>;
     case "A19/S6":
       return <span>A<sub>19</sub> / S<sub>6</sub></span>;
@@ -75,7 +75,7 @@ export function PinLabel({ name }: { name: string }) {
 export function FormattedSignalText({ text }: { text: string }) {
   if (!text) return null;
 
-  const regex = /(BHE#\/S7|BHE#|RD#|WR#|DEN#|INTA#|TEST#|LOCK#|MN\/MX#|DT\/R#|M\/IO#|S0#–S2#|S0#|S1#|S2#|RQ#\/GT0#|RQ#\/GT1#|RQ#|GT0#|GT1#|TEST̄|RD̄|MN\/MX̄|BHĒ)/g;
+  const regex = /(B̅H̅E̅\/S7|B̅H̅E̅|R̅D̅|W̅R̅|D̅E̅N̅|I̅N̅T̅A̅|T̅E̅S̅T̅|L̅O̅C̅K̅|MN\/M̅X̅|DT\/R̅|M\/I̅O̅|S̅0̅–S̅2̅|S̅0̅|S̅1̅|S̅2̅|R̅Q̅\/G̅T̅0̅|R̅Q̅\/G̅T̅1̅|R̅Q̅|G̅T̅0̅|G̅T̅1̅|TEST̄|RD̄|MN\/MX̄|BHĒ)/g;
 
   const parts = text.split(regex);
 
@@ -83,49 +83,49 @@ export function FormattedSignalText({ text }: { text: string }) {
     <span>
       {parts.map((part, index) => {
         switch (part) {
-          case "BHE#":
+          case "B̅H̅E̅":
           case "BHĒ":
             return <ActiveLow key={index}>BHE</ActiveLow>;
-          case "RD#":
+          case "R̅D̅":
           case "RD̄":
             return <ActiveLow key={index}>RD</ActiveLow>;
-          case "WR#":
+          case "W̅R̅":
             return <ActiveLow key={index}>WR</ActiveLow>;
-          case "DEN#":
+          case "D̅E̅N̅":
             return <ActiveLow key={index}>DEN</ActiveLow>;
-          case "INTA#":
+          case "I̅N̅T̅A̅":
             return <ActiveLow key={index}>INTA</ActiveLow>;
-          case "TEST#":
+          case "T̅E̅S̅T̅":
           case "TEST̄":
             return <ActiveLow key={index}>TEST</ActiveLow>;
-          case "LOCK#":
+          case "L̅O̅C̅K̅":
             return <ActiveLow key={index}>LOCK</ActiveLow>;
-          case "MN/MX#":
+          case "MN/M̅X̅":
           case "MN/MX̄":
             return <span key={index}>MN/<ActiveLow>MX</ActiveLow></span>;
-          case "DT/R#":
+          case "DT/R̅":
             return <span key={index}>DT/<ActiveLow>R</ActiveLow></span>;
-          case "M/IO#":
+          case "M/I̅O̅":
             return <span key={index}>M/<ActiveLow>IO</ActiveLow></span>;
-          case "S0#":
+          case "S̅0̅":
             return <span key={index}><ActiveLow>S</ActiveLow><sub>0</sub></span>;
-          case "S1#":
+          case "S̅1̅":
             return <span key={index}><ActiveLow>S</ActiveLow><sub>1</sub></span>;
-          case "S2#":
+          case "S̅2̅":
             return <span key={index}><ActiveLow>S</ActiveLow><sub>2</sub></span>;
-          case "S0#–S2#":
+          case "S̅0̅–S̅2̅":
             return <span key={index}><ActiveLow>S</ActiveLow><sub>0</sub>–<ActiveLow>S</ActiveLow><sub>2</sub></span>;
-          case "BHE#/S7":
+          case "B̅H̅E̅/S7":
             return <span key={index}><ActiveLow>BHE</ActiveLow>/S<sub>7</sub></span>;
-          case "RQ#":
+          case "R̅Q̅":
             return <ActiveLow key={index}>RQ</ActiveLow>;
-          case "GT0#":
+          case "G̅T̅0̅":
             return <span key={index}><ActiveLow>GT</ActiveLow><sub>0</sub></span>;
-          case "GT1#":
+          case "G̅T̅1̅":
             return <span key={index}><ActiveLow>GT</ActiveLow><sub>1</sub></span>;
-          case "RQ#/GT0#":
+          case "R̅Q̅/G̅T̅0̅":
             return <span key={index}><ActiveLow>RQ</ActiveLow>/<ActiveLow>GT</ActiveLow><sub>0</sub></span>;
-          case "RQ#/GT1#":
+          case "R̅Q̅/G̅T̅1̅":
             return <span key={index}><ActiveLow>RQ</ActiveLow>/<ActiveLow>GT</ActiveLow><sub>1</sub></span>;
           default:
             return part;
@@ -158,18 +158,18 @@ const PIN_LIST: PinData[] = [
   { num: 20, minName: "GND", maxName: "GND", category: "power", direction: "Power", desc: "Ground connection (0V reference).", minDetail: "Second ground pin.", maxDetail: "Second ground pin." },
   { num: 21, minName: "RESET", maxName: "RESET", category: "system", direction: "Input", desc: "System Reset signal.", minDetail: "Sets CS=FFFFh, IP=0000h.", maxDetail: "Sets CS=FFFFh, IP=0000h." },
   { num: 22, minName: "READY", maxName: "READY", category: "system", direction: "Input", desc: "Bus Ready acknowledge signal.", minDetail: "Inserts wait states (TW).", maxDetail: "Inserts wait states (TW)." },
-  { num: 23, minName: "TEST#", maxName: "TEST#", category: "system", direction: "Input", desc: "Test input sampled by WAIT instruction. Active-LOW (TEST̄).", minDetail: "Sampled by WAIT instruction. If LOW (0V), execution continues; if HIGH (+5V), CPU remains in idle wait states until TEST# goes LOW. Synchronizes with 8087 NDP.", maxDetail: "Sampled by WAIT instruction to synchronize with 8087 math coprocessor." },
-  { num: 24, minName: "INTA#", maxName: "QS1", category: "status", direction: "Output", desc: "Min: Interrupt Acknowledge (INTA#) | Max: Queue Status 1 (QS1)", minDetail: "MIN: Active-low interrupt acknowledge strobe sent to 8259A PIC.", maxDetail: "MAX: Instruction queue status bit 1." },
+  { num: 23, minName: "T̅E̅S̅T̅", maxName: "T̅E̅S̅T̅", category: "system", direction: "Input", desc: "Test input sampled by WAIT instruction. Active-LOW (TEST̄).", minDetail: "Sampled by WAIT instruction. If LOW (0V), execution continues; if HIGH (+5V), CPU remains in idle wait states until T̅E̅S̅T̅ goes LOW. Synchronizes with 8087 NDP.", maxDetail: "Sampled by WAIT instruction to synchronize with 8087 math coprocessor." },
+  { num: 24, minName: "I̅N̅T̅A̅", maxName: "QS1", category: "status", direction: "Output", desc: "Min: Interrupt Acknowledge (I̅N̅T̅A̅) | Max: Queue Status 1 (QS1)", minDetail: "MIN: Active-low interrupt acknowledge strobe sent to 8259A PIC.", maxDetail: "MAX: Instruction queue status bit 1." },
   { num: 25, minName: "ALE", maxName: "QS0", category: "control", direction: "Output", desc: "Min: Address Latch Enable (ALE) | Max: Queue Status 0 (QS0)", minDetail: "MIN: Active-high pulse in T1 state to latch multiplexed address bits A0-A15.", maxDetail: "MAX: Instruction queue status bit 0." },
-  { num: 26, minName: "DEN#", maxName: "S0#", category: "control", direction: "Output", desc: "Min: Data Enable (DEN#) | Max: Status Line 0 (S0#)", minDetail: "MIN: Active-low strobe enabling 8286 transceiver outputs.", maxDetail: "MAX: Active-low status output line 0 sent to 8288 Bus Controller." },
-  { num: 27, minName: "DT/R#", maxName: "S1#", category: "control", direction: "Output", desc: "Min: Data Transmit/Receive# (DT/R#) | Max: Status Line 1 (S1#)", minDetail: "MIN: Transceiver direction control. HIGH (+5V) = Transmit (Write); LOW (0V) = Receive (Read).", maxDetail: "MAX: Active-low status output line 1 sent to 8288 Bus Controller." },
-  { num: 28, minName: "M/IO#", maxName: "S2#", category: "control", direction: "Output", desc: "Min: Memory / I/O Select (M/IO#) | Max: Status Line 2 (S2#)", minDetail: "MIN: Selects memory vs I/O. HIGH (+5V) = 1 MB Memory; LOW (0V) = 64 KB I/O.", maxDetail: "MAX: Active-low status output line 2 sent to 8288 Bus Controller." },
-  { num: 29, minName: "WR#", maxName: "LOCK#", category: "control", direction: "Output", desc: "Min: Write Strobe (WR#) | Max: Bus Lock Output (LOCK#)", minDetail: "MIN: Active-low write strobe signaling valid data on data bus.", maxDetail: "MAX: Active-low bus lock prefix output preventing other bus masters from gaining bus control." },
-  { num: 30, minName: "HLDA", maxName: "RQ#/GT1#", category: "control", direction: "Output", desc: "Min: Hold Acknowledge (HLDA) | Max: Request/Grant 1 (RQ#/GT1#)", minDetail: "MIN: Active-high output indicating CPU has relinquished bus in response to HOLD.", maxDetail: "MAX: Bidirectional active-low request/grant line 1 for co-processor bus arbitration." },
-  { num: 31, minName: "HOLD", maxName: "RQ#/GT0#", category: "control", direction: "Input", desc: "Min: Hold Request (HOLD) | Max: Request/Grant 0 (RQ#/GT0#)", minDetail: "MIN: Active-high input from DMA controller requesting CPU to release bus.", maxDetail: "MAX: Bidirectional active-low request/grant line 0 (higher priority) for co-processor bus arbitration." },
-  { num: 32, minName: "RD#", maxName: "RD#", category: "control", direction: "Output", desc: "Read Strobe signal. Active-LOW (RD̄).", minDetail: "Active-low read strobe indicating CPU is reading data from memory or I/O port.", maxDetail: "Active-low read strobe indicating CPU is reading data from memory or I/O port." },
-  { num: 33, minName: "MN/MX#", maxName: "MN/MX#", category: "system", direction: "Input", desc: "Minimum / Maximum Mode selection pin (MN/MX̄).", minDetail: "Wired to VCC (+5V) for MIN mode (single CPU mode).", maxDetail: "Wired to GND (0V) for MAX mode (multi-processor mode with 8288 Bus Controller)." },
-  { num: 34, minName: "BHE#/S7", maxName: "BHE#/S7", category: "address-data", direction: "Output", desc: "Bus High Enable (BHE#) / Status S7.", minDetail: "During T1: Active-low BHE# enables upper byte data bus D8-D15. During T2-T4: Outputs status bit S7.", maxDetail: "During T1: Active-low BHE# enables upper byte data bus D8-D15. During T2-T4: Outputs status bit S7." },
+  { num: 26, minName: "D̅E̅N̅", maxName: "S̅0̅", category: "control", direction: "Output", desc: "Min: Data Enable (D̅E̅N̅) | Max: Status Line 0 (S̅0̅)", minDetail: "MIN: Active-low strobe enabling 8286 transceiver outputs.", maxDetail: "MAX: Active-low status output line 0 sent to 8288 Bus Controller." },
+  { num: 27, minName: "DT/R̅", maxName: "S̅1̅", category: "control", direction: "Output", desc: "Min: Data Transmit/R̅e̅c̅e̅i̅v̅e̅ (DT/R̅) | Max: Status Line 1 (S̅1̅)", minDetail: "MIN: Transceiver direction control. HIGH (+5V) = Transmit (Write); LOW (0V) = Receive (Read).", maxDetail: "MAX: Active-low status output line 1 sent to 8288 Bus Controller." },
+  { num: 28, minName: "M/I̅O̅", maxName: "S̅2̅", category: "control", direction: "Output", desc: "Min: Memory / I/O Select (M/I̅O̅) | Max: Status Line 2 (S̅2̅)", minDetail: "MIN: Selects memory vs I/O. HIGH (+5V) = 1 MB Memory; LOW (0V) = 64 KB I/O.", maxDetail: "MAX: Active-low status output line 2 sent to 8288 Bus Controller." },
+  { num: 29, minName: "W̅R̅", maxName: "L̅O̅C̅K̅", category: "control", direction: "Output", desc: "Min: Write Strobe (W̅R̅) | Max: Bus Lock Output (L̅O̅C̅K̅)", minDetail: "MIN: Active-low write strobe signaling valid data on data bus.", maxDetail: "MAX: Active-low bus lock prefix output preventing other bus masters from gaining bus control." },
+  { num: 30, minName: "HLDA", maxName: "R̅Q̅/G̅T̅1̅", category: "control", direction: "Output", desc: "Min: Hold Acknowledge (HLDA) | Max: Request/Grant 1 (R̅Q̅/G̅T̅1̅)", minDetail: "MIN: Active-high output indicating CPU has relinquished bus in response to HOLD.", maxDetail: "MAX: Bidirectional active-low request/grant line 1 for co-processor bus arbitration." },
+  { num: 31, minName: "HOLD", maxName: "R̅Q̅/G̅T̅0̅", category: "control", direction: "Input", desc: "Min: Hold Request (HOLD) | Max: Request/Grant 0 (R̅Q̅/G̅T̅0̅)", minDetail: "MIN: Active-high input from DMA controller requesting CPU to release bus.", maxDetail: "MAX: Bidirectional active-low request/grant line 0 (higher priority) for co-processor bus arbitration." },
+  { num: 32, minName: "R̅D̅", maxName: "R̅D̅", category: "control", direction: "Output", desc: "Read Strobe signal. Active-LOW (RD̄).", minDetail: "Active-low read strobe indicating CPU is reading data from memory or I/O port.", maxDetail: "Active-low read strobe indicating CPU is reading data from memory or I/O port." },
+  { num: 33, minName: "MN/M̅X̅", maxName: "MN/M̅X̅", category: "system", direction: "Input", desc: "Minimum / Maximum Mode selection pin (MN/MX̄).", minDetail: "Wired to VCC (+5V) for MIN mode (single CPU mode).", maxDetail: "Wired to GND (0V) for MAX mode (multi-processor mode with 8288 Bus Controller)." },
+  { num: 34, minName: "B̅H̅E̅/S7", maxName: "B̅H̅E̅/S7", category: "address-data", direction: "Output", desc: "Bus High Enable (B̅H̅E̅) / Status S7.", minDetail: "During T1: Active-low B̅H̅E̅ enables upper byte data bus D8-D15. During T2-T4: Outputs status bit S7.", maxDetail: "During T1: Active-low B̅H̅E̅ enables upper byte data bus D8-D15. During T2-T4: Outputs status bit S7." },
   { num: 35, minName: "A19/S6", maxName: "A19/S6", category: "address-data", direction: "Output", desc: "Address Line 19 / Status S6.", minDetail: "Upper address bit A19 / Status S6 (Bus ownership status, always 0).", maxDetail: "Upper address bit A19 / Status S6 (Bus ownership status, always 0)." },
   { num: 36, minName: "A18/S5", maxName: "A18/S5", category: "address-data", direction: "Output", desc: "Address Line 18 / Status S5.", minDetail: "Upper address bit A18 / Status S5 (Reflects Interrupt Enable Flag IF).", maxDetail: "Upper address bit A18 / Status S5 (Reflects Interrupt Enable Flag IF)." },
   { num: 37, minName: "A17/S4", maxName: "A17/S4", category: "address-data", direction: "Output", desc: "Address Line 17 / Status S4.", minDetail: "Upper address bit A17 / Status S4 (Segment selection status).", maxDetail: "Upper address bit A17 / Status S4 (Segment selection status)." },
@@ -181,7 +181,7 @@ const PIN_LIST: PinData[] = [
 const GROUP_INFO: Record<string, { title: string; desc: string; bg: string; text: string; border: string; pillBg: string }> = {
   "broad-common": {
     title: "1. Common Signals Group (32 Pins)",
-    desc: "Pins 1–23 & 32–40 perform identical functions in both Minimum (+5V) and Maximum (GND) modes. Includes multiplexed Address/Data bus (AD0–AD15), upper address/status (A16/S3–A19/S6), BHE#/S7, RD#, CLK, RESET, READY, INTR, NMI, TEST#, MN/MX#, VCC, and GND.",
+    desc: "Pins 1–23 & 32–40 perform identical functions in both Minimum (+5V) and Maximum (GND) modes. Includes multiplexed Address/Data bus (AD0–AD15), upper address/status (A16/S3–A19/S6), B̅H̅E̅/S7, R̅D̅, CLK, RESET, READY, INTR, NMI, T̅E̅S̅T̅, MN/M̅X̅, VCC, and GND.",
     bg: "bg-blue-50/80",
     text: "text-blue-900",
     border: "border-blue-200",
@@ -189,7 +189,7 @@ const GROUP_INFO: Record<string, { title: string; desc: string; bg: string; text
   },
   "broad-min": {
     title: "2. Minimum Mode Signals Group (8 Pins)",
-    desc: "Pins 24–31 active when MN/MX# = +5V (Single CPU mode). The 8086 directly outputs system control strobes: INTA# (24), ALE (25), DEN# (26), DT/R# (27), M/IO# (28), WR# (29), HLDA (30), and HOLD (31).",
+    desc: "Pins 24–31 active when MN/M̅X̅ = +5V (Single CPU mode). The 8086 directly outputs system control strobes: I̅N̅T̅A̅ (24), ALE (25), D̅E̅N̅ (26), DT/R̅ (27), M/I̅O̅ (28), W̅R̅ (29), HLDA (30), and HOLD (31).",
     bg: "bg-indigo-50/80",
     text: "text-indigo-900",
     border: "border-indigo-200",
@@ -197,7 +197,7 @@ const GROUP_INFO: Record<string, { title: string; desc: string; bg: string; text
   },
   "broad-max": {
     title: "3. Maximum Mode Signals Group (8 Pins)",
-    desc: "Pins 24–31 active when MN/MX# = 0V (Multiprocessor mode). Reconfigured for status output and queue control: QS1 (24), QS0 (25), S0# (26), S1# (27), S2# (28), LOCK# (29), RQ#/GT1# (30), and RQ#/GT0# (31). Decoded by external 8288 Bus Controller.",
+    desc: "Pins 24–31 active when MN/M̅X̅ = 0V (Multiprocessor mode). Reconfigured for status output and queue control: QS1 (24), QS0 (25), S̅0̅ (26), S̅1̅ (27), S̅2̅ (28), L̅O̅C̅K̅ (29), R̅Q̅/G̅T̅1̅ (30), and R̅Q̅/G̅T̅0̅ (31). Decoded by external 8288 Bus Controller.",
     bg: "bg-purple-50/80",
     text: "text-purple-900",
     border: "border-purple-200",
@@ -205,7 +205,7 @@ const GROUP_INFO: Record<string, { title: string; desc: string; bg: string; text
   },
   "address-data": {
     title: "Address / Data Bus Group",
-    desc: "Provides 20-bit address capability (A0–A19) and 16-bit data transfers (D0–D15). Multiplexed in time (Address in T1 state, Data/Status in T2–T4 states). Includes Bus High Enable (BHE#) for odd memory bank access.",
+    desc: "Provides 20-bit address capability (A0–A19) and 16-bit data transfers (D0–D15). Multiplexed in time (Address in T1 state, Data/Status in T2–T4 states). Includes Bus High Enable (B̅H̅E̅) for odd memory bank access.",
     bg: "bg-blue-50/80",
     text: "text-blue-900",
     border: "border-blue-200",
@@ -213,7 +213,7 @@ const GROUP_INFO: Record<string, { title: string; desc: string; bg: string; text
   },
   control: {
     title: "Control & Bus Management Group",
-    desc: "Generates timing strobes and bus transceiver signals. In Minimum Mode (+5V), CPU provides RD#, WR#, ALE, DEN#, DT/R#, M/IO#, INTA#, HOLD, HLDA directly. In Maximum Mode (0V), pins 24–28 transition to status lines S0#–S2# and queue status QS0–QS1.",
+    desc: "Generates timing strobes and bus transceiver signals. In Minimum Mode (+5V), CPU provides R̅D̅, W̅R̅, ALE, D̅E̅N̅, DT/R̅, M/I̅O̅, I̅N̅T̅A̅, HOLD, HLDA directly. In Maximum Mode (0V), pins 24–28 transition to status lines S̅0̅–S̅2̅ and queue status QS0–QS1.",
     bg: "bg-amber-50/80",
     text: "text-amber-900",
     border: "border-amber-200",
@@ -221,7 +221,7 @@ const GROUP_INFO: Record<string, { title: string; desc: string; bg: string; text
   },
   status: {
     title: "Status & Queue Signals Group",
-    desc: "Provides processor status and instruction queue feedback. Includes segment selection status (S3–S4), interrupt flag status (S5), bus ownership (S6), and BHE#/S7. In Maximum Mode, expands to include S0#–S2# for 8288 bus decoding, instruction queue status (QS0, QS1), and bus locking (LOCK#).",
+    desc: "Provides processor status and instruction queue feedback. Includes segment selection status (S3–S4), interrupt flag status (S5), bus ownership (S6), and B̅H̅E̅/S7. In Maximum Mode, expands to include S̅0̅–S̅2̅ for 8288 bus decoding, instruction queue status (QS0, QS1), and bus locking (L̅O̅C̅K̅).",
     bg: "bg-purple-50/80",
     text: "text-purple-900",
     border: "border-purple-200",
@@ -229,7 +229,7 @@ const GROUP_INFO: Record<string, { title: string; desc: string; bg: string; text
   },
   system: {
     title: "System & Interrupt Control Group",
-    desc: "Controls hardware interrupts, CPU reset sequence, wait-state synchronization, and operating mode selection. Includes INTR (Maskable), NMI (Non-Maskable Vector 2), RESET (CS=FFFFH, IP=0000H), READY (Wait-state generator), TEST# (WAIT sync), and MN/MX# (Mode strap).",
+    desc: "Controls hardware interrupts, CPU reset sequence, wait-state synchronization, and operating mode selection. Includes INTR (Maskable), NMI (Non-Maskable Vector 2), RESET (CS=FFFFH, IP=0000H), READY (Wait-state generator), T̅E̅S̅T̅ (WAIT sync), and MN/M̅X̅ (Mode strap).",
     bg: "bg-emerald-50/80",
     text: "text-emerald-900",
     border: "border-emerald-200",
@@ -265,25 +265,25 @@ const DECODING_8288_DATA: Status8288Mapping[] = [
   {
     s2: 0, s1: 0, s0: 0,
     cycleType: "Interrupt Acknowledge",
-    commandGenerated: "INTA#",
+    commandGenerated: "I̅N̅T̅A̅",
     commandBadge: "text-emerald-700 bg-emerald-100 border-emerald-300 font-bold",
-    busActionDesc: "CPU receives an INTR interrupt. 8288 generates two INTA# pulses to acknowledge the interrupt request and read the 8-bit interrupt vector type from the data bus.",
+    busActionDesc: "CPU receives an INTR interrupt. 8288 generates two I̅N̅T̅A̅ pulses to acknowledge the interrupt request and read the 8-bit interrupt vector type from the data bus.",
     controlSignals: { ale: "HIGH (T1)", den: "LOW (T2-T3)", dtr: "LOW (Read)", mIo: "LOW (I/O)" }
   },
   {
     s2: 0, s1: 0, s0: 1,
     cycleType: "Read I/O Port",
-    commandGenerated: "IORC#",
+    commandGenerated: "I̅O̅R̅C̅",
     commandBadge: "text-blue-700 bg-blue-100 border-blue-300 font-bold",
-    busActionDesc: "Activates I/O Read Command (IORC#) line to enable an I/O peripheral device to place data onto the system bus (IN instruction).",
+    busActionDesc: "Activates I/O Read Command (I̅O̅R̅C̅) line to enable an I/O peripheral device to place data onto the system bus (IN instruction).",
     controlSignals: { ale: "HIGH (T1)", den: "LOW (T2-T3)", dtr: "LOW (Read)", mIo: "LOW (I/O)" }
   },
   {
     s2: 0, s1: 1, s0: 0,
     cycleType: "Write I/O Port",
-    commandGenerated: "IOWC# / AIOWC#",
+    commandGenerated: "I̅O̅W̅C̅ / A̅I̅O̅W̅C̅",
     commandBadge: "text-amber-700 bg-amber-100 border-amber-300 font-bold",
-    busActionDesc: "Activates I/O Write Command (IOWC#) & Advanced I/O Write Command (AIOWC#) to transfer data from CPU to an I/O port (OUT instruction).",
+    busActionDesc: "Activates I/O Write Command (I̅O̅W̅C̅) & Advanced I/O Write Command (A̅I̅O̅W̅C̅) to transfer data from CPU to an I/O port (OUT instruction).",
     controlSignals: { ale: "HIGH (T1)", den: "LOW (T2-T3)", dtr: "HIGH (Write)", mIo: "LOW (I/O)" }
   },
   {
@@ -297,25 +297,25 @@ const DECODING_8288_DATA: Status8288Mapping[] = [
   {
     s2: 1, s1: 0, s0: 0,
     cycleType: "Instruction Fetch",
-    commandGenerated: "MRDC#",
+    commandGenerated: "M̅R̅D̅C̅",
     commandBadge: "text-indigo-700 bg-indigo-100 border-indigo-300 font-bold",
-    busActionDesc: "Bus Interface Unit (BIU) fetches instruction opcode bytes from Code Segment (CS) memory into the 6-byte instruction queue using Memory Read Command (MRDC#).",
+    busActionDesc: "Bus Interface Unit (BIU) fetches instruction opcode bytes from Code Segment (CS) memory into the 6-byte instruction queue using Memory Read Command (M̅R̅D̅C̅).",
     controlSignals: { ale: "HIGH (T1)", den: "LOW (T2-T3)", dtr: "LOW (Read)", mIo: "HIGH (Mem)" }
   },
   {
     s2: 1, s1: 0, s0: 1,
     cycleType: "Read Memory",
-    commandGenerated: "MRDC#",
+    commandGenerated: "M̅R̅D̅C̅",
     commandBadge: "text-blue-700 bg-blue-100 border-blue-300 font-bold",
-    busActionDesc: "Activates Memory Read Command (MRDC#) line to read memory operand data from RAM/ROM into internal processor registers.",
+    busActionDesc: "Activates Memory Read Command (M̅R̅D̅C̅) line to read memory operand data from RAM/ROM into internal processor registers.",
     controlSignals: { ale: "HIGH (T1)", den: "LOW (T2-T3)", dtr: "LOW (Read)", mIo: "HIGH (Mem)" }
   },
   {
     s2: 1, s1: 1, s0: 0,
     cycleType: "Write Memory",
-    commandGenerated: "MWTC# / AMWC#",
+    commandGenerated: "M̅W̅T̅C̅ / A̅M̅W̅C̅",
     commandBadge: "text-amber-700 bg-amber-100 border-amber-300 font-bold",
-    busActionDesc: "Activates Memory Write Command (MWTC#) and Advanced Memory Write Command (AMWC#) to store register data into system memory.",
+    busActionDesc: "Activates Memory Write Command (M̅W̅T̅C̅) and Advanced Memory Write Command (A̅M̅W̅C̅) to store register data into system memory.",
     controlSignals: { ale: "HIGH (T1)", den: "LOW (T2-T3)", dtr: "HIGH (Write)", mIo: "HIGH (Mem)" }
   },
   {
@@ -766,7 +766,7 @@ export default function PinConfigurationSimulator() {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-mono bg-purple-100 text-purple-900 font-bold px-2.5 py-1 rounded-lg border border-purple-300 shrink-0">
-              {mode === "MAX" ? "Active in Maximum Mode" : "Decoded when MN/MX# = 0V"}
+              {mode === "MAX" ? "Active in Maximum Mode" : "Decoded when MN/M̅X̅ = 0V"}
             </span>
           </div>
         </div>
@@ -1003,7 +1003,7 @@ export default function PinConfigurationSimulator() {
               <span className="text-[10px] bg-purple-50 text-purple-700 border border-purple-200 px-1.5 py-0.5 rounded">Pins 26, 27, 28</span>
             </div>
             <p className="text-slate-600 leading-relaxed text-[11px]">
-              Decoded by external <strong>8288 Bus Controller</strong> to determine the bus cycle type (Memory Read/Write, I/O Read/Write, INTA#, Halt).
+              Decoded by external <strong>8288 Bus Controller</strong> to determine the bus cycle type (Memory Read/Write, I/O Read/Write, I̅N̅T̅A̅, Halt).
             </p>
           </div>
 
@@ -1041,11 +1041,11 @@ export default function PinConfigurationSimulator() {
 
           <div className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-2 shadow-2xs">
             <div className="flex items-center justify-between font-mono font-bold text-amber-900">
-              <span>S7 / BHE# (Bus High Enable)</span>
+              <span>S7 / B̅H̅E̅ (Bus High Enable)</span>
               <span className="text-[10px] bg-amber-50 text-amber-700 border border-amber-200 px-1.5 py-0.5 rounded">Pin 34</span>
             </div>
             <p className="text-slate-600 leading-relaxed text-[11px]">
-              Multiplexed with BHE#. During T1, acts as BHE# to enable upper data bank (D8–D15). During T2–T4, outputs status S7 (spare/reserved).
+              Multiplexed with B̅H̅E̅. During T1, acts as B̅H̅E̅ to enable upper data bank (D8–D15). During T2–T4, outputs status S7 (spare/reserved).
             </p>
           </div>
 

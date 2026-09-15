@@ -31,7 +31,7 @@ interface CycleMeta {
   wrState: 'active' | 'inactive'; // active = LOW during T2-T3
   dtrState: 'low' | 'high'; // LOW (0) for Read, HIGH (1) for Write
   s2s1s0: string; // Status lines S2, S1, S0
-  max8288Cmd: string; // MRDC#, MWTC#, IORC#, IOWC#
+  max8288Cmd: string; // M̅R̅D̅C̅, M̅W̅T̅C̅, I̅O̅R̅C̅, I̅O̅W̅C̅
   busAddressSample: string;
   busDataSample: string;
   description: string;
@@ -52,11 +52,11 @@ const CYCLE_DATA: Record<CycleType, CycleMeta> = {
     wrState: 'inactive',
     dtrState: 'low',
     s2s1s0: '1 0 1',
-    max8288Cmd: 'MRDC#',
+    max8288Cmd: 'M̅R̅D̅C̅',
     busAddressSample: '0x20000 (Physical RAM)',
     busDataSample: '0x4F8A (Read Data)',
     description: 'Reads data from system RAM/ROM into internal 8086 registers or instruction prefetch queue.',
-    minActiveSignal: 'RD# (Memory Read)'
+    minActiveSignal: 'R̅D̅ (Memory Read)'
   },
   mem_write: {
     id: 'mem_write',
@@ -71,11 +71,11 @@ const CYCLE_DATA: Record<CycleType, CycleMeta> = {
     wrState: 'active',
     dtrState: 'high',
     s2s1s0: '1 1 0',
-    max8288Cmd: 'MWTC# / AMWC#',
+    max8288Cmd: 'M̅W̅T̅C̅ / A̅M̅W̅C̅',
     busAddressSample: '0x20000 (Physical RAM)',
     busDataSample: '0x1234 (Write Data)',
     description: 'Writes data from 8086 CPU registers into external system RAM memory.',
-    minActiveSignal: 'WR# (Memory Write)'
+    minActiveSignal: 'W̅R̅ (Memory Write)'
   },
   io_read: {
     id: 'io_read',
@@ -90,11 +90,11 @@ const CYCLE_DATA: Record<CycleType, CycleMeta> = {
     wrState: 'inactive',
     dtrState: 'low',
     s2s1s0: '0 0 1',
-    max8288Cmd: 'IORC#',
+    max8288Cmd: 'I̅O̅R̅C̅',
     busAddressSample: '0x00064 (Port 64H)',
     busDataSample: '0x00FF (Port Input Data)',
     description: 'Reads input data from an external peripheral interface port (e.g. keyboard, timer) using the IN instruction.',
-    minActiveSignal: 'RD# (I/O Read)'
+    minActiveSignal: 'R̅D̅ (I/O Read)'
   },
   io_write: {
     id: 'io_write',
@@ -109,11 +109,11 @@ const CYCLE_DATA: Record<CycleType, CycleMeta> = {
     wrState: 'active',
     dtrState: 'high',
     s2s1s0: '0 1 0',
-    max8288Cmd: 'IOWC# / AIOWC#',
+    max8288Cmd: 'I̅O̅W̅C̅ / A̅I̅O̅W̅C̅',
     busAddressSample: '0x00064 (Port 64H)',
     busDataSample: '0x00AE (Port Command Data)',
     description: 'Outputs command or data byte to an external peripheral interface port (e.g. display, motor controller) using the OUT instruction.',
-    minActiveSignal: 'WR# (I/O Write)'
+    minActiveSignal: 'W̅R̅ (I/O Write)'
   }
 };
 
@@ -180,10 +180,10 @@ export default function TimingDiagramSimulator() {
         type = 'float';
         labelText = 'Float';
       }
-    } else if (signalName === 'M/IO#') {
+    } else if (signalName === 'M/I̅O̅') {
       type = activeMeta.mIoState;
       labelText = activeMeta.mIoState === 'high' ? '1 (Mem)' : '0 (I/O)';
-    } else if (signalName === 'RD#') {
+    } else if (signalName === 'R̅D̅') {
       if (activeMeta.rdState === 'active' && (state === 'T2' || state === 'T3' || state === 'Tw')) {
         type = 'low';
         labelText = '0 (Active Read)';
@@ -191,7 +191,7 @@ export default function TimingDiagramSimulator() {
         type = 'high';
         labelText = '1 (Inactive)';
       }
-    } else if (signalName === 'WR#') {
+    } else if (signalName === 'W̅R̅') {
       if (activeMeta.wrState === 'active' && (state === 'T2' || state === 'T3' || state === 'Tw')) {
         type = 'low';
         labelText = '0 (Active Write)';
@@ -199,10 +199,10 @@ export default function TimingDiagramSimulator() {
         type = 'high';
         labelText = '1 (Inactive)';
       }
-    } else if (signalName === 'DT/R#') {
+    } else if (signalName === 'DT/R̅') {
       type = activeMeta.dtrState;
       labelText = activeMeta.dtrState === 'high' ? '1 (Transmit)' : '0 (Receive)';
-    } else if (signalName === 'DEN#') {
+    } else if (signalName === 'D̅E̅N̅') {
       if (state === 'T2' || state === 'T3' || state === 'Tw') {
         type = 'low';
         labelText = '0 (Buffer Enable)';
@@ -335,20 +335,20 @@ export default function TimingDiagramSimulator() {
       case 'T1':
         return {
           title: 'T1 State: Address Latch Phase',
-          detail: `CPU places target ${activeMeta.category === 'Memory' ? '20-bit Memory Address' : '16-bit I/O Port Address'} on multiplexed AD0–AD15 lines. Pin M/IO# is driven ${activeMeta.mIoLabel}. CPU pulses ALE HIGH to trigger external 8282 latches to freeze the address before bus turnaround.`,
-          mIoNote: `M/IO# = ${activeMeta.mIoState === 'high' ? '1 (Memory Access)' : '0 (I/O Access)'}`,
+          detail: `CPU places target ${activeMeta.category === 'Memory' ? '20-bit Memory Address' : '16-bit I/O Port Address'} on multiplexed AD0–AD15 lines. Pin M/I̅O̅ is driven ${activeMeta.mIoLabel}. CPU pulses ALE HIGH to trigger external 8282 latches to freeze the address before bus turnaround.`,
+          mIoNote: `M/I̅O̅ = ${activeMeta.mIoState === 'high' ? '1 (Memory Access)' : '0 (I/O Access)'}`,
           aleNote: 'ALE = 1 (Active Latch Pulse)',
-          rdWrNote: 'RD# & WR# = 1 (Inactive)'
+          rdWrNote: 'R̅D̅ & W̅R̅ = 1 (Inactive)'
         };
       case 'T2':
         return {
           title: 'T2 State: Bus Turnaround & Control Strobe Activation',
-          detail: `ALE drops LOW. CPU sets DT/R# = ${activeMeta.dtrState === 'high' ? '1 (Transmit Data to bus)' : '0 (Receive Data from bus)'} and asserts DEN# = LOW to enable 8286 transceivers. ${
+          detail: `ALE drops LOW. CPU sets DT/R̅ = ${activeMeta.dtrState === 'high' ? '1 (Transmit Data to bus)' : '0 (Receive Data from bus)'} and asserts D̅E̅N̅ = LOW to enable 8286 transceivers. ${
             activeMeta.direction === 'Read'
-              ? 'CPU floats AD0–AD15 bus to let external RAM/I/O device drive data lines, and asserts RD# = LOW.'
-              : 'CPU outputs valid data onto AD0–AD15 bus, and asserts WR# = LOW.'
+              ? 'CPU floats AD0–AD15 bus to let external RAM/I/O device drive data lines, and asserts R̅D̅ = LOW.'
+              : 'CPU outputs valid data onto AD0–AD15 bus, and asserts W̅R̅ = LOW.'
           }`,
-          mIoNote: `M/IO# remains ${activeMeta.mIoLabel}`,
+          mIoNote: `M/I̅O̅ remains ${activeMeta.mIoLabel}`,
           aleNote: 'ALE = 0 (Latched)',
           rdWrNote: `${activeMeta.minActiveSignal} drops LOW (Active)`
         };
@@ -358,27 +358,27 @@ export default function TimingDiagramSimulator() {
           detail: `${
             activeMeta.direction === 'Read'
               ? 'External RAM or I/O device places valid data onto AD0–AD15 bus. CPU reads data into internal registers at end of T3.'
-              : 'CPU holds valid data on AD0–AD15 bus while RAM or I/O device captures it under active WR# pulse.'
+              : 'CPU holds valid data on AD0–AD15 bus while RAM or I/O device captures it under active W̅R̅ pulse.'
           } CPU checks READY pin. If READY is LOW (slow memory/peripheral), CPU inserts Wait states (Tw) before T4.`,
-          mIoNote: `M/IO# = ${activeMeta.mIoLabel}`,
+          mIoNote: `M/I̅O̅ = ${activeMeta.mIoLabel}`,
           aleNote: 'ALE = 0',
           rdWrNote: `${activeMeta.minActiveSignal} remains LOW (Active)`
         };
       case 'Tw':
         return {
           title: 'Tw State: Wait State (Inserted for Slow Memory / Peripherals)',
-          detail: `Slow RAM chip or slow I/O peripheral pulled READY pin LOW. CPU freezes all bus control signals (ALE=0, ${activeMeta.minActiveSignal}=LOW, DEN#=LOW) for an additional clock period to grant the device required setup time.`,
-          mIoNote: `M/IO# = ${activeMeta.mIoLabel}`,
+          detail: `Slow RAM chip or slow I/O peripheral pulled READY pin LOW. CPU freezes all bus control signals (ALE=0, ${activeMeta.minActiveSignal}=LOW, D̅E̅N̅=LOW) for an additional clock period to grant the device required setup time.`,
+          mIoNote: `M/I̅O̅ = ${activeMeta.mIoLabel}`,
           aleNote: 'ALE = 0',
           rdWrNote: `${activeMeta.minActiveSignal} holds LOW (Wait)`
         };
       case 'T4':
         return {
           title: 'T4 State: Bus Cycle Completion',
-          detail: `Active control strobe (${activeMeta.minActiveSignal}) returns HIGH, concluding the transfer. DEN# returns HIGH to disable transceivers and isolate the bus. AD0–AD15 lines float back to idle state ready for the next machine cycle.`,
-          mIoNote: `M/IO# returns to idle`,
+          detail: `Active control strobe (${activeMeta.minActiveSignal}) returns HIGH, concluding the transfer. D̅E̅N̅ returns HIGH to disable transceivers and isolate the bus. AD0–AD15 lines float back to idle state ready for the next machine cycle.`,
+          mIoNote: `M/I̅O̅ returns to idle`,
           aleNote: 'ALE = 0',
-          rdWrNote: 'RD# & WR# = 1 (Inactive)'
+          rdWrNote: 'R̅D̅ & W̅R̅ = 1 (Inactive)'
         };
       default:
         return { title: '', detail: '', mIoNote: '', aleNote: '', rdWrNote: '' };
@@ -389,8 +389,8 @@ export default function TimingDiagramSimulator() {
 
   // Active signals list based on Operating Mode
   const activeSignalList = opMode === 'MIN' 
-    ? ['CLK', 'ALE', 'AD0-AD15', 'M/IO#', 'RD#', 'WR#', 'DT/R#', 'DEN#']
-    : ['CLK', 'ALE', 'AD0-AD15', 'S2,S1,S0', '8288 Cmd', 'DT/R#', 'DEN#'];
+    ? ['CLK', 'ALE', 'AD0-AD15', 'M/I̅O̅', 'R̅D̅', 'W̅R̅', 'DT/R̅', 'D̅E̅N̅']
+    : ['CLK', 'ALE', 'AD0-AD15', 'S2,S1,S0', '8288 Cmd', 'DT/R̅', 'D̅E̅N̅'];
 
   return (
     <div className="flex flex-col h-full bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden font-sans">
@@ -559,11 +559,11 @@ export default function TimingDiagramSimulator() {
                     <div key={sig} className="grid grid-cols-12 gap-0 items-center">
                       {/* Signal Name Label */}
                       <div className="col-span-3 text-right pr-3 font-mono text-[11px] font-bold text-slate-700 truncate">
-                        {sig === 'M/IO#' && <span className="text-purple-700">M/IO#</span>}
-                        {sig === 'RD#' && <span className={activeMeta.rdState === 'active' ? 'text-indigo-700' : 'text-slate-500'}>RD#</span>}
-                        {sig === 'WR#' && <span className={activeMeta.wrState === 'active' ? 'text-emerald-700' : 'text-slate-500'}>WR#</span>}
+                        {sig === 'M/I̅O̅' && <span className="text-purple-700">M/I̅O̅</span>}
+                        {sig === 'R̅D̅' && <span className={activeMeta.rdState === 'active' ? 'text-indigo-700' : 'text-slate-500'}>R̅D̅</span>}
+                        {sig === 'W̅R̅' && <span className={activeMeta.wrState === 'active' ? 'text-emerald-700' : 'text-slate-500'}>W̅R̅</span>}
                         {sig === '8288 Cmd' && <span className="text-purple-700 font-bold">{activeMeta.max8288Cmd}</span>}
-                        {sig !== 'M/IO#' && sig !== 'RD#' && sig !== 'WR#' && sig !== '8288 Cmd' && sig}
+                        {sig !== 'M/I̅O̅' && sig !== 'R̅D̅' && sig !== 'W̅R̅' && sig !== '8288 Cmd' && sig}
                       </div>
 
                       {/* Signal Wave Tiles Across T-States */}
@@ -627,7 +627,7 @@ export default function TimingDiagramSimulator() {
 
                 <div className="grid grid-cols-2 gap-1.5 pt-1">
                   <div className="bg-white p-1.5 rounded border border-slate-200">
-                    <span className="text-slate-500 block text-[9px]">M/IO# Pin:</span>
+                    <span className="text-slate-500 block text-[9px]">M/I̅O̅ Pin:</span>
                     <span className="font-bold text-purple-700">{activeTDesc.mIoNote}</span>
                   </div>
 
@@ -642,7 +642,7 @@ export default function TimingDiagramSimulator() {
                   </div>
 
                   <div className="bg-white p-1.5 rounded border border-slate-200">
-                    <span className="text-slate-500 block text-[9px]">Transceiver DT/R#:</span>
+                    <span className="text-slate-500 block text-[9px]">Transceiver DT/R̅:</span>
                     <span className="font-bold text-slate-800">
                       {activeMeta.dtrState === 'high' ? '1 (Transmit)' : '0 (Receive)'}
                     </span>
@@ -694,7 +694,7 @@ export default function TimingDiagramSimulator() {
               <tr className="bg-slate-100 text-slate-700 border-b border-slate-200 text-[11px]">
                 <th className="p-2 font-bold">Bus Cycle Type</th>
                 <th className="p-2 font-bold">Category</th>
-                <th className="p-2 font-bold">M/IO# (Pin 28)</th>
+                <th className="p-2 font-bold">M/I̅O̅ (Pin 28)</th>
                 <th className="p-2 font-bold">Active Min Signal</th>
                 <th className="p-2 font-bold">8288 Status (/S2,/S1,/S0)</th>
                 <th className="p-2 font-bold">Max Mode 8288 Cmd</th>

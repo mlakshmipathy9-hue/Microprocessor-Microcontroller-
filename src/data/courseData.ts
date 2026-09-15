@@ -370,12 +370,12 @@ export const courseData: Module[] = [
         points: [
           '• Why Physical Memory is Divided into Even & Odd Banks: The 8086 CPU features a 16-bit data bus (D0–D15), but physical memory is byte-addressable (8-bit wide). Partitioning 1 MB physical RAM into two parallel 512 KB banks (Even Bank on D0–D7 & Odd Bank on D8–D15) allows the processor to read/write a single 8-bit byte from either bank independently in 1 cycle, or fetch a full 16-bit word from both banks concurrently in 1 single bus cycle.',
           '• Even Bank (Lower Bank - 512 KB): Contains all even physical memory addresses (00000H, 00002H, ..., FFFFEH). Connected to data bus lines D0–D7 and enabled when address bit A0 = 0.',
-          '• Odd Bank (Upper Bank - 512 KB): Contains all odd physical memory addresses (00001H, 00003H, ..., FFFFFH). Connected to data bus lines D8–D15 and enabled when Bus High Enable BHE# = 0.',
-          '• Memory Access Signal Control Table (BHE# & A0):',
-          '  - BHE# = 0, A0 = 0 → 16-Bit Word Transfer at Even Address (1 cycle across D0–D15).',
-          '  - BHE# = 1, A0 = 0 → 8-Bit Byte Transfer at Even Address (1 cycle across D0–D7).',
-          '  - BHE# = 0, A0 = 1 → 8-Bit Byte Transfer at Odd Address (1 cycle across D8–D15).',
-          '  - BHE# = 0, A0 = 1 (Misaligned 16-Bit Word at Odd Address) → Requires 2 memory cycles (Cycle 1: Odd byte on D8–D15; Cycle 2: Even byte on D0–D7).'
+          '• Odd Bank (Upper Bank - 512 KB): Contains all odd physical memory addresses (00001H, 00003H, ..., FFFFFH). Connected to data bus lines D8–D15 and enabled when Bus High Enable B̅H̅E̅ = 0.',
+          '• Memory Access Signal Control Table (B̅H̅E̅ & A0):',
+          '  - B̅H̅E̅ = 0, A0 = 0 → 16-Bit Word Transfer at Even Address (1 cycle across D0–D15).',
+          '  - B̅H̅E̅ = 1, A0 = 0 → 8-Bit Byte Transfer at Even Address (1 cycle across D0–D7).',
+          '  - B̅H̅E̅ = 0, A0 = 1 → 8-Bit Byte Transfer at Odd Address (1 cycle across D8–D15).',
+          '  - B̅H̅E̅ = 0, A0 = 1 (Misaligned 16-Bit Word at Odd Address) → Requires 2 memory cycles (Cycle 1: Odd byte on D8–D15; Cycle 2: Even byte on D0–D7).'
         ],
         interactiveType: 'memory-calc'
       },
@@ -585,11 +585,11 @@ export const courseData: Module[] = [
         moduleId: 'm5',
         points: [
           'Interactive Timing Waveforms: Visualizes CPU bus signal transitions across clock states (T1–T4) for Memory Read, Memory Write, I/O Read, and I/O Write bus cycles.',
-          'Memory Operations (M/IO# = HIGH): Accesses RAM/ROM using 20-bit physical addresses. Active control signals are RD# (Memory Read) or WR# (Memory Write).',
-          'I/O Operations (M/IO# = LOW): Accesses peripheral ports using 16-bit port addresses (IN / OUT instructions). Active control signals are RD# (I/O Read) or WR# (I/O Write).',
+          'Memory Operations (M/I̅O̅ = HIGH): Accesses RAM/ROM using 20-bit physical addresses. Active control signals are R̅D̅ (Memory Read) or W̅R̅ (Memory Write).',
+          'I/O Operations (M/I̅O̅ = LOW): Accesses peripheral ports using 16-bit port addresses (IN / OUT instructions). Active control signals are R̅D̅ (I/O Read) or W̅R̅ (I/O Write).',
           'Address Latch Enable (ALE): Pulses HIGH during T1 to trigger external 8282 latches to capture multiplexed address lines (AD0–AD15) before data phase.',
-          'Transceiver Control (DT/R# & DEN#): DT/R# sets data direction (0 for Read, 1 for Write) and DEN# enables 8286 transceivers during T2–T3.',
-          'Maximum Mode Equivalents: Uses external 8288 Bus Controller to output MRDC# (Mem Read), MWTC# (Mem Write), IORC# (I/O Read), and IOWC# (I/O Write).'
+          'Transceiver Control (DT/R̅ & D̅E̅N̅): DT/R̅ sets data direction (0 for Read, 1 for Write) and D̅E̅N̅ enables 8286 transceivers during T2–T3.',
+          'Maximum Mode Equivalents: Uses external 8288 Bus Controller to output M̅R̅D̅C̅ (Mem Read), M̅W̅T̅C̅ (Mem Write), I̅O̅R̅C̅ (I/O Read), and I̅O̅W̅C̅ (I/O Write).'
         ],
         interactiveType: 'timing'
       },
@@ -1627,8 +1627,8 @@ export const courseData: Module[] = [
         interactiveType: 'peripheral-interfacing',
         points: [
           'Types of Stepper Motors (Construction & Operating Principles):\n• 1. Variable Reluctance (VR) Stepper Motor:\n  - Rotor Construction: Non-magnetic, multi-toothed soft iron rotor with no permanent magnet; wound stator poles.\n  - Operating Principle: Rotor teeth pull into alignment with the energized stator pole to minimize the magnetic path reluctance (resistance to magnetic flux).\n  - Characteristics: Zero detent torque (rotor turns freely when unpowered), high stepping rate, low rotor inertia, typical step angle: 7.5°, 15°, or 30°.\n• 2. Permanent Magnet (PM) Stepper Motor:\n  - Rotor Construction: Cylindrical permanent magnet rotor with alternating North and South magnetic poles along circumference; wound stator poles (tin-can / can-stack construction).\n  - Operating Principle: Magnetic attraction between energized stator electromagnets and rotor permanent magnetic poles.\n  - Characteristics: Noticeable detent torque (residual holding torque when coils unpowered), higher torque-to-size ratio, typical step angle: 7.5° (48 steps/rev) or 15° (24 steps/rev).\n• 3. Hybrid Stepper Motor (VR + PM Combined):\n  - Rotor Construction: Combines VR and PM principles. Features an axial permanent magnet sandwiched between two toothed soft-iron end caps offset by half a tooth pitch (3.6°).\n  - Operating Principle: Magnetic flux travels axially through PM core and radially across toothed air gaps for ultra-precise reluctance alignment.\n  - Characteristics: Highest torque output, finest step angle (1.8° / 200 steps/rev or 0.9° / 400 steps/rev), exceptional holding torque; standard for 3D printers, CNC machines, and robotics (NEMA 17/23).\n• 4. Unipolar vs. Bipolar Stepper Motors & Driver Topologies:\n  - Unipolar (5/6-wire): Center-tapped windings connected to +12V DC. Current flows in only one direction per half-coil; driven simply using low-side transistor arrays (ULN2003A).\n  - Bipolar (4-wire): Windings without center taps. Current flows bidirectionally through entire coil; requires full H-Bridge drivers (L293D / L298N / A4988); utilizes 100% of copper volume for ~30–40% higher torque.',
-          'Block 1: 8086 Microprocessor (Controller / Master Unit)\n• Function: Acts as the brain of the system. It executes the Assembly Language Program (ALP), generates digital timing pulses, and determines the rotation direction (CW/CCW), speed (via software delay loops), and total step count.\n• Key Connections:\n  - AD0–AD15: Multiplexed Address/Data bus lines.\n  - ALE: Pulses HIGH in T1 to latch the address into the 74LS373.\n  - M/IO#, RD#, WR#: System control bus signals specifying an I/O write cycle.',
-          'Block 2: 74HC373 / 74LS373 Octal Transparent D-Latch (Demultiplexer Stage)\n• Function: Solves the multiplexed bus requirement of the 8086. Address lines AD0–AD7 only carry address during clock cycle T1. When ALE (Address Latch Enable, Pin 25) pulses HIGH into LE (Pin 11), the 74HC373 captures and holds the stable address lines (A0–A1).\n• Direct Port Selection:\n  - Latched outputs Q0 and Q1 connect directly to 8255 pins A0 (Pin 9) and A1 (Pin 8) to select Port A (00b), Port B (01b), Port C (10b), or Control Register (11b).\n• Single-Chip System (No Decoder Required):\n  - Since the 8255 is the only peripheral connected to the CPU with no other I/O devices or memory conflicts, Chip Select CS# (Pin 6) and Latch OE# (Pin 1) are tied directly to Ground (Logic LOW / 0V), keeping the 8255 always enabled without needing a 74LS138 decoder.\n  - Note: In multi-peripheral systems with memory/timers, a 74LS138 decoder would decode upper address lines (A2–A7) to generate CS# at a specific base address (e.g. 80H).',
+          'Block 1: 8086 Microprocessor (Controller / Master Unit)\n• Function: Acts as the brain of the system. It executes the Assembly Language Program (ALP), generates digital timing pulses, and determines the rotation direction (CW/CCW), speed (via software delay loops), and total step count.\n• Key Connections:\n  - AD0–AD15: Multiplexed Address/Data bus lines.\n  - ALE: Pulses HIGH in T1 to latch the address into the 74LS373.\n  - M/I̅O̅, R̅D̅, W̅R̅: System control bus signals specifying an I/O write cycle.',
+          'Block 2: 74HC373 / 74LS373 Octal Transparent D-Latch (Demultiplexer Stage)\n• Function: Solves the multiplexed bus requirement of the 8086. Address lines AD0–AD7 only carry address during clock cycle T1. When ALE (Address Latch Enable, Pin 25) pulses HIGH into LE (Pin 11), the 74HC373 captures and holds the stable address lines (A0–A1).\n• Direct Port Selection:\n  - Latched outputs Q0 and Q1 connect directly to 8255 pins A0 (Pin 9) and A1 (Pin 8) to select Port A (00b), Port B (01b), Port C (10b), or Control Register (11b).\n• Single-Chip System (No Decoder Required):\n  - Since the 8255 is the only peripheral connected to the CPU with no other I/O devices or memory conflicts, Chip Select C̅S̅ (Pin 6) and Latch O̅E̅ (Pin 1) are tied directly to Ground (Logic LOW / 0V), keeping the 8255 always enabled without needing a 74LS138 decoder.\n  - Note: In multi-peripheral systems with memory/timers, a 74LS138 decoder would decode upper address lines (A2–A7) to generate C̅S̅ at a specific base address (e.g. 80H).',
           'Block 3: Intel 8255 Programmable Peripheral Interface (PPI)\n• Function: Provides programmable parallel I/O ports to interface the CPU with the motor driver.\n• Configuration:\n  - Initialized in Mode 0 (Basic I/O) with Port A configured as an Output port by sending control byte 80H (10000000b) to the Control Register at address 86H.\n  - Pins PA0–PA3 output the 4-bit excitation nibble (03H, 06H, 0CH, 09H) to energize the motor phases in sequence.',
           'Block 4: ULN2003A Darlington Transistor Driver IC\n• Why it is Required:\n  - Current Amplification: The 8255 I/O pins can only provide ~1.6 mA to 2.5 mA of current (logic levels 0V/5V), whereas each stepper motor coil requires 200 mA to 500 mA at +12V DC.\n  - Inductive Back-EMF Suppression: Motor coils are inductors. When current to a coil is suddenly shut off, a dangerous reverse voltage spike (V = -L di/dt) is generated.\n• Internal Structure & Connections:\n  - Contains 7 open-collector Darlington pairs with integral suppression diodes.\n  - Inputs (1B–4B / In1–In4): Connected to 8255 pins PA0–PA3.\n  - Outputs (1C–4C / Out1–Out4): Connected to Motor Coils Phase A, B, C, D.\n  - Pin 8 (GND): Connected to common system ground.\n  - Pin 9 (COM): Connected to +12V DC to connect internal freewheeling clamp diodes across the coils.',
           'Block 5: 4-Phase Stepper Motor (Actuator) & Excitation Modes\n• Operating Principle: Electromechanical transducer converting digital excitation pulses into discrete mechanical angular displacement. Step Angle (β) = 360° / (Number of Stator Phases × Rotor Teeth); 4 phases with 50 teeth yields 1.8°/step (200 steps/rev).\n• Wave Drive (1-Phase ON): Single coil energized at a time (01H -> 02H -> 04H -> 08H); lowest power consumption, 1.8° step angle.\n• Full-Step Drive (2-Phase ON): Two adjacent coils energized simultaneously (03H -> 06H -> 0CH -> 09H); produces ~1.414× maximum holding torque.\n• Half-Step Drive (Alternating 1 & 2 Phase ON): Alternates 1-phase and 2-phase excitation (01H -> 03H -> 02H -> 06H -> 04H -> 0CH -> 08H -> 09H); doubles angular resolution to 0.9°/step (400 steps/rev).',
@@ -1642,8 +1642,8 @@ export const courseData: Module[] = [
         moduleId: 'm15',
         interactiveType: 'peripheral-interfacing',
         points: [
-          'Block 1: 8086 Microprocessor (Master Controller)\n• Function: Executes conversion algorithms (e.g. BCD to 7-segment lookup via `XLAT`), writes display patterns to 8255 I/O ports via `OUT 80H, AL`, and manages multiplexing scan timing (~50 Hz refresh rate).\n• Key Connections: Multiplexed AD0–AD15 lines, ALE (Address Latch Enable), and I/O control signals (M/IO#, RD#, WR#).',
-          'Block 2: Demultiplexer (74LS373) & Address Decoder (74LS138)\n• 74LS373 Latch: Holds lower 16-bit address stable during T2–T4 clock cycles when ALE goes LOW.\n• 74LS138 Decoder: Decodes A2–A7 and M/IO# (active LOW for I/O) to generate active-low CS# (Chip Select) at base address 80H.\n• Port Map: Port A = 80H (Segment Data), Port B = 82H, Port C = 84H (Digit Select), Control Register = 86H (CW = 80H).',
+          'Block 1: 8086 Microprocessor (Master Controller)\n• Function: Executes conversion algorithms (e.g. BCD to 7-segment lookup via `XLAT`), writes display patterns to 8255 I/O ports via `OUT 80H, AL`, and manages multiplexing scan timing (~50 Hz refresh rate).\n• Key Connections: Multiplexed AD0–AD15 lines, ALE (Address Latch Enable), and I/O control signals (M/I̅O̅, R̅D̅, W̅R̅).',
+          'Block 2: Demultiplexer (74LS373) & Address Decoder (74LS138)\n• 74LS373 Latch: Holds lower 16-bit address stable during T2–T4 clock cycles when ALE goes LOW.\n• 74LS138 Decoder: Decodes A2–A7 and M/I̅O̅ (active LOW for I/O) to generate active-low C̅S̅ (Chip Select) at base address 80H.\n• Port Map: Port A = 80H (Segment Data), Port B = 82H, Port C = 84H (Digit Select), Control Register = 86H (CW = 80H).',
           'Block 3: Intel 8255 Programmable Peripheral Interface (PPI)\n• Configuration: Mode 0 (Basic I/O), Port A & Port C initialized as Output ports (Control Word 80H).\n• Pin Mapping: PA0=a, PA1=b, PA2=c, PA3=d, PA4=e, PA5=f, PA6=g, PA7=dp. For multi-digit multiplexing, PC0–PC3 switch digit enable lines.',
           'Block 4: Current-Limiting Resistor Array (8 × 330Ω) & Buffer Stage\n• Why Required: Protects LEDs and 8255 output pins from excessive current. Forward voltage drop VF ≈ 1.8V to 2.0V; R = (5V - VF) / IF = (5V - 1.8V) / 10mA ≈ 320Ω → standard 330Ω.\n• Buffer: 74LS244 octal buffer or transistor array can provide additional current drive capability for larger displays.',
           'Block 5: 7-Segment LED Display Unit (Common Cathode vs. Common Anode)\n• Common Cathode: All LED cathodes tied to GND (0V). Segment is illuminated by driving anode pin HIGH (+5V). Digit 0 = 3FH (00111111b), 1 = 06H, 8 = 7FH.\n• Common Anode: All LED anodes tied to +5V VCC. Segment is illuminated by driving cathode pin LOW (0V). Digit 0 = C0H (11000000b), 1 = F9H, 8 = 80H.\n• Multiplexed Display: Digit common pins connected through switching transistors (BC547 NPN for CC, BC557 PNP for CA) driven by Port C pins.'
@@ -1656,8 +1656,8 @@ export const courseData: Module[] = [
         moduleId: 'm15',
         interactiveType: 'peripheral-interfacing',
         points: [
-          'Block 1: 8086 Microprocessor (Master Controller)\n• Function: Executes matrix scanning algorithms, transmits active-LOW row grounding bytes (`OUT 80H, AL`), reads column sense inputs (`IN AL, 82H`), and executes 20 ms software debounce routines.\n• Key Connections: Multiplexed AD0–AD15 lines, ALE (Address Latch Enable), M/IO# (LOW for I/O port cycles), RD#, and WR#.',
-          'Block 2: Demultiplexer (74LS373) & Address Decoder (74LS138)\n• 74LS373 Latch: Captures lower 16-bit address on ALE falling edge during clock cycle T1.\n• 74LS138 Decoder: Decodes A2–A7 with M/IO#=LOW to assert active-low CS# (Chip Select) at base address 80H.\n• Port Map: Port A = 80H (Row Outputs R0–R3), Port B = 82H (Column Inputs C0–C3), Control Register = 86H (Control Word = 82H).',
+          'Block 1: 8086 Microprocessor (Master Controller)\n• Function: Executes matrix scanning algorithms, transmits active-LOW row grounding bytes (`OUT 80H, AL`), reads column sense inputs (`IN AL, 82H`), and executes 20 ms software debounce routines.\n• Key Connections: Multiplexed AD0–AD15 lines, ALE (Address Latch Enable), M/I̅O̅ (LOW for I/O port cycles), R̅D̅, and W̅R̅.',
+          'Block 2: Demultiplexer (74LS373) & Address Decoder (74LS138)\n• 74LS373 Latch: Captures lower 16-bit address on ALE falling edge during clock cycle T1.\n• 74LS138 Decoder: Decodes A2–A7 with M/I̅O̅=LOW to assert active-low C̅S̅ (Chip Select) at base address 80H.\n• Port Map: Port A = 80H (Row Outputs R0–R3), Port B = 82H (Column Inputs C0–C3), Control Register = 86H (Control Word = 82H).',
           'Block 3: Intel 8255 Programmable Peripheral Interface (PPI)\n• Configuration: Mode 0 (Basic I/O), Control Word = 82H (10000010b) setting Port A as Output (Rows) and Port B as Input (Columns).\n• Pin Mapping: PA0=R0, PA1=R1, PA2=R2, PA3=R3 (driven LOW one at a time); PB0=C0, PB1=C1, PB2=C2, PB3=C3 (sensed by CPU).',
           'Block 4: Pull-Up Resistor Array (4 × 10kΩ) & Debouncing Stage\n• Pull-Up Network: 4 × 10kΩ resistors tie PB0–PB3 to +5V VCC, guaranteeing a solid logic HIGH (\'1\') when all keys are open.\n• Contact Bounce: Mechanical switches vibrate for 10–20 ms upon contact closure; software delay loops (~20 ms) verify steady-state signals before registering valid keypresses.',
           'Block 5: 4×4 Matrix Keypad Switch Grid & Scanning Algorithm\n• Hardware Grid: 16 SPST momentary push-buttons arranged at the cross-points of 4 rows and 4 columns, saving I/O pins (8 lines vs. 16 dedicated wires).\n• Scanning Logic: Ground all rows (`00H`) to detect any press → Wait 20 ms debounce → Ground rows sequentially (`0EH`, `0DH`, `0BH`, `07H`) → Read Port B column nibble → Translate (Row, Col) into key code via `XLAT` lookup table.'
@@ -1816,7 +1816,7 @@ export const courseData: Module[] = [
         interactiveType: 'analog-interfacing',
         points: [
           'Need for D/A Conversion: Microprocessors produce digital outputs; DACs convert binary values into continuous analog voltages/currents to drive actuators, speakers, servos, and proportional control valves.',
-          'DAC 0800 Architecture: High-speed 8-bit multiplying DAC utilizing an internal R-2R resistor ladder network with complementary current outputs (Iout and Iout#) with fast 100 ns settling time.',
+          'DAC 0800 Architecture: High-speed 8-bit multiplying DAC utilizing an internal R-2R resistor ladder network with complementary current outputs (Iout and I̅o̅u̅t̅) with fast 100 ns settling time.',
           'Current-to-Voltage Op-Amp Stage: An external Operational Amplifier (e.g. LM741) in transimpedance configuration converts DAC output current into output voltage Vout = Vref × (Digital Data / 256).',
           'Square Wave Generation: 8086 outputs 00H to 8255 Port A, executes a timed delay loop, then outputs FFH, repeating continuously to produce a square wave.',
           'Sawtooth & Triangular Wave Generation: Sawtooth is generated by incrementing port value from 00H to FFH in a loop; Triangular wave increments from 00H to FFH and then decrements back to 00H with symmetrical delay intervals.'
@@ -1980,7 +1980,7 @@ export const courseData: Module[] = [
           'Synchronous vs Asynchronous Serial Transmission: Asynchronous uses Start/Stop framing bits without a shared clock; Synchronous uses transmitter/receiver clock synchronization with sync characters.',
           'Baud Rate Definition: Number of signal state changes or bits transmitted per second (e.g. 9600 Baud).',
           'Overview of 8251 USART: Universal Synchronous Asynchronous Receiver Transmitter chip that converts MPU parallel data into serial format for transmission, and incoming serial data into parallel format.',
-          'Functional Blocks of 8251: Transmitter Buffer & Register, Receiver Buffer & Register, Data Bus Buffer, Read/Write Control Logic, Modem Control (RTS#, CTS#, DTR#, DSR#).'
+          'Functional Blocks of 8251: Transmitter Buffer & Register, Receiver Buffer & Register, Data Bus Buffer, Read/Write Control Logic, Modem Control (R̅T̅S̅, C̅T̅S̅, D̅T̅R̅, D̅S̅R̅).'
         ]
       },
       {
@@ -1990,10 +1990,10 @@ export const courseData: Module[] = [
         moduleId: 'm18',
         interactiveType: 'usart-8251',
         points: [
-          '8251 Control Logic & C/D# Pin: C/D# = 0 accesses Data Buffer; C/D# = 1 accesses Control/Status Register.',
+          '8251 Control Logic & C/D̅ Pin: C/D̅ = 0 accesses Data Buffer; C/D̅ = 1 accesses Control/Status Register.',
           'Mode Instruction Format: Sent first after RESET to select Asynchronous/Synchronous mode, baud rate factor (x1, x16, x64), character length (5-8 bits), parity enable/type, and stop bit count (1, 1.5, 2).',
           'Command Instruction Format: Controls operational functions such as Transmit Enable (TXEN), Receive Enable (RXE), Error Reset (ER), and Internal Reset (IR).',
-          'Status Read Register: Reading 8251 with C/D# = 1 provides status flags: TxRDY (Transmitter Ready), RxRDY (Receiver Ready), TxEMPTY, Framing Error (FE), Overrun Error (OE), Parity Error (PE).',
+          'Status Read Register: Reading 8251 with C/D̅ = 1 provides status flags: TxRDY (Transmitter Ready), RxRDY (Receiver Ready), TxEMPTY, Framing Error (FE), Overrun Error (OE), Parity Error (PE).',
           'RS-232C Voltage Level Shifting: MPU TTL voltage levels (0V/5V) are converted to RS-232C bipolar standards (-12V / +12V) using line driver ICs like MAX232.'
         ]
       },
@@ -2088,7 +2088,7 @@ export const courseData: Module[] = [
             explanation: 'The Intel 8237A provides 4 independent DMA channels (Channel 0 to Channel 3).'
           },
           {
-            question: 'Which 8237A DMA transfer mode transfers data bytes continuously until the terminal count register reaches zero or EOP# is asserted?',
+            question: 'Which 8237A DMA transfer mode transfers data bytes continuously until the terminal count register reaches zero or E̅O̅P̅ is asserted?',
             options: [
               'Single Transfer Mode',
               'Block Transfer Mode',
@@ -2622,7 +2622,7 @@ export const courseData: Module[] = [
           'VCC (Pin 40) & GND (Pin 20): +5V DC regulated power supply and ground return.',
           'XTAL1 (Pin 19) & XTAL2 (Pin 18): On-chip oscillator input/output connected to external quartz crystal and two 30 pF capacitors.',
           'RESET (Pin 9): Active HIGH reset input requiring at least 2 machine cycles (24 clock periods) HIGH to reset processor.',
-          'EA# / VPP (Pin 31 - External Access): Tied HIGH (+5V) for internal 4KB ROM execution; tied LOW (0V) for external ROM (0000H–FFFFH).'
+          'E̅A̅ / VPP (Pin 31 - External Access): Tied HIGH (+5V) for internal 4KB ROM execution; tied LOW (0V) for external ROM (0000H–FFFFH).'
         ]
       },
       {
@@ -2647,11 +2647,11 @@ export const courseData: Module[] = [
         points: [
           'Port 3 Multi-Functional Lines:',
           '• P3.0 (RXD) & P3.1 (TXD): Serial data input / output pins for 8251/UART communication.',
-          '• P3.2 (INT0#) & P3.3 (INT1#): External hardware interrupt inputs 0 and 1.',
+          '• P3.2 (I̅N̅T̅0̅) & P3.3 (I̅N̅T̅1̅): External hardware interrupt inputs 0 and 1.',
           '• P3.4 (T0) & P3.5 (T1): External timer/counter clock inputs.',
-          '• P3.6 (WR#) & P3.7 (RD#): Active-low write and read strobe lines for external RAM (MOVX).',
-          'ALE / PROG# (Pin 30): Address Latch Enable pulses HIGH to latch Port 0 address (A0–A7) into external 74LS373 latch.',
-          'PSEN# (Pin 29): Program Store Enable output strobe for fetching instructions from external EPROM.'
+          '• P3.6 (W̅R̅) & P3.7 (R̅D̅): Active-low write and read strobe lines for external RAM (MOVX).',
+          'ALE / P̅R̅O̅G̅ (Pin 30): Address Latch Enable pulses HIGH to latch Port 0 address (A0–A7) into external 74LS373 latch.',
+          'P̅S̅E̅N̅ (Pin 29): Program Store Enable output strobe for fetching instructions from external EPROM.'
         ]
       },
       {
@@ -2668,7 +2668,7 @@ export const courseData: Module[] = [
             explanation: 'Port 0 is an open-drain port without internal pull-ups, requiring an external pull-up resistor network for standalone I/O.'
           },
           {
-            question: 'What is the function of the PSEN# (Pin 29) signal on the 8051 microcontroller?',
+            question: 'What is the function of the P̅S̅E̅N̅ (Pin 29) signal on the 8051 microcontroller?',
             options: [
               'Power supply enable for standby mode',
               'Active-low output enable strobe for reading code from external ROM',
@@ -2676,13 +2676,13 @@ export const courseData: Module[] = [
               'Analog reference voltage input'
             ],
             correctAnswer: 1,
-            explanation: 'PSEN# (Program Store Enable) is an active-low output signal connected to the Output Enable (OE#) pin of external program EPROMs.'
+            explanation: 'P̅S̅E̅N̅ (Program Store Enable) is an active-low output signal connected to the Output Enable (O̅E̅) pin of external program EPROMs.'
           },
           {
-            question: 'Which pin on Port 3 serves as the active-low External Interrupt 0 input (INT0#)?',
+            question: 'Which pin on Port 3 serves as the active-low External Interrupt 0 input (I̅N̅T̅0̅)?',
             options: ['P3.0', 'P3.2', 'P3.4', 'P3.6'],
             correctAnswer: 1,
-            explanation: 'Pin P3.2 serves as the External Interrupt 0 input (INT0#).'
+            explanation: 'Pin P3.2 serves as the External Interrupt 0 input (I̅N̅T̅0̅).'
           }
         ]
       }
@@ -2836,7 +2836,7 @@ export const courseData: Module[] = [
         points: [
           'The 8051 microcontroller contains two 16-bit Timer/Counter hardware modules: Timer 0 (TH0, TL0) and Timer 1 (TH1, TL1).',
           'Operating Modes: In Timer mode, the register counts internal machine cycles (XTAL frequency ÷ 12). In Counter mode, it counts negative-edge transitions on external pins T0 (P3.4) or T1 (P3.5).',
-          'TMOD Register (89H): 8-bit non-bit-addressable register that configures the operating mode (Mode 0, 1, 2, 3) and source (C/T# bit) for Timer 0 and Timer 1.',
+          'TMOD Register (89H): 8-bit non-bit-addressable register that configures the operating mode (Mode 0, 1, 2, 3) and source (C/T̅ bit) for Timer 0 and Timer 1.',
           'TCON Register (88H): Bit-addressable control register containing TR0/TR1 (timer run flags) and TF0/TF1 (timer overflow flags).'
         ]
       },
@@ -2906,9 +2906,9 @@ export const courseData: Module[] = [
         points: [
           'The 8051 microcontroller supports 5 hardware interrupt sources + Reset vector:',
           '1. Reset (0000H) - Highest priority hardware reset vector.',
-          '2. External Interrupt 0 (INT0# @ 0003H) - Triggered via pin P3.2 (low level or falling edge).',
+          '2. External Interrupt 0 (I̅N̅T̅0̅ @ 0003H) - Triggered via pin P3.2 (low level or falling edge).',
           '3. Timer 0 Interrupt (TF0 @ 000BH) - Triggered on Timer 0 overflow.',
-          '4. External Interrupt 1 (INT1# @ 0013H) - Triggered via pin P3.3.',
+          '4. External Interrupt 1 (I̅N̅T̅1̅ @ 0013H) - Triggered via pin P3.3.',
           '5. Timer 1 Interrupt (TF1 @ 001BH) - Triggered on Timer 1 overflow.',
           '6. Serial Port Interrupt (RI/TI @ 0023H) - Triggered when a byte is received or transmitted.',
           'Interrupt Enable (IE @ A8H) & Interrupt Priority (IP @ B8H) registers govern global/individual enable flags and 2-level priority schemes.'
@@ -2942,7 +2942,7 @@ export const courseData: Module[] = [
         interactiveType: 'quiz',
         quizQuestions: [
           {
-            question: 'What is the vector address for External Interrupt 0 (INT0#) in the 8051 microcontroller?',
+            question: 'What is the vector address for External Interrupt 0 (I̅N̅T̅0̅) in the 8051 microcontroller?',
             options: [
               '0000H',
               '0003H',
@@ -2950,7 +2950,7 @@ export const courseData: Module[] = [
               '0013H'
             ],
             correctAnswer: 1,
-            explanation: 'External Interrupt 0 (INT0#) branches to vector address 0003H when triggered.'
+            explanation: 'External Interrupt 0 (I̅N̅T̅0̅) branches to vector address 0003H when triggered.'
           },
           {
             question: 'In HD44780 LCD interfacing, what logic state must RS (Register Select) be set to when sending display ASCII characters?',
@@ -2979,7 +2979,7 @@ export const courseData: Module[] = [
         points: [
           'LM35 Precision Temperature Sensor: Analog output voltage scaled at 10 mV/°C (e.g., 250 mV at 25°C).',
           'ADC0804 8-Bit Analog-to-Digital Converter: Successive Approximation ADC with 8-bit output (resolution = Vref/2 / 128 = ~19.5 mV/step).',
-          'Interfacing Protocol: 8051 pulses CS# & WR# LOW to start conversion. ADC asserts INTR# LOW when conversion finishes. 8051 reads 8-bit digital output DB0–DB7 via Port 0 by pulsing RD# LOW.'
+          'Interfacing Protocol: 8051 pulses C̅S̅ & W̅R̅ LOW to start conversion. ADC asserts I̅N̅T̅R̅ LOW when conversion finishes. 8051 reads 8-bit digital output DB0–DB7 via Port 0 by pulsing R̅D̅ LOW.'
         ]
       },
       {
@@ -2993,7 +2993,7 @@ export const courseData: Module[] = [
           'Port 0 serves as multiplexed low-order address/data bus (A0–A7 / D0–D7).',
           'ALE (Address Latch Enable) pulses HIGH to latch low address bits into a 74HC373 latch.',
           'Port 2 outputs high-order address bits A8–A15.',
-          'Control Signals: PSEN# (Program Store Enable) reads external EPROM/Flash ROM. RD# (P3.7) and WR# (P3.6) read/write external SRAM.'
+          'Control Signals: P̅S̅E̅N̅ (Program Store Enable) reads external EPROM/Flash ROM. R̅D̅ (P3.7) and W̅R̅ (P3.6) read/write external SRAM.'
         ]
       },
       {
@@ -3014,12 +3014,12 @@ export const courseData: Module[] = [
             question: 'Which signal from the 8051 microcontroller is used as the active-LOW read strobe for external Program ROM code fetches?',
             options: [
               'ALE (Address Latch Enable)',
-              'PSEN# (Program Store Enable)',
-              'RD# (P3.7)',
-              'WR# (P3.6)'
+              'P̅S̅E̅N̅ (Program Store Enable)',
+              'R̅D̅ (P3.7)',
+              'W̅R̅ (P3.6)'
             ],
             correctAnswer: 1,
-            explanation: 'PSEN# (Program Store Enable) is the dedicated read control signal used exclusively when fetching instructions from external Program ROM.'
+            explanation: 'P̅S̅E̅N̅ (Program Store Enable) is the dedicated read control signal used exclusively when fetching instructions from external Program ROM.'
           },
           {
             question: 'What is the voltage output of an LM35 temperature sensor at 30°C given its 10 mV/°C scale factor?',

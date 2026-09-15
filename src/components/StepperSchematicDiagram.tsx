@@ -62,12 +62,12 @@ export default function StepperSchematicDiagram({
     u2: {
       title: 'U2: Intel 8086 16-Bit Microprocessor',
       subtitle: 'Part: 8086 • Component: Microprocessor (CPU)',
-      desc: 'Configured in Minimum Mode by connecting Pin 33 (MN/MX#) to +5V VCC. Generates multiplexed address/data on AD[0..15], ALE (Pin 25) for address demultiplexing, RD# (Pin 32), WR# (Pin 29), and M/IO# (Pin 28) for 8255 I/O port mapping.',
+      desc: 'Configured in Minimum Mode by connecting Pin 33 (MN/M̅X̅) to +5V VCC. Generates multiplexed address/data on AD[0..15], ALE (Pin 25) for address demultiplexing, R̅D̅ (Pin 32), W̅R̅ (Pin 29), and M/I̅O̅ (Pin 28) for 8255 I/O port mapping.',
       pins: [
-        { pin: 'Pin 33 (MN/MX#)', func: 'Tied to +5V VCC to set Minimum Mode operation.' },
+        { pin: 'Pin 33 (MN/M̅X̅)', func: 'Tied to +5V VCC to set Minimum Mode operation.' },
         { pin: 'Pin 25 (ALE)', func: 'Address Latch Enable connected to 74HC373 Pin 11 (LE) to latch lower address lines.' },
-        { pin: 'Pin 28 (M/IO#)', func: 'Outputs LOW during IN/OUT instructions to drive 8255 Chip Select (CS# Pin 6).' },
-        { pin: 'Pin 32 (RD#) / Pin 29 (WR#)', func: 'Directly wired to 8255 RD# (Pin 5) and WR# (Pin 36).' },
+        { pin: 'Pin 28 (M/I̅O̅)', func: 'Outputs LOW during IN/OUT instructions to drive 8255 Chip Select (C̅S̅ Pin 6).' },
+        { pin: 'Pin 32 (R̅D̅) / Pin 29 (W̅R̅)', func: 'Directly wired to 8255 R̅D̅ (Pin 5) and W̅R̅ (Pin 36).' },
         { pin: 'Pins 21, 22, 18, 31, 23, 17', func: 'Tied to GND reference (RESET=0, READY=1/GND, INTR=0, HOLD=0, TEST=0, NMI=0).' }
       ]
     },
@@ -77,7 +77,7 @@ export default function StepperSchematicDiagram({
       desc: 'Latches lower address bits from multiplexed AD0–AD7 during T1 clock state using the ALE strobe on LE (Pin 11). Provides steady demultiplexed address outputs A0 (from Q1) and A1 (from Q2) to the 8255.',
       pins: [
         { pin: 'Pin 11 (LE)', func: 'Latch Enable driven by 8086 ALE (Pin 25).' },
-        { pin: 'Pin 1 (OE#)', func: 'Output Enable tied to GND (0V) for active 3-state outputs.' },
+        { pin: 'Pin 1 (O̅E̅)', func: 'Output Enable tied to GND (0V) for active 3-state outputs.' },
         { pin: 'Pins 3, 4, 7, 8, 13, 14, 17, 18 (D0–D7)', func: 'Inputs wired to 8086 AD0–AD7 data/address bus.' },
         { pin: 'Pin 5 (Q1) & Pin 6 (Q2)', func: 'Demultiplexed address outputs wired to 8255 A0 and A1.' },
         { pin: 'Pin 9 (Q3)', func: 'Latched control line wired to 8255 RESET (Pin 35).' }
@@ -89,7 +89,7 @@ export default function StepperSchematicDiagram({
       desc: 'Operates in Mode 0 (Basic I/O). Port A (PA0–PA3) is configured as an output port to issue the 4-phase unipolar stepper motor excitation sequence to the ULN2003 driver.',
       pins: [
         { pin: 'Pins 34–27 (D0–D7)', func: 'Bidirectional data bus wired to 8086 AD0–AD7.' },
-        { pin: 'Pin 6 (CS#)', func: 'Active-low chip select activated by 8086 M/IO# signal.' },
+        { pin: 'Pin 6 (C̅S̅)', func: 'Active-low chip select activated by 8086 M/I̅O̅ signal.' },
         { pin: 'Pin 9 (A0) & Pin 8 (A1)', func: 'Port register selection (00=Port A, 01=Port B, 10=Port C, 11=Control Word).' },
         { pin: 'Pins 4, 3, 2, 1 (PA0–PA3)', func: 'Output phase signals wired straight to ULN2003 inputs 1B–4B.' }
       ]
@@ -387,7 +387,7 @@ export default function StepperSchematicDiagram({
                 </g>
               ))}
 
-              {/* Control Inputs: OE# and LE */}
+              {/* Control Inputs: O̅E̅ and LE */}
               <g>
                 <text x="480" y="404" textAnchor="start" className="font-mono text-xs font-extrabold fill-slate-900">OE</text>
                 <circle cx="470" cy="400" r="3" fill="#ffffff" stroke="#78350f" strokeWidth="1.4" />
@@ -425,7 +425,7 @@ export default function StepperSchematicDiagram({
             <path d="M 350 245 L 390 245 L 390 440 L 470 440" fill="none" stroke="#16a34a" strokeWidth="1.6" />
             <circle cx="390" cy="245" r="3" fill="#dc2626" />
 
-            {/* 74HC373 OE# (Pin 1) to GND */}
+            {/* 74HC373 O̅E̅ (Pin 1) to GND */}
             <path d="M 400 400 L 400 500 L 70 500" fill="none" stroke="#16a34a" strokeWidth="1.6" />
             <circle cx="400" cy="500" r="3" fill="#dc2626" />
 
@@ -517,16 +517,16 @@ export default function StepperSchematicDiagram({
             <path d="M 650 255 L 710 255 L 710 525 L 740 525" fill="none" stroke="#16a34a" strokeWidth="1.6" />
 
             {/* Control Signals Routing from 8086 to 8255 */}
-            {/* RD# (8086 Pin 32 -> 8255 Pin 5) via bottom route */}
+            {/* R̅D̅ (8086 Pin 32 -> 8255 Pin 5) via bottom route */}
             <path d="M 350 385 L 370 385 L 370 590 L 725 590 L 725 395 L 740 395" fill="none" stroke="#16a34a" strokeWidth="1.6" />
 
-            {/* WR# (8086 Pin 29 -> 8255 Pin 36) via bottom route */}
+            {/* W̅R̅ (8086 Pin 29 -> 8255 Pin 36) via bottom route */}
             <path d="M 350 425 L 360 425 L 360 615 L 735 615 L 735 430 L 740 430" fill="none" stroke="#16a34a" strokeWidth="1.6" />
 
-            {/* M/IO# (8086 Pin 28 -> 8255 Pin 6 CS#) */}
+            {/* M/I̅O̅ (8086 Pin 28 -> 8255 Pin 6 C̅S̅) */}
             <path d="M 350 465 L 420 465 L 420 555 L 740 555" fill="none" stroke="#16a34a" strokeWidth="1.6" />
 
-            {/* Interactive Logic State Probe [0] on M/IO# */}
+            {/* Interactive Logic State Probe [0] on M/I̅O̅ */}
             <g 
               className="cursor-pointer"
               onClick={() => setActiveLogicProbe(activeLogicProbe === 0 ? 1 : 0)}
@@ -764,9 +764,9 @@ export default function StepperSchematicDiagram({
         </div>
 
         <div className="p-2.5 bg-amber-50 border border-amber-200 rounded-xl flex flex-col justify-between text-amber-950">
-          <span className="font-bold text-[10px]">8255 CS# Select</span>
+          <span className="font-bold text-[10px]">8255 C̅S̅ Select</span>
           <span className="font-mono text-xs font-bold text-amber-800">
-            M/IO# = {activeLogicProbe} ({activeLogicProbe === 0 ? 'Active LOW' : 'Disabled'})
+            M/I̅O̅ = {activeLogicProbe} ({activeLogicProbe === 0 ? 'Active LOW' : 'Disabled'})
           </span>
         </div>
       </div>

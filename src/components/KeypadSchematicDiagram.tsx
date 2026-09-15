@@ -71,10 +71,10 @@ export default function KeypadSchematicDiagram({
       subtitle: 'Part: 8086 • Component: Microprocessor (CPU)',
       desc: 'Executes the matrix scanning software loop. Sends active-LOW row grounding masks to 8255 Port A (80H), reads Port B (82H) column inputs, and applies a 20 ms debounce delay subroutine before keycode translation.',
       pins: [
-        { pin: 'Pin 33 (MN/MX#)', func: 'Tied to +5V VCC for Minimum Mode.' },
+        { pin: 'Pin 33 (MN/M̅X̅)', func: 'Tied to +5V VCC for Minimum Mode.' },
         { pin: 'Pin 25 (ALE)', func: 'Address Latch Enable to 74LS373 (Pin 11).' },
-        { pin: 'Pin 28 (M/IO#)', func: 'Asserted LOW during I/O operations.' },
-        { pin: 'Pin 32 (RD#) / Pin 29 (WR#)', func: 'Control read/write strobe lines to 8255.' },
+        { pin: 'Pin 28 (M/I̅O̅)', func: 'Asserted LOW during I/O operations.' },
+        { pin: 'Pin 32 (R̅D̅) / Pin 29 (W̅R̅)', func: 'Control read/write strobe lines to 8255.' },
         { pin: 'AD0–AD7', func: 'Multiplexed address/data bus lines.' }
       ]
     },
@@ -84,18 +84,18 @@ export default function KeypadSchematicDiagram({
       desc: 'Latches lower address bits A0–A7 from multiplexed AD0–AD7 when ALE pulses HIGH during clock cycle T1, providing stable A0 and A1 lines to select 8255 registers.',
       pins: [
         { pin: 'Pin 11 (LE)', func: 'Driven by 8086 ALE (Pin 25).' },
-        { pin: 'Pin 1 (OE#)', func: 'Tied to GND (0V) for permanent 3-state output enable.' },
+        { pin: 'Pin 1 (O̅E̅)', func: 'Tied to GND (0V) for permanent 3-state output enable.' },
         { pin: 'Pins Q0, Q1', func: 'Latched address outputs connected to 8255 A0 and A1.' }
       ]
     },
     u3: {
       title: 'U3: 74LS138 3-to-8 Line Decoder',
       subtitle: 'Part: 74LS138 • Component: 3-to-8 Address Decoder',
-      desc: 'Decodes upper address lines A2–A7 and M/IO# to assert active-low CS# (Pin 6) on the 8255 whenever an I/O instruction references port addresses 80H–87H.',
+      desc: 'Decodes upper address lines A2–A7 and M/I̅O̅ to assert active-low C̅S̅ (Pin 6) on the 8255 whenever an I/O instruction references port addresses 80H–87H.',
       pins: [
         { pin: 'Pin 6 (G1)', func: 'Tied to +5V VCC.' },
-        { pin: 'Pins 4, 5 (G2A#, G2B#)', func: 'Tied to 8086 M/IO# and A7.' },
-        { pin: 'Pin 15 (Y0#)', func: 'Asserted LOW for addresses 80H–87H -> 8255 CS#.' }
+        { pin: 'Pins 4, 5 (G̅2̅A̅, G̅2̅B̅)', func: 'Tied to 8086 M/I̅O̅ and A7.' },
+        { pin: 'Pin 15 (Y̅0̅)', func: 'Asserted LOW for addresses 80H–87H -> 8255 C̅S̅.' }
       ]
     },
     u4: {
@@ -106,7 +106,7 @@ export default function KeypadSchematicDiagram({
         { pin: 'Pins 4, 3, 2, 1 (PA0–PA3)', func: 'Outputs driving Keypad Rows R0, R1, R2, R3 (Active-LOW grounding).' },
         { pin: 'Pins 18–21 (PB0–PB3)', func: 'Inputs sensing Keypad Columns C0, C1, C2, C3.' },
         { pin: 'Pins 34–27 (D0–D7)', func: '8-bit data bus connected to 8086 CPU.' },
-        { pin: 'Pin 6 (CS#)', func: 'Chip Select from 74LS138 Y0# (Address 80H).' }
+        { pin: 'Pin 6 (C̅S̅)', func: 'Chip Select from 74LS138 Y̅0̅ (Address 80H).' }
       ]
     },
     rp1: {
@@ -284,7 +284,7 @@ export default function KeypadSchematicDiagram({
               <text x="72.5" y="24" fill="#4338ca" fontWeight="bold" textAnchor="middle" fontSize="7.5">16-BIT MICROPROCESSOR (CPU)</text>
 
               {/* Mode & Operational Info */}
-              <text x="10" y="46" fill="#64748b" fontSize="8" fontWeight="bold">MIN MODE (MN/MX#=1)</text>
+              <text x="10" y="46" fill="#64748b" fontSize="8" fontWeight="bold">MIN MODE (MN/M̅X̅=1)</text>
               <text x="10" y="58" fill="#64748b" fontSize="8">CLK: 5MHz • VCC: +5V</text>
 
               <text x="10" y="280" fill="#4338ca" fontSize="8" fontWeight="bold">Keypad Scan Loop:</text>
@@ -296,9 +296,9 @@ export default function KeypadSchematicDiagram({
               <text x="135" y="84" fill="#dc2626" fontWeight="bold" textAnchor="end">AD0–AD7</text>
               <text x="135" y="114" fill="#dc2626" textAnchor="end">AD8–AD15</text>
               <text x="135" y="144" fill="#059669" fontWeight="bold" textAnchor="end">ALE (Pin 25)</text>
-              <text x="135" y="174" fill="#d97706" fontWeight="bold" textAnchor="end">M/IO# (Pin 28)</text>
-              <text x="135" y="204" fill="#d97706" fontWeight="bold" textAnchor="end">WR# (Pin 29)</text>
-              <text x="135" y="234" fill="#d97706" textAnchor="end">RD# (Pin 32)</text>
+              <text x="135" y="174" fill="#d97706" fontWeight="bold" textAnchor="end">M/I̅O̅ (Pin 28)</text>
+              <text x="135" y="204" fill="#d97706" fontWeight="bold" textAnchor="end">W̅R̅ (Pin 29)</text>
+              <text x="135" y="234" fill="#d97706" textAnchor="end">R̅D̅ (Pin 32)</text>
               <text x="135" y="264" fill="#64748b" textAnchor="end">RESET (Pin 21)</text>
 
               {[80, 110, 140, 170, 200, 230, 260].map((y, i) => (
@@ -331,7 +331,7 @@ export default function KeypadSchematicDiagram({
 
               {/* Left Inputs */}
               <text x="10" y="84" fill="#dc2626" fontWeight="bold">AD0–AD7</text>
-              <text x="10" y="114" fill="#64748b">OE# (Pin 1: GND)</text>
+              <text x="10" y="114" fill="#64748b">O̅E̅ (Pin 1: GND)</text>
               <text x="10" y="144" fill="#059669" fontWeight="bold">LE (Pin 11)</text>
 
               {/* Right Outputs (Spaced and Un-overlapping) */}
@@ -376,12 +376,12 @@ export default function KeypadSchematicDiagram({
               {/* Left Inputs */}
               <text x="10" y="54" fill="#d97706" fontWeight="bold">A2, A3, A4</text>
               <text x="10" y="84" fill="#d97706">G1 (Pin 6: +5V)</text>
-              <text x="10" y="114" fill="#d97706" fontWeight="bold">G2A# (Pin 4: M/IO#)</text>
-              <text x="10" y="144" fill="#d97706">G2B# (Pin 5: A7)</text>
+              <text x="10" y="114" fill="#d97706" fontWeight="bold">G̅2̅A̅ (Pin 4: M/I̅O̅)</text>
+              <text x="10" y="144" fill="#d97706">G̅2̅B̅ (Pin 5: A7)</text>
 
               {/* Right Outputs */}
-              <text x="155" y="74" fill="#059669" textAnchor="end" fontWeight="bold">Y0# (Pin 15: 80H)</text>
-              <text x="155" y="124" fill="#94a3b8" textAnchor="end">Y1#–Y7# (Unused)</text>
+              <text x="155" y="74" fill="#059669" textAnchor="end" fontWeight="bold">Y̅0̅ (Pin 15: 80H)</text>
+              <text x="155" y="124" fill="#94a3b8" textAnchor="end">Y̅1̅–Y̅7̅ (Unused)</text>
 
               <circle cx="0" cy="50" r="3" fill="#d97706" />
               <circle cx="0" cy="80" r="2.5" fill="#d97706" />
@@ -404,9 +404,9 @@ export default function KeypadSchematicDiagram({
             <line x1="170" y1="185" x2="245" y2="185" stroke="#059669" strokeWidth="2" />
             <text x="207" y="180" fill="#059669" fontSize="8" fontWeight="bold" textAnchor="middle">ALE</text>
 
-            {/* M/IO# wire to Decoder */}
+            {/* M/I̅O̅ wire to Decoder */}
             <path d="M 170 215 L 195 215 L 195 345 L 245 345" fill="none" stroke="#d97706" strokeWidth="1.5" />
-            <text x="180" y="275" fill="#d97706" fontSize="8" fontWeight="bold" textAnchor="middle">M/IO#</text>
+            <text x="180" y="275" fill="#d97706" fontSize="8" fontWeight="bold" textAnchor="middle">M/I̅O̅</text>
 
             {/* Latched Address A2-A7 wire from U2 to U3 */}
             <path d="M 410 185 L 425 185 L 425 220 L 230 220 L 230 285 L 245 285" fill="none" stroke="#2563eb" strokeWidth="1.5" strokeDasharray="4,2" />
@@ -439,9 +439,9 @@ export default function KeypadSchematicDiagram({
               <text x="10" y="54" fill="#dc2626" fontWeight="bold">D0–D7 (Pins 34–27)</text>
               <text x="10" y="84" fill="#2563eb" fontWeight="bold">A0 (Pin 9)</text>
               <text x="10" y="114" fill="#2563eb" fontWeight="bold">A1 (Pin 8)</text>
-              <text x="10" y="144" fill="#059669" fontWeight="bold">CS# (Pin 6: 80H)</text>
-              <text x="10" y="174" fill="#d97706" fontWeight="bold">WR# (Pin 36)</text>
-              <text x="10" y="204" fill="#d97706">RD# (Pin 5)</text>
+              <text x="10" y="144" fill="#059669" fontWeight="bold">C̅S̅ (Pin 6: 80H)</text>
+              <text x="10" y="174" fill="#d97706" fontWeight="bold">W̅R̅ (Pin 36)</text>
+              <text x="10" y="204" fill="#d97706">R̅D̅ (Pin 5)</text>
               <text x="10" y="234" fill="#64748b">RESET (Pin 35 = 0)</text>
 
               {/* Right Output Rows (Port A: PA0–PA3) */}
@@ -502,11 +502,11 @@ export default function KeypadSchematicDiagram({
             <line x1="410" y1="155" x2="475" y2="155" stroke="#2563eb" strokeWidth="2" />
             <text x="442" y="150" fill="#2563eb" fontSize="7.5" fontWeight="bold" textAnchor="middle">A1</text>
 
-            {/* Decoder Y0# to 8255 CS#: Clean Orthogonal Route */}
+            {/* Decoder Y̅0̅ to 8255 C̅S̅: Clean Orthogonal Route */}
             <path d="M 410 305 L 440 305 L 440 185 L 475 185" fill="none" stroke="#059669" strokeWidth="2" />
-            <text x="446" y="248" fill="#059669" fontSize="7.5" fontWeight="bold">CS#</text>
+            <text x="446" y="248" fill="#059669" fontSize="7.5" fontWeight="bold">C̅S̅</text>
 
-            {/* CPU WR# to 8255 WR#: Clean Orthogonal Route */}
+            {/* CPU W̅R̅ to 8255 W̅R̅: Clean Orthogonal Route */}
             <path d="M 170 245 L 205 245 L 205 228 L 460 228 L 460 215 L 475 215" fill="none" stroke="#d97706" strokeWidth="1.5" strokeDasharray="5,2" />
 
             {/* ============================================================== */}

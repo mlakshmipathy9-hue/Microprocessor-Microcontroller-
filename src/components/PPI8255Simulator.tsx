@@ -87,8 +87,8 @@ export default function PPI8255Simulator({
     details: string;
   }>({
     type: 'idle',
-    title: 'Bus Idle (CS#=0, RD#=1, WR#=1)',
-    details: 'Select a target port address (A1, A0) and execute a CPU Read (RD#=0) or Write (WR#=0) cycle.',
+    title: 'Bus Idle (C̅S̅=0, R̅D̅=1, W̅R̅=1)',
+    details: 'Select a target port address (A1, A0) and execute a CPU Read (R̅D̅=0) or Write (W̅R̅=0) cycle.',
   });
 
   // Compute 8255 I/O Control Word Byte
@@ -233,8 +233,8 @@ export default function PPI8255Simulator({
     if (sigCS === 1 && overrideA1 === undefined) {
       setBusCycleLog({
         type: 'warning',
-        title: '⚠️ Read Ignored: Chip Disabled (CS# = 1)',
-        details: 'When CS# is HIGH (+5V), internal 8255 bus buffers remain in high-impedance state (tri-state).',
+        title: '⚠️ Read Ignored: Chip Disabled (C̅S̅ = 1)',
+        details: 'When C̅S̅ is HIGH (+5V), internal 8255 bus buffers remain in high-impedance state (tri-state).',
       });
       return;
     }
@@ -245,7 +245,7 @@ export default function PPI8255Simulator({
       setCpuDataBus(dataRead);
       setBusCycleLog({
         type: 'read',
-        title: `🔵 [IN AL, 80H / Port A]: CS#=0, RD#=0, WR#=1, A1=0, A0=0 → Read 0x${dataRead.toString(16).toUpperCase().padStart(2, '0')} (${dataRead.toString(2).padStart(8, '0')}b)`,
+        title: `🔵 [IN AL, 80H / Port A]: C̅S̅=0, R̅D̅=0, W̅R̅=1, A1=0, A0=0 → Read 0x${dataRead.toString(16).toUpperCase().padStart(2, '0')} (${dataRead.toString(2).padStart(8, '0')}b)`,
         details: portADir === 'input'
           ? `Port A is configured as INPUT (D4=1). CPU placed 8255 external pin inputs (PA7–PA0) onto CPU Data Bus lines (D7–D0).`
           : `Port A is configured as OUTPUT (D4=0). CPU read the current latched output value from Port A output register onto Data Bus.`,
@@ -256,7 +256,7 @@ export default function PPI8255Simulator({
       setCpuDataBus(dataRead);
       setBusCycleLog({
         type: 'read',
-        title: `🔵 [IN AL, 81H / Port B]: CS#=0, RD#=0, WR#=1, A1=0, A0=1 → Read 0x${dataRead.toString(16).toUpperCase().padStart(2, '0')} (${dataRead.toString(2).padStart(8, '0')}b)`,
+        title: `🔵 [IN AL, 81H / Port B]: C̅S̅=0, R̅D̅=0, W̅R̅=1, A1=0, A0=1 → Read 0x${dataRead.toString(16).toUpperCase().padStart(2, '0')} (${dataRead.toString(2).padStart(8, '0')}b)`,
         details: portBDir === 'input'
           ? `Port B is configured as INPUT (D1=1). External peripheral signals on PB7–PB0 transferred to CPU Data Bus.`
           : `Port B is configured as OUTPUT (D1=0). Current latched value transferred to CPU Data Bus.`,
@@ -269,7 +269,7 @@ export default function PPI8255Simulator({
       const lowDesc = portCLowerDir === 'input' ? 'PC3–PC0 from external pins' : 'PC3–PC0 from output latch';
       setBusCycleLog({
         type: 'read',
-        title: `🔵 [IN AL, 82H / Port C]: CS#=0, RD#=0, WR#=1, A1=1, A0=0 → Read 0x${dataRead.toString(16).toUpperCase().padStart(2, '0')} (${dataRead.toString(2).padStart(8, '0')}b)`,
+        title: `🔵 [IN AL, 82H / Port C]: C̅S̅=0, R̅D̅=0, W̅R̅=1, A1=1, A0=0 → Read 0x${dataRead.toString(16).toUpperCase().padStart(2, '0')} (${dataRead.toString(2).padStart(8, '0')}b)`,
         details: `Split Read: ${upDesc}, and ${lowDesc}. Transferred onto CPU Data Bus lines D7–D0.`,
       });
     } else {
@@ -277,7 +277,7 @@ export default function PPI8255Simulator({
       setBusCycleLog({
         type: 'warning',
         title: `⚠️ Read Blocked: Control Register (A1=1, A0=1) is WRITE-ONLY`,
-        details: `In Intel 8255 architecture, reading from Control Register Address (A1=1, A0=1 with RD#=0) is illegal. The internal control word is not readable; bus enters High-Z / float.`,
+        details: `In Intel 8255 architecture, reading from Control Register Address (A1=1, A0=1 with R̅D̅=0) is illegal. The internal control word is not readable; bus enters High-Z / float.`,
       });
     }
   };
@@ -295,8 +295,8 @@ export default function PPI8255Simulator({
     if (sigCS === 1 && overrideA1 === undefined) {
       setBusCycleLog({
         type: 'warning',
-        title: '⚠️ Write Aborted: Chip Disabled (CS# = 1)',
-        details: 'When CS# is HIGH (+5V), internal write strobes are blocked. Port registers remain unchanged.',
+        title: '⚠️ Write Aborted: Chip Disabled (C̅S̅ = 1)',
+        details: 'When C̅S̅ is HIGH (+5V), internal write strobes are blocked. Port registers remain unchanged.',
       });
       return;
     }
@@ -307,7 +307,7 @@ export default function PPI8255Simulator({
         setPortAOutputLatch(dataToWrite);
         setBusCycleLog({
           type: 'write',
-          title: `🟢 [OUT 80H, AL / Port A]: CS#=0, WR#=0, RD#=1, A1=0, A0=0 → Latched 0x${dataToWrite.toString(16).toUpperCase().padStart(2, '0')} (${dataToWrite.toString(2).padStart(8, '0')}b)`,
+          title: `🟢 [OUT 80H, AL / Port A]: C̅S̅=0, W̅R̅=0, R̅D̅=1, A1=0, A0=0 → Latched 0x${dataToWrite.toString(16).toUpperCase().padStart(2, '0')} (${dataToWrite.toString(2).padStart(8, '0')}b)`,
           details: `Port A is OUTPUT (D4=0). Latched byte from CPU Data Bus into Port A register. Pins PA7–PA0 are actively driving this value.`,
         });
       } else {
@@ -323,7 +323,7 @@ export default function PPI8255Simulator({
         setPortBOutputLatch(dataToWrite);
         setBusCycleLog({
           type: 'write',
-          title: `🟢 [OUT 81H, AL / Port B]: CS#=0, WR#=0, RD#=1, A1=0, A0=1 → Latched 0x${dataToWrite.toString(16).toUpperCase().padStart(2, '0')} (${dataToWrite.toString(2).padStart(8, '0')}b)`,
+          title: `🟢 [OUT 81H, AL / Port B]: C̅S̅=0, W̅R̅=0, R̅D̅=1, A1=0, A0=1 → Latched 0x${dataToWrite.toString(16).toUpperCase().padStart(2, '0')} (${dataToWrite.toString(2).padStart(8, '0')}b)`,
           details: `Port B is OUTPUT (D1=0). Latched byte from CPU Data Bus into Port B register. Pins PB7–PB0 are actively driving this value.`,
         });
       } else {
@@ -359,7 +359,7 @@ export default function PPI8255Simulator({
         setPortCOutputLatch(newLatch);
         setBusCycleLog({
           type: 'write',
-          title: `🟢 [OUT 82H, AL / Port C]: CS#=0, WR#=0 → Latched 0x${dataToWrite.toString(16).toUpperCase().padStart(2, '0')}`,
+          title: `🟢 [OUT 82H, AL / Port C]: C̅S̅=0, W̅R̅=0 → Latched 0x${dataToWrite.toString(16).toUpperCase().padStart(2, '0')}`,
           details: detailsText,
         });
       } else {
@@ -374,7 +374,7 @@ export default function PPI8255Simulator({
       applyControlWordByte(dataToWrite);
       setBusCycleLog({
         type: 'write',
-        title: `⚙️ [OUT 83H, AL / Control Register]: CS#=0, WR#=0 → Written 0x${dataToWrite.toString(16).toUpperCase().padStart(2, '0')}`,
+        title: `⚙️ [OUT 83H, AL / Control Register]: C̅S̅=0, W̅R̅=0 → Written 0x${dataToWrite.toString(16).toUpperCase().padStart(2, '0')}`,
         details: (dataToWrite & 0x80) !== 0
           ? `I/O Mode Set Control Word written (D7=1). Group A & B operating modes and port I/O directions updated!`
           : `BSR Control Word written (D7=0). Port C bit ${(dataToWrite >> 1) & 7} ${dataToWrite & 1 ? 'SET to 1' : 'RESET to 0'}.`,
@@ -1407,11 +1407,11 @@ export default function PPI8255Simulator({
                 </div>
               </div>
 
-              {/* Bus Control Strobes (CS#, RD#, WR#) - 4 cols */}
+              {/* Bus Control Strobes (C̅S̅, R̅D̅, W̅R̅) - 4 cols */}
               <div className="lg:col-span-4 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
-                    2. Bus Strobes (CS#, RD#, WR#)
+                    2. Bus Strobes (C̅S̅, R̅D̅, W̅R̅)
                   </span>
                   <button
                     type="button"
@@ -1422,35 +1422,35 @@ export default function PPI8255Simulator({
                         : 'bg-rose-100 text-rose-900 border-rose-300'
                     }`}
                   >
-                    CS#={sigCS} ({sigCS === 0 ? 'Chip Enabled' : 'Disabled / High-Z'})
+                    C̅S̅={sigCS} ({sigCS === 0 ? 'Chip Enabled' : 'Disabled / High-Z'})
                   </button>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
-                  {/* RD# Button */}
+                  {/* R̅D̅ Button */}
                   <button
                     type="button"
                     onClick={() => executeCpuRead()}
-                    title="Assert RD# LOW (Pin 5): CPU reads from addressed port/pins into CPU Data Bus (IN AL, [Port])."
+                    title="Assert R̅D̅ LOW (Pin 5): CPU reads from addressed port/pins into CPU Data Bus (IN AL, [Port])."
                     className="p-2.5 rounded-lg border cursor-pointer transition-all flex flex-col items-center justify-center gap-1 bg-blue-600 hover:bg-blue-700 text-white border-blue-700 shadow-xs hover:-translate-y-0.5 active:translate-y-0"
                   >
                     <div className="flex items-center gap-1 font-bold text-xs">
                       <ArrowDown className="w-3.5 h-3.5" />
-                      READ (RD# = 0)
+                      READ (R̅D̅ = 0)
                     </div>
                     <span className="text-[9px] text-blue-100">IN AL, [Port]</span>
                   </button>
 
-                  {/* WR# Button */}
+                  {/* W̅R̅ Button */}
                   <button
                     type="button"
                     onClick={() => executeCpuWrite()}
-                    title="Assert WR# LOW (Pin 36): CPU writes CPU Data Bus value into addressed port latch (OUT [Port], AL)."
+                    title="Assert W̅R̅ LOW (Pin 36): CPU writes CPU Data Bus value into addressed port latch (OUT [Port], AL)."
                     className="p-2.5 rounded-lg border cursor-pointer transition-all flex flex-col items-center justify-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-700 shadow-xs hover:-translate-y-0.5 active:translate-y-0"
                   >
                     <div className="flex items-center gap-1 font-bold text-xs">
                       <ArrowUp className="w-3.5 h-3.5" />
-                      WRITE (WR# = 0)
+                      WRITE (W̅R̅ = 0)
                     </div>
                     <span className="text-[9px] text-emerald-100">OUT [Port], AL</span>
                   </button>
@@ -1459,7 +1459,7 @@ export default function PPI8255Simulator({
                 <div className="text-[10px] text-slate-500 bg-white p-2 rounded-lg border border-slate-200">
                   <span className="font-semibold text-slate-700">Active Signals: </span>
                   <span className="font-mono">
-                    CS#={sigCS} • RD#={sigRD} • WR#={sigWR}
+                    C̅S̅={sigCS} • R̅D̅={sigRD} • W̅R̅={sigWR}
                   </span>
                   {sigRD === 0 && <span className="text-blue-600 font-bold ml-1">● READING</span>}
                   {sigWR === 0 && <span className="text-emerald-600 font-bold ml-1">● WRITING</span>}
@@ -1703,8 +1703,8 @@ export default function PPI8255Simulator({
 
                 <p className="text-[10px] text-slate-500 leading-tight">
                   {portADir === 'input'
-                    ? 'Pins represent external inputs (sensors/switches). Click pins to change signals, then execute READ (RD#=0).'
-                    : 'Pins driven by internal output latch. Load CPU Data Bus and execute WRITE (WR#=0) to update.'}
+                    ? 'Pins represent external inputs (sensors/switches). Click pins to change signals, then execute READ (R̅D̅=0).'
+                    : 'Pins driven by internal output latch. Load CPU Data Bus and execute WRITE (W̅R̅=0) to update.'}
                 </p>
               </div>
 
@@ -1793,8 +1793,8 @@ export default function PPI8255Simulator({
 
                 <p className="text-[10px] text-slate-500 leading-tight">
                   {portBDir === 'input'
-                    ? 'Pins represent external inputs. Click pins to toggle, then execute READ (RD#=0).'
-                    : 'Pins driven by internal output latch. Load CPU Data Bus and execute WRITE (WR#=0).'}
+                    ? 'Pins represent external inputs. Click pins to toggle, then execute READ (R̅D̅=0).'
+                    : 'Pins driven by internal output latch. Load CPU Data Bus and execute WRITE (W̅R̅=0).'}
                 </p>
               </div>
 
@@ -2174,16 +2174,16 @@ export default function PPI8255Simulator({
                 </div>
               </div>
 
-              {/* Quick RD#/WR# Status */}
+              {/* Quick R̅D̅/W̅R̅ Status */}
               <div className="flex items-center gap-1.5 font-mono text-[10px]">
                 <span className="px-2 py-0.5 bg-white rounded border border-slate-200 text-slate-600">
-                  CS#={sigCS}
+                  C̅S̅={sigCS}
                 </span>
                 <span className={`px-2 py-0.5 rounded border font-bold ${sigRD === 0 ? 'bg-blue-100 text-blue-800 border-blue-300' : 'bg-white text-slate-600 border-slate-200'}`}>
-                  RD#={sigRD}
+                  R̅D̅={sigRD}
                 </span>
                 <span className={`px-2 py-0.5 rounded border font-bold ${sigWR === 0 ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-white text-slate-600 border-slate-200'}`}>
-                  WR#={sigWR}
+                  W̅R̅={sigWR}
                 </span>
               </div>
             </div>

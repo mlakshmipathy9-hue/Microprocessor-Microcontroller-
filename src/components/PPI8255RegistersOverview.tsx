@@ -110,7 +110,7 @@ const REGISTERS: RegisterInfo[] = [
     simpleExplanation: 'Can be used as an 8-bit data port, two separate 4-bit ports (PC Upper & PC Lower), or as individual handshaking and status wires.',
     keyPoints: [
       'Split into Port C Upper (PC4–PC7) and Port C Lower (PC0–PC3)',
-      'Provides handshake signals (STB#, IBF, OBF#, ACK#, INTR) in Mode 1 & 2',
+      'Provides handshake signals (S̅T̅B̅, IBF, O̅B̅F̅, A̅C̅K̅, INTR) in Mode 1 & 2',
       'Any individual bit can be set or cleared using BSR Mode',
       'Directly accessed with address inputs A1 = 1, A0 = 0'
     ],
@@ -388,7 +388,7 @@ export const PPI8255RegistersOverview: React.FC = () => {
               <Binary className="w-4 h-4 text-indigo-600" />
               Quick Reference Table: All 4 Registers at a Glance
             </div>
-            <span className="text-[11px] text-slate-500">CS# = 0 (Chip Select Enabled)</span>
+            <span className="text-[11px] text-slate-500">C̅S̅ = 0 (Chip Select Enabled)</span>
           </div>
 
           <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-2xs">

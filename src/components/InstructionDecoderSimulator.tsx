@@ -2250,7 +2250,7 @@ export default function InstructionDecoderSimulator({
                                   <span className="text-xs bg-indigo-100 text-indigo-800 px-2.5 py-0.5 rounded border border-indigo-200 font-bold uppercase">Hardware Pin Sync</span>
                                 </div>
                                 <p className="text-slate-800 text-xs sm:text-sm leading-relaxed">
-                                  Causes the 8086 CPU to enter an idle wait loop checking the hardware <code className="font-mono text-xs sm:text-sm font-bold text-indigo-700">TEST#</code> input pin. Once the external coprocessor finishes its floating-point calculation and drives <code className="font-mono text-xs sm:text-sm font-bold text-indigo-700">TEST#</code> LOW, the CPU resumes normal code execution.
+                                  Causes the 8086 CPU to enter an idle wait loop checking the hardware <code className="font-mono text-xs sm:text-sm font-bold text-indigo-700">T̅E̅S̅T̅</code> input pin. Once the external coprocessor finishes its floating-point calculation and drives <code className="font-mono text-xs sm:text-sm font-bold text-indigo-700">T̅E̅S̅T̅</code> LOW, the CPU resumes normal code execution.
                                 </p>
                               </div>
                             </div>
@@ -2261,7 +2261,7 @@ export default function InstructionDecoderSimulator({
                                 💡 Multiprocessor & Hardware Signal Integration:
                               </span>
                               <p className="leading-relaxed">
-                                Unlike standard data manipulation instructions, Machine Control instructions interact directly with 8086 hardware pins (such as <strong className="font-mono">LOCK#</strong>, <strong className="font-mono">TEST#</strong>, and interrupt control flags). They are critical for building reliable multi-master bus systems and floating-point numeric pipelines.
+                                Unlike standard data manipulation instructions, Machine Control instructions interact directly with 8086 hardware pins (such as <strong className="font-mono">L̅O̅C̅K̅</strong>, <strong className="font-mono">T̅E̅S̅T̅</strong>, and interrupt control flags). They are critical for building reliable multi-master bus systems and floating-point numeric pipelines.
                               </p>
                             </div>
                           </div>
@@ -2453,8 +2453,8 @@ export default function InstructionDecoderSimulator({
                                     <div className="bg-white p-2.5 rounded border border-slate-200 space-y-1">
                                       <span className="font-mono font-bold text-teal-900 block">2. Hardware Bus Signals</span>
                                       <p className="text-slate-700 leading-relaxed">
-                                        <strong>String Ops:</strong> Drive <code className="font-mono text-teal-800">M/IO# = 1</code> (Memory Cycle) with <code className="font-mono">MEMR# / MEMW#</code>.<br />
-                                        <strong>Port I/O:</strong> Drive <code className="font-mono text-rose-800">M/IO# = 0</code> (I/O Cycle) with <code className="font-mono">IOR# / IOW#</code> strobes.
+                                        <strong>String Ops:</strong> Drive <code className="font-mono text-teal-800">M/I̅O̅ = 1</code> (Memory Cycle) with <code className="font-mono">M̅E̅M̅R̅ / M̅E̅M̅W̅</code>.<br />
+                                        <strong>Port I/O:</strong> Drive <code className="font-mono text-rose-800">M/I̅O̅ = 0</code> (I/O Cycle) with <code className="font-mono">I̅O̅R̅ / I̅O̅W̅</code> strobes.
                                       </p>
                                     </div>
                                     <div className="bg-white p-2.5 rounded border border-slate-200 space-y-1">
@@ -5495,12 +5495,12 @@ POP DX         ; Reads 1234H into DX, SP ← SP + 2 (FFFE)`}
 
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-center text-xs font-bold">
                           <div className="bg-white p-2.5 rounded-lg border border-rose-200 shadow-2xs">
-                            <span className="text-[9px] text-slate-500 block uppercase">M/IO# Pin Signal</span>
+                            <span className="text-[9px] text-slate-500 block uppercase">M/I̅O̅ Pin Signal</span>
                             <span className="text-rose-700 font-black text-sm">0 (LOW = I/O)</span>
                           </div>
                           <div className="bg-white p-2.5 rounded-lg border border-rose-200 shadow-2xs">
                             <span className="text-[9px] text-slate-500 block uppercase">Control Strobe</span>
-                            <span className="text-amber-800 font-black text-sm">{stringActiveOp === 'IN' ? 'RD# Active Low' : 'WR# Active Low'}</span>
+                            <span className="text-amber-800 font-black text-sm">{stringActiveOp === 'IN' ? 'R̅D̅ Active Low' : 'W̅R̅ Active Low'}</span>
                           </div>
                           <div className="bg-white p-2.5 rounded-lg border border-rose-200 shadow-2xs">
                             <span className="text-[9px] text-slate-500 block uppercase">Address Bus (A0–A7)</span>

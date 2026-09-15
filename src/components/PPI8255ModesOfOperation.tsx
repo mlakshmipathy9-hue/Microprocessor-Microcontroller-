@@ -990,7 +990,7 @@ export default function PPI8255ModesOfOperation({
                     </div>
 
                     <div className="space-y-3 text-xs">
-                      {/* OBF# */}
+                      {/* O̅B̅F̅ */}
                       <div className="bg-white p-3 rounded-lg border border-amber-200/80 shadow-2xs space-y-1.5">
                         <div className="flex items-center justify-between">
                           <span className="font-mono font-bold text-cyan-800 bg-cyan-50 px-2 py-0.5 rounded border border-cyan-200 text-xs">
@@ -1009,7 +1009,7 @@ export default function PPI8255ModesOfOperation({
                         </p>
                       </div>
 
-                      {/* ACK# */}
+                      {/* A̅C̅K̅ */}
                       <div className="bg-white p-3 rounded-lg border border-amber-200/80 shadow-2xs space-y-1.5">
                         <div className="flex items-center justify-between">
                           <span className="font-mono font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 text-xs">
@@ -1045,7 +1045,7 @@ export default function PPI8255ModesOfOperation({
                     </div>
 
                     <div className="space-y-3 text-xs">
-                      {/* STB# */}
+                      {/* S̅T̅B̅ */}
                       <div className="bg-white p-3 rounded-lg border border-emerald-200/80 shadow-2xs space-y-1.5">
                         <div className="flex items-center justify-between">
                           <span className="font-mono font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 text-xs">

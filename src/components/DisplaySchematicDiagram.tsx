@@ -91,11 +91,11 @@ export default function DisplaySchematicDiagram({
       subtitle: 'Part: 8086 • Component: Microprocessor (CPU)',
       desc: 'Executes 7-segment display driver software, outputs BCD/hex lookup segment patterns via OUT 80H, AL, and generates multiplexing digit strobe controls on Port C.',
       pins: [
-        { pin: 'Pin 33 (MN/MX#)', func: 'Tied to +5V VCC to configure 8086 in Minimum Mode.' },
+        { pin: 'Pin 33 (MN/M̅X̅)', func: 'Tied to +5V VCC to configure 8086 in Minimum Mode.' },
         { pin: 'Pin 25 (ALE)', func: 'Address Latch Enable connected to 74LS373 Pin 11 (LE) to latch lower address bits A0–A7.' },
-        { pin: 'Pin 28 (M/IO#)', func: 'Outputs LOW (0V) during I/O operations to enable 74LS138 decoder.' },
-        { pin: 'Pin 29 (WR#)', func: 'Active-low write strobe connected to 8255 WR# (Pin 36).' },
-        { pin: 'Pin 32 (RD#)', func: 'Active-low read strobe connected to 8255 RD# (Pin 5).' },
+        { pin: 'Pin 28 (M/I̅O̅)', func: 'Outputs LOW (0V) during I/O operations to enable 74LS138 decoder.' },
+        { pin: 'Pin 29 (W̅R̅)', func: 'Active-low write strobe connected to 8255 W̅R̅ (Pin 36).' },
+        { pin: 'Pin 32 (R̅D̅)', func: 'Active-low read strobe connected to 8255 R̅D̅ (Pin 5).' },
         { pin: 'Pins AD0–AD7', func: 'Multiplexed address/data bus connected to 74LS373 inputs and 8255 D0–D7 lines.' }
       ]
     },
@@ -105,18 +105,18 @@ export default function DisplaySchematicDiagram({
       desc: 'Captures and holds stable address lines A0, A1, A2 from AD0–AD7 when ALE pulses HIGH during clock cycle T1.',
       pins: [
         { pin: 'Pin 11 (LE)', func: 'Connected to 8086 ALE (Pin 25).' },
-        { pin: 'Pin 1 (OE#)', func: 'Connected to GND (0V) for active transparent output driving.' },
+        { pin: 'Pin 1 (O̅E̅)', func: 'Connected to GND (0V) for active transparent output driving.' },
         { pin: 'Pins Q0, Q1', func: 'Latched address outputs connected to 8255 A0 (Pin 9) and A1 (Pin 8).' }
       ]
     },
     u3: {
       title: 'U3: 74LS138 3-to-8 Line Address Decoder',
       subtitle: 'Part: 74LS138 • Component: 3-to-8 Address Decoder',
-      desc: 'Decodes upper address lines (A2–A7) and M/IO# to generate active-low CS# for the 8255 PPI at base I/O address 80H–86H.',
+      desc: 'Decodes upper address lines (A2–A7) and M/I̅O̅ to generate active-low C̅S̅ for the 8255 PPI at base I/O address 80H–86H.',
       pins: [
         { pin: 'Pin 6 (G1)', func: 'Active-HIGH enable tied to +5V VCC.' },
-        { pin: 'Pins 4, 5 (G2A#, G2B#)', func: 'Active-LOW enables tied to 8086 M/IO# and address line A7.' },
-        { pin: 'Pin 15 (Y0#)', func: 'Asserted LOW when address is 80H–87H, connected to 8255 CS# (Pin 6).' }
+        { pin: 'Pins 4, 5 (G̅2̅A̅, G̅2̅B̅)', func: 'Active-LOW enables tied to 8086 M/I̅O̅ and address line A7.' },
+        { pin: 'Pin 15 (Y̅0̅)', func: 'Asserted LOW when address is 80H–87H, connected to 8255 C̅S̅ (Pin 6).' }
       ]
     },
     u4: {
@@ -127,7 +127,7 @@ export default function DisplaySchematicDiagram({
         { pin: 'Pins 34–27 (D0–D7)', func: '8-bit bidirectional data bus from 8086 CPU.' },
         { pin: 'Pins 4–1, 40–37 (PA0–PA7)', func: 'Segment data lines driving anodes/cathodes a, b, c, d, e, f, g, dp.' },
         { pin: 'Pins 14–17 (PC0–PC3)', func: 'Digit select strobe lines driving multiplexing transistors Q1–Q4.' },
-        { pin: 'Pin 6 (CS#)', func: 'Chip Select from 74LS138 Y0# (Address 80H).' }
+        { pin: 'Pin 6 (C̅S̅)', func: 'Chip Select from 74LS138 Y̅0̅ (Address 80H).' }
       ]
     },
     rn1: {
@@ -323,7 +323,7 @@ export default function DisplaySchematicDiagram({
               <text x="72.5" y="24" fill="#4338ca" fontWeight="bold" textAnchor="middle" fontSize="7.5">16-BIT MICROPROCESSOR (CPU)</text>
 
               {/* Mode & Operational Info */}
-              <text x="10" y="46" fill="#64748b" fontSize="8" fontWeight="bold">MIN MODE (MN/MX#=1)</text>
+              <text x="10" y="46" fill="#64748b" fontSize="8" fontWeight="bold">MIN MODE (MN/M̅X̅=1)</text>
               <text x="10" y="58" fill="#64748b" fontSize="8">CLK: 5MHz • VCC: +5V</text>
 
               <text x="10" y="325" fill="#4338ca" fontSize="8.5" fontWeight="bold">I/O Base: 80H</text>
@@ -334,9 +334,9 @@ export default function DisplaySchematicDiagram({
               <text x="135" y="84" fill="#dc2626" fontWeight="bold" textAnchor="end">AD0–AD7</text>
               <text x="135" y="114" fill="#dc2626" textAnchor="end">AD8–AD15</text>
               <text x="135" y="144" fill="#059669" fontWeight="bold" textAnchor="end">ALE (Pin 25)</text>
-              <text x="135" y="174" fill="#d97706" fontWeight="bold" textAnchor="end">M/IO# (Pin 28)</text>
-              <text x="135" y="204" fill="#d97706" fontWeight="bold" textAnchor="end">WR# (Pin 29)</text>
-              <text x="135" y="234" fill="#d97706" textAnchor="end">RD# (Pin 32)</text>
+              <text x="135" y="174" fill="#d97706" fontWeight="bold" textAnchor="end">M/I̅O̅ (Pin 28)</text>
+              <text x="135" y="204" fill="#d97706" fontWeight="bold" textAnchor="end">W̅R̅ (Pin 29)</text>
+              <text x="135" y="234" fill="#d97706" textAnchor="end">R̅D̅ (Pin 32)</text>
               <text x="135" y="264" fill="#64748b" textAnchor="end">RESET (Pin 21)</text>
 
               {/* Right Pin Output Terminals */}
@@ -370,7 +370,7 @@ export default function DisplaySchematicDiagram({
 
               {/* Left Inputs */}
               <text x="10" y="84" fill="#dc2626" fontWeight="bold">AD0–AD7</text>
-              <text x="10" y="114" fill="#64748b">OE# (Pin 1: GND)</text>
+              <text x="10" y="114" fill="#64748b">O̅E̅ (Pin 1: GND)</text>
               <text x="10" y="144" fill="#059669" fontWeight="bold">LE (Pin 11)</text>
 
               {/* Right Outputs (Spaced and Un-overlapping) */}
@@ -415,12 +415,12 @@ export default function DisplaySchematicDiagram({
               {/* Left Inputs */}
               <text x="10" y="54" fill="#d97706" fontWeight="bold">A2, A3, A4</text>
               <text x="10" y="84" fill="#d97706">G1 (Pin 6: +5V)</text>
-              <text x="10" y="114" fill="#d97706" fontWeight="bold">G2A# (Pin 4: M/IO#)</text>
-              <text x="10" y="144" fill="#d97706">G2B# (Pin 5: A7)</text>
+              <text x="10" y="114" fill="#d97706" fontWeight="bold">G̅2̅A̅ (Pin 4: M/I̅O̅)</text>
+              <text x="10" y="144" fill="#d97706">G̅2̅B̅ (Pin 5: A7)</text>
 
               {/* Right Outputs (Clear vertical and horizontal clearance) */}
-              <text x="155" y="74" fill="#059669" textAnchor="end" fontWeight="bold">Y0# (Pin 15: 80H)</text>
-              <text x="155" y="124" fill="#94a3b8" textAnchor="end">Y1#–Y7# (Unused)</text>
+              <text x="155" y="74" fill="#059669" textAnchor="end" fontWeight="bold">Y̅0̅ (Pin 15: 80H)</text>
+              <text x="155" y="124" fill="#94a3b8" textAnchor="end">Y̅1̅–Y̅7̅ (Unused)</text>
 
               <circle cx="0" cy="50" r="3" fill="#d97706" />
               <circle cx="0" cy="80" r="2.5" fill="#d97706" />
@@ -446,9 +446,9 @@ export default function DisplaySchematicDiagram({
             <line x1="170" y1="185" x2="245" y2="185" stroke="#059669" strokeWidth="2" />
             <text x="207" y="180" fill="#059669" fontSize="8" fontWeight="bold" textAnchor="middle">ALE</text>
 
-            {/* M/IO# wire: Clean 90-degree orthogonal path from U1 (y=215) down to U3 G2A# (y=345) */}
+            {/* M/I̅O̅ wire: Clean 90-degree orthogonal path from U1 (y=215) down to U3 G̅2̅A̅ (y=345) */}
             <path d="M 170 215 L 195 215 L 195 345 L 245 345" fill="none" stroke="#d97706" strokeWidth="1.5" />
-            <text x="180" y="275" fill="#d97706" fontSize="8" fontWeight="bold" textAnchor="middle">M/IO#</text>
+            <text x="180" y="275" fill="#d97706" fontSize="8" fontWeight="bold" textAnchor="middle">M/I̅O̅</text>
 
             {/* Latched Address A2-A7 wire from U2 to U3 */}
             <path d="M 410 185 L 425 185 L 425 220 L 230 220 L 230 285 L 245 285" fill="none" stroke="#2563eb" strokeWidth="1.5" strokeDasharray="4,2" />
@@ -481,9 +481,9 @@ export default function DisplaySchematicDiagram({
               <text x="10" y="54" fill="#dc2626" fontWeight="bold">D0–D7 (Pins 34–27)</text>
               <text x="10" y="84" fill="#2563eb" fontWeight="bold">A0 (Pin 9)</text>
               <text x="10" y="114" fill="#2563eb" fontWeight="bold">A1 (Pin 8)</text>
-              <text x="10" y="144" fill="#059669" fontWeight="bold">CS# (Pin 6: 80H)</text>
-              <text x="10" y="174" fill="#d97706" fontWeight="bold">WR# (Pin 36)</text>
-              <text x="10" y="204" fill="#d97706">RD# (Pin 5)</text>
+              <text x="10" y="144" fill="#059669" fontWeight="bold">C̅S̅ (Pin 6: 80H)</text>
+              <text x="10" y="174" fill="#d97706" fontWeight="bold">W̅R̅ (Pin 36)</text>
+              <text x="10" y="204" fill="#d97706">R̅D̅ (Pin 5)</text>
               <text x="10" y="234" fill="#64748b">RESET (Pin 35 = 0)</text>
 
               {/* Right Output Ports (Port A Segments a..dp) */}
@@ -529,11 +529,11 @@ export default function DisplaySchematicDiagram({
             <line x1="410" y1="155" x2="475" y2="155" stroke="#2563eb" strokeWidth="2" />
             <text x="442" y="150" fill="#2563eb" fontSize="7.5" fontWeight="bold" textAnchor="middle">A1</text>
 
-            {/* Decoder Y0# to 8255 CS#: Clean Orthogonal Route */}
+            {/* Decoder Y̅0̅ to 8255 C̅S̅: Clean Orthogonal Route */}
             <path d="M 410 305 L 440 305 L 440 185 L 475 185" fill="none" stroke="#059669" strokeWidth="2" />
-            <text x="446" y="248" fill="#059669" fontSize="7.5" fontWeight="bold">CS#</text>
+            <text x="446" y="248" fill="#059669" fontSize="7.5" fontWeight="bold">C̅S̅</text>
 
-            {/* CPU WR# to 8255 WR#: Clean Orthogonal Route */}
+            {/* CPU W̅R̅ to 8255 W̅R̅: Clean Orthogonal Route */}
             <path d="M 170 245 L 205 245 L 205 228 L 460 228 L 460 215 L 475 215" fill="none" stroke="#d97706" strokeWidth="1.5" strokeDasharray="5,2" />
 
             {/* ============================================================== */}

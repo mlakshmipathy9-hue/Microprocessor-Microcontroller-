@@ -152,7 +152,7 @@ export default function MCU8051Simulator({
       title: '4 KB On-Chip Program ROM / Flash',
       desc: 'Non-volatile program memory for storing 8051 machine instructions.',
       details: [
-        'Address Space: 0000H to 0FFFH internal program storage (expandable up to 64 KB using EA# pin).',
+        'Address Space: 0000H to 0FFFH internal program storage (expandable up to 64 KB using E\u0305A\u0305 pin).',
         'Reset Vector (0000H): CPU starts execution at address 0000H upon hardware RESET.',
         'Interrupt Vectors (0003H–002BH): Dedicated jump locations for INT0, T0, INT1, T1, and Serial Port interrupts.'
       ],
@@ -165,7 +165,7 @@ export default function MCU8051Simulator({
         'Port 0 (80H): Open-drain bidirectional port; serves as multiplexed Address/Data bus (AD0–AD7) in external memory mode.',
         'Port 1 (90H): Pure 8-bit bidirectional I/O port with internal pull-up resistors.',
         'Port 2 (A0H): Bidirectional I/O port; outputs high-order address byte (A8–A15) for external memory access.',
-        'Port 3 (B0H): Multi-functional port providing RXD, TXD, INT0#, INT1#, T0, T1, WR#, and RD# alternate functions.'
+        'Port 3 (B0H): Multi-functional port providing RXD, TXD, I\u0305N\u0305T\u03050\u0305, I\u0305N\u0305T\u03051\u0305, T0, T1, W\u0305R\u0305, and R\u0305D\u0305 alternate functions.'
       ],
       icon: Layers
     },
@@ -192,7 +192,7 @@ export default function MCU8051Simulator({
       title: '5-Vector Interrupt Controller',
       desc: 'Manages hardware and software interrupt requests with 2 priority levels.',
       details: [
-        'Interrupt Sources: INT0# (External 0), Timer 0 (TF0), INT1# (External 1), Timer 1 (TF1), Serial Port (RI/TI).',
+        'Interrupt Sources: I\u0305N\u0305T\u03050\u0305 (External 0), Timer 0 (TF0), I\u0305N\u0305T\u03051\u0305 (External 1), Timer 1 (TF1), Serial Port (RI/TI).',
         'IE Register (A8H): Interrupt Enable register containing global enable bit (EA) and individual interrupt mask bits.',
         'IP Register (B8H): Interrupt Priority register setting High or Low priority for each interrupt source.'
       ],
@@ -824,7 +824,7 @@ export default function MCU8051Simulator({
                   <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-1">
                     <span className="font-bold text-slate-800 block">Port 3 Alternate Functions:</span>
                     <p className="text-slate-500 text-[11px]">
-                      P3.0 (RXD), P3.1 (TXD), P3.2 (INT0#), P3.3 (INT1#), P3.4 (T0), P3.5 (T1), P3.6 (WR#), P3.7 (RD#).
+                      P3.0 (RXD), P3.1 (TXD), P3.2 (<span className="overline font-semibold" style={{ textDecoration: 'overline' }}>INT0</span>), P3.3 (<span className="overline font-semibold" style={{ textDecoration: 'overline' }}>INT1</span>), P3.4 (T0), P3.5 (T1), P3.6 (<span className="overline font-semibold" style={{ textDecoration: 'overline' }}>WR</span>), P3.7 (<span className="overline font-semibold" style={{ textDecoration: 'overline' }}>RD</span>).
                     </p>
                   </div>
                 </div>
@@ -838,21 +838,27 @@ export default function MCU8051Simulator({
 
                 <div className="space-y-2.5 text-xs">
                   <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                    <span className="font-mono font-bold text-indigo-700 block">EA# / VPP (Pin 31 - External Access):</span>
+                    <span className="font-mono font-bold text-indigo-700 block">
+                      <span className="overline" style={{ textDecoration: 'overline' }}>EA</span> / VPP (Pin 31 - External Access):
+                    </span>
                     <p className="text-slate-600 text-[11px] mt-0.5">
                       Held LOW (0V) to force execution from external ROM (0000H–FFFFH); tied HIGH (+5V) to execute from internal 4KB ROM first.
                     </p>
                   </div>
 
                   <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                    <span className="font-mono font-bold text-indigo-700 block">ALE / PROG# (Pin 30 - Address Latch Enable):</span>
+                    <span className="font-mono font-bold text-indigo-700 block">
+                      ALE / <span className="overline" style={{ textDecoration: 'overline' }}>PROG</span> (Pin 30 - Address Latch Enable):
+                    </span>
                     <p className="text-slate-600 text-[11px] mt-0.5">
                       Pulses HIGH at 1/6th clock frequency to demultiplex Port 0 address (A0–A7) into external latch ICs (like 74LS373).
                     </p>
                   </div>
 
                   <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-                    <span className="font-mono font-bold text-indigo-700 block">PSEN# (Pin 29 - Program Store Enable):</span>
+                    <span className="font-mono font-bold text-indigo-700 block">
+                      <span className="overline" style={{ textDecoration: 'overline' }}>PSEN</span> (Pin 29 - Program Store Enable):
+                    </span>
                     <p className="text-slate-600 text-[11px] mt-0.5">
                       Active LOW output signal enabling external EPROM code reads during instruction fetches.
                     </p>

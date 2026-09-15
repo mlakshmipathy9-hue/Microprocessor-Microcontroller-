@@ -81,56 +81,56 @@ export default function RAMROMSchematicDiagram({
         isWord = true;
         isWrite = true;
         scenarioTitle = '1. 16-Bit Aligned Word RAM Write (00200H)';
-        scenarioDesc = 'Writes a 16-bit word into RAM_1 (Even Bank) and RAM_2 (Odd Bank) simultaneously across D0–D15 in a single bus cycle (CS_RAM#=0, CE_RAM1#=0, CE_RAM2#=0, WR#=0).';
+        scenarioDesc = 'Writes a 16-bit word into RAM_1 (Even Bank) and RAM_2 (Odd Bank) simultaneously across D0–D15 in a single bus cycle (C̅S̅_RAM=0, C̅E̅_RAM1=0, C̅E̅_RAM2=0, W̅R̅=0).';
         break;
       case 'ram-word-read':
         addressHex = '00100';
         isWord = true;
         isWrite = false;
         scenarioTitle = '2. 16-Bit Aligned Word RAM Read (00100H)';
-        scenarioDesc = 'Reads a 16-bit word from RAM_1 and RAM_2 simultaneously across D0–D15 in a single bus cycle (CS_RAM#=0, CE_RAM1#=0, CE_RAM2#=0, RD#=0).';
+        scenarioDesc = 'Reads a 16-bit word from RAM_1 and RAM_2 simultaneously across D0–D15 in a single bus cycle (C̅S̅_RAM=0, C̅E̅_RAM1=0, C̅E̅_RAM2=0, R̅D̅=0).';
         break;
       case 'ram-even-byte':
         addressHex = '00102';
         isWord = false;
         isWrite = false;
         scenarioTitle = '3. Even Byte RAM Read (00102H)';
-        scenarioDesc = 'Reads 1 byte from RAM_1 (Even Bank, D0–D7). RAM_2 (Odd Bank) is disabled (A0=0, BHE#=1, CE_RAM1#=0, CE_RAM2#=1, RD#=0).';
+        scenarioDesc = 'Reads 1 byte from RAM_1 (Even Bank, D0–D7). RAM_2 (Odd Bank) is disabled (A0=0, B̅H̅E̅=1, C̅E̅_RAM1=0, C̅E̅_RAM2=1, R̅D̅=0).';
         break;
       case 'ram-odd-byte':
         addressHex = '00103';
         isWord = false;
         isWrite = false;
         scenarioTitle = '4. Odd Byte RAM Read (00103H)';
-        scenarioDesc = 'Reads 1 byte from RAM_2 (Odd Bank, D8–D15). RAM_1 (Even Bank) is disabled (A0=1, BHE#=0, CE_RAM1#=1, CE_RAM2#=0, RD#=0).';
+        scenarioDesc = 'Reads 1 byte from RAM_2 (Odd Bank, D8–D15). RAM_1 (Even Bank) is disabled (A0=1, B̅H̅E̅=0, C̅E̅_RAM1=1, C̅E̅_RAM2=0, R̅D̅=0).';
         break;
       case 'rom-boot-fetch':
         addressHex = 'FFFF0';
         isWord = true;
         isWrite = false;
         scenarioTitle = '5. 8086 Power-On Reset Boot Fetch (FFFF0H - Reset Vector)';
-        scenarioDesc = 'The 8086 fetches its first boot instruction from ROM at FFFF0H. CS_ROM#=0, enabling ROM_1 & ROM_2 across D0–D15 (A0=0, BHE#=0, CE_ROM1#=0, CE_ROM2#=0, RD#=0).';
+        scenarioDesc = 'The 8086 fetches its first boot instruction from ROM at FFFF0H. C̅S̅_ROM=0, enabling ROM_1 & ROM_2 across D0–D15 (A0=0, B̅H̅E̅=0, C̅E̅_ROM1=0, C̅E̅_ROM2=0, R̅D̅=0).';
         break;
       case 'rom-even-byte':
         addressHex = 'F8000';
         isWord = false;
         isWrite = false;
         scenarioTitle = '6. Even Byte ROM Read (F8000H - Base of ROM)';
-        scenarioDesc = 'Reads 1 byte of firmware from ROM_1 (Even Bank, D0–D7). ROM_2 is disabled (A0=0, BHE#=1, CE_ROM1#=0, CE_ROM2#=1, RD#=0).';
+        scenarioDesc = 'Reads 1 byte of firmware from ROM_1 (Even Bank, D0–D7). ROM_2 is disabled (A0=0, B̅H̅E̅=1, C̅E̅_ROM1=0, C̅E̅_ROM2=1, R̅D̅=0).';
         break;
       case 'rom-odd-byte':
         addressHex = 'F8001';
         isWord = false;
         isWrite = false;
         scenarioTitle = '7. Odd Byte ROM Read (F8001H)';
-        scenarioDesc = 'Reads 1 byte of firmware from ROM_2 (Odd Bank, D8–D15). ROM_1 is disabled (A0=1, BHE#=0, CE_ROM1#=1, CE_ROM2#=0, RD#=0).';
+        scenarioDesc = 'Reads 1 byte of firmware from ROM_2 (Odd Bank, D8–D15). ROM_1 is disabled (A0=1, B̅H̅E̅=0, C̅E̅_ROM1=1, C̅E̅_ROM2=0, R̅D̅=0).';
         break;
       case 'unmapped-access':
         addressHex = '80000';
         isWord = true;
         isWrite = false;
         scenarioTitle = '8. Unmapped Address Access (80000H)';
-        scenarioDesc = 'Address 80000H falls outside both 32 KB RAM (00000H–07FFFH) and 32 KB ROM (F8000H–FFFFFH). Both CS_RAM#=1 and CS_ROM#=1 remain inactive HIGH. Transceivers float in High-Z.';
+        scenarioDesc = 'Address 80000H falls outside both 32 KB RAM (00000H–07FFFH) and 32 KB ROM (F8000H–FFFFFH). Both C̅S̅_RAM=1 and C̅S̅_ROM=1 remain inactive HIGH. Transceivers float in High-Z.';
         break;
     }
   }
@@ -196,8 +196,8 @@ export default function RAMROMSchematicDiagram({
   }> = {
     u1: {
       title: 'U1: Intel 8086 16-Bit Microprocessor',
-      subtitle: 'Minimum Mode Master Controller (MN/MX# = +5V)',
-      desc: 'The central master processor orchestrating dual-memory bus transactions. Generates multiplexed address/data signals (AD0–AD15) during T1, bus strobes (ALE, RD#, WR#, M/IO#), and data direction control for the 32 KB RAM and 32 KB ROM memory arrays.',
+      subtitle: 'Minimum Mode Master Controller (MN/M̅X̅ = +5V)',
+      desc: 'The central master processor orchestrating dual-memory bus transactions. Generates multiplexed address/data signals (AD0–AD15) during T1, bus strobes (ALE, R̅D̅, W̅R̅, M/I̅O̅), and data direction control for the 32 KB RAM and 32 KB ROM memory arrays.',
       techSpecs: [
         { label: 'Operating Mode', val: 'Minimum Mode (Pin 33 tied to +5V VCC)' },
         { label: 'Address Range', val: '20-Bit Physical Space (00000H–FFFFFH)' },
@@ -207,22 +207,22 @@ export default function RAMROMSchematicDiagram({
       pins: [
         { pin: 'AD0–AD15 (Pins 16–2, 39)', role: 'Time-multiplexed Address/Data Bus', state: tState === 1 ? `Addr: ${addressHex}H` : (isWrite ? 'Data Out (CPU->RAM)' : 'Data In (Mem->CPU)') },
         { pin: 'A16–A19 (Pins 35–38)', role: 'Upper Address Lines (to Decoders)', state: `A19..A15: ${a19}${a18}${a17}${a16}${a15}b` },
-        { pin: 'BHE#/S7 (Pin 34)', role: 'Bus High Enable (Active LOW for Odd Banks)', state: bhe === 0 ? '0 (LOW - Odd Bank ENABLED)' : '1 (HIGH - Odd Bank Inactive)' },
+        { pin: 'B̅H̅E̅/S7 (Pin 34)', role: 'Bus High Enable (Active LOW for Odd Banks)', state: bhe === 0 ? '0 (LOW - Odd Bank ENABLED)' : '1 (HIGH - Odd Bank Inactive)' },
         { pin: 'ALE (Pin 25)', role: 'Address Latch Enable for 3× 74LS373', state: ale === 1 ? '1 (PULSE HIGH in T1)' : '0 (LOW in T2–T4)' },
-        { pin: 'M/IO# (Pin 28)', role: 'Memory / IO Cycle Selector', state: '1 (HIGH - Memory Cycle)' },
-        { pin: 'RD# (Pin 32)', role: 'Active-LOW Memory Read strobe', state: rd === 0 ? '0 (ACTIVE READ)' : '1 (IDLE)' },
-        { pin: 'WR# (Pin 29)', role: 'Active-LOW Memory Write strobe', state: wr === 0 ? '0 (ACTIVE WRITE)' : '1 (IDLE)' },
-        { pin: 'DEN# (Pin 26)', role: 'Data Enable for 74LS245 Transceivers', state: den === 0 ? '0 (ACTIVE LOW)' : '1 (Tristate)' },
-        { pin: 'DT/R# (Pin 27)', role: 'Data Transmit (1=Write) / Receive (0=Read)', state: dtr === 1 ? '1 (TRANSMIT)' : '0 (RECEIVE)' }
+        { pin: 'M/I̅O̅ (Pin 28)', role: 'Memory / IO Cycle Selector', state: '1 (HIGH - Memory Cycle)' },
+        { pin: 'R̅D̅ (Pin 32)', role: 'Active-LOW Memory Read strobe', state: rd === 0 ? '0 (ACTIVE READ)' : '1 (IDLE)' },
+        { pin: 'W̅R̅ (Pin 29)', role: 'Active-LOW Memory Write strobe', state: wr === 0 ? '0 (ACTIVE WRITE)' : '1 (IDLE)' },
+        { pin: 'D̅E̅N̅ (Pin 26)', role: 'Data Enable for 74LS245 Transceivers', state: den === 0 ? '0 (ACTIVE LOW)' : '1 (Tristate)' },
+        { pin: 'DT/R̅ (Pin 27)', role: 'Data Transmit (1=Write) / Receive (0=Read)', state: dtr === 1 ? '1 (TRANSMIT)' : '0 (RECEIVE)' }
       ]
     },
     u2: {
       title: 'U2A, U2B, U2C: 3× 74LS373 Octal Latches',
-      subtitle: 'Demultiplexes AD0–AD15 & A16–A19/BHE# into Static Address Bus',
-      desc: 'Latches the address lines during T1 on the falling edge of ALE. U2A outputs pure A0–A7, U2B outputs A8–A15, and U2C outputs A16–A19 and BHE#. Holds stable addresses throughout T2, T3, and T4.',
+      subtitle: 'Demultiplexes AD0–AD15 & A16–A19/B̅H̅E̅ into Static Address Bus',
+      desc: 'Latches the address lines during T1 on the falling edge of ALE. U2A outputs pure A0–A7, U2B outputs A8–A15, and U2C outputs A16–A19 and B̅H̅E̅. Holds stable addresses throughout T2, T3, and T4.',
       techSpecs: [
         { label: 'Latch Type', val: '8-bit transparent D-type latch (3 ICs)' },
-        { label: 'Control Pin', val: 'Pin 11 (LE) driven by 8086 ALE; Pin 1 (OE#) grounded' },
+        { label: 'Control Pin', val: 'Pin 11 (LE) driven by 8086 ALE; Pin 1 (O̅E̅) grounded' },
         { label: 'Memory Feeds', val: 'Latched A1–A14 wired to RAM & ROM address inputs A0–A13' }
       ],
       pins: [
@@ -230,54 +230,54 @@ export default function RAMROMSchematicDiagram({
         { pin: 'A0 (From U2A)', role: 'Even Bank enable line to OR Gates 1 & 3', state: a0 === 0 ? '0 (Even Address)' : '1 (Odd Address)' },
         { pin: 'A1–A14 (U2A & U2B)', role: '14 Address Lines to RAM & ROM A0–A13', state: `${chipAddrHex}H (Offset within 16KB)` },
         { pin: 'A15–A19 (U2B & U2C)', role: '5 High Address Lines to Decoders', state: `${a19}${a18}${a17}${a16}${a15}b` },
-        { pin: 'BHE# (From U2C)', role: 'Odd Bank enable line to OR Gates 2 & 4', state: bhe === 0 ? '0 (LOW)' : '1 (HIGH)' }
+        { pin: 'B̅H̅E̅ (From U2C)', role: 'Odd Bank enable line to OR Gates 2 & 4', state: bhe === 0 ? '0 (LOW)' : '1 (HIGH)' }
       ]
     },
     u3_dec: {
       title: 'Dual Memory Address Decoders (74LS138 / 74LS30 NAND)',
-      subtitle: 'Generates Independent CS_RAM# and CS_ROM# Chip Selects',
-      desc: 'Decodes high-order address bits A15–A19 and M/IO#. When A19..A15 = 00000b, CS_RAM# asserts LOW (00000H–07FFFH). When A19..A15 = 11111b, CS_ROM# asserts LOW (F8000H–FFFFFH). Both are inactive HIGH for any unmapped address.',
+      subtitle: 'Generates Independent C̅S̅_RAM and C̅S̅_ROM Chip Selects',
+      desc: 'Decodes high-order address bits A15–A19 and M/I̅O̅. When A19..A15 = 00000b, C̅S̅_RAM asserts LOW (00000H–07FFFH). When A19..A15 = 11111b, C̅S̅_ROM asserts LOW (F8000H–FFFFFH). Both are inactive HIGH for any unmapped address.',
       techSpecs: [
-        { label: 'RAM Equation', val: 'CS_RAM# = NOT( NOT A19 • NOT A18 • NOT A17 • NOT A16 • NOT A15 • M/IO# )' },
-        { label: 'ROM Equation', val: 'CS_ROM# = NOT( A19 • A18 • A17 • A16 • A15 • M/IO# )' },
+        { label: 'RAM Equation', val: 'C̅S̅_RAM = NOT( NOT A19 • NOT A18 • NOT A17 • NOT A16 • NOT A15 • M/I̅O̅ )' },
+        { label: 'ROM Equation', val: 'C̅S̅_ROM = NOT( A19 • A18 • A17 • A16 • A15 • M/I̅O̅ )' },
         { label: 'RAM Address Range', val: '00000H to 07FFFH (32,768 Bytes)' },
         { label: 'ROM Address Range', val: 'F8000H to FFFFFH (32,768 Bytes)' }
       ],
       pins: [
         { pin: 'A15–A19 Inputs', role: 'Upper address bits from Latches', state: `${a19}${a18}${a17}${a16}${a15}b` },
-        { pin: 'M/IO# Input', role: 'Memory cycle enable (active HIGH)', state: '1 (HIGH)' },
-        { pin: 'CS_RAM# Output', role: 'Active-LOW Master Chip Select for 32 KB RAM', state: csRamBar === 0 ? '0 (LOW - RAM SELECTED)' : '1 (HIGH - Inactive)' },
-        { pin: 'CS_ROM# Output', role: 'Active-LOW Master Chip Select for 32 KB ROM', state: csRomBar === 0 ? '0 (LOW - ROM SELECTED)' : '1 (HIGH - Inactive)' }
+        { pin: 'M/I̅O̅ Input', role: 'Memory cycle enable (active HIGH)', state: '1 (HIGH)' },
+        { pin: 'C̅S̅_RAM Output', role: 'Active-LOW Master Chip Select for 32 KB RAM', state: csRamBar === 0 ? '0 (LOW - RAM SELECTED)' : '1 (HIGH - Inactive)' },
+        { pin: 'C̅S̅_ROM Output', role: 'Active-LOW Master Chip Select for 32 KB ROM', state: csRomBar === 0 ? '0 (LOW - ROM SELECTED)' : '1 (HIGH - Inactive)' }
       ]
     },
     u_or: {
       title: 'Bank Qualification OR Gates (74LS32 Quad 2-Input OR)',
-      subtitle: 'Generates 4 Independent Chip Enables (CE_RAM1#, CE_RAM2#, CE_ROM1#, CE_ROM2#)',
-      desc: 'Combines master chip selects (CS_RAM# / CS_ROM#) with bank qualifiers (A0 / BHE#). Only asserts LOW when the target memory block is selected AND the corresponding byte/word bank is active.',
+      subtitle: 'Generates 4 Independent Chip Enables (C̅E̅_RAM1, C̅E̅_RAM2, C̅E̅_ROM1, C̅E̅_ROM2)',
+      desc: 'Combines master chip selects (C̅S̅_RAM / C̅S̅_ROM) with bank qualifiers (A0 / B̅H̅E̅). Only asserts LOW when the target memory block is selected AND the corresponding byte/word bank is active.',
       techSpecs: [
-        { label: 'CE_RAM1# (Even RAM)', val: 'CS_RAM# OR A0 (RAM 1 on D0–D7)' },
-        { label: 'CE_RAM2# (Odd RAM)', val: 'CS_RAM# OR BHE# (RAM 2 on D8–D15)' },
-        { label: 'CE_ROM1# (Even ROM)', val: 'CS_ROM# OR A0 (ROM 1 on D0–D7)' },
-        { label: 'CE_ROM2# (Odd ROM)', val: 'CS_ROM# OR BHE# (ROM 2 on D8–D15)' }
+        { label: 'C̅E̅_RAM1 (Even RAM)', val: 'C̅S̅_RAM OR A0 (RAM 1 on D0–D7)' },
+        { label: 'C̅E̅_RAM2 (Odd RAM)', val: 'C̅S̅_RAM OR B̅H̅E̅ (RAM 2 on D8–D15)' },
+        { label: 'C̅E̅_ROM1 (Even ROM)', val: 'C̅S̅_ROM OR A0 (ROM 1 on D0–D7)' },
+        { label: 'C̅E̅_ROM2 (Odd ROM)', val: 'C̅S̅_ROM OR B̅H̅E̅ (ROM 2 on D8–D15)' }
       ],
       pins: [
-        { pin: 'CE_RAM1# (Pin 3)', role: 'Even Bank RAM_1 Chip Enable', state: ceRam1Bar === 0 ? '0 (LOW - ACTIVE)' : '1 (HIGH - Inactive)' },
-        { pin: 'CE_RAM2# (Pin 6)', role: 'Odd Bank RAM_2 Chip Enable', state: ceRam2Bar === 0 ? '0 (LOW - ACTIVE)' : '1 (HIGH - Inactive)' },
-        { pin: 'CE_ROM1# (Pin 8)', role: 'Even Bank ROM_1 Chip Enable', state: ceRom1Bar === 0 ? '0 (LOW - ACTIVE)' : '1 (HIGH - Inactive)' },
-        { pin: 'CE_ROM2# (Pin 11)', role: 'Odd Bank ROM_2 Chip Enable', state: ceRom2Bar === 0 ? '0 (LOW - ACTIVE)' : '1 (HIGH - Inactive)' }
+        { pin: 'C̅E̅_RAM1 (Pin 3)', role: 'Even Bank RAM_1 Chip Enable', state: ceRam1Bar === 0 ? '0 (LOW - ACTIVE)' : '1 (HIGH - Inactive)' },
+        { pin: 'C̅E̅_RAM2 (Pin 6)', role: 'Odd Bank RAM_2 Chip Enable', state: ceRam2Bar === 0 ? '0 (LOW - ACTIVE)' : '1 (HIGH - Inactive)' },
+        { pin: 'C̅E̅_ROM1 (Pin 8)', role: 'Even Bank ROM_1 Chip Enable', state: ceRom1Bar === 0 ? '0 (LOW - ACTIVE)' : '1 (HIGH - Inactive)' },
+        { pin: 'C̅E̅_ROM2 (Pin 11)', role: 'Odd Bank ROM_2 Chip Enable', state: ceRom2Bar === 0 ? '0 (LOW - ACTIVE)' : '1 (HIGH - Inactive)' }
       ]
     },
     u4: {
       title: 'U4A & U4B: 2× 74LS245 Octal Bus Transceivers',
       subtitle: 'Bidirectional Data Bus Buffers for Lower (D0–D7) & Upper (D8–D15) Buses',
-      desc: 'Buffers data between CPU multiplexed pins and memory chips. Controlled by DT/R# (direction) and DEN# (enable).',
+      desc: 'Buffers data between CPU multiplexed pins and memory chips. Controlled by DT/R̅ (direction) and D̅E̅N̅ (enable).',
       techSpecs: [
-        { label: 'DIR (Pin 1)', val: 'Driven by DT/R# (1 = Transmit/Write, 0 = Receive/Read)' },
-        { label: 'OE# (Pin 19)', val: 'Driven by 8086 DEN# (Active LOW in T2–T4)' }
+        { label: 'DIR (Pin 1)', val: 'Driven by DT/R̅ (1 = Transmit/Write, 0 = Receive/Read)' },
+        { label: 'O̅E̅ (Pin 19)', val: 'Driven by 8086 D̅E̅N̅ (Active LOW in T2–T4)' }
       ],
       pins: [
-        { pin: 'DIR (Pin 1)', role: 'Driven by 8086 DT/R#', state: dtr === 1 ? '1 (TRANSMIT / WRITE)' : '0 (RECEIVE / READ)' },
-        { pin: 'OE# (Pin 19)', role: 'Driven by 8086 DEN#', state: den === 0 ? '0 (BUFFERS ACTIVE)' : '1 (TRISTATE)' },
+        { pin: 'DIR (Pin 1)', role: 'Driven by 8086 DT/R̅', state: dtr === 1 ? '1 (TRANSMIT / WRITE)' : '0 (RECEIVE / READ)' },
+        { pin: 'O̅E̅ (Pin 19)', role: 'Driven by 8086 D̅E̅N̅', state: den === 0 ? '0 (BUFFERS ACTIVE)' : '1 (TRISTATE)' },
         { pin: 'U4A (Lower Transceiver)', role: 'Buffers Even Data Byte (D0–D7)', state: lowerTransceiverActive ? 'Active Bus Driving' : 'High-Z' },
         { pin: 'U4B (Upper Transceiver)', role: 'Buffers Odd Data Byte (D8–D15)', state: upperTransceiverActive ? 'Active Bus Driving' : 'High-Z' }
       ]
@@ -285,41 +285,41 @@ export default function RAMROMSchematicDiagram({
     ram1: {
       title: 'RAM 1: 16 KB Even Bank SRAM (e.g. 62128 / 62256)',
       subtitle: 'Lower Byte RAM Array (D0–D7) • Addresses 00000H, 00002H, ... 07FFEH',
-      desc: 'Stores even-addressed RAM bytes (IVT vectors, OS variables, stack variables). Enabled when CE_RAM1# = 0 (CS_RAM#=0 and A0=0). Accepts read (OE#) and write (WE#) pulses.',
+      desc: 'Stores even-addressed RAM bytes (IVT vectors, OS variables, stack variables). Enabled when C̅E̅_RAM1 = 0 (C̅S̅_RAM=0 and A0=0). Accepts read (O̅E̅) and write (W̅E̅) pulses.',
       techSpecs: [
         { label: 'Capacity', val: '16 KB (16,384 Bytes) x 8 bits' },
         { label: 'Data Bus', val: 'D0–D7 (Connected to Transceiver U4A)' },
         { label: 'Address Inputs', val: 'A0–A13 wired to 8086 Latched A1–A14' },
-        { label: 'Write Pin', val: 'WE# connected to 8086 WR# (Pin 29)' }
+        { label: 'Write Pin', val: 'W̅E̅ connected to 8086 W̅R̅ (Pin 29)' }
       ],
       pins: [
-        { pin: 'CE# (Chip Enable)', role: 'Driven by OR Gate 1 (CE_RAM1#)', state: ceRam1Bar === 0 ? '0 (CHIP SELECTED)' : '1 (CHIP DESELECTED)' },
-        { pin: 'OE# (Output Enable)', role: 'Driven by 8086 RD#', state: rd === 0 ? '0 (READ OUT ACTIVE)' : '1 (High-Z)' },
-        { pin: 'WE# (Write Enable)', role: 'Driven by 8086 WR#', state: wr === 0 ? '0 (WRITE IN ACTIVE)' : '1 (Idle)' },
+        { pin: 'C̅E̅ (Chip Enable)', role: 'Driven by OR Gate 1 (C̅E̅_RAM1)', state: ceRam1Bar === 0 ? '0 (CHIP SELECTED)' : '1 (CHIP DESELECTED)' },
+        { pin: 'O̅E̅ (Output Enable)', role: 'Driven by 8086 R̅D̅', state: rd === 0 ? '0 (READ OUT ACTIVE)' : '1 (High-Z)' },
+        { pin: 'W̅E̅ (Write Enable)', role: 'Driven by 8086 W̅R̅', state: wr === 0 ? '0 (WRITE IN ACTIVE)' : '1 (Idle)' },
         { pin: 'A0–A13 Inputs', role: 'Internal word offset from A1–A14', state: `${chipAddrHex}H (Offset: ${chipAddrOffset})` }
       ]
     },
     ram2: {
       title: 'RAM 2: 16 KB Odd Bank SRAM (e.g. 62128 / 62256)',
       subtitle: 'Upper Byte RAM Array (D8–D15) • Addresses 00001H, 00003H, ... 07FFFH',
-      desc: 'Stores odd-addressed RAM bytes. Enabled when CE_RAM2# = 0 (CS_RAM#=0 and BHE#=0). Active together with RAM 1 for aligned 16-bit word operations.',
+      desc: 'Stores odd-addressed RAM bytes. Enabled when C̅E̅_RAM2 = 0 (C̅S̅_RAM=0 and B̅H̅E̅=0). Active together with RAM 1 for aligned 16-bit word operations.',
       techSpecs: [
         { label: 'Capacity', val: '16 KB (16,384 Bytes) x 8 bits' },
         { label: 'Data Bus', val: 'D8–D15 (Connected to Transceiver U4B)' },
         { label: 'Address Inputs', val: 'A0–A13 wired to 8086 Latched A1–A14' },
-        { label: 'Write Pin', val: 'WE# connected to 8086 WR# (Pin 29)' }
+        { label: 'Write Pin', val: 'W̅E̅ connected to 8086 W̅R̅ (Pin 29)' }
       ],
       pins: [
-        { pin: 'CE# (Chip Enable)', role: 'Driven by OR Gate 2 (CE_RAM2#)', state: ceRam2Bar === 0 ? '0 (CHIP SELECTED)' : '1 (CHIP DESELECTED)' },
-        { pin: 'OE# (Output Enable)', role: 'Driven by 8086 RD#', state: rd === 0 ? '0 (READ OUT ACTIVE)' : '1 (High-Z)' },
-        { pin: 'WE# (Write Enable)', role: 'Driven by 8086 WR#', state: wr === 0 ? '0 (WRITE IN ACTIVE)' : '1 (Idle)' },
+        { pin: 'C̅E̅ (Chip Enable)', role: 'Driven by OR Gate 2 (C̅E̅_RAM2)', state: ceRam2Bar === 0 ? '0 (CHIP SELECTED)' : '1 (CHIP DESELECTED)' },
+        { pin: 'O̅E̅ (Output Enable)', role: 'Driven by 8086 R̅D̅', state: rd === 0 ? '0 (READ OUT ACTIVE)' : '1 (High-Z)' },
+        { pin: 'W̅E̅ (Write Enable)', role: 'Driven by 8086 W̅R̅', state: wr === 0 ? '0 (WRITE IN ACTIVE)' : '1 (Idle)' },
         { pin: 'A0–A13 Inputs', role: 'Internal word offset from A1–A14', state: `${chipAddrHex}H (Offset: ${chipAddrOffset})` }
       ]
     },
     rom1: {
       title: 'ROM 1: 16 KB Even Bank EPROM (e.g. 27128 / 27256)',
       subtitle: 'Lower Byte ROM Array (D0–D7) • Addresses F8000H, F8002H, ... FFFFEH',
-      desc: 'Stores even-addressed boot firmware and BIOS code. Enabled when CE_ROM1# = 0 (CS_ROM#=0 and A0=0). Read-only: Has NO write enable (WE#) pin.',
+      desc: 'Stores even-addressed boot firmware and BIOS code. Enabled when C̅E̅_ROM1 = 0 (C̅S̅_ROM=0 and A0=0). Read-only: Has NO write enable (W̅E̅) pin.',
       techSpecs: [
         { label: 'Capacity', val: '16 KB (16,384 Bytes) x 8 bits' },
         { label: 'Data Bus', val: 'D0–D7 (Connected to Transceiver U4A)' },
@@ -327,16 +327,16 @@ export default function RAMROMSchematicDiagram({
         { label: 'Write Pin', val: 'None (Read-Only Semiconductor Memory)' }
       ],
       pins: [
-        { pin: 'CE# (Chip Enable)', role: 'Driven by OR Gate 3 (CE_ROM1#)', state: ceRom1Bar === 0 ? '0 (CHIP SELECTED)' : '1 (CHIP DESELECTED)' },
-        { pin: 'OE# (Output Enable)', role: 'Driven by 8086 RD#', state: rd === 0 ? '0 (READ OUT ACTIVE)' : '1 (High-Z)' },
-        { pin: 'WE# (Write Enable)', role: 'N/A (Permanent ROM)', state: 'No WE# pin on ROM IC' },
+        { pin: 'C̅E̅ (Chip Enable)', role: 'Driven by OR Gate 3 (C̅E̅_ROM1)', state: ceRom1Bar === 0 ? '0 (CHIP SELECTED)' : '1 (CHIP DESELECTED)' },
+        { pin: 'O̅E̅ (Output Enable)', role: 'Driven by 8086 R̅D̅', state: rd === 0 ? '0 (READ OUT ACTIVE)' : '1 (High-Z)' },
+        { pin: 'W̅E̅ (Write Enable)', role: 'N/A (Permanent ROM)', state: 'No W̅E̅ pin on ROM IC' },
         { pin: 'A0–A13 Inputs', role: 'Internal word offset from A1–A14', state: `${chipAddrHex}H (Offset: ${chipAddrOffset})` }
       ]
     },
     rom2: {
       title: 'ROM 2: 16 KB Odd Bank EPROM (e.g. 27128 / 27256)',
       subtitle: 'Upper Byte ROM Array (D8–D15) • Addresses F8001H, F8003H, ... FFFFFH',
-      desc: 'Stores odd-addressed boot firmware including the Power-On Reset vector instruction at FFFF0H. Enabled when CE_ROM2# = 0 (CS_ROM#=0 and BHE#=0).',
+      desc: 'Stores odd-addressed boot firmware including the Power-On Reset vector instruction at FFFF0H. Enabled when C̅E̅_ROM2 = 0 (C̅S̅_ROM=0 and B̅H̅E̅=0).',
       techSpecs: [
         { label: 'Capacity', val: '16 KB (16,384 Bytes) x 8 bits' },
         { label: 'Data Bus', val: 'D8–D15 (Connected to Transceiver U4B)' },
@@ -344,9 +344,9 @@ export default function RAMROMSchematicDiagram({
         { label: 'Reset Vector', val: 'Holds Boot Vector at FFFF0H' }
       ],
       pins: [
-        { pin: 'CE# (Chip Enable)', role: 'Driven by OR Gate 4 (CE_ROM2#)', state: ceRom2Bar === 0 ? '0 (CHIP SELECTED)' : '1 (CHIP DESELECTED)' },
-        { pin: 'OE# (Output Enable)', role: 'Driven by 8086 RD#', state: rd === 0 ? '0 (READ OUT ACTIVE)' : '1 (High-Z)' },
-        { pin: 'WE# (Write Enable)', role: 'N/A (Permanent ROM)', state: 'No WE# pin on ROM IC' },
+        { pin: 'C̅E̅ (Chip Enable)', role: 'Driven by OR Gate 4 (C̅E̅_ROM2)', state: ceRom2Bar === 0 ? '0 (CHIP SELECTED)' : '1 (CHIP DESELECTED)' },
+        { pin: 'O̅E̅ (Output Enable)', role: 'Driven by 8086 R̅D̅', state: rd === 0 ? '0 (READ OUT ACTIVE)' : '1 (High-Z)' },
+        { pin: 'W̅E̅ (Write Enable)', role: 'N/A (Permanent ROM)', state: 'No W̅E̅ pin on ROM IC' },
         { pin: 'A0–A13 Inputs', role: 'Internal word offset from A1–A14', state: `${chipAddrHex}H (Offset: ${chipAddrOffset})` }
       ]
     }
@@ -482,22 +482,22 @@ export default function RAMROMSchematicDiagram({
         {/* Live Active Signal Tags */}
         <div className="flex flex-wrap items-center gap-1.5 font-mono text-[10px]">
           <span className={`px-2 py-0.5 rounded border font-bold ${csRamBar === 0 ? 'bg-emerald-100 text-emerald-900 border-emerald-400' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
-            CS_RAM#={csRamBar}
+            C̅S̅_RAM={csRamBar}
           </span>
           <span className={`px-2 py-0.5 rounded border font-bold ${csRomBar === 0 ? 'bg-amber-100 text-amber-900 border-amber-400' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
-            CS_ROM#={csRomBar}
+            C̅S̅_ROM={csRomBar}
           </span>
           <span className={`px-2 py-0.5 rounded border font-bold ${ceRam1Bar === 0 ? 'bg-emerald-100 text-emerald-900 border-emerald-400' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
-            CE_RAM1#={ceRam1Bar}
+            C̅E̅_RAM1={ceRam1Bar}
           </span>
           <span className={`px-2 py-0.5 rounded border font-bold ${ceRam2Bar === 0 ? 'bg-emerald-100 text-emerald-900 border-emerald-400' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
-            CE_RAM2#={ceRam2Bar}
+            C̅E̅_RAM2={ceRam2Bar}
           </span>
           <span className={`px-2 py-0.5 rounded border font-bold ${ceRom1Bar === 0 ? 'bg-amber-100 text-amber-900 border-amber-400' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
-            CE_ROM1#={ceRom1Bar}
+            C̅E̅_ROM1={ceRom1Bar}
           </span>
           <span className={`px-2 py-0.5 rounded border font-bold ${ceRom2Bar === 0 ? 'bg-amber-100 text-amber-900 border-amber-400' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
-            CE_ROM2#={ceRom2Bar}
+            C̅E̅_ROM2={ceRom2Bar}
           </span>
         </div>
       </div>
@@ -574,7 +574,7 @@ export default function RAMROMSchematicDiagram({
                 Intel 8086 MPU (U1)
               </text>
               <text x="140" y="78" textAnchor="middle" fill="#15803d" fontSize="9" fontWeight="bold">
-                MIN MODE (MN/MX# = +5V)
+                MIN MODE (MN/M̅X̅ = +5V)
               </text>
 
               {/* Pin Labels & Output Nodes */}
@@ -586,32 +586,32 @@ export default function RAMROMSchematicDiagram({
               <text x="42" y="193" fill="#475569" fontSize="9.5">AD8–AD15 (Pins 39, 2–8)</text>
               <circle cx="250" cy="190" r="3.5" fill="#3b82f6" />
 
-              {/* A16–A19 & BHE# */}
+              {/* A16–A19 & B̅H̅E̅ */}
               <text x="42" y="260" fill="#475569" fontSize="9">A16–A19 (35–38)</text>
-              <text x="42" y="274" fill="#475569" fontSize="9">BHE#/S7 (Pin 34)</text>
+              <text x="42" y="274" fill="#475569" fontSize="9">B̅H̅E̅/S7 (Pin 34)</text>
               <circle cx="250" cy="265" r="3.5" fill="#7e22ce" />
 
               {/* ALE */}
               <text x="42" y="334" fill="#9a3412" fontSize="9.5" fontWeight="bold">ALE (Pin 25)</text>
               <circle cx="250" cy="330" r="3.5" fill={ale === 1 ? '#ea580c' : '#94a3b8'} />
 
-              {/* M/IO# */}
-              <text x="42" y="384" fill="#15803d" fontSize="9.5" fontWeight="bold">M/IO# (Pin 28) = 1</text>
+              {/* M/I̅O̅ */}
+              <text x="42" y="384" fill="#15803d" fontSize="9.5" fontWeight="bold">M/I̅O̅ (Pin 28) = 1</text>
               <circle cx="250" cy="380" r="3.5" fill="#15803d" />
 
-              {/* RD# */}
-              <text x="42" y="444" fill="#0369a1" fontSize="9.5" fontWeight="bold">RD# (Pin 32)</text>
+              {/* R̅D̅ */}
+              <text x="42" y="444" fill="#0369a1" fontSize="9.5" fontWeight="bold">R̅D̅ (Pin 32)</text>
               <circle cx="250" cy="440" r="3.5" fill={rd === 0 ? '#0284c7' : '#94a3b8'} />
 
-              {/* WR# */}
-              <text x="42" y="504" fill="#b45309" fontSize="9.5" fontWeight="bold">WR# (Pin 29)</text>
+              {/* W̅R̅ */}
+              <text x="42" y="504" fill="#b45309" fontSize="9.5" fontWeight="bold">W̅R̅ (Pin 29)</text>
               <circle cx="250" cy="500" r="3.5" fill={wr === 0 ? '#d97706' : '#94a3b8'} />
 
-              {/* DEN# & DT/R# */}
-              <text x="42" y="564" fill="#64748b" fontSize="9.5">DEN# (Pin 26)</text>
+              {/* D̅E̅N̅ & DT/R̅ */}
+              <text x="42" y="564" fill="#64748b" fontSize="9.5">D̅E̅N̅ (Pin 26)</text>
               <circle cx="250" cy="560" r="3.5" fill={den === 0 ? '#6366f1' : '#94a3b8'} />
 
-              <text x="42" y="614" fill="#64748b" fontSize="9.5">DT/R# (Pin 27)</text>
+              <text x="42" y="614" fill="#64748b" fontSize="9.5">DT/R̅ (Pin 27)</text>
               <circle cx="250" cy="610" r="3.5" fill="#64748b" />
 
               {/* Status Box inside CPU */}
@@ -638,7 +638,7 @@ export default function RAMROMSchematicDiagram({
               <text x="400" y="98" textAnchor="middle" fill="#1e40af" fontWeight="bold" fontSize="10.5">U2A: 74LS373 (Low)</text>
               <text x="328" y="118" fill="#475569" fontSize="8.5">AD0–AD7</text>
               <text x="430" y="118" fill="#1e40af" fontSize="8.5" fontWeight="bold">A0–A7</text>
-              <text x="400" y="138" textAnchor="middle" fill="#d97706" fontSize="8">LE=ALE, OE#=GND</text>
+              <text x="400" y="138" textAnchor="middle" fill="#d97706" fontSize="8">LE=ALE, O̅E̅=GND</text>
 
               {/* U2B: AD8–AD15 -> A8–A15 */}
               <rect 
@@ -650,9 +650,9 @@ export default function RAMROMSchematicDiagram({
               <text x="400" y="173" textAnchor="middle" fill="#1e40af" fontWeight="bold" fontSize="10.5">U2B: 74LS373 (Mid)</text>
               <text x="328" y="193" fill="#475569" fontSize="8.5">AD8–AD15</text>
               <text x="430" y="193" fill="#1e40af" fontSize="8.5" fontWeight="bold">A8–A15</text>
-              <text x="400" y="213" textAnchor="middle" fill="#d97706" fontSize="8">LE=ALE, OE#=GND</text>
+              <text x="400" y="213" textAnchor="middle" fill="#d97706" fontSize="8">LE=ALE, O̅E̅=GND</text>
 
-              {/* U2C: A16–A19, BHE# */}
+              {/* U2C: A16–A19, B̅H̅E̅ */}
               <rect 
                 x="320" y="230" width="160" height="70" rx="6" 
                 fill={selectedChip === 'u2' ? '#eef2ff' : '#ffffff'} 
@@ -661,8 +661,8 @@ export default function RAMROMSchematicDiagram({
               />
               <text x="400" y="248" textAnchor="middle" fill="#7e22ce" fontWeight="bold" fontSize="10.5">U2C: 74LS373 (High)</text>
               <text x="328" y="268" fill="#475569" fontSize="8.5">A16–19, BHE</text>
-              <text x="415" y="268" fill="#7e22ce" fontSize="8.5" fontWeight="bold">A16–19, BHE#</text>
-              <text x="400" y="288" textAnchor="middle" fill="#d97706" fontSize="8">LE=ALE, OE#=GND</text>
+              <text x="415" y="268" fill="#7e22ce" fontSize="8.5" fontWeight="bold">A16–19, B̅H̅E̅</text>
+              <text x="400" y="288" textAnchor="middle" fill="#d97706" fontSize="8">LE=ALE, O̅E̅=GND</text>
             </g>
 
             {/* Multiplexed Bus Lines from 8086 to Latches */}
@@ -681,7 +681,7 @@ export default function RAMROMSchematicDiagram({
             <path d="M 480 190 L 515 190 L 515 32" fill="none" stroke="#0f172a" strokeWidth="2" />
 
             {/* ============================================================== */}
-            {/* BANK SELECT SIGNALS: A0 & BHE# */}
+            {/* BANK SELECT SIGNALS: A0 & B̅H̅E̅ */}
             {/* ============================================================== */}
             {/* A0 path (Even Bank Line) from U2A -> feeds OR 1 & OR 3 */}
             <path d="M 480 100 L 760 100" fill="none" stroke="#2563eb" strokeWidth="2" />
@@ -690,12 +690,12 @@ export default function RAMROMSchematicDiagram({
             <circle cx="760" cy="100" r="3" fill="#2563eb" />
             <text x="530" y="94" fill="#2563eb" fontSize="9" fontWeight="bold">A0 (Even Bank Enable: A0 = 0)</text>
 
-            {/* BHE# path (Odd Bank Line) from U2C -> feeds OR 2 & OR 4 */}
+            {/* B̅H̅E̅ path (Odd Bank Line) from U2C -> feeds OR 2 & OR 4 */}
             <path d="M 480 270 L 775 270" fill="none" stroke="#7e22ce" strokeWidth="2" />
             <path d="M 775 270 L 775 560 L 790 560" fill="none" stroke="#7e22ce" strokeWidth="2" />
             <path d="M 775 270 L 790 270" fill="none" stroke="#7e22ce" strokeWidth="2" />
             <circle cx="775" cy="270" r="3" fill="#7e22ce" />
-            <text x="530" y="264" fill="#7e22ce" fontSize="9" fontWeight="bold">BHE# (Odd Bank Enable: BHE# = 0)</text>
+            <text x="530" y="264" fill="#7e22ce" fontSize="9" fontWeight="bold">B̅H̅E̅ (Odd Bank Enable: B̅H̅E̅ = 0)</text>
 
             {/* ============================================================== */}
             {/* 3. DUAL MEMORY DECODERS (74LS138 / 74LS30 NAND) */}
@@ -720,7 +720,7 @@ export default function RAMROMSchematicDiagram({
               <text x="556" y="386" fill="#065f46" fontSize="8.5" fontWeight="bold">RAM Decoder: A19..A15 = 00000b</text>
               <text x="556" y="400" fill="#475569" fontSize="7.5">Address Space: 00000H–07FFFH (32 KB)</text>
               <text x="556" y="416" fill={csRamBar === 0 ? '#047857' : '#94a3b8'} fontSize="9.5" fontWeight="bold">
-                CS_RAM# = {csRamBar}
+                C̅S̅_RAM = {csRamBar}
               </text>
               <circle cx="740" cy="412" r="3.5" fill={csRamBar === 0 ? '#059669' : '#94a3b8'} />
 
@@ -729,7 +729,7 @@ export default function RAMROMSchematicDiagram({
               <text x="556" y="454" fill="#92400e" fontSize="8.5" fontWeight="bold">ROM Decoder: A19..A15 = 11111b</text>
               <text x="556" y="468" fill="#475569" fontSize="7.5">Address Space: F8000H–FFFFFH (32 KB)</text>
               <text x="556" y="484" fill={csRomBar === 0 ? '#b45309' : '#94a3b8'} fontSize="9.5" fontWeight="bold">
-                CS_ROM# = {csRomBar}
+                C̅S̅_ROM = {csRomBar}
               </text>
               <circle cx="740" cy="480" r="3.5" fill={csRomBar === 0 ? '#d97706' : '#94a3b8'} />
             </g>
@@ -739,15 +739,15 @@ export default function RAMROMSchematicDiagram({
             <path d="M 480 250 L 530 250 L 530 365 L 540 365" fill="none" stroke="#7e22ce" strokeWidth="2" />
             <text x="495" y="300" fill="#7e22ce" fontSize="8.5" fontWeight="bold">A15–A19</text>
 
-            {/* M/IO# feed into Decoder */}
+            {/* M/I̅O̅ feed into Decoder */}
             <path d="M 250 380 L 540 380" fill="none" stroke="#15803d" strokeWidth="2" />
 
-            {/* CS_RAM# routes to OR 1 & OR 2 */}
+            {/* C̅S̅_RAM routes to OR 1 & OR 2 */}
             <path d="M 740 412 L 750 412 L 750 115 L 790 115" fill="none" stroke={csRamBar === 0 ? '#059669' : '#cbd5e1'} strokeWidth="2" />
             <path d="M 750 250 L 790 250" fill="none" stroke={csRamBar === 0 ? '#059669' : '#cbd5e1'} strokeWidth="2" />
             <circle cx="750" cy="250" r="3" fill={csRamBar === 0 ? '#059669' : '#cbd5e1'} />
 
-            {/* CS_ROM# routes to OR 3 & OR 4 */}
+            {/* C̅S̅_ROM routes to OR 3 & OR 4 */}
             <path d="M 740 480 L 755 480 L 755 425 L 790 425" fill="none" stroke={csRomBar === 0 ? '#d97706' : '#cbd5e1'} strokeWidth="2" />
             <path d="M 755 480 L 755 575 L 790 575" fill="none" stroke={csRomBar === 0 ? '#d97706' : '#cbd5e1'} strokeWidth="2" />
             <circle cx="755" cy="480" r="3" fill={csRomBar === 0 ? '#d97706' : '#cbd5e1'} />
@@ -759,57 +759,57 @@ export default function RAMROMSchematicDiagram({
               onClick={() => setSelectedChip('u_or')}
               className="cursor-pointer group"
             >
-              {/* OR 1: CE_RAM1# (CS_RAM# + A0) */}
+              {/* OR 1: C̅E̅_RAM1 (C̅S̅_RAM + A0) */}
               <rect x="790" y="85" width="85" height="42" rx="5" fill="#ffffff" stroke={ceRam1Bar === 0 ? '#059669' : '#94a3b8'} strokeWidth={ceRam1Bar === 0 ? '2' : '1.5'} />
               <text x="832" y="99" textAnchor="middle" fill="#047857" fontSize="8" fontWeight="bold">OR 1 (74LS32)</text>
               <text x="832" y="111" textAnchor="middle" fill="#475569" fontSize="7">CS_RAM + A0</text>
-              <text x="832" y="122" textAnchor="middle" fill={ceRam1Bar === 0 ? '#047857' : '#94a3b8'} fontSize="8" fontWeight="bold">CE_RAM1#={ceRam1Bar}</text>
+              <text x="832" y="122" textAnchor="middle" fill={ceRam1Bar === 0 ? '#047857' : '#94a3b8'} fontSize="8" fontWeight="bold">C̅E̅_RAM1={ceRam1Bar}</text>
 
-              {/* OR 2: CE_RAM2# (CS_RAM# + BHE#) */}
+              {/* OR 2: C̅E̅_RAM2 (C̅S̅_RAM + B̅H̅E̅) */}
               <rect x="790" y="235" width="85" height="42" rx="5" fill="#ffffff" stroke={ceRam2Bar === 0 ? '#059669' : '#94a3b8'} strokeWidth={ceRam2Bar === 0 ? '2' : '1.5'} />
               <text x="832" y="249" textAnchor="middle" fill="#047857" fontSize="8" fontWeight="bold">OR 2 (74LS32)</text>
-              <text x="832" y="261" textAnchor="middle" fill="#475569" fontSize="7">CS_RAM + BHE#</text>
-              <text x="832" y="272" textAnchor="middle" fill={ceRam2Bar === 0 ? '#047857' : '#94a3b8'} fontSize="8" fontWeight="bold">CE_RAM2#={ceRam2Bar}</text>
+              <text x="832" y="261" textAnchor="middle" fill="#475569" fontSize="7">CS_RAM + B̅H̅E̅</text>
+              <text x="832" y="272" textAnchor="middle" fill={ceRam2Bar === 0 ? '#047857' : '#94a3b8'} fontSize="8" fontWeight="bold">C̅E̅_RAM2={ceRam2Bar}</text>
 
-              {/* OR 3: CE_ROM1# (CS_ROM# + A0) */}
+              {/* OR 3: C̅E̅_ROM1 (C̅S̅_ROM + A0) */}
               <rect x="790" y="395" width="85" height="42" rx="5" fill="#ffffff" stroke={ceRom1Bar === 0 ? '#d97706' : '#94a3b8'} strokeWidth={ceRom1Bar === 0 ? '2' : '1.5'} />
               <text x="832" y="409" textAnchor="middle" fill="#b45309" fontSize="8" fontWeight="bold">OR 3 (74LS32)</text>
               <text x="832" y="421" textAnchor="middle" fill="#475569" fontSize="7">CS_ROM + A0</text>
-              <text x="832" y="432" textAnchor="middle" fill={ceRom1Bar === 0 ? '#b45309' : '#94a3b8'} fontSize="8" fontWeight="bold">CE_ROM1#={ceRom1Bar}</text>
+              <text x="832" y="432" textAnchor="middle" fill={ceRom1Bar === 0 ? '#b45309' : '#94a3b8'} fontSize="8" fontWeight="bold">C̅E̅_ROM1={ceRom1Bar}</text>
 
-              {/* OR 4: CE_ROM2# (CS_ROM# + BHE#) */}
+              {/* OR 4: C̅E̅_ROM2 (C̅S̅_ROM + B̅H̅E̅) */}
               <rect x="790" y="545" width="85" height="42" rx="5" fill="#ffffff" stroke={ceRom2Bar === 0 ? '#d97706' : '#94a3b8'} strokeWidth={ceRom2Bar === 0 ? '2' : '1.5'} />
               <text x="832" y="559" textAnchor="middle" fill="#b45309" fontSize="8" fontWeight="bold">OR 4 (74LS32)</text>
-              <text x="832" y="571" textAnchor="middle" fill="#475569" fontSize="7">CS_ROM + BHE#</text>
-              <text x="832" y="582" textAnchor="middle" fill={ceRom2Bar === 0 ? '#b45309' : '#94a3b8'} fontSize="8" fontWeight="bold">CE_ROM2#={ceRom2Bar}</text>
+              <text x="832" y="571" textAnchor="middle" fill="#475569" fontSize="7">CS_ROM + B̅H̅E̅</text>
+              <text x="832" y="582" textAnchor="middle" fill={ceRom2Bar === 0 ? '#b45309' : '#94a3b8'} fontSize="8" fontWeight="bold">C̅E̅_ROM2={ceRom2Bar}</text>
             </g>
 
-            {/* Direct connection lines from OR Gate outputs to Memory CE# inputs */}
+            {/* Direct connection lines from OR Gate outputs to Memory C̅E̅ inputs */}
             <path d="M 875 106 L 1000 106" stroke={ceRam1Bar === 0 ? '#059669' : '#cbd5e1'} strokeWidth={ceRam1Bar === 0 ? '2.5' : '1.5'} />
             <path d="M 875 256 L 1000 256" stroke={ceRam2Bar === 0 ? '#059669' : '#cbd5e1'} strokeWidth={ceRam2Bar === 0 ? '2.5' : '1.5'} />
             <path d="M 875 416 L 1000 416" stroke={ceRom1Bar === 0 ? '#d97706' : '#cbd5e1'} strokeWidth={ceRom1Bar === 0 ? '2.5' : '1.5'} />
             <path d="M 875 566 L 1000 566" stroke={ceRom2Bar === 0 ? '#d97706' : '#cbd5e1'} strokeWidth={ceRom2Bar === 0 ? '2.5' : '1.5'} />
 
             {/* ============================================================== */}
-            {/* CONTROL LINES: RD# & WR# BUSES */}
+            {/* CONTROL LINES: R̅D̅ & W̅R̅ BUSES */}
             {/* ============================================================== */}
-            {/* RD# Bus line -> OE# pins on ALL 4 memory chips */}
+            {/* R̅D̅ Bus line -> O̅E̅ pins on ALL 4 memory chips */}
             <path d="M 250 440 L 930 440" fill="none" stroke={rd === 0 ? '#0284c7' : '#cbd5e1'} strokeWidth={rd === 0 ? '2.5' : '1.5'} />
-            {/* Vertical distribution for RD# */}
+            {/* Vertical distribution for R̅D̅ */}
             <path d="M 930 126 L 930 586" fill="none" stroke={rd === 0 ? '#0284c7' : '#cbd5e1'} strokeWidth={rd === 0 ? '2' : '1.5'} />
             <path d="M 930 126 L 1000 126" stroke={rd === 0 ? '#0284c7' : '#cbd5e1'} strokeWidth={rd === 0 ? '2' : '1.5'} />
             <path d="M 930 276 L 1000 276" stroke={rd === 0 ? '#0284c7' : '#cbd5e1'} strokeWidth={rd === 0 ? '2' : '1.5'} />
             <path d="M 930 436 L 1000 436" stroke={rd === 0 ? '#0284c7' : '#cbd5e1'} strokeWidth={rd === 0 ? '2' : '1.5'} />
             <path d="M 930 586 L 1000 586" stroke={rd === 0 ? '#0284c7' : '#cbd5e1'} strokeWidth={rd === 0 ? '2' : '1.5'} />
-            <text x="890" y="434" fill="#0284c7" fontSize="8.5" fontWeight="bold">RD#</text>
+            <text x="890" y="434" fill="#0284c7" fontSize="8.5" fontWeight="bold">R̅D̅</text>
 
-            {/* WR# Bus line -> WE# pins on RAM 1 & RAM 2 ONLY (ROM has no write pin) */}
+            {/* W̅R̅ Bus line -> W̅E̅ pins on RAM 1 & RAM 2 ONLY (ROM has no write pin) */}
             <path d="M 250 500 L 950 500" fill="none" stroke={wr === 0 ? '#d97706' : '#cbd5e1'} strokeWidth={wr === 0 ? '2.5' : '1.5'} />
-            {/* Vertical distribution for WR# (Only goes up to RAM 1 & RAM 2) */}
+            {/* Vertical distribution for W̅R̅ (Only goes up to RAM 1 & RAM 2) */}
             <path d="M 950 148 L 950 500" fill="none" stroke={wr === 0 ? '#d97706' : '#cbd5e1'} strokeWidth={wr === 0 ? '2' : '1.5'} />
             <path d="M 950 148 L 1000 148" stroke={wr === 0 ? '#d97706' : '#cbd5e1'} strokeWidth={wr === 0 ? '2' : '1.5'} />
             <path d="M 950 298 L 1000 298" stroke={wr === 0 ? '#d97706' : '#cbd5e1'} strokeWidth={wr === 0 ? '2' : '1.5'} />
-            <text x="890" y="494" fill="#d97706" fontSize="8.5" fontWeight="bold">WR#</text>
+            <text x="890" y="494" fill="#d97706" fontSize="8.5" fontWeight="bold">W̅R̅</text>
 
             {/* ============================================================== */}
             {/* 5. 2× 74LS245 DATA TRANSCEIVERS & DATA BUSES */}
@@ -829,7 +829,7 @@ export default function RAMROMSchematicDiagram({
               <text x="548" y="572" fill="#475569" fontSize="8">AD0–AD7</text>
               <text x="732" y="572" fill="#2563eb" fontSize="8.5" fontWeight="bold" textAnchor="end">D0–D7</text>
               <text x="640" y="590" fill="#475569" fontSize="7.5" textAnchor="middle">
-                DIR: DT/R# ({dtr}), OE#: DEN# ({den})
+                DIR: DT/R̅ ({dtr}), O̅E̅: D̅E̅N̅ ({den})
               </text>
               <circle cx="725" cy="552" r="3.5" fill={lowerTransceiverActive ? '#059669' : '#cbd5e1'} />
 
@@ -844,12 +844,12 @@ export default function RAMROMSchematicDiagram({
               <text x="548" y="647" fill="#475569" fontSize="8">AD8–AD15</text>
               <text x="732" y="647" fill="#d97706" fontSize="8.5" fontWeight="bold" textAnchor="end">D8–D15</text>
               <text x="640" y="665" fill="#475569" fontSize="7.5" textAnchor="middle">
-                DIR: DT/R# ({dtr}), OE#: DEN# ({den})
+                DIR: DT/R̅ ({dtr}), O̅E̅: D̅E̅N̅ ({den})
               </text>
               <circle cx="725" cy="627" r="3.5" fill={upperTransceiverActive ? '#059669' : '#cbd5e1'} />
             </g>
 
-            {/* DEN# & DT/R# control feeds from CPU to Transceivers */}
+            {/* D̅E̅N̅ & DT/R̅ control feeds from CPU to Transceivers */}
             <path d="M 250 560 L 540 560" fill="none" stroke={den === 0 ? '#6366f1' : '#cbd5e1'} strokeWidth="1.8" />
             <path d="M 250 610 L 540 610" fill="none" stroke="#64748b" strokeWidth="1.8" />
 
@@ -896,13 +896,13 @@ export default function RAMROMSchematicDiagram({
               <text x="1010" y="76" fill="#0f172a" fontSize="8.5" fontWeight="bold">A0–A13 (14 pins) ← A1–A14 latched</text>
               <text x="1010" y="92" fill="#2563eb" fontSize="8.5" fontWeight="bold">D0–D7 (Lower Byte Data Bus)</text>
               <text x="1010" y="110" fill={ceRam1Bar === 0 ? '#047857' : '#94a3b8'} fontSize="9" fontWeight="bold">
-                CE# (Pin) ← CE_RAM1# ({ceRam1Bar})
+                C̅E̅ (Pin) ← C̅E̅_RAM1 ({ceRam1Bar})
               </text>
               <text x="1010" y="130" fill={rd === 0 ? '#0284c7' : '#94a3b8'} fontSize="9" fontWeight="bold">
-                OE# (Pin) ← 8086 RD# ({rd})
+                O̅E̅ (Pin) ← 8086 R̅D̅ ({rd})
               </text>
               <text x="1010" y="152" fill={wr === 0 ? '#d97706' : '#94a3b8'} fontSize="9" fontWeight="bold">
-                WE# (Pin) ← 8086 WR# ({wr})
+                W̅E̅ (Pin) ← 8086 W̅R̅ ({wr})
               </text>
               <text x="1010" y="170" fill="#64748b" fontSize="8">Offset Address: {chipAddrHex}H</text>
             </g>
@@ -929,13 +929,13 @@ export default function RAMROMSchematicDiagram({
               <text x="1010" y="228" fill="#0f172a" fontSize="8.5" fontWeight="bold">A0–A13 (14 pins) ← A1–A14 latched</text>
               <text x="1010" y="244" fill="#d97706" fontSize="8.5" fontWeight="bold">D8–D15 (Upper Byte Data Bus)</text>
               <text x="1010" y="260" fill={ceRam2Bar === 0 ? '#047857' : '#94a3b8'} fontSize="9" fontWeight="bold">
-                CE# (Pin) ← CE_RAM2# ({ceRam2Bar})
+                C̅E̅ (Pin) ← C̅E̅_RAM2 ({ceRam2Bar})
               </text>
               <text x="1010" y="280" fill={rd === 0 ? '#0284c7' : '#94a3b8'} fontSize="9" fontWeight="bold">
-                OE# (Pin) ← 8086 RD# ({rd})
+                O̅E̅ (Pin) ← 8086 R̅D̅ ({rd})
               </text>
               <text x="1010" y="302" fill={wr === 0 ? '#d97706' : '#94a3b8'} fontSize="9" fontWeight="bold">
-                WE# (Pin) ← 8086 WR# ({wr})
+                W̅E̅ (Pin) ← 8086 W̅R̅ ({wr})
               </text>
               <text x="1010" y="320" fill="#64748b" fontSize="8">Offset Address: {chipAddrHex}H</text>
             </g>
@@ -962,13 +962,13 @@ export default function RAMROMSchematicDiagram({
               <text x="1010" y="386" fill="#0f172a" fontSize="8.5" fontWeight="bold">A0–A13 (14 pins) ← A1–A14 latched</text>
               <text x="1010" y="404" fill="#2563eb" fontSize="8.5" fontWeight="bold">D0–D7 (Lower Byte Data Bus)</text>
               <text x="1010" y="420" fill={ceRom1Bar === 0 ? '#b45309' : '#94a3b8'} fontSize="9" fontWeight="bold">
-                CE# (Pin) ← CE_ROM1# ({ceRom1Bar})
+                C̅E̅ (Pin) ← C̅E̅_ROM1 ({ceRom1Bar})
               </text>
               <text x="1010" y="440" fill={rd === 0 ? '#0284c7' : '#94a3b8'} fontSize="9" fontWeight="bold">
-                OE# (Pin) ← 8086 RD# ({rd})
+                O̅E̅ (Pin) ← 8086 R̅D̅ ({rd})
               </text>
               <text x="1010" y="460" fill="#94a3b8" fontSize="8.5" fontStyle="italic">
-                NO WE# PIN (Read-Only Hardware Protection)
+                NO W̅E̅ PIN (Read-Only Hardware Protection)
               </text>
               <text x="1010" y="480" fill="#64748b" fontSize="8">Offset Address: {chipAddrHex}H</text>
             </g>
@@ -995,13 +995,13 @@ export default function RAMROMSchematicDiagram({
               <text x="1010" y="536" fill="#0f172a" fontSize="8.5" fontWeight="bold">A0–A13 (14 pins) ← A1–A14 latched</text>
               <text x="1010" y="554" fill="#d97706" fontSize="8.5" fontWeight="bold">D8–D15 (Upper Byte Data Bus)</text>
               <text x="1010" y="570" fill={ceRom2Bar === 0 ? '#b45309' : '#94a3b8'} fontSize="9" fontWeight="bold">
-                CE# (Pin) ← CE_ROM2# ({ceRom2Bar})
+                C̅E̅ (Pin) ← C̅E̅_ROM2 ({ceRom2Bar})
               </text>
               <text x="1010" y="590" fill={rd === 0 ? '#0284c7' : '#94a3b8'} fontSize="9" fontWeight="bold">
-                OE# (Pin) ← 8086 RD# ({rd})
+                O̅E̅ (Pin) ← 8086 R̅D̅ ({rd})
               </text>
               <text x="1010" y="610" fill="#94a3b8" fontSize="8.5" fontStyle="italic">
-                NO WE# PIN (Read-Only Hardware Protection)
+                NO W̅E̅ PIN (Read-Only Hardware Protection)
               </text>
               <text x="1010" y="630" fill="#64748b" fontSize="8">Offset Address: {chipAddrHex}H • Reset Vector: FFFF0H</text>
             </g>
@@ -1017,7 +1017,7 @@ export default function RAMROMSchematicDiagram({
 
               <rect x="428" y="5" width="455" height="22" rx="4" fill="#f1f5f9" stroke="#94a3b8" />
               <text x="655" y="19" fill="#475569" fontSize="9" textAnchor="middle">
-                Unmapped Address Space (08000H – F7FFFH) • All CS# &amp; CE# Inactive (HIGH)
+                Unmapped Address Space (08000H – F7FFFH) • All C̅S̅ &amp; C̅E̅ Inactive (HIGH)
               </text>
 
               <rect x="893" y="5" width="414" height="22" rx="4" fill="#fffbeb" stroke="#d97706" />
