@@ -2463,7 +2463,7 @@ export const courseData: Module[] = [
     slides: [
       {
         id: 'm21-s1',
-        title: '1. Introduction to Microcontrollers & Features of 8051 Microcontroller',
+        title: '1. Introduction, Features & Selection Criteria of 8051',
         moduleTitle: 'Module 21: 8051 Microcontroller Architecture',
         moduleId: 'm21',
         points: [
@@ -2481,40 +2481,14 @@ export const courseData: Module[] = [
       },
       {
         id: 'm21-s2',
-        title: '2. 8051 Hardware Block Diagram & Core Units',
+        title: '2. 8051 Block Diagram & Internal Architecture',
         moduleTitle: 'Module 21: 8051 Microcontroller Architecture',
         moduleId: 'm21',
         points: [
-          '8051 Family Internal Architecture (Slide 11 of 50): Features the authoritative family block diagram illustrating on-chip CPU, on-chip oscillator/crystal, 5/6 interrupt controller with external interrupt pins, internal bus, bus control, 4 I/O ports (P0, P2, P1, P3), full-duplex UART serial port (RXD, TXD), and Timers 0, 1, and 2 with external counter inputs.',
+          '8051 Family Internal Architecture: Features the authoritative family block diagram illustrating on-chip CPU, on-chip oscillator/crystal, 5/6 interrupt controller with external interrupt pins, internal bus, bus control, 4 I/O ports (P0, P2, P1, P3), full-duplex UART serial port (RXD, TXD), and Timers 0, 1, and 2 with external counter inputs.',
           '8051 Family ROM & RAM Scaling: ROM capacities span 8051 (4 KB), 8052 (8 KB), and 8031 (ROMless / none, requiring external ROM). RAM capacities span 8051 (128 bytes), 8052 (256 bytes), and 80750 (64 bytes).',
           'Timers & Counter Inputs: Timer 0 and Timer 1 on standard 8051, enhanced with 16-bit Timer 2 on 8052 for higher precision timing, auto-reload, and baud-rate clock generation.',
-          'Detailed Hardware Schematic & Architecture Views: Toggle between the 8051 Family Architecture diagram (Slide 11 of 50) and the Detailed Hardware Schematic (Slide 10 of 50) to inspect hardware registers, buses, and pin alternate functions.'
-        ],
-        interactiveType: 'mcu-8051'
-      },
-      {
-        id: 'm21-s3',
-        title: '3. 8051 SFRs, Ports, Instructions & ALP Simulator',
-        moduleTitle: 'Module 21: 8051 Microcontroller Architecture',
-        moduleId: 'm21',
-        points: [
-          'Special Function Registers (SFRs) & Internal RAM: Interactive map spanning 128-byte internal RAM (Register Banks 0–3, bit-addressable RAM, scratchpad) and the 80H–FFH SFR space including ACC, B, PSW, SP, DPTR, PCON, and TCON.',
-          'Interactive Program Status Word (PSW): Toggle CY, AC, F0, RS1, RS0, OV, and P flags to observe active register bank switching (Banks 0–3) and arithmetic status in real time.',
-          'Parallel I/O Ports & Pinout: Inspect the 40-pin DIP package layout and test the Port 0–3 latch circuits with pull-up resistors and bidirectional open-drain behavior.',
-          'Instruction Set & Assembly Simulator: Explore 8051 instruction groups (Data Transfer, Arithmetic, Logic, Boolean, Branch) and assemble/step through 8051 assembly code with live register updates.'
-        ],
-        interactiveType: 'mcu-8051'
-      },
-      {
-        id: 'm21-s4',
-        title: '4. 8051 SFRs, Ports, Instructions & ALP Simulator',
-        moduleTitle: 'Module 21: 8051 Microcontroller Architecture',
-        moduleId: 'm21',
-        points: [
-          'Special Function Registers (SFRs) & Internal RAM: Interactive map spanning 128-byte internal RAM (Register Banks 0–3, bit-addressable RAM, scratchpad) and the 80H–FFH SFR space including ACC, B, PSW, SP, DPTR, PCON, and TCON.',
-          'Interactive Program Status Word (PSW): Toggle CY, AC, F0, RS1, RS0, OV, and P flags to observe active register bank switching (Banks 0–3) and arithmetic status in real time.',
-          'Parallel I/O Ports & Pinout: Inspect the 40-pin DIP package layout and test the Port 0–3 latch circuits with pull-up resistors and bidirectional open-drain behavior.',
-          'Instruction Set & Assembly Simulator: Explore 8051 instruction groups (Data Transfer, Arithmetic, Logic, Boolean, Branch) and assemble/step through 8051 assembly code with live register updates.'
+          'Detailed Hardware Schematic & Architecture Views: Toggle between the 8051 Family Architecture diagram and the Detailed Hardware Schematic to inspect hardware registers, buses, and pin alternate functions.'
         ],
         interactiveType: 'mcu-8051'
       },
@@ -2542,6 +2516,17 @@ export const courseData: Module[] = [
             options: ['Program Counter (PC)', 'Data Pointer (DPTR)', 'Stack Pointer (SP)', 'Accumulator (ACC)'],
             correctAnswer: 1,
             explanation: 'The 16-bit Data Pointer (DPTR = DPH:DPL) serves as the primary pointer for external memory accesses.'
+          },
+          {
+            question: 'What are the two primary category dimensions evaluated when selecting a microcontroller for an embedded engineering application?',
+            options: [
+              'Technical performance requirements (speed, memory, I/O, power) and Commercial factors (unit cost, availability, tool support)',
+              'Chassis color and desktop operating system brand',
+              'Number of external PCI slots and monitor screen refresh rate',
+              'Internal hard disk spin speed and keyboard backlight levels'
+            ],
+            correctAnswer: 0,
+            explanation: 'Microcontroller selection requires balancing Technical / Hardware constraints (computational throughput, on-chip Flash/RAM, power modes, I/O peripherals) with Commercial / Business factors (per-unit BOM cost, second-source availability, toolchain maturity).'
           }
         ]
       }

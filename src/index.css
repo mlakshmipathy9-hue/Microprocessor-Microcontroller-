@@ -80,10 +80,11 @@ div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > main:nth-of-
   display: none !important;
 }
 
-/* Targeted rule to remove the selected component from the slide */
-div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(3) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div#interactive-bento-card:nth-of-type(1) > div:nth-of-type(1) > div#interactive-bento-card:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > p:nth-of-type(1) {
+/* Targeted rule to remove the selected span */
+div#root:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(2) > main:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div#interactive-bento-card:nth-of-type(1) > div:nth-of-type(1) > div#interactive-bento-card:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > div:nth-of-type(1) > span:nth-of-type(1) {
   display: none !important;
 }
+
 
 
 

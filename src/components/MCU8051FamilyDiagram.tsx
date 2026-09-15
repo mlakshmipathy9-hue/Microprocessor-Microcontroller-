@@ -208,12 +208,6 @@ export default function MCU8051FamilyDiagram() {
     <div className="flex flex-col gap-4">
       {/* Control bar with variant filters and zoom */}
       <div className="bg-white rounded-xl border border-slate-200 p-2.5 shadow-2xs flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="p-1 bg-blue-100 text-blue-700 rounded-md" title="8051 Family Architecture">
-            <Split className="w-3.5 h-3.5" />
-          </span>
-        </div>
-
         {/* Variant filter buttons and Zoom */}
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200 text-[11px]">
@@ -376,11 +370,6 @@ export default function MCU8051FamilyDiagram() {
                 stroke="#1e293b"
                 strokeWidth="2.5"
               />
-
-              {/* Page marker top right */}
-              <text x="800" y="32" fontSize="12" fontWeight="bold" fill="#64748b" fontFamily="monospace">
-                11 of 50
-              </text>
 
               {/* ========================================================================= */}
               {/* EXTERNAL INTERRUPT INPUTS (Top Left into Interrupts block)               */}

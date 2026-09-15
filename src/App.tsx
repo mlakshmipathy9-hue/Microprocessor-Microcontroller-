@@ -129,6 +129,9 @@ export default function App() {
   // Presentation State to split theoretical bullets and interactive lab on same slide
   const [showInteractiveOnSlide, setShowInteractiveOnSlide] = useState(false);
 
+  // Trigger key to reset internal slide tabs and views whenever a slide is selected
+  const [slideSelectionKey, setSlideSelectionKey] = useState(0);
+
   // Active lab experiment under directives/sandbox (e.g., 'exp1', 'exp2'...)
   const [activeLabId, setActiveLabId] = useState<string>('exp1');
 
@@ -188,6 +191,7 @@ export default function App() {
       setCurrentSlideIdx(nextSlide.sIdx);
       setRevealedPointsCount(1); // Start next slide with first point revealed
       setShowInteractiveOnSlide(false);
+      setSlideSelectionKey(prev => prev + 1);
       
       // Automatic haptic feedback on mobile devices supporting standard navigator.vibrate
       if (vibrateOnNext && typeof navigator !== 'undefined' && navigator.vibrate) {
@@ -223,6 +227,7 @@ export default function App() {
       const prevSlide = allSlidesWithModuleInfo[flatCurrentIdx - 1];
       setCurrentModuleIdx(prevSlide.mIdx);
       setCurrentSlideIdx(prevSlide.sIdx);
+      setSlideSelectionKey(prev => prev + 1);
       
       // If the previous slide has an interactive simulator, enter directly into its simulator view
       if (prevSlide.interactiveType && prevSlide.interactiveType !== 'quiz') {
@@ -251,6 +256,7 @@ export default function App() {
         setCurrentModuleIdx(mIdx);
         setCurrentSlideIdx(sIdx);
         setRevealedPointsCount(1); // Reset to first point
+        setSlideSelectionKey(prev => prev + 1);
         
         const selectedSlide = courseData[mIdx].slides[sIdx];
         const isLab = selectedSlide.interactiveType && selectedSlide.interactiveType !== 'quiz';
@@ -791,6 +797,7 @@ export default function App() {
             fullScreenMode={fullScreenMode}
             onToggleFullScreen={handleToggleFullScreen}
             onSelectSlide={handleSelectSlide}
+            slideSelectionKey={slideSelectionKey}
           />
         </main>
       </div>

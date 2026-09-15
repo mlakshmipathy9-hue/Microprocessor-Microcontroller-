@@ -267,7 +267,7 @@ export default function MCU8051SchematicDiagram() {
             <Cpu className="w-3.5 h-3.5" />
           </span>
           <span className="text-[11px] font-mono font-bold text-slate-700">
-            Hardware Schematic • Slide 10 of 50
+            Hardware Schematic
           </span>
         </div>
 
@@ -406,9 +406,6 @@ export default function MCU8051SchematicDiagram() {
               {/* TOP HEADER TITLE INSIDE SVG */}
               <text x="40" y="32" fontSize="13" fontWeight="bold" fill="#334155" fontFamily="monospace">
                 INTEL 8051 MICROCONTROLLER INTERNAL ARCHITECTURE
-              </text>
-              <text x="880" y="32" fontSize="11" fontWeight="bold" fill="#64748b" textAnchor="end" fontFamily="monospace">
-                10 of 50
               </text>
 
               {/* ========================================================================= */}

@@ -245,6 +245,7 @@ interface SlidePresenterProps {
   fullScreenMode?: boolean;
   onToggleFullScreen?: (enable?: boolean) => void;
   onSelectSlide?: (moduleId: string, slideId: string, labId?: string) => void;
+  slideSelectionKey?: number;
 }
 
 export default function SlidePresenter({
@@ -262,7 +263,8 @@ export default function SlidePresenter({
   activeLabId,
   fullScreenMode = false,
   onToggleFullScreen,
-  onSelectSlide
+  onSelectSlide,
+  slideSelectionKey = 0
 }: SlidePresenterProps) {
   // Quiz states
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number | null>>({});
@@ -271,7 +273,7 @@ export default function SlidePresenter({
   const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [isExplanationOpen, setIsExplanationOpen] = useState(false);
-  const [m21SlideTab, setM21SlideTab] = useState<'definition' | 'differences' | 'features'>('definition');
+  const [m21SlideTab, setM21SlideTab] = useState<'definition' | 'differences' | 'criteria' | 'features'>('definition');
 
   // Video embedding custom overrides state
   const [customVideoOverrides, setCustomVideoOverrides] = useState<Record<string, { url: string; title: string }>>(() => {
@@ -371,15 +373,16 @@ export default function SlidePresenter({
     touchStartRef.current = null;
   };
 
-  // Reset quiz states when changing slides
+  // Reset quiz states and slide-specific tab states when changing slides or selecting a slide
   useEffect(() => {
+    setM21SlideTab('definition');
     setSelectedAnswers({});
     setQuizFinished(false);
     setQuizScore(0);
     setCurrentQuestionIdx(0);
     setSidebarCollapsed(true);
     setIsExplanationOpen(false);
-  }, [slide.id]);
+  }, [slide.id, slideSelectionKey]);
 
   // Magnifier States
   const [magnifier, setMagnifier] = useState<{ x: number; y: number; active: boolean }>({ x: 0, y: 0, active: false });
@@ -713,8 +716,7 @@ export default function SlidePresenter({
       case 'mcu-8051':
         component = (
           <MCU8051Simulator
-            initialTab={slide.id === 'm21-s3' || slide.id === 'm21-s4' ? 'sfr' : 'architecture'}
-            hideArchitecture={slide.id === 'm21-s3' || slide.id === 'm21-s4'}
+            initialTab="architecture"
             hideAlp={slide.id === 'm21-s2'}
             hideInstructions={slide.id === 'm21-s2'}
             hideModularBreakdown={slide.id === 'm21-s2'}
@@ -765,7 +767,9 @@ export default function SlidePresenter({
             <span>Loading Interactive Simulator...</span>
           </div>
         }>
-          {component}
+          <div key={`${slide.id}-${slideSelectionKey}`} className="w-full h-full">
+            {component}
+          </div>
         </React.Suspense>
       </SimulatorErrorBoundary>
     );
@@ -998,20 +1002,9 @@ export default function SlidePresenter({
                       ) : slide.id === 'm21-s1' ? (
                         /* Module 21 Slide 1: 3 Tabs (Definition, Differences, Features of 8051) in a Single Card */
                         <div className="bg-slate-50/80 rounded-2xl border border-slate-200/90 p-4 md:p-5 shadow-2xs space-y-4">
-                          {/* Single Card Header & Tab Controls */}
-                          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-slate-200">
-                            <div>
-                              <h3 className="text-xs font-bold text-slate-900 uppercase font-mono tracking-wider flex items-center gap-1.5">
-                                <Cpu className="w-4 h-4 text-indigo-600" />
-                                8051 Microcontroller Foundations
-                              </h3>
-                              <p className="text-[11px] text-slate-500 font-medium">
-                                Core concepts, architectural comparisons, and salient 8051 hardware features
-                              </p>
-                            </div>
-
-                            {/* 3 Tabs Navigation */}
-                            <div className="flex flex-wrap items-center gap-1 bg-slate-200/70 p-1 rounded-xl border border-slate-200/80 self-start lg:self-auto">
+                          {/* Tab Navigation Controls */}
+                          <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200">
+                            <div className="flex flex-wrap items-center gap-1.5 bg-slate-200/70 p-1 rounded-xl border border-slate-200/80 w-full sm:w-auto">
                               <button
                                 onClick={() => setM21SlideTab('definition')}
                                 className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
@@ -1021,7 +1014,7 @@ export default function SlidePresenter({
                                 }`}
                               >
                                 <BookOpen className="w-3.5 h-3.5 text-indigo-600" />
-                                1. Definition
+                                1. Microcontroller Definition
                               </button>
                               <button
                                 onClick={() => setM21SlideTab('differences')}
@@ -1032,7 +1025,7 @@ export default function SlidePresenter({
                                 }`}
                               >
                                 <Layers className="w-3.5 h-3.5 text-amber-600" />
-                                2. Differences (MPU vs MCU)
+                                2. Microprocessor vs Microcontroller
                               </button>
                               <button
                                 onClick={() => setM21SlideTab('features')}
@@ -1043,7 +1036,18 @@ export default function SlidePresenter({
                                 }`}
                               >
                                 <Cpu className="w-3.5 h-3.5 text-emerald-600" />
-                                3. Features of 8051
+                                3. Hardware Specifications & Features
+                              </button>
+                              <button
+                                onClick={() => setM21SlideTab('criteria')}
+                                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                                  m21SlideTab === 'criteria'
+                                    ? 'bg-white text-indigo-700 shadow-2xs font-bold'
+                                    : 'text-slate-600 hover:text-slate-900'
+                                }`}
+                              >
+                                <Target className="w-3.5 h-3.5 text-blue-600" />
+                                4. Criteria for Selection
                               </button>
                             </div>
                           </div>
@@ -1062,9 +1066,6 @@ export default function SlidePresenter({
                                   <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-600 text-white uppercase tracking-wider">
                                     Academic Definition
                                   </span>
-                                  <h4 className="text-sm font-bold text-indigo-950 font-display">
-                                    What is a Microcontroller (MCU)?
-                                  </h4>
                                 </div>
                                 <p className="text-[13.5px] md:text-[14px] leading-relaxed text-slate-800 text-justify">
                                   A <strong className="font-bold text-indigo-950">Microcontroller (MCU)</strong> is a compact, highly integrated single-chip microcomputer specifically designed and optimized to control dedicated electromechanical operations within an embedded system. It houses a complete functional computer on a single monolithic silicon die—incorporating a <strong className="text-slate-900 font-semibold">Central Processing Unit (CPU)</strong>, <strong className="text-slate-900 font-semibold">Program Memory (ROM/Flash)</strong>, <strong className="text-slate-900 font-semibold">Data Memory (RAM)</strong>, <strong className="text-slate-900 font-semibold">Programmable Timers/Counters</strong>, <strong className="text-slate-900 font-semibold">Parallel Digital I/O Ports</strong>, and <strong className="text-slate-900 font-semibold">Serial Communication Channels (UART)</strong>.
@@ -1235,7 +1236,7 @@ export default function SlidePresenter({
                             </motion.div>
                           )}
 
-                          {/* Tab 3: Features of 8051 */}
+                          {/* Tab 3: Hardware Specifications & Features */}
                           {m21SlideTab === 'features' && (
                             <motion.div
                               initial={{ opacity: 0, y: 6 }}
@@ -1273,6 +1274,242 @@ export default function SlidePresenter({
                                     </motion.div>
                                   );
                                 })}
+                              </div>
+                            </motion.div>
+                          )}
+
+                          {/* Tab 4: Criteria for Microcontroller Selection */}
+                          {m21SlideTab === 'criteria' && (
+                            <motion.div
+                              initial={{ opacity: 0, y: 6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="space-y-4 text-justify"
+                            >
+                              {/* Engineering Selection Framework Banner */}
+                              <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-150 space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-700 text-white uppercase tracking-wider">
+                                    Engineering Selection Framework
+                                  </span>
+                                </div>
+                                <p className="text-[13.5px] md:text-[14px] leading-relaxed text-slate-800 text-justify">
+                                  Selecting the ideal microcontroller for an embedded product is an engineering optimization process that balances <strong className="font-bold text-blue-950">Technical &amp; Hardware Performance Requirements</strong> (ensuring the device satisfies all real-time timing, memory, and peripheral constraints) against <strong className="font-bold text-blue-950">Commercial, Cost &amp; Ecosystem Factors</strong> (ensuring minimal Bill of Materials cost, supply chain resilience, and rapid time-to-market).
+                                </p>
+                              </div>
+
+                              {/* Two Core Pillars Layout */}
+                              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                {/* Pillar 1: Technical & Hardware Criteria */}
+                                <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs space-y-3">
+                                  <div className="flex items-center gap-2 pb-2 border-b border-slate-150">
+                                    <span className="w-2.5 h-2.5 rounded-full bg-indigo-600" />
+                                    <h4 className="text-xs font-bold text-slate-900 uppercase font-mono tracking-wider">
+                                      1. Technical &amp; Hardware Criteria
+                                    </h4>
+                                  </div>
+
+                                  <div className="space-y-2.5 text-[12.5px] md:text-[13px] text-slate-700 leading-relaxed">
+                                    <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-150 space-y-1">
+                                      <span className="font-bold text-indigo-950 font-mono text-[11px] block">
+                                        • Speed &amp; Computational Throughput:
+                                      </span>
+                                      <p className="text-slate-700 text-justify">
+                                        Clock frequency (MHz), instruction cycle timing, and ALU word size (8-bit, 16-bit, or 32-bit). Must guarantee that execution deadlines, sensor sampling rates, and control loops are executed within real-time limits.
+                                      </p>
+                                    </div>
+
+                                    <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-150 space-y-1">
+                                      <span className="font-bold text-indigo-950 font-mono text-[11px] block">
+                                        • Memory Sizing (ROM/Flash &amp; RAM):
+                                      </span>
+                                      <p className="text-slate-700 text-justify">
+                                        Adequate on-chip Flash/ROM to hold compiled application firmware, lookup tables, and string constants (with 20–30% reserve headroom). Adequate RAM for stack depth, packet buffers, and variables, plus external bus expandability if memory growth is foreseen.
+                                      </p>
+                                    </div>
+
+                                    <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-150 space-y-1">
+                                      <span className="font-bold text-indigo-950 font-mono text-[11px] block">
+                                        • Power Dissipation &amp; Operating Voltage:
+                                      </span>
+                                      <p className="text-slate-700 text-justify">
+                                        Operating voltage (5V, 3.3V, or 1.8V) and current consumption in Active, Idle, and Power-Down/Deep Sleep modes. Crucial for battery-powered, handheld, automotive, and portable telemetry devices.
+                                      </p>
+                                    </div>
+
+                                    <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-150 space-y-1">
+                                      <span className="font-bold text-indigo-950 font-mono text-[11px] block">
+                                        • I/O Pin Count &amp; On-Chip Peripherals:
+                                      </span>
+                                      <p className="text-slate-700 text-justify">
+                                        Sufficient bidirectional GPIO lines to interface switches, displays, and sensors. Dedicated on-chip hardware blocks (Timers/Counters, PWM, ADC/DAC, UART, SPI, I2C, CAN) eliminate costly external support chips.
+                                      </p>
+                                    </div>
+
+                                    <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-150 space-y-1">
+                                      <span className="font-bold text-indigo-950 font-mono text-[11px] block">
+                                        • Interrupt Architecture &amp; Latency:
+                                      </span>
+                                      <p className="text-slate-700 text-justify">
+                                        Number of external and internal interrupt vector sources, priority levels, and context-switching overhead required to service asynchronous external events with minimal latency.
+                                      </p>
+                                    </div>
+
+                                    <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-150 space-y-1">
+                                      <span className="font-bold text-indigo-950 font-mono text-[11px] block">
+                                        • Packaging &amp; Operating Temperature Range:
+                                      </span>
+                                      <p className="text-slate-700 text-justify">
+                                        Package footprint (DIP for breadboard prototyping and education; SOIC, TQFP, QFN, BGA for space-constrained SMD PCBs) and operating temperature rating (Commercial 0°C–70°C, Industrial -40°C–85°C, Automotive -40°C–125°C).
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Pillar 2: Commercial & Ecosystem Criteria */}
+                                <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-2xs space-y-3">
+                                  <div className="flex items-center gap-2 pb-2 border-b border-slate-150">
+                                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-600" />
+                                    <h4 className="text-xs font-bold text-slate-900 uppercase font-mono tracking-wider">
+                                      2. Commercial &amp; Development Criteria
+                                    </h4>
+                                  </div>
+
+                                  <div className="space-y-2.5 text-[12.5px] md:text-[13px] text-slate-700 leading-relaxed">
+                                    <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-150 space-y-1">
+                                      <span className="font-bold text-emerald-950 font-mono text-[11px] block">
+                                        • Unit Cost &amp; BOM Economics:
+                                      </span>
+                                      <p className="text-slate-700 text-justify">
+                                        Cost per chip at anticipated production volumes. In mass consumer products (millions of units), saving even a few cents per microcontroller dictates architecture choice, cementing mature 8-bit cores like 8051 as the industry benchmark.
+                                      </p>
+                                    </div>
+
+                                    <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-150 space-y-1">
+                                      <span className="font-bold text-emerald-950 font-mono text-[11px] block">
+                                        • Availability &amp; Multi-Vendor Sourcing:
+                                      </span>
+                                      <p className="text-slate-700 text-justify">
+                                        Reliable supply chain and availability of second-source fabricators. The 8051 architecture is multi-sourced by Intel, Atmel/Microchip, NXP/Philips, Silicon Labs, STC, and Maxim, protecting manufacturers against sole-vendor component obsolescence.
+                                      </p>
+                                    </div>
+
+                                    <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-150 space-y-1">
+                                      <span className="font-bold text-emerald-950 font-mono text-[11px] block">
+                                        • Software Toolchain &amp; Debugging Ecosystem:
+                                      </span>
+                                      <p className="text-slate-700 text-justify">
+                                        Availability of mature C cross-compilers (Keil μVision C51, SDCC), in-circuit emulators (ICE), JTAG/ISP hardware programmers, evaluation boards, and comprehensive code libraries that slash development time and software bugs.
+                                      </p>
+                                    </div>
+
+                                    <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-150 space-y-1">
+                                      <span className="font-bold text-emerald-950 font-mono text-[11px] block">
+                                        • Code Portability &amp; Upgrade Path:
+                                      </span>
+                                      <p className="text-slate-700 text-justify">
+                                        Firmware compatibility across family derivatives (e.g. migrating seamlessly from standard 8051 to 8052, AT89S52, or single-cycle pipelined 8051 cores) protecting engineering investment as product features scale.
+                                      </p>
+                                    </div>
+
+                                    {/* Quick Summary Pill Highlight */}
+                                    <div className="p-3 rounded-lg bg-emerald-50/60 border border-emerald-150 space-y-1 mt-1">
+                                      <span className="font-bold text-emerald-950 font-mono text-[11px] uppercase tracking-wider block">
+                                        Golden Rule of MCU Selection:
+                                      </span>
+                                      <p className="text-slate-700 text-justify text-[12px]">
+                                        Choose the <strong className="font-semibold text-emerald-900">least expensive microcontroller</strong> that reliably meets all current system computing, memory, I/O, and power requirements, while leaving approximately <strong className="font-semibold text-emerald-900">20% to 30% safety margin</strong> in ROM and RAM for future firmware updates and bug fixes.
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Decision Matrix Table */}
+                              <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-2xs">
+                                <table className="w-full text-left text-xs border-collapse">
+                                  <thead>
+                                    <tr className="bg-slate-100/90 border-b border-slate-200">
+                                      <th className="py-2.5 px-3 font-bold text-slate-900 font-mono uppercase text-[11px] w-1/4">
+                                        Selection Parameter
+                                      </th>
+                                      <th className="py-2.5 px-3 font-bold text-slate-800 font-mono uppercase text-[11px] border-x border-slate-200 w-1/3">
+                                        Key Design Evaluation Question
+                                      </th>
+                                      <th className="py-2.5 px-3 font-bold text-indigo-900 bg-indigo-50/50 font-mono uppercase text-[11px] w-5/12">
+                                        Intel 8051 Implementation Benchmark
+                                      </th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-slate-200 bg-white">
+                                    <tr className="hover:bg-slate-50/80 transition-colors">
+                                      <td className="py-2 px-3 font-semibold text-slate-900 font-mono text-[11px]">
+                                        1. Word Size &amp; Speed
+                                      </td>
+                                      <td className="py-2 px-3 text-slate-700 border-x border-slate-200">
+                                        Is the application primarily byte/bit oriented or heavy mathematical DSP?
+                                      </td>
+                                      <td className="py-2 px-3 text-indigo-950 bg-indigo-50/20">
+                                        8-bit CISC CPU, 12 MHz standard clock (1 μs machine cycle), optimized for bit manipulation.
+                                      </td>
+                                    </tr>
+                                    <tr className="hover:bg-slate-50/80 transition-colors">
+                                      <td className="py-2 px-3 font-semibold text-slate-900 font-mono text-[11px]">
+                                        2. On-Chip Memory
+                                      </td>
+                                      <td className="py-2 px-3 text-slate-700 border-x border-slate-200">
+                                        How large is the compiled binary firmware and dynamic data buffer?
+                                      </td>
+                                      <td className="py-2 px-3 text-indigo-950 bg-indigo-50/20">
+                                        4 KB on-chip ROM (Flash in AT89C51), 128 Bytes on-chip RAM; expandable up to 64 KB code and data.
+                                      </td>
+                                    </tr>
+                                    <tr className="hover:bg-slate-50/80 transition-colors">
+                                      <td className="py-2 px-3 font-semibold text-slate-900 font-mono text-[11px]">
+                                        3. I/O &amp; Peripherals
+                                      </td>
+                                      <td className="py-2 px-3 text-slate-700 border-x border-slate-200">
+                                        How many external switches, relays, displays, and sensors must be driven?
+                                      </td>
+                                      <td className="py-2 px-3 text-indigo-950 bg-indigo-50/20">
+                                        32 bidirectional I/O lines (4 ports: P0–P3), two 16-bit timers/counters, full-duplex UART serial port.
+                                      </td>
+                                    </tr>
+                                    <tr className="hover:bg-slate-50/80 transition-colors">
+                                      <td className="py-2 px-3 font-semibold text-slate-900 font-mono text-[11px]">
+                                        4. Power Budget
+                                      </td>
+                                      <td className="py-2 px-3 text-slate-700 border-x border-slate-200">
+                                        Is the device powered by mains electricity, batteries, or energy harvesting?
+                                      </td>
+                                      <td className="py-2 px-3 text-indigo-950 bg-indigo-50/20">
+                                        +5V standard supply (or 2.7V–3.6V in low-power 80C51 / AT89LV51 CMOS models) with Idle &amp; Power-Down modes.
+                                      </td>
+                                    </tr>
+                                    <tr className="hover:bg-slate-50/80 transition-colors">
+                                      <td className="py-2 px-3 font-semibold text-slate-900 font-mono text-[11px]">
+                                        5. Unit Cost &amp; Sourcing
+                                      </td>
+                                      <td className="py-2 px-3 text-slate-700 border-x border-slate-200">
+                                        What is the target BOM budget, and is multi-vendor supply chain required?
+                                      </td>
+                                      <td className="py-2 px-3 text-indigo-950 bg-indigo-50/20">
+                                        Highly competitive sub-dollar unit cost in volume; multi-sourced by Atmel, NXP, Silicon Labs, and STC.
+                                      </td>
+                                    </tr>
+                                    <tr className="hover:bg-slate-50/80 transition-colors">
+                                      <td className="py-2 px-3 font-semibold text-slate-900 font-mono text-[11px]">
+                                        6. Development Tools
+                                      </td>
+                                      <td className="py-2 px-3 text-slate-700 border-x border-slate-200">
+                                        Are cross-compilers, programmers, simulators, and debugging tools accessible?
+                                      </td>
+                                      <td className="py-2 px-3 text-indigo-950 bg-indigo-50/20">
+                                        Immense global toolchain ecosystem: Keil μVision C51, SDCC, affordable USB ISP programmers, extensive documentation.
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
                               </div>
                             </motion.div>
                           )}

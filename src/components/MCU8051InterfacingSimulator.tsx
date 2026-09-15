@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Clock,
   Radio,
@@ -18,6 +18,10 @@ interface MCU8051InterfacingSimulatorProps {
 
 export default function MCU8051InterfacingSimulator({ initialTab = 'timers' }: MCU8051InterfacingSimulatorProps) {
   const [activeTab, setActiveTab] = useState<'timers' | 'interrupts-lcd' | 'adc-dac' | 'stepper' | 'comparison'>(initialTab);
+
+  useEffect(() => {
+    setActiveTab(initialTab);
+  }, [initialTab]);
 
   // --- TAB 1: TIMERS & SERIAL ---
   const [timerMode, setTimerMode] = useState<'mode0' | 'mode1' | 'mode2'>('mode1');

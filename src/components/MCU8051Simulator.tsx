@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Cpu,
   Layers,
@@ -55,6 +55,16 @@ export default function MCU8051Simulator({
     if (hidePins && initialTab === 'pins') return 'architecture';
     return initialTab;
   });
+
+  useEffect(() => {
+    let tab = initialTab;
+    if (hideArchitecture && tab === 'architecture') tab = 'sfr';
+    if (hideAlp && tab === 'alp') tab = 'architecture';
+    if (hideInstructions && tab === 'instructions') tab = 'architecture';
+    if (hideSfr && tab === 'sfr') tab = 'architecture';
+    if (hidePins && tab === 'pins') tab = 'architecture';
+    setActiveTab(tab);
+  }, [initialTab, hideArchitecture, hideAlp, hideInstructions, hideSfr, hidePins]);
 
   // Architecture state
   const [archViewMode, setArchViewMode] = useState<'schematic' | 'family' | 'cards'>('family');
@@ -301,21 +311,20 @@ export default function MCU8051Simulator({
 
   return (
     <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 bg-white text-slate-900 rounded-2xl shadow-sm border border-slate-200 space-y-6">
-      {/* Upper Navigation Tabs */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-200 pb-4">
-        <div className="flex items-center gap-2">
-          <div className="p-2 bg-indigo-50 border border-indigo-100 rounded-xl">
-            <Cpu className="w-5 h-5 text-indigo-600" />
+      {/* Upper Navigation Tabs - rendered only when multiple suite tabs are available */}
+      {(!hideSfr || !hidePins || !hideInstructions || !hideAlp) && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-200 pb-4">
+          <div className="flex items-center gap-2">
+            <div className="p-2 bg-indigo-50 border border-indigo-100 rounded-xl">
+              <Cpu className="w-5 h-5 text-indigo-600" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-slate-900 font-display">
+                8051 Microcontroller Interactive Suite
+              </h2>
+            </div>
           </div>
-          <div>
-            <h2 className="text-base font-bold text-slate-900 font-display">
-              {hideSfr && hidePins ? '8051 Microcontroller Architecture' : '8051 Microcontroller Interactive Suite'}
-            </h2>
-          </div>
-        </div>
 
-        {/* Tab Buttons - rendered when multiple tabs are available */}
-        {(!hideSfr || !hidePins || !hideInstructions || !hideAlp) && (
           <div className="flex flex-wrap items-center bg-slate-100 p-1 rounded-xl border border-slate-200 gap-1">
             {!hideArchitecture && (
               <button
@@ -327,7 +336,7 @@ export default function MCU8051Simulator({
                 }`}
               >
                 <Cpu className="w-3.5 h-3.5" />
-                1. Architecture
+                Block Diagram
               </button>
             )}
             {!hideSfr && (
@@ -340,7 +349,7 @@ export default function MCU8051Simulator({
                 }`}
               >
                 <HardDrive className="w-3.5 h-3.5" />
-                {hideArchitecture ? '1. SFR & Memory' : '2. SFR & Memory'}
+                SFRs & Internal RAM
               </button>
             )}
             {!hidePins && (
@@ -353,7 +362,7 @@ export default function MCU8051Simulator({
                 }`}
               >
                 <Layers className="w-3.5 h-3.5" />
-                {hideArchitecture ? '2. Ports & Pins' : '3. Ports & Pins'}
+                I/O Ports & Pins
               </button>
             )}
             {!hideInstructions && (
@@ -366,7 +375,7 @@ export default function MCU8051Simulator({
                 }`}
               >
                 <Sliders className="w-3.5 h-3.5" />
-                {hideArchitecture ? '3. Instructions' : '4. Instructions'}
+                Instruction Set
               </button>
             )}
             {!hideAlp && (
@@ -379,14 +388,12 @@ export default function MCU8051Simulator({
                 }`}
               >
                 <Code2 className="w-3.5 h-3.5" />
-                {hideArchitecture
-                  ? (hideInstructions ? '3. ALP Simulator' : '4. ALP Simulator')
-                  : (hideInstructions ? '4. ALP Simulator' : '5. ALP Simulator')}
+                ALP Simulator
               </button>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* TAB 1: ARCHITECTURE BLOCK DIAGRAM */}
       {activeTab === 'architecture' && !hideArchitecture && (
@@ -413,7 +420,7 @@ export default function MCU8051Simulator({
                 }`}
               >
                 <Split className="w-3.5 h-3.5" />
-                Family Internal Architecture
+                Functional Block Diagram
               </button>
               <button
                 onClick={() => setArchViewMode('schematic')}
@@ -424,7 +431,7 @@ export default function MCU8051Simulator({
                 }`}
               >
                 <Cpu className="w-3.5 h-3.5" />
-                Hardware Schematic Diagram (10 of 50)
+                Detailed Hardware Schematic
               </button>
               {!hideModularBreakdown && (
                 <button
