@@ -54,7 +54,7 @@ export default function StepperSchematicDiagram({
     if (!localRunning) return;
     const interval = setInterval(() => {
       setLocalStep((prev) => (prev + 1) % currentSeq.length);
-    }, 650);
+    }, 950);
     return () => clearInterval(interval);
   }, [localRunning, currentSeq.length]);
 
@@ -245,22 +245,22 @@ export default function StepperSchematicDiagram({
             <rect x="0" y="0" width="1560" height="660" fill="url(#cadGrid)" opacity="0.6" />
 
             {/* ======================================================== */}
-            {/* BUS: TOP MAIN AD[0..15] BLUE BUS (Elevation y = 80)     */}
+            {/* BUS: AD[0..15] BLUE NET BUSES (Proteus Named Net Style)  */}
             {/* ======================================================== */}
-            {/* Bus from 8086 rising to top rail */}
+            {/* Bus from 8086 rising to top rail with net terminator */}
             <path d="M 320 180 L 350 180 L 350 75" fill="none" stroke="#1d4ed8" strokeWidth="6" strokeLinecap="round" />
-            <polygon points="350,65 343,80 357,80" fill="#1d4ed8" />
-            <text x="310" y="60" className="font-mono text-xs font-black fill-blue-900">AD[0..15]</text>
+            <polygon points="350,65 343,78 357,78" fill="#1d4ed8" />
+            <text x="350" y="56" textAnchor="middle" className="font-mono text-xs font-black fill-blue-900">AD[0..15]</text>
 
-            {/* Bus tap down to 74HC373 D0..D7 */}
-            <line x1="430" y1="75" x2="430" y2="330" stroke="#1d4ed8" strokeWidth="6" strokeLinecap="round" />
-            <polygon points="430,65 423,80 437,80" fill="#1d4ed8" />
-            <text x="390" y="60" className="font-mono text-xs font-black fill-blue-900">AD[0..15]</text>
+            {/* Bus tap down to 74HC373 D0..D7 (extends down to y=370 so D7 at y=355 is fully connected) */}
+            <line x1="430" y1="75" x2="430" y2="370" stroke="#1d4ed8" strokeWidth="6" strokeLinecap="round" />
+            <polygon points="430,65 423,78 437,78" fill="#1d4ed8" />
+            <text x="430" y="56" textAnchor="middle" className="font-mono text-xs font-black fill-blue-900">AD[0..15]</text>
 
-            {/* Bus tap down to 8255A D0..D7 */}
-            <line x1="740" y1="75" x2="740" y2="330" stroke="#1d4ed8" strokeWidth="6" strokeLinecap="round" />
-            <polygon points="740,65 733,80 747,80" fill="#1d4ed8" />
-            <text x="700" y="60" className="font-mono text-xs font-black fill-blue-900">AD[0..15]</text>
+            {/* Bus tap down to 8255A D0..D7 (extends down to y=370 so D7 at y=355 is fully connected) */}
+            <line x1="740" y1="75" x2="740" y2="370" stroke="#1d4ed8" strokeWidth="6" strokeLinecap="round" />
+            <polygon points="740,65 733,78 747,78" fill="#1d4ed8" />
+            <text x="740" y="56" textAnchor="middle" className="font-mono text-xs font-black fill-blue-900">AD[0..15]</text>
 
             {/* ======================================================== */}
             {/* COMPONENT 1: U2 (8086 CPU)                                */}
@@ -381,6 +381,8 @@ export default function StepperSchematicDiagram({
                 <g key={idx}>
                   {/* Clean straight wire from blue bus tap */}
                   <line x1="430" y1={p.y} x2="470" y2={p.y} stroke="#16a34a" strokeWidth="1.6" />
+                  {/* Bus junction tap dot */}
+                  <circle cx="430" cy={p.y} r="2.5" fill="#1d4ed8" />
                   <rect x="444" y={p.y - 12} width="16" height="11" fill="#f8fafc" rx="2" />
                   <text x="452" y={p.y - 3} textAnchor="middle" className="font-mono text-[9px] font-bold fill-slate-500">{p.pin}</text>
                   <text x="480" y={p.y + 4} textAnchor="start" className="font-mono text-xs font-extrabold fill-slate-900">{p.label}</text>
@@ -456,6 +458,8 @@ export default function StepperSchematicDiagram({
               ].map((p, idx) => (
                 <g key={idx}>
                   <line x1="740" y1={p.y} x2="790" y2={p.y} stroke="#16a34a" strokeWidth="1.6" />
+                  {/* Bus junction tap dot */}
+                  <circle cx="740" cy={p.y} r="2.5" fill="#1d4ed8" />
                   <rect x="760" y={p.y - 12} width="18" height="11" fill="#f8fafc" rx="2" />
                   <text x="769" y={p.y - 3} textAnchor="middle" className="font-mono text-[9px] font-bold fill-slate-500">{p.pin}</text>
                   <text x="800" y={p.y + 4} textAnchor="start" className="font-mono text-xs font-extrabold fill-slate-900">{p.label}</text>

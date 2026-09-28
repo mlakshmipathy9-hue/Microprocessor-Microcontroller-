@@ -84,7 +84,7 @@ export default function PeripheralInterfacingSimulator({
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [motorAngle, setMotorAngle] = useState<number>(0);
-  const [stepDelayMs, setStepDelayMs] = useState<number>(450);
+  const [stepDelayMs, setStepDelayMs] = useState<number>(700);
 
   // 4x4 Matrix Keypad Circuit Architecture & Live Signal State
   const [keypadCircuitKey, setKeypadCircuitKey] = useState<string>('5');
@@ -476,7 +476,7 @@ END MAIN                      ; End of source file with program entry point`;
     if (segCircuitMode === 'multiplexed' && segSignalsAnimating) {
       timer = setInterval(() => {
         setSegMultiIndex((prev) => (prev + 1) % 4);
-      }, 550);
+      }, 900);
     }
     return () => clearInterval(timer);
   }, [segCircuitMode, segSignalsAnimating]);
@@ -508,10 +508,10 @@ END MAIN                      ; End of source file with program entry point`;
 
   // Traffic Light States: 
   const trafficStates = [
-    { name: 'North-South GREEN / East-West RED', ns: 'green', ew: 'red', portA: '0x21H', duration: 3000 },
-    { name: 'North-South YELLOW / East-West RED', ns: 'yellow', ew: 'red', portA: '0x11H', duration: 1200 },
-    { name: 'North-South RED / East-West GREEN', ns: 'red', ew: 'green', portA: '0x0CH', duration: 3000 },
-    { name: 'North-South RED / East-West YELLOW', ns: 'red', ew: 'yellow', portA: '0x0AH', duration: 1200 }
+    { name: 'North-South GREEN / East-West RED', ns: 'green', ew: 'red', portA: '0x21H', duration: 4500 },
+    { name: 'North-South YELLOW / East-West RED', ns: 'yellow', ew: 'red', portA: '0x11H', duration: 2000 },
+    { name: 'North-South RED / East-West GREEN', ns: 'red', ew: 'green', portA: '0x0CH', duration: 4500 },
+    { name: 'North-South RED / East-West YELLOW', ns: 'red', ew: 'yellow', portA: '0x0AH', duration: 2000 }
   ];
 
   useEffect(() => {
@@ -538,7 +538,7 @@ END MAIN                      ; End of source file with program entry point`;
     if (!keypadSignalsAnimating || keypadScanMode !== 'auto') return;
     const interval = setInterval(() => {
       setKeypadAutoRow((prev) => (prev + 1) % 4);
-    }, 700);
+    }, 1100);
     return () => clearInterval(interval);
   }, [keypadSignalsAnimating, keypadScanMode]);
 
@@ -1510,8 +1510,8 @@ END MAIN                      ; End of assembly program`;
                 </div>
                 <input
                   type="range"
-                  min="150"
-                  max="900"
+                  min="300"
+                  max="1500"
                   step="50"
                   value={stepDelayMs}
                   onChange={(e) => setStepDelayMs(parseInt(e.target.value))}
@@ -2077,12 +2077,12 @@ END MAIN                      ; End of assembly program`;
             <div className="min-w-[820px] flex items-stretch justify-between gap-2.5 text-[11px]">
               
               {/* BLOCK 1: 8086 Microprocessor */}
-              <div className="w-44 bg-white border-2 border-indigo-200 rounded-xl p-3 shadow-xs flex flex-col justify-between space-y-2">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
-                  <span className="font-extrabold text-indigo-700 font-mono text-xs">8086 CPU</span>
-                  <span className="px-1.5 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[9px] font-bold">5 MHz</span>
+              <div className="w-44 bg-white border-2 border-indigo-200 rounded-xl p-2.5 shadow-xs flex flex-col justify-between space-y-1.5">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-1">
+                  <span className="font-extrabold text-indigo-700 font-mono text-[11px]">8086 CPU</span>
+                  <span className="px-1.5 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[8.5px] font-bold">5 MHz</span>
                 </div>
-                <div className="space-y-1 font-mono text-[10px]">
+                <div className="space-y-1 font-mono text-[9px]">
                   <div className="flex justify-between items-center py-0.5 px-1 bg-slate-50 rounded">
                     <span className="text-slate-600">AD0–AD15</span>
                     <span className="text-indigo-600 font-bold">Mux Bus</span>
@@ -2095,99 +2095,99 @@ END MAIN                      ; End of assembly program`;
                     <span className="text-slate-600">M/I̅O̅, W̅R̅</span>
                     <span className="text-amber-600 font-bold">I/O Write</span>
                   </div>
-                  <div className="flex justify-between items-center py-0.5 px-1 bg-indigo-50/70 rounded">
+                  <div className="flex justify-between items-center py-0.5 px-1 bg-indigo-50/70 rounded text-[8.5px]">
                     <span className="text-indigo-900 font-bold">Instruction:</span>
                     <span className="text-indigo-700 font-bold">OUT 80H, AL</span>
                   </div>
                 </div>
-                <div className="pt-1 text-[9px] text-slate-400 border-t border-slate-100 text-center font-mono">
+                <div className="pt-1 text-[8.5px] text-slate-400 border-t border-slate-100 text-center font-mono">
                   Minimum Mode (+5V)
                 </div>
               </div>
 
               {/* ARROW 1: Bus Demux */}
               <div className="flex flex-col items-center justify-center space-y-1 px-1">
-                <span className="text-[9px] font-mono text-indigo-600 font-bold">ALE / Demux</span>
+                <span className="text-[8.5px] font-mono text-indigo-600 font-bold">ALE / Demux</span>
                 <div className="w-7 h-0.5 bg-indigo-300 relative">
                   <ArrowRight className="w-3.5 h-3.5 text-indigo-500 absolute -right-2 -top-1.5" />
                 </div>
-                <span className="text-[9px] font-mono text-slate-400">74LS373</span>
+                <span className="text-[8.5px] font-mono text-slate-400">74LS373</span>
               </div>
 
               {/* BLOCK 2: 74LS138 Address Decoder */}
-              <div className="w-40 bg-white border border-slate-200 rounded-xl p-3 shadow-xs flex flex-col justify-between space-y-2">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
-                  <span className="font-bold text-slate-800 font-mono text-xs">74LS138</span>
-                  <span className="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[9px] font-bold">Decoder</span>
+              <div className="w-40 bg-white border border-slate-200 rounded-xl p-2.5 shadow-xs flex flex-col justify-between space-y-1.5">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-1">
+                  <span className="font-bold text-slate-800 font-mono text-[11px]">74LS138</span>
+                  <span className="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[8.5px] font-bold">Decoder</span>
                 </div>
-                <div className="space-y-1 font-mono text-[10px]">
+                <div className="space-y-1 font-mono text-[9px]">
                   <div className="text-slate-600">Inputs: <strong className="text-slate-800">A2, A3, A4</strong></div>
                   <div className="text-slate-600">Enables: <strong className="text-slate-800">M/I̅O̅, G1</strong></div>
-                  <div className="py-1 px-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded text-[10px] font-bold flex justify-between">
+                  <div className="py-0.5 px-1.5 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded text-[9px] font-bold flex justify-between">
                     <span>Y̅0̅ (C̅S̅)</span>
                     <span>0 (Active)</span>
                   </div>
-                  <div className="text-slate-500 text-[9px]">A1=0, A0=0 → Port A</div>
+                  <div className="text-slate-500 text-[8.5px]">A1=0, A0=0 → Port A</div>
                 </div>
-                <div className="text-[9px] text-slate-500 border-t border-slate-100 pt-1 text-center">
+                <div className="text-[8.5px] text-slate-500 border-t border-slate-100 pt-1 text-center">
                   Base Port: 80H
                 </div>
               </div>
 
               {/* ARROW 2: Chip Select & Bus */}
               <div className="flex flex-col items-center justify-center space-y-1 px-1">
-                <span className="text-[9px] font-mono text-emerald-600 font-bold">C̅S̅, A0, A1</span>
+                <span className="text-[8.5px] font-mono text-emerald-600 font-bold">C̅S̅, A0, A1</span>
                 <div className="w-7 h-0.5 bg-emerald-400 relative">
                   <ArrowRight className="w-3.5 h-3.5 text-emerald-600 absolute -right-2 -top-1.5" />
                 </div>
-                <span className="text-[9px] font-mono text-slate-400">D0–D7 Bus</span>
+                <span className="text-[8.5px] font-mono text-slate-400">D0–D7 Bus</span>
               </div>
 
               {/* BLOCK 3: Intel 8255 PPI */}
-              <div className="w-48 bg-white border-2 border-indigo-300 rounded-xl p-3 shadow-xs flex flex-col justify-between space-y-2">
-                <div className="flex items-center justify-between border-b border-indigo-100 pb-1.5">
-                  <span className="font-extrabold text-indigo-800 font-mono text-xs">Intel 8255 PPI</span>
-                  <span className="px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded text-[9px] font-bold">24 I/O</span>
+              <div className="w-48 bg-white border-2 border-indigo-300 rounded-xl p-2.5 shadow-xs flex flex-col justify-between space-y-1.5">
+                <div className="flex items-center justify-between border-b border-indigo-100 pb-1">
+                  <span className="font-extrabold text-indigo-800 font-mono text-[11px]">Intel 8255 PPI</span>
+                  <span className="px-1.5 py-0.5 bg-indigo-50 text-indigo-700 rounded text-[8.5px] font-bold">24 I/O</span>
                 </div>
-                <div className="space-y-1.5 font-mono text-[10px]">
+                <div className="space-y-1 font-mono text-[9px]">
                   {/* Port A status */}
-                  <div className="p-1.5 bg-indigo-50/70 rounded border border-indigo-100 flex items-center justify-between">
+                  <div className="p-1 bg-indigo-50/70 rounded border border-indigo-100 flex items-center justify-between text-[8.5px]">
                     <span className="text-indigo-900 font-bold">Port A (PA0–PA7)</span>
                     <span className="text-emerald-700 font-bold">0x{activeCode.toString(16).toUpperCase().padStart(2, '0')}H</span>
                   </div>
                   {/* Port C status (multiplexing digit enable) */}
-                  <div className={`p-1 rounded border flex items-center justify-between ${
+                  <div className={`p-1 rounded border flex items-center justify-between text-[8px] ${
                     segCircuitMode === 'multiplexed' ? 'bg-amber-50 border-amber-200 text-amber-900 font-bold' : 'bg-slate-50 border-slate-200 text-slate-500'
                   }`}>
                     <span>Port C (PC0–PC3)</span>
                     <span>{segCircuitMode === 'multiplexed' ? `0x0${(1 << segMultiIndex).toString(16).toUpperCase()}H (D${segMultiIndex + 1})` : 'Digit En (1 Digit)'}</span>
                   </div>
-                  <div className="p-1 bg-slate-50 rounded border border-slate-200 flex items-center justify-between text-slate-500 text-[9px]">
+                  <div className="p-1 bg-slate-50 rounded border border-slate-200 flex items-center justify-between text-slate-500 text-[8px]">
                     <span>Control Reg (86H)</span>
                     <span>CW: 80H (Mode 0)</span>
                   </div>
                 </div>
-                <div className="text-[9px] text-indigo-600 font-bold text-center border-t border-slate-100 pt-1 font-mono">
+                <div className="text-[8.5px] text-indigo-600 font-bold text-center border-t border-slate-100 pt-1 font-mono">
                   PA0=a ... PA6=g, PA7=dp
                 </div>
               </div>
 
               {/* ARROW 3: Driver Lines */}
               <div className="flex flex-col items-center justify-center space-y-1 px-1">
-                <span className="text-[9px] font-mono text-indigo-600 font-bold">PA0–PA7</span>
+                <span className="text-[8.5px] font-mono text-indigo-600 font-bold">PA0–PA7</span>
                 <div className="w-7 h-0.5 bg-indigo-400 relative">
                   <ArrowRight className="w-3.5 h-3.5 text-indigo-600 absolute -right-2 -top-1.5" />
                 </div>
-                <span className="text-[9px] font-mono text-slate-400">8-Bit Data</span>
+                <span className="text-[8.5px] font-mono text-slate-400">8-Bit Data</span>
               </div>
 
               {/* BLOCK 4: Resistor Array (8 x 330Ω) */}
-              <div className="w-48 bg-white border border-slate-200 rounded-xl p-3 shadow-xs flex flex-col justify-between space-y-2">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
-                  <span className="font-bold text-slate-800 font-mono text-xs">Resistor Array</span>
-                  <span className="px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded text-[9px] font-bold">8 × 330Ω</span>
+              <div className="w-48 bg-white border border-slate-200 rounded-xl p-2.5 shadow-xs flex flex-col justify-between space-y-1.5">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-1">
+                  <span className="font-bold text-slate-800 font-mono text-[11px]">Resistor Array</span>
+                  <span className="px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded text-[8.5px] font-bold">8 × 330Ω</span>
                 </div>
-                <div className="space-y-1 font-mono text-[9px]">
+                <div className="space-y-1 font-mono text-[8.5px]">
                   <div className="grid grid-cols-4 gap-1 text-center">
                     {['a', 'b', 'c', 'd', 'e', 'f', 'g', 'dp'].map((seg, idx) => {
                       const bit = (activeCode >> idx) & 1;
@@ -2195,39 +2195,39 @@ END MAIN                      ; End of assembly program`;
                       return (
                         <div
                           key={seg}
-                          className={`p-0.5 rounded border text-[8.5px] transition-all ${
+                          className={`p-0.5 rounded border text-[8px] transition-all ${
                             isSegActive ? 'bg-emerald-100 border-emerald-300 text-emerald-900 font-bold' : 'bg-slate-50 border-slate-200 text-slate-400'
                           }`}
                         >
                           <div>R_{seg}</div>
-                          <div className="text-[7.5px]">{isSegActive ? '~10mA' : '0mA'}</div>
+                          <div className="text-[6.5px]">{isSegActive ? '~10mA' : '0mA'}</div>
                         </div>
                       );
                     })}
                   </div>
-                  <div className="text-slate-500 text-[8.5px] pt-1 text-center font-mono">
+                  <div className="text-slate-500 text-[8px] pt-0.5 text-center font-mono">
                     VF ≈ 1.8V | VCC = +5V DC
                   </div>
                 </div>
-                <div className="text-[9px] text-amber-800 border-t border-slate-100 pt-1 text-center font-bold">
+                <div className="text-[8.5px] text-amber-800 border-t border-slate-100 pt-1 text-center font-bold">
                   Limits Current to Safe 10mA
                 </div>
               </div>
 
               {/* ARROW 4: Segment Anodes/Cathodes */}
               <div className="flex flex-col items-center justify-center space-y-1 px-1">
-                <span className="text-[9px] font-mono text-amber-600 font-bold">Segments</span>
+                <span className="text-[8.5px] font-mono text-amber-600 font-bold">Segments</span>
                 <div className="w-7 h-0.5 bg-amber-400 relative">
                   <ArrowRight className="w-3.5 h-3.5 text-amber-600 absolute -right-2 -top-1.5" />
                 </div>
-                <span className="text-[9px] font-mono text-slate-400">a–g, dp</span>
+                <span className="text-[8.5px] font-mono text-slate-400">a–g, dp</span>
               </div>
 
               {/* BLOCK 5: 7-Segment Display Unit */}
-              <div className="w-52 bg-white border-2 border-emerald-300 rounded-xl p-3 shadow-xs flex flex-col justify-between items-center text-center space-y-2">
-                <div className="w-full flex items-center justify-between border-b border-emerald-100 pb-1.5">
-                  <span className="font-extrabold text-emerald-800 font-mono text-xs">7-Segment Unit</span>
-                  <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 rounded text-[9px] font-bold">
+              <div className="w-52 bg-white border-2 border-emerald-300 rounded-xl p-2.5 shadow-xs flex flex-col justify-between items-center text-center space-y-1.5">
+                <div className="w-full flex items-center justify-between border-b border-emerald-100 pb-1">
+                  <span className="font-extrabold text-emerald-800 font-mono text-[11px]">7-Segment Unit</span>
+                  <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-700 rounded text-[8.5px] font-bold">
                     {displayType === 'cathode' ? 'CC (GND)' : 'CA (+5V)'}
                   </span>
                 </div>
@@ -2334,79 +2334,79 @@ END MAIN                      ; End of assembly program`;
           </div>
 
           {/* 5 Comprehensive Hardware Interfacing Circuit Stage Breakdown Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-3 text-[11px]">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-3 text-[10px]">
             {/* Block 1 */}
-            <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
-              <div className="flex items-center gap-1.5 text-indigo-700 font-bold text-xs border-b border-slate-200 pb-1">
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
+              <div className="flex items-center gap-1.5 text-indigo-700 font-bold text-[11px] border-b border-slate-200 pb-1">
                 <Cpu className="w-3.5 h-3.5" />
                 <span>1. 8086 CPU</span>
               </div>
-              <p className="text-slate-600 leading-relaxed text-[10.5px]">
+              <p className="text-slate-600 leading-relaxed text-[9.5px]">
                 Operates in <strong>Minimum Mode</strong> (+5V single phase clock). Translates numeric values using lookup tables via <code className="font-mono text-indigo-600 bg-white px-1 rounded">XLAT</code> or pointer indexing, and issues <code className="font-mono text-indigo-600 bg-white px-1 rounded">OUT 80H, AL</code> to transmit display patterns.
               </p>
-              <div className="font-mono text-[9px] text-slate-500 bg-white p-1 rounded border border-slate-100">
+              <div className="font-mono text-[8.5px] text-slate-500 bg-white p-1 rounded border border-slate-100">
                 Pins: AD0-AD15, ALE, M/I̅O̅, W̅R̅
               </div>
             </div>
 
             {/* Block 2 */}
-            <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
-              <div className="flex items-center gap-1.5 text-slate-800 font-bold text-xs border-b border-slate-200 pb-1">
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
+              <div className="flex items-center gap-1.5 text-slate-800 font-bold text-[11px] border-b border-slate-200 pb-1">
                 <Layers className="w-3.5 h-3.5 text-indigo-600" />
                 <span>2. Demux & Decoder</span>
               </div>
-              <p className="text-slate-600 leading-relaxed text-[10.5px]">
+              <p className="text-slate-600 leading-relaxed text-[9.5px]">
                 <strong>74LS373</strong> transparent latch captures lower 16-bit address on falling edge of <code className="font-mono text-emerald-600 bg-white px-1 rounded">ALE</code>. <strong>74LS138</strong> decodes lines A2–A7 with M/I̅O̅=LOW to generate active-low chip select <code className="font-mono text-emerald-700 bg-white px-1 rounded">C̅S̅ = 80H</code>.
               </p>
-              <div className="font-mono text-[9px] text-slate-500 bg-white p-1 rounded border border-slate-100">
+              <div className="font-mono text-[8.5px] text-slate-500 bg-white p-1 rounded border border-slate-100">
                 Port A = 80H (A1=0, A0=0)
               </div>
             </div>
 
             {/* Block 3 */}
-            <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
-              <div className="flex items-center gap-1.5 text-indigo-800 font-bold text-xs border-b border-slate-200 pb-1">
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
+              <div className="flex items-center gap-1.5 text-indigo-800 font-bold text-[11px] border-b border-slate-200 pb-1">
                 <Zap className="w-3.5 h-3.5 text-amber-500" />
                 <span>3. Intel 8255 PPI</span>
               </div>
-              <p className="text-slate-600 leading-relaxed text-[10.5px]">
+              <p className="text-slate-600 leading-relaxed text-[9.5px]">
                 Configured in <strong>Mode 0 (Basic I/O)</strong> by writing Control Word <code className="font-mono text-indigo-700 bg-white px-1 rounded">80H</code> to port 86H. <strong>Port A</strong> transmits 8-bit segment drive codes (PA0=a .. PA7=dp), while <strong>Port C</strong> switches digit enable lines for multiplexed scanning.
               </p>
-              <div className="font-mono text-[9px] text-slate-500 bg-white p-1 rounded border border-slate-100">
+              <div className="font-mono text-[8.5px] text-slate-500 bg-white p-1 rounded border border-slate-100">
                 Mode 0 Output: Ports A, B & C
               </div>
             </div>
 
             {/* Block 4 */}
-            <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
-              <div className="flex items-center gap-1.5 text-amber-700 font-bold text-xs border-b border-slate-200 pb-1">
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
+              <div className="flex items-center gap-1.5 text-amber-700 font-bold text-[11px] border-b border-slate-200 pb-1">
                 <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
                 <span>4. 330Ω Resistor Array</span>
               </div>
-              <p className="text-slate-600 leading-relaxed text-[10.5px]">
+              <p className="text-slate-600 leading-relaxed text-[9.5px]">
                 Protects LED segments and 8255 port output drivers from burning out due to overcurrent:
                 <br />
-                <span className="font-mono text-amber-900 font-bold bg-amber-50 px-1 py-0.5 rounded text-[9.5px]">
+                <span className="font-mono text-amber-900 font-bold bg-amber-50 px-1 py-0.5 rounded text-[8.5px]">
                   R = (5.0V - 1.8V) / 10mA = 320Ω → 330Ω
                 </span>
               </p>
-              <div className="font-mono text-[9px] text-slate-500 bg-white p-1 rounded border border-slate-100">
+              <div className="font-mono text-[8.5px] text-slate-500 bg-white p-1 rounded border border-slate-100">
                 8 × 330Ω in series with PA0-PA7
               </div>
             </div>
 
             {/* Block 5 */}
-            <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
-              <div className="flex items-center gap-1.5 text-emerald-700 font-bold text-xs border-b border-slate-200 pb-1">
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
+              <div className="flex items-center gap-1.5 text-emerald-700 font-bold text-[11px] border-b border-slate-200 pb-1">
                 <Lightbulb className="w-3.5 h-3.5 text-emerald-600" />
                 <span>5. 7-Segment Display</span>
               </div>
-              <p className="text-slate-600 leading-relaxed text-[10.5px]">
+              <p className="text-slate-600 leading-relaxed text-[9.5px]">
                 <strong>Common Cathode (CC):</strong> All cathodes grounded (0V); segment illuminates on logic HIGH (+5V).
                 <br />
                 <strong>Common Anode (CA):</strong> All anodes tied to +5V; segment illuminates on logic LOW (0V).
               </p>
-              <div className="font-mono text-[9px] text-slate-500 bg-white p-1 rounded border border-slate-100">
+              <div className="font-mono text-[8.5px] text-slate-500 bg-white p-1 rounded border border-slate-100">
                 Multi-Digit: BC547/BC557 drivers
               </div>
             </div>
@@ -2946,15 +2946,15 @@ END MAIN                      ; End of assembly program`;
 
           {/* Interactive Hardware Block Diagram Canvas (Clean Light SVG) */}
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 overflow-x-auto shadow-inner">
-            <div className="min-w-[920px] flex items-stretch justify-between gap-2.5 text-[11px]">
+            <div className="min-w-[920px] flex items-stretch justify-between gap-2.5 text-[10px]">
               
               {/* BLOCK 1: 8086 Microprocessor */}
               <div className="w-44 bg-white border-2 border-indigo-200 rounded-xl p-3 shadow-xs flex flex-col justify-between space-y-2">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
-                  <span className="font-extrabold text-indigo-700 font-mono text-xs">8086 CPU</span>
-                  <span className="px-1.5 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[9px] font-bold">5 MHz</span>
+                  <span className="font-extrabold text-indigo-700 font-mono text-[11px]">8086 CPU</span>
+                  <span className="px-1.5 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[8.5px] font-bold">5 MHz</span>
                 </div>
-                <div className="space-y-1 font-mono text-[10px]">
+                <div className="space-y-1 font-mono text-[8.5px]">
                   <div className="flex justify-between items-center py-0.5 px-1 bg-slate-50 rounded">
                     <span className="text-slate-600">AD0–AD15</span>
                     <span className="text-indigo-600 font-bold">Mux Bus</span>
@@ -2976,14 +2976,14 @@ END MAIN                      ; End of assembly program`;
                     <span className="text-emerald-700 font-bold">IN AL, 82H</span>
                   </div>
                 </div>
-                <div className="p-1.5 bg-slate-50 rounded border border-slate-100 text-[9px] text-slate-500">
+                <div className="p-1.5 bg-slate-50 rounded border border-slate-100 text-[8.5px] text-slate-500">
                   Runs scan loop &amp; 20ms debounce timing
                 </div>
               </div>
 
               {/* ARROW 1: Multiplexed Bus */}
               <div className="flex flex-col items-center justify-center px-1 text-slate-400">
-                <div className="font-mono text-[9px] text-indigo-600 font-bold bg-indigo-50 px-1 py-0.5 rounded border border-indigo-100 mb-1">
+                <div className="font-mono text-[8.5px] text-indigo-600 font-bold bg-indigo-50 px-1 py-0.5 rounded border border-indigo-100 mb-1">
                   ALE + AD0-7
                 </div>
                 <div className="h-0.5 w-6 bg-indigo-300 relative">
@@ -2997,10 +2997,10 @@ END MAIN                      ; End of assembly program`;
               {/* BLOCK 2: 74LS373 Latch & 74LS138 Address Decoder */}
               <div className="w-48 bg-white border-2 border-slate-200 rounded-xl p-3 shadow-xs flex flex-col justify-between space-y-2">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
-                  <span className="font-extrabold text-slate-800 font-mono text-xs">74LS373 / 138</span>
-                  <span className="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[9px] font-bold">Demux / C̅S̅</span>
+                  <span className="font-extrabold text-slate-800 font-mono text-[11px]">74LS373 / 138</span>
+                  <span className="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[8.5px] font-bold">Demux / C̅S̅</span>
                 </div>
-                <div className="space-y-1 font-mono text-[10px]">
+                <div className="space-y-1 font-mono text-[8.5px]">
                   <div className="flex justify-between items-center py-0.5 px-1 bg-slate-50 rounded">
                     <span className="text-slate-600">A2–A7 (Base)</span>
                     <span className="text-slate-900 font-bold">80H Match</span>
@@ -3018,14 +3018,14 @@ END MAIN                      ; End of assembly program`;
                     <span className="text-purple-600 font-bold">86H (CW=82H)</span>
                   </div>
                 </div>
-                <div className="p-1.5 bg-slate-50 rounded border border-slate-100 text-[9px] text-slate-500">
+                <div className="p-1.5 bg-slate-50 rounded border border-slate-100 text-[8.5px] text-slate-500">
                   Maps 8255 I/O port address space
                 </div>
               </div>
 
               {/* ARROW 2: Control & Address lines */}
               <div className="flex flex-col items-center justify-center px-1 text-slate-400">
-                <div className="font-mono text-[9px] text-slate-600 font-bold bg-slate-100 px-1 py-0.5 rounded border border-slate-200 mb-1">
+                <div className="font-mono text-[8.5px] text-slate-600 font-bold bg-slate-100 px-1 py-0.5 rounded border border-slate-200 mb-1">
                   C̅S̅, A0, A1
                 </div>
                 <div className="h-0.5 w-6 bg-slate-300 relative">
@@ -3039,21 +3039,21 @@ END MAIN                      ; End of assembly program`;
               {/* BLOCK 3: Intel 8255 PPI */}
               <div className="w-52 bg-white border-2 border-indigo-300 rounded-xl p-3 shadow-xs flex flex-col justify-between space-y-2">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
-                  <span className="font-extrabold text-indigo-900 font-mono text-xs">8255 PPI</span>
-                  <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-700 rounded text-[9px] font-bold">Mode 0 (CW=82H)</span>
+                  <span className="font-extrabold text-indigo-900 font-mono text-[11px]">8255 PPI</span>
+                  <span className="px-1.5 py-0.5 bg-indigo-100 text-indigo-700 rounded text-[8.5px] font-bold">Mode 0 (CW=82H)</span>
                 </div>
-                <div className="space-y-1 font-mono text-[10px]">
+                <div className="space-y-1 font-mono text-[8.5px]">
                   <div className="p-1 bg-indigo-50/70 rounded border border-indigo-100 space-y-0.5">
                     <div className="flex justify-between items-center">
                       <span className="text-indigo-900 font-bold">Port A (80H) - OUT:</span>
                       <span className="font-bold text-indigo-700 font-mono">0x{keypadRowOutputByte.toString(16).toUpperCase().padStart(2, '0')}H</span>
                     </div>
-                    <div className="grid grid-cols-4 gap-0.5 text-center text-[9px] pt-0.5">
+                    <div className="grid grid-cols-4 gap-0.5 text-center text-[8px] pt-0.5">
                       {[0, 1, 2, 3].map((r) => {
                         const isGrounded = activeDrivingRow === -1 || activeDrivingRow === r;
                         return (
                           <div 
-                            key={r}
+                            key={r} 
                             className={`py-0.5 rounded ${
                               isGrounded 
                                 ? 'bg-emerald-600 text-white font-bold' 
@@ -3072,12 +3072,12 @@ END MAIN                      ; End of assembly program`;
                       <span className="text-emerald-900 font-bold">Port B (82H) - IN:</span>
                       <span className="font-bold text-emerald-700 font-mono">0x{keypadColInputByte.toString(16).toUpperCase().padStart(2, '0')}H</span>
                     </div>
-                    <div className="grid grid-cols-4 gap-0.5 text-center text-[9px] pt-0.5">
+                    <div className="grid grid-cols-4 gap-0.5 text-center text-[8px] pt-0.5">
                       {[0, 1, 2, 3].map((c) => {
                         const isColZero = isColDetected && targetCol === c;
                         return (
                           <div 
-                            key={c}
+                            key={c} 
                             className={`py-0.5 rounded ${
                               isColZero 
                                 ? 'bg-emerald-600 text-white font-bold' 
@@ -3091,14 +3091,14 @@ END MAIN                      ; End of assembly program`;
                     </div>
                   </div>
                 </div>
-                <div className="p-1.5 bg-slate-50 rounded border border-slate-100 text-[9px] text-slate-500">
+                <div className="p-1.5 bg-slate-50 rounded border border-slate-100 text-[8.5px] text-slate-500">
                   PA0–PA3 drives Rows; PB0–PB3 reads Columns
                 </div>
               </div>
 
               {/* ARROW 3: Bidirectional Interconnect Bus */}
               <div className="flex flex-col items-center justify-center px-1 text-slate-400">
-                <div className="font-mono text-[9px] text-indigo-600 font-bold bg-indigo-50 px-1 py-0.5 rounded border border-indigo-100 mb-1">
+                <div className="font-mono text-[8.5px] text-indigo-600 font-bold bg-indigo-50 px-1 py-0.5 rounded border border-indigo-100 mb-1">
                   Rows (Out) ➔
                 </div>
                 <div className="h-0.5 w-6 bg-indigo-400 relative">
@@ -3106,7 +3106,7 @@ END MAIN                      ; End of assembly program`;
                     <div className="absolute top-[-2px] left-0 w-1.5 h-1.5 bg-indigo-600 rounded-full animate-ping" />
                   )}
                 </div>
-                <div className="font-mono text-[9px] text-emerald-600 font-bold bg-emerald-50 px-1 py-0.5 rounded border border-emerald-100 mt-1">
+                <div className="font-mono text-[8.5px] text-emerald-600 font-bold bg-emerald-50 px-1 py-0.5 rounded border border-emerald-100 mt-1">
                   ⇠ Cols (In)
                 </div>
               </div>
@@ -3114,15 +3114,15 @@ END MAIN                      ; End of assembly program`;
               {/* BLOCK 4: Pull-Up Resistor Network (4 x 10kΩ) */}
               <div className="w-44 bg-white border-2 border-amber-200 rounded-xl p-3 shadow-xs flex flex-col justify-between space-y-2">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
-                  <span className="font-extrabold text-amber-900 font-mono text-xs">4 × 10kΩ Pull-Ups</span>
-                  <span className="px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded text-[9px] font-bold">+5V VCC</span>
+                  <span className="font-extrabold text-amber-900 font-mono text-[11px]">4 × 10kΩ Pull-Ups</span>
+                  <span className="px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded text-[8.5px] font-bold">+5V VCC</span>
                 </div>
-                <div className="space-y-1 font-mono text-[10px]">
+                <div className="space-y-1 font-mono text-[8.5px]">
                   {[0, 1, 2, 3].map((c) => {
                     const isColZero = isColDetected && targetCol === c;
                     return (
                       <div 
-                        key={c}
+                        key={c} 
                         className={`flex justify-between items-center py-0.5 px-1 rounded ${
                           isColZero ? 'bg-emerald-50 text-emerald-900 font-bold' : 'bg-slate-50 text-slate-700'
                         }`}
@@ -3133,14 +3133,14 @@ END MAIN                      ; End of assembly program`;
                     );
                   })}
                 </div>
-                <div className="p-1.5 bg-slate-50 rounded border border-slate-100 text-[9px] text-slate-500">
+                <div className="p-1.5 bg-slate-50 rounded border border-slate-100 text-[8.5px] text-slate-500">
                   Holds column lines HIGH until pulled LOW by switch
                 </div>
               </div>
 
               {/* ARROW 4: Matrix Cross Interconnect */}
               <div className="flex flex-col items-center justify-center px-1 text-slate-400">
-                <div className="font-mono text-[9px] text-emerald-600 font-bold bg-emerald-50 px-1 py-0.5 rounded border border-emerald-100 mb-1">
+                <div className="font-mono text-[8.5px] text-emerald-600 font-bold bg-emerald-50 px-1 py-0.5 rounded border border-emerald-100 mb-1">
                   Sense Lines
                 </div>
                 <div className="h-0.5 w-6 bg-emerald-400 relative">
@@ -3154,8 +3154,8 @@ END MAIN                      ; End of assembly program`;
               {/* BLOCK 5: 4x4 Matrix Keypad Physical Switch Grid */}
               <div className="w-56 bg-white text-slate-900 rounded-xl p-3 shadow-sm flex flex-col justify-between space-y-2 border-2 border-indigo-300">
                 <div className="flex items-center justify-between border-b border-slate-200 pb-1.5">
-                  <span className="font-extrabold text-indigo-900 font-mono text-xs">4×4 Keypad Grid</span>
-                  <span className="px-1.5 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded text-[9px] font-bold">
+                  <span className="font-extrabold text-indigo-900 font-mono text-[11px]">4×4 Keypad Grid</span>
+                  <span className="px-1.5 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded text-[8.5px] font-bold">
                     Key: '{keypadCircuitKey}'
                   </span>
                 </div>
@@ -3199,7 +3199,7 @@ END MAIN                      ; End of assembly program`;
                 </div>
 
                 {/* Live Matrix Coordinate & Detection Status */}
-                <div className="p-1.5 bg-slate-800/90 rounded border border-slate-700 text-[9px] flex justify-between items-center font-mono">
+                <div className="p-1.5 bg-slate-800/90 rounded border border-slate-700 text-[8.5px] flex justify-between items-center font-mono">
                   <span className="text-slate-300">Target (R{targetRow}, C{targetCol})</span>
                   <span className={`font-bold ${isColDetected ? 'text-emerald-400' : 'text-amber-400'}`}>
                     {isColDetected ? '✓ SENSE MATCH' : 'SCANNING...'}
@@ -3211,82 +3211,77 @@ END MAIN                      ; End of assembly program`;
           </div>
 
           {/* 5 Hardware Interfacing Circuit Stage Breakdown Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-2.5 text-[10px]">
-            <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
-              <div className="flex items-center gap-1.5 border-b border-slate-100 pb-1">
-                <span className="p-1 bg-indigo-50 text-indigo-600 rounded">
-                  <Cpu className="w-3.5 h-3.5" />
-                </span>
-                <span className="font-bold text-slate-900">1. 8086 CPU Engine</span>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-3 text-[10px]">
+            {/* Block 1 */}
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
+              <div className="flex items-center gap-1.5 text-indigo-700 font-bold text-[11px] border-b border-slate-200 pb-1">
+                <Cpu className="w-3.5 h-3.5" />
+                <span>1. 8086 CPU Engine</span>
               </div>
-              <p className="text-slate-600 leading-relaxed">
-                Operates in Minimum Mode with multiplexed <code className="font-mono text-indigo-600">AD0–AD15</code>. Emits row grounding bytes via <code className="font-mono text-indigo-600">OUT 80H, AL</code> and samples return column nibble with <code className="font-mono text-emerald-600">IN AL, 82H</code>.
+              <p className="text-slate-600 leading-relaxed text-[9.5px]">
+                Operates in Minimum Mode with multiplexed <code className="font-mono text-indigo-600 bg-white px-1 rounded">AD0–AD15</code>. Emits row grounding bytes via <code className="font-mono text-indigo-600 bg-white px-1 rounded">OUT 80H, AL</code> and samples return column nibble with <code className="font-mono text-emerald-600 bg-white px-1 rounded">IN AL, 82H</code>.
               </p>
-              <div className="font-mono text-[9px] text-slate-500 bg-slate-50 p-1 rounded">
+              <div className="font-mono text-[8.5px] text-slate-500 bg-white p-1 rounded border border-slate-100">
                 • 20ms Software Debounce<br />
                 • Clock: 5 MHz (T-states)
               </div>
             </div>
 
-            <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
-              <div className="flex items-center gap-1.5 border-b border-slate-100 pb-1">
-                <span className="p-1 bg-slate-100 text-slate-700 rounded">
-                  <Layers className="w-3.5 h-3.5" />
-                </span>
-                <span className="font-bold text-slate-900">2. Demux &amp; Decoder</span>
+            {/* Block 2 */}
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
+              <div className="flex items-center gap-1.5 text-slate-800 font-bold text-[11px] border-b border-slate-200 pb-1">
+                <Layers className="w-3.5 h-3.5 text-indigo-600" />
+                <span>2. Demux &amp; Decoder</span>
               </div>
-              <p className="text-slate-600 leading-relaxed">
-                <strong className="text-slate-800">74LS373</strong> latches lower address on <code className="font-mono text-indigo-600">ALE</code> falling edge. <strong className="text-slate-800">74LS138</strong> decodes <code className="font-mono text-indigo-600">A2–A7</code> with <code className="font-mono text-indigo-600">M/I̅O̅=0</code> to assert active-LOW <code className="font-mono text-emerald-600">C̅S̅</code> at base <strong className="text-slate-800">80H</strong>.
+              <p className="text-slate-600 leading-relaxed text-[9.5px]">
+                <strong className="text-slate-800">74LS373</strong> latches lower address on <code className="font-mono text-indigo-600 bg-white px-1 rounded">ALE</code> falling edge. <strong className="text-slate-800">74LS138</strong> decodes <code className="font-mono text-indigo-600 bg-white px-1 rounded">A2–A7</code> with <code className="font-mono text-indigo-600 bg-white px-1 rounded">M/I̅O̅=0</code> to assert active-LOW <code className="font-mono text-emerald-600 bg-white px-1 rounded">C̅S̅</code> at base <strong className="text-slate-800">80H</strong>.
               </p>
-              <div className="font-mono text-[9px] text-slate-500 bg-slate-50 p-1 rounded">
+              <div className="font-mono text-[8.5px] text-slate-500 bg-white p-1 rounded border border-slate-100">
                 • Port A: 80H | Port B: 82H<br />
                 • Control Register: 86H
               </div>
             </div>
 
-            <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
-              <div className="flex items-center gap-1.5 border-b border-slate-100 pb-1">
-                <span className="p-1 bg-indigo-100 text-indigo-700 rounded">
-                  <Sliders className="w-3.5 h-3.5" />
-                </span>
-                <span className="font-bold text-slate-900">3. Intel 8255 PPI</span>
+            {/* Block 3 */}
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
+              <div className="flex items-center gap-1.5 text-indigo-800 font-bold text-[11px] border-b border-slate-200 pb-1">
+                <Sliders className="w-3.5 h-3.5 text-amber-500" />
+                <span>3. Intel 8255 PPI</span>
               </div>
-              <p className="text-slate-600 leading-relaxed">
-                Configured with Control Word <code className="font-mono font-bold text-indigo-700 bg-slate-100 px-1 rounded">82H</code> (Mode 0: Port A = Output for Rows, Port B = Input for Columns). Port A pins <code className="font-mono text-indigo-600">PA0–PA3</code> sink current to ground rows sequentially.
+              <p className="text-slate-600 leading-relaxed text-[9.5px]">
+                Configured with Control Word <code className="font-mono font-bold text-indigo-700 bg-white px-1 rounded">82H</code> (Mode 0: Port A = Output for Rows, Port B = Input for Columns). Port A pins <code className="font-mono text-indigo-600 bg-white px-1 rounded">PA0–PA3</code> sink current to ground rows sequentially.
               </p>
-              <div className="font-mono text-[9px] text-slate-500 bg-slate-50 p-1 rounded">
+              <div className="font-mono text-[8.5px] text-slate-500 bg-white p-1 rounded border border-slate-100">
                 • Mode 0 (Basic I/O)<br />
                 • CW = 82H (10000010b)
               </div>
             </div>
 
-            <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
-              <div className="flex items-center gap-1.5 border-b border-slate-100 pb-1">
-                <span className="p-1 bg-amber-50 text-amber-700 rounded">
-                  <Zap className="w-3.5 h-3.5" />
-                </span>
-                <span className="font-bold text-slate-900">4. 10kΩ Pull-Ups</span>
+            {/* Block 4 */}
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
+              <div className="flex items-center gap-1.5 text-amber-700 font-bold text-[11px] border-b border-slate-200 pb-1">
+                <Zap className="w-3.5 h-3.5 text-amber-600" />
+                <span>4. 10kΩ Pull-Ups</span>
               </div>
-              <p className="text-slate-600 leading-relaxed">
-                Four <strong className="text-slate-800">10kΩ pull-up resistors</strong> tie <code className="font-mono text-indigo-600">PB0–PB3</code> to +5V VCC. When keys are open, columns float HIGH (<code className="font-mono text-slate-700">0FH</code>). When key is pressed and row grounded, column drops to <strong className="text-emerald-700">0.0V</strong>.
+              <p className="text-slate-600 leading-relaxed text-[9.5px]">
+                Four <strong className="text-slate-800">10kΩ pull-up resistors</strong> tie <code className="font-mono text-indigo-600 bg-white px-1 rounded">PB0–PB3</code> to +5V VCC. When keys are open, columns float HIGH (<code className="font-mono text-slate-700 bg-white px-1 rounded">0FH</code>). When key is pressed and row grounded, column drops to <strong className="text-emerald-700">0.0V</strong>.
               </p>
-              <div className="font-mono text-[9px] text-slate-500 bg-slate-50 p-1 rounded">
+              <div className="font-mono text-[8.5px] text-slate-500 bg-white p-1 rounded border border-slate-100">
                 • I_sink = 5V / 10kΩ = 0.5mA<br />
                 • Logic 1 = 5V, Logic 0 = 0V
               </div>
             </div>
 
-            <div className="bg-white p-3 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
-              <div className="flex items-center gap-1.5 border-b border-slate-100 pb-1">
-                <span className="p-1 bg-emerald-50 text-emerald-700 rounded">
-                  <Grid className="w-3.5 h-3.5" />
-                </span>
-                <span className="font-bold text-slate-900">5. 4×4 Matrix Grid</span>
+            {/* Block 5 */}
+            <div className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-1.5 shadow-2xs">
+              <div className="flex items-center gap-1.5 text-emerald-700 font-bold text-[11px] border-b border-slate-200 pb-1">
+                <Grid className="w-3.5 h-3.5 text-emerald-600" />
+                <span>5. 4×4 Matrix Grid</span>
               </div>
-              <p className="text-slate-600 leading-relaxed">
-                Arranges 16 SPST momentary tactile switches at row/col cross-points, requiring only 8 I/O pins instead of 16 dedicated lines. Pressing $(R_i, C_j)$ creates an electrical short between row $i$ and column $j$.
+              <p className="text-slate-600 leading-relaxed text-[9.5px]">
+                Arranges 16 SPST momentary tactile switches at row/col cross-points, requiring only 8 I/O pins instead of 16 dedicated lines. Pressing (Row, Col) creates an electrical short between row line and column line.
               </p>
-              <div className="font-mono text-[9px] text-slate-500 bg-slate-50 p-1 rounded">
+              <div className="font-mono text-[8.5px] text-slate-500 bg-white p-1 rounded border border-slate-100">
                 • 16 Keys: 0–9, A–D, *, #<br />
                 • Two-Key Lockout Protection
               </div>

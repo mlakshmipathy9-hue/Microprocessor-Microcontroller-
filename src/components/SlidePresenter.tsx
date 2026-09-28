@@ -150,6 +150,12 @@ class SimulatorErrorBoundary extends (Component as any) {
     (this as any).setState({ hasError: false, error: null });
   };
 
+  handleReload = () => {
+    if (typeof window !== 'undefined') {
+      window.location.reload();
+    }
+  };
+
   render() {
     if (this.state.hasError) {
       return (
@@ -165,12 +171,20 @@ class SimulatorErrorBoundary extends (Component as any) {
               The simulator could not be loaded due to a transient network condition or module update.
             </p>
           </div>
-          <button
-            onClick={this.handleRetry}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
-          >
-            Retry Loading Simulator
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={this.handleRetry}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+            >
+              Retry Loading Simulator
+            </button>
+            <button
+              onClick={this.handleReload}
+              className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-xs font-semibold shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+            >
+              Reload Page
+            </button>
+          </div>
         </div>
       );
     }
@@ -205,7 +219,7 @@ const AssemblerOutputsSimulator = lazyWithRetry(() => import('./AssemblerOutputs
 const MemoryInterfacingSimulator = lazyWithRetry(() => import('./MemoryInterfacingSimulator'));
 const PPI8255Simulator = lazyWithRetry(() => import('./PPI8255Simulator'));
 const PPI8255RegistersOverview = lazyWithRetry(() => import('./PPI8255RegistersOverview'));
-const PeripheralInterfacingSimulator = lazyWithRetry(() => import('./PeripheralInterfacingSimulator'));
+import PeripheralInterfacingSimulator from './PeripheralInterfacingSimulator';
 const AnalogInterfacingSimulator = lazyWithRetry(() => import('./AnalogInterfacingSimulator'));
 const Interrupt8259Simulator = lazyWithRetry(() => import('./Interrupt8259Simulator'));
 const USART8251Simulator = lazyWithRetry(() => import('./USART8251Simulator'));
@@ -215,6 +229,9 @@ const DMA8237Simulator = lazyWithRetry(() => import('./DMA8237Simulator'));
 const MCU8051Simulator = lazyWithRetry(() => import('./MCU8051Simulator'));
 const MCU8051InterfacingSimulator = lazyWithRetry(() => import('./MCU8051InterfacingSimulator'));
 const MCU8051RAMDiagram = lazyWithRetry(() => import('./MCU8051RAMDiagram'));
+const MCU8051AddressingModesSimulator = lazyWithRetry(() => import('./MCU8051AddressingModesSimulator'));
+const MCU8051InstructionDecoderSimulator = lazyWithRetry(() => import('./MCU8051InstructionDecoderSimulator'));
+const SwitchesLEDsSimulator = lazyWithRetry(() => import('./SwitchesLEDsSimulator'));
 
 interface SlidePresenterProps {
   slide: Slide;
@@ -665,23 +682,26 @@ export default function SlidePresenter({
           mode = 'schematic';
           allowedTabs = ['schematic', 'circuit', 'stepper-types', 'stepper', 'stepper-code'];
         }
-        else if (slide.id === 'm15-s2') {
+        else if (slide.id === 'm15-s2' || slide.id === 'm15-s3') {
           mode = 'display-schematic';
           allowedTabs = ['display-schematic', 'display-circuit', 'display', 'display-code'];
         }
-        else if (slide.id === 'm15-s3') {
+        else if (slide.id === 'm15-s4') {
           mode = 'keypad-schematic';
           allowedTabs = ['keypad-schematic', 'keypad-circuit', 'keypad', 'keypad-code'];
         }
-        else if (slide.id === 'm15-s4') {
+        else if (slide.id === 'm15-s5') {
           mode = 'traffic-schematic';
           allowedTabs = ['traffic-schematic', 'traffic-circuit', 'traffic', 'traffic-code'];
         }
-        else if (slide.id === 'm15-s5') mode = 'alp';
+        else if (slide.id === 'm15-s6') mode = 'alp';
 
         component = <PeripheralInterfacingSimulator initialTab={mode} allowedTabs={allowedTabs} />;
         break;
       }
+      case 'switches-leds':
+        component = <SwitchesLEDsSimulator />;
+        break;
       case 'analog-interfacing': {
         let initialTab: 'adc' | 'characteristics' | 'dac' = 'adc';
         if (slide.id === 'm16-s1') initialTab = 'adc';
@@ -719,10 +739,21 @@ export default function SlidePresenter({
         component = <MCU8051Simulator initialTab="sfr" />;
         break;
       case 'mcu-pins':
-        component = <MCU8051Simulator initialTab="pins" />;
+        component = (
+          <MCU8051Simulator
+            initialTab="pins"
+            hideArchitecture={true}
+            hideSfr={true}
+            hideInstructions={true}
+            hideAlp={true}
+          />
+        );
+        break;
+      case 'mcu-addressing-modes':
+        component = <MCU8051AddressingModesSimulator />;
         break;
       case 'mcu-instructions':
-        component = <MCU8051Simulator initialTab="instructions" />;
+        component = <MCU8051InstructionDecoderSimulator />;
         break;
       case 'mcu-alp':
         component = <MCU8051Simulator initialTab="alp" />;

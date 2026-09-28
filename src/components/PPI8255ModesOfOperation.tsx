@@ -1329,7 +1329,6 @@ export default function PPI8255ModesOfOperation({
           <div className="bg-purple-50/80 p-4 rounded-xl border border-purple-200 space-y-4">
             <div className="flex items-center justify-between flex-wrap gap-2">
               <div className="flex items-center gap-2">
-                <span className="p-1 bg-purple-600 text-white rounded-md font-bold text-xs">Mode 2 Demo</span>
                 <h4 className="font-bold text-purple-950 text-sm">
                   Mode 2: Strobed Bi-directional Bus I/O Working Demonstration (Port A Only)
                 </h4>

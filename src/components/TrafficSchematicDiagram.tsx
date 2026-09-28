@@ -35,7 +35,7 @@ export default function TrafficSchematicDiagram({
       codePortA: 0x21, // PA5(EW G)=0, PA4(EW Y)=0, PA3(EW R)=1, PA2(NS G)=1, PA1(NS Y)=0, PA0(NS R)=0 -> 00100001b = 21H
       ns: 'green',
       ew: 'red',
-      duration: 3500,
+      duration: 4800,
       desc: 'NS Corridor Traffic Flowing (30s)'
     },
     {
@@ -44,7 +44,7 @@ export default function TrafficSchematicDiagram({
       codePortA: 0x11, // PA5=0, PA4=0, PA3=1, PA2=0, PA1=1, PA0=0 -> 00010001b = 11H
       ns: 'yellow',
       ew: 'red',
-      duration: 1500,
+      duration: 2200,
       desc: 'NS Corridor Clearance Warning (5s)'
     },
     {
@@ -53,7 +53,7 @@ export default function TrafficSchematicDiagram({
       codePortA: 0x0C, // PA5=0, PA4=0, PA3=0, PA2=0, PA1=0, PA0=1 + PA5 EW G -> PA5=1, PA0=1 -> 00100100b or 0CH / 24H (EW Green = 1, NS Red = 1)
       ns: 'red',
       ew: 'green',
-      duration: 3500,
+      duration: 4800,
       desc: 'EW Corridor Traffic Flowing (30s)'
     },
     {
@@ -62,7 +62,7 @@ export default function TrafficSchematicDiagram({
       codePortA: 0x0A, // PA4=1 (EW Yellow), PA0=1 (NS Red) -> 00010001b or 0AH / 12H
       ns: 'red',
       ew: 'yellow',
-      duration: 1500,
+      duration: 2200,
       desc: 'EW Corridor Clearance Warning (5s)'
     }
   ];

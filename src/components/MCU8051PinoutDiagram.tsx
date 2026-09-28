@@ -90,12 +90,8 @@ export default function MCU8051PinoutDiagram({
       {/* Top Filter and Slide 25 Notice Banner */}
       <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-2xs flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <span className="p-1.5 bg-blue-50 text-blue-700 rounded-lg border border-blue-100 font-mono font-bold text-xs flex items-center gap-1.5">
-            <Layers className="w-4 h-4" />
-            Slide 25 of 50 • I/O Ports 2/4
-          </span>
           <span className="text-xs font-semibold text-slate-700 hidden sm:inline">
-            40-Pin DIP Package &amp; Port 1 Architecture
+            Port 1 Dedicated I/O Architecture
           </span>
         </div>
 

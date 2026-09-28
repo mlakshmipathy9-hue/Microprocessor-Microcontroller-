@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { Layers, Database, Sparkles, CheckCircle2, ArrowRight, HelpCircle, BookOpen } from 'lucide-react';
+import { Layers, Database, Sparkles, CheckCircle2, ArrowRight, HelpCircle, BookOpen, Cpu, Split } from 'lucide-react';
+import MCU8051ROMDiagram from './MCU8051ROMDiagram';
 
 interface MCU8051RAMDiagramProps {
   onSelectZone?: (zone: 'working' | 'bit' | 'general') => void;
+  initialDomain?: 'ram' | 'rom' | 'comparison';
 }
 
-export default function MCU8051RAMDiagram({ onSelectZone }: MCU8051RAMDiagramProps) {
+export default function MCU8051RAMDiagram({ onSelectZone, initialDomain = 'ram' }: MCU8051RAMDiagramProps) {
+  const [memoryDomain, setMemoryDomain] = useState<'ram' | 'rom' | 'comparison'>(initialDomain);
   const [selectedSection, setSelectedSection] = useState<'working' | 'bit' | 'general'>('working');
   const [selectedBank, setSelectedBank] = useState<0 | 1 | 2 | 3>(0);
   const [selectedBitRow, setSelectedBitRow] = useState<number>(0); // 0 to 15 (20H to 2FH)
@@ -82,52 +85,117 @@ export default function MCU8051RAMDiagram({ onSelectZone }: MCU8051RAMDiagramPro
 
   return (
     <div className="w-full flex flex-col gap-5 font-sans">
-      {/* Top Header Filter & Slide 13 of 50 Badge */}
-      <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-2xs flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="p-1.5 bg-amber-50 text-amber-800 rounded-lg border border-amber-200 font-mono font-bold text-xs flex items-center gap-1.5">
-            <Layers className="w-4 h-4 text-amber-600" />
-            Slide 13 of 50 • Internal RAM Map
-          </span>
-          <span className="text-xs font-semibold text-slate-700 hidden sm:inline">
-            128-Byte On-Chip RAM Architecture (00H to 7FH)
-          </span>
+      {/* Primary Domain Switcher: RAM Map vs ROM Memory vs Harvard Comparison */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 bg-indigo-50 border border-indigo-100 rounded-xl">
+            <Database className="w-5 h-5 text-indigo-600" />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-slate-900 font-display">
+              8051 Memory Architecture Suite
+            </h3>
+            <p className="text-[11px] text-slate-500">
+              Harvard Architecture: 128B Internal RAM + 4KB Flash/ROM (Expandable to 64KB each)
+            </p>
+          </div>
         </div>
 
-        {/* Section Selector Quick Tabs */}
-        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
+        <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-mono font-bold">
           <button
-            onClick={() => setSelectedSection('working')}
-            className={`px-3 py-1 font-mono font-bold rounded-lg transition-all cursor-pointer ${
-              selectedSection === 'working'
-                ? 'bg-blue-600 text-white shadow-2xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-            }`}
-          >
-            Working Registers (32B)
-          </button>
-          <button
-            onClick={() => setSelectedSection('bit')}
-            className={`px-3 py-1 font-mono font-bold rounded-lg transition-all cursor-pointer ${
-              selectedSection === 'bit'
+            onClick={() => setMemoryDomain('ram')}
+            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+              memoryDomain === 'ram'
                 ? 'bg-amber-600 text-white shadow-2xs'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
             }`}
           >
-            Bit Addressable (16B)
+            <Layers className="w-3.5 h-3.5" />
+            Internal RAM (128B)
           </button>
           <button
-            onClick={() => setSelectedSection('general')}
-            className={`px-3 py-1 font-mono font-bold rounded-lg transition-all cursor-pointer ${
-              selectedSection === 'general'
-                ? 'bg-emerald-600 text-white shadow-2xs'
+            onClick={() => setMemoryDomain('rom')}
+            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+              memoryDomain === 'rom'
+                ? 'bg-indigo-600 text-white shadow-2xs'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
             }`}
           >
-            General Purpose (80B)
+            <Cpu className="w-3.5 h-3.5" />
+            Program ROM (4KB / 64KB)
+          </button>
+          <button
+            onClick={() => setMemoryDomain('comparison')}
+            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+              memoryDomain === 'comparison'
+                ? 'bg-blue-600 text-white shadow-2xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+            }`}
+          >
+            <Split className="w-3.5 h-3.5" />
+            RAM vs ROM Comparison
           </button>
         </div>
       </div>
+
+      {/* When ROM or Comparison is selected, show the full interactive ROM & Harvard diagram */}
+      {memoryDomain === 'rom' && (
+        <MCU8051ROMDiagram defaultTab="map" />
+      )}
+
+      {memoryDomain === 'comparison' && (
+        <MCU8051ROMDiagram defaultTab="harvard" />
+      )}
+
+      {/* When RAM is selected, show the authentic 128-byte RAM map and inspector */}
+      {memoryDomain === 'ram' && (
+        <div className="flex flex-col gap-5">
+          {/* Header Filter */}
+          <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-2xs flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="p-1.5 bg-amber-50 text-amber-800 rounded-lg border border-amber-200 font-mono font-bold text-xs flex items-center gap-1.5">
+                <Layers className="w-4 h-4 text-amber-600" />
+                Internal RAM Organization (00H to 7FH)
+              </span>
+              <span className="text-xs font-semibold text-slate-700 hidden sm:inline">
+                32B Working Registers + 16B Bit Addressable + 80B Scratchpad
+              </span>
+            </div>
+
+            {/* Section Selector Quick Tabs */}
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
+              <button
+                onClick={() => setSelectedSection('working')}
+                className={`px-3 py-1 font-mono font-bold rounded-lg transition-all cursor-pointer ${
+                  selectedSection === 'working'
+                    ? 'bg-blue-600 text-white shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                }`}
+              >
+                Working Registers (32B)
+              </button>
+              <button
+                onClick={() => setSelectedSection('bit')}
+                className={`px-3 py-1 font-mono font-bold rounded-lg transition-all cursor-pointer ${
+                  selectedSection === 'bit'
+                    ? 'bg-amber-600 text-white shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                }`}
+              >
+                Bit Addressable (16B)
+              </button>
+              <button
+                onClick={() => setSelectedSection('general')}
+                className={`px-3 py-1 font-mono font-bold rounded-lg transition-all cursor-pointer ${
+                  selectedSection === 'general'
+                    ? 'bg-emerald-600 text-white shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                }`}
+              >
+                General Purpose (80B)
+              </button>
+            </div>
+          </div>
 
       {/* Main Container: Left Notebook Canvas replicating Slide 13, Right Deep Technical Inspector */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
@@ -658,5 +726,7 @@ export default function MCU8051RAMDiagram({ onSelectZone }: MCU8051RAMDiagramPro
         </div>
       </div>
     </div>
+  )}
+</div>
   );
 }

@@ -37,7 +37,7 @@ export default function KeypadSchematicDiagram({
     if (!isScanning) return;
     const interval = setInterval(() => {
       setActiveRowScan((prev) => (prev + 1) % 4);
-    }, 700);
+    }, 1100);
     return () => clearInterval(interval);
   }, [isScanning]);
 
@@ -280,26 +280,26 @@ export default function KeypadSchematicDiagram({
                 strokeWidth={selectedChip === 'u1' ? '2.5' : '1.5'}
               />
               <rect x="0" y="0" width="145" height="30" rx="6" fill="#eef2ff" stroke="#c7d2fe" strokeWidth="1" />
-              <text x="72.5" y="13" fill="#312e81" fontWeight="bold" textAnchor="middle" fontSize="10.5">U1 : 8086</text>
-              <text x="72.5" y="24" fill="#4338ca" fontWeight="bold" textAnchor="middle" fontSize="7.5">16-BIT MICROPROCESSOR (CPU)</text>
+              <text x="72.5" y="13" fill="#312e81" fontWeight="bold" textAnchor="middle" fontSize="9.5">U1 : 8086</text>
+              <text x="72.5" y="24" fill="#4338ca" fontWeight="bold" textAnchor="middle" fontSize="7">16-BIT MICROPROCESSOR (CPU)</text>
 
               {/* Mode & Operational Info */}
-              <text x="10" y="46" fill="#64748b" fontSize="8" fontWeight="bold">MIN MODE (MN/M̅X̅=1)</text>
-              <text x="10" y="58" fill="#64748b" fontSize="8">CLK: 5MHz • VCC: +5V</text>
+              <text x="10" y="46" fill="#64748b" fontSize="7.5" fontWeight="bold">MIN MODE (MN/M̅X̅=1)</text>
+              <text x="10" y="58" fill="#64748b" fontSize="7.5">CLK: 5MHz • VCC: +5V</text>
 
-              <text x="10" y="280" fill="#4338ca" fontSize="8" fontWeight="bold">Keypad Scan Loop:</text>
-              <text x="10" y="298" fill="#1e293b" fontSize="7.5">OUT 80H, AL (Rows)</text>
-              <text x="10" y="314" fill="#1e293b" fontSize="7.5">IN AL, 82H (Cols)</text>
-              <text x="10" y="332" fill="#6366f1" fontSize="7.5" fontWeight="bold">CALL DEBOUNCE</text>
+              <text x="10" y="280" fill="#4338ca" fontSize="7.5" fontWeight="bold">Keypad Scan Loop:</text>
+              <text x="10" y="298" fill="#1e293b" fontSize="7">OUT 80H, AL (Rows)</text>
+              <text x="10" y="314" fill="#1e293b" fontSize="7">IN AL, 82H (Cols)</text>
+              <text x="10" y="332" fill="#6366f1" fontSize="7" fontWeight="bold">CALL DEBOUNCE</text>
 
               {/* Right Pin Labels (Aligned with Interconnect Traces) */}
-              <text x="135" y="84" fill="#dc2626" fontWeight="bold" textAnchor="end">AD0–AD7</text>
-              <text x="135" y="114" fill="#dc2626" textAnchor="end">AD8–AD15</text>
-              <text x="135" y="144" fill="#059669" fontWeight="bold" textAnchor="end">ALE (Pin 25)</text>
-              <text x="135" y="174" fill="#d97706" fontWeight="bold" textAnchor="end">M/I̅O̅ (Pin 28)</text>
-              <text x="135" y="204" fill="#d97706" fontWeight="bold" textAnchor="end">W̅R̅ (Pin 29)</text>
-              <text x="135" y="234" fill="#d97706" textAnchor="end">R̅D̅ (Pin 32)</text>
-              <text x="135" y="264" fill="#64748b" textAnchor="end">RESET (Pin 21)</text>
+              <text x="135" y="84" fill="#dc2626" fontWeight="bold" textAnchor="end" fontSize="7.5">AD0–AD7</text>
+              <text x="135" y="114" fill="#dc2626" textAnchor="end" fontSize="7.5">AD8–AD15</text>
+              <text x="135" y="144" fill="#059669" fontWeight="bold" textAnchor="end" fontSize="7.5">ALE (Pin 25)</text>
+              <text x="135" y="174" fill="#d97706" fontWeight="bold" textAnchor="end" fontSize="7.5">M/I̅O̅ (Pin 28)</text>
+              <text x="135" y="204" fill="#d97706" fontWeight="bold" textAnchor="end" fontSize="7.5">W̅R̅ (Pin 29)</text>
+              <text x="135" y="234" fill="#d97706" textAnchor="end" fontSize="7.5">R̅D̅ (Pin 32)</text>
+              <text x="135" y="264" fill="#64748b" textAnchor="end" fontSize="7.5">RESET (Pin 21)</text>
 
               {[80, 110, 140, 170, 200, 230, 260].map((y, i) => (
                 <circle key={i} cx="145" cy={y} r="3" fill="#4f46e5" />
@@ -326,18 +326,18 @@ export default function KeypadSchematicDiagram({
                 strokeWidth={selectedChip === 'u2' ? '2.5' : '1.5'}
               />
               <rect x="0" y="0" width="165" height="30" rx="6" fill="#f0fdf4" stroke="#bbf7d0" strokeWidth="1" />
-              <text x="82.5" y="13" fill="#14532d" fontWeight="bold" textAnchor="middle" fontSize="10.5">U2 : 74LS373</text>
-              <text x="82.5" y="24" fill="#15803d" fontWeight="bold" textAnchor="middle" fontSize="7.5">OCTAL ADDRESS LATCH</text>
+              <text x="82.5" y="13" fill="#14532d" fontWeight="bold" textAnchor="middle" fontSize="9.5">U2 : 74LS373</text>
+              <text x="82.5" y="24" fill="#15803d" fontWeight="bold" textAnchor="middle" fontSize="7">OCTAL ADDRESS LATCH</text>
 
               {/* Left Inputs */}
-              <text x="10" y="84" fill="#dc2626" fontWeight="bold">AD0–AD7</text>
-              <text x="10" y="114" fill="#64748b">O̅E̅ (Pin 1: GND)</text>
-              <text x="10" y="144" fill="#059669" fontWeight="bold">LE (Pin 11)</text>
+              <text x="10" y="84" fill="#dc2626" fontWeight="bold" fontSize="7.5">AD0–AD7</text>
+              <text x="10" y="114" fill="#64748b" fontSize="7">O̅E̅ (Pin 1: GND)</text>
+              <text x="10" y="144" fill="#059669" fontWeight="bold" fontSize="7.5">LE (Pin 11)</text>
 
               {/* Right Outputs (Spaced and Un-overlapping) */}
-              <text x="155" y="84" fill="#2563eb" textAnchor="end" fontWeight="bold">A0 (Q0: Pin 2)</text>
-              <text x="155" y="114" fill="#2563eb" textAnchor="end" fontWeight="bold">A1 (Q1: Pin 5)</text>
-              <text x="155" y="144" fill="#2563eb" textAnchor="end">A2–A7 (Q2–Q7)</text>
+              <text x="155" y="84" fill="#2563eb" textAnchor="end" fontWeight="bold" fontSize="7">A0 (Q0: Pin 2)</text>
+              <text x="155" y="114" fill="#2563eb" textAnchor="end" fontWeight="bold" fontSize="7">A1 (Q1: Pin 5)</text>
+              <text x="155" y="144" fill="#2563eb" textAnchor="end" fontSize="7">A2–A7 (Q2–Q7)</text>
 
               {/* Input Pin Dots */}
               <circle cx="0" cy="80" r="3" fill="#dc2626" />
@@ -370,18 +370,18 @@ export default function KeypadSchematicDiagram({
                 strokeWidth={selectedChip === 'u3' ? '2.5' : '1.5'}
               />
               <rect x="0" y="0" width="165" height="30" rx="6" fill="#fffbeb" stroke="#fef08a" strokeWidth="1" />
-              <text x="82.5" y="13" fill="#78350f" fontWeight="bold" textAnchor="middle" fontSize="10.5">U3 : 74LS138</text>
-              <text x="82.5" y="24" fill="#b45309" fontWeight="bold" textAnchor="middle" fontSize="7.5">3-TO-8 ADDRESS DECODER</text>
+              <text x="82.5" y="13" fill="#78350f" fontWeight="bold" textAnchor="middle" fontSize="9.5">U3 : 74LS138</text>
+              <text x="82.5" y="24" fill="#b45309" fontWeight="bold" textAnchor="middle" fontSize="7">3-TO-8 ADDRESS DECODER</text>
 
               {/* Left Inputs */}
-              <text x="10" y="54" fill="#d97706" fontWeight="bold">A2, A3, A4</text>
-              <text x="10" y="84" fill="#d97706">G1 (Pin 6: +5V)</text>
-              <text x="10" y="114" fill="#d97706" fontWeight="bold">G̅2̅A̅ (Pin 4: M/I̅O̅)</text>
-              <text x="10" y="144" fill="#d97706">G̅2̅B̅ (Pin 5: A7)</text>
+              <text x="10" y="54" fill="#d97706" fontWeight="bold" fontSize="7.5">A2, A3, A4</text>
+              <text x="10" y="84" fill="#d97706" fontSize="7">G1 (Pin 6: +5V)</text>
+              <text x="10" y="114" fill="#d97706" fontWeight="bold" fontSize="7">G̅2̅A̅ (Pin 4: M/I̅O̅)</text>
+              <text x="10" y="144" fill="#d97706" fontSize="7">G̅2̅B̅ (Pin 5: A7)</text>
 
               {/* Right Outputs */}
-              <text x="155" y="74" fill="#059669" textAnchor="end" fontWeight="bold">Y̅0̅ (Pin 15: 80H)</text>
-              <text x="155" y="124" fill="#94a3b8" textAnchor="end">Y̅1̅–Y̅7̅ (Unused)</text>
+              <text x="155" y="74" fill="#059669" textAnchor="end" fontWeight="bold" fontSize="7.5">Y̅0̅ (Pin 15: 80H)</text>
+              <text x="155" y="124" fill="#94a3b8" textAnchor="end" fontSize="7">Y̅1̅–Y̅7̅ (Unused)</text>
 
               <circle cx="0" cy="50" r="3" fill="#d97706" />
               <circle cx="0" cy="80" r="2.5" fill="#d97706" />
@@ -431,49 +431,49 @@ export default function KeypadSchematicDiagram({
                 strokeWidth={selectedChip === 'u4' ? '2.5' : '2'}
               />
               <rect x="0" y="0" width="190" height="30" rx="6" fill="#eef2ff" stroke="#c7d2fe" strokeWidth="1" />
-              <text x="95" y="13" fill="#312e81" fontWeight="bold" textAnchor="middle" fontSize="10.5">U4 : 8255A</text>
-              <text x="95" y="24" fill="#4338ca" fontWeight="bold" textAnchor="middle" fontSize="7">PROGRAMMABLE PERIPHERAL INTERFACE (PPI)</text>
-              <text x="95" y="42" fill="#4f46e5" fontSize="8" fontWeight="bold" textAnchor="middle">MODE 0 (CW = 82H) • Base: 80H</text>
+              <text x="95" y="13" fill="#312e81" fontWeight="bold" textAnchor="middle" fontSize="9.5">U4 : 8255A</text>
+              <text x="95" y="24" fill="#4338ca" fontWeight="bold" textAnchor="middle" fontSize="6.5">PROGRAMMABLE PERIPHERAL INTERFACE (PPI)</text>
+              <text x="95" y="42" fill="#4f46e5" fontSize="7.5" fontWeight="bold" textAnchor="middle">MODE 0 (CW = 82H) • Base: 80H</text>
 
               {/* Left Control & Bus Inputs */}
-              <text x="10" y="54" fill="#dc2626" fontWeight="bold">D0–D7 (Pins 34–27)</text>
-              <text x="10" y="84" fill="#2563eb" fontWeight="bold">A0 (Pin 9)</text>
-              <text x="10" y="114" fill="#2563eb" fontWeight="bold">A1 (Pin 8)</text>
-              <text x="10" y="144" fill="#059669" fontWeight="bold">C̅S̅ (Pin 6: 80H)</text>
-              <text x="10" y="174" fill="#d97706" fontWeight="bold">W̅R̅ (Pin 36)</text>
-              <text x="10" y="204" fill="#d97706">R̅D̅ (Pin 5)</text>
-              <text x="10" y="234" fill="#64748b">RESET (Pin 35 = 0)</text>
+              <text x="10" y="54" fill="#dc2626" fontWeight="bold" fontSize="7.5">D0–D7 (Pins 34–27)</text>
+              <text x="10" y="84" fill="#2563eb" fontWeight="bold" fontSize="7.5">A0 (Pin 9)</text>
+              <text x="10" y="114" fill="#2563eb" fontWeight="bold" fontSize="7.5">A1 (Pin 8)</text>
+              <text x="10" y="144" fill="#059669" fontWeight="bold" fontSize="7.5">C̅S̅ (Pin 6: 80H)</text>
+              <text x="10" y="174" fill="#d97706" fontWeight="bold" fontSize="7.5">W̅R̅ (Pin 36)</text>
+              <text x="10" y="204" fill="#d97706" fontSize="7.5">R̅D̅ (Pin 5)</text>
+              <text x="10" y="234" fill="#64748b" fontSize="7.5">RESET (Pin 35 = 0)</text>
 
-              {/* Right Output Rows (Port A: PA0–PA3) */}
-              <text x="180" y="54" fill={rowBitActive[0] === 0 ? '#059669' : '#94a3b8'} fontWeight="bold" textAnchor="end">
+              {/* Right Output Rows (Port A: PA0–PA3: 100% Horizontal aligned with Keypad Rows) */}
+              <text x="180" y="88" fill={rowBitActive[0] === 0 ? '#059669' : '#94a3b8'} fontWeight="bold" textAnchor="end" fontSize="7.5">
                 PA0 (R0) [{rowBitActive[0]}]
               </text>
-              <text x="180" y="78" fill={rowBitActive[1] === 0 ? '#059669' : '#94a3b8'} fontWeight="bold" textAnchor="end">
+              <text x="180" y="153" fill={rowBitActive[1] === 0 ? '#059669' : '#94a3b8'} fontWeight="bold" textAnchor="end" fontSize="7.5">
                 PA1 (R1) [{rowBitActive[1]}]
               </text>
-              <text x="180" y="102" fill={rowBitActive[2] === 0 ? '#059669' : '#94a3b8'} fontWeight="bold" textAnchor="end">
+              <text x="180" y="218" fill={rowBitActive[2] === 0 ? '#059669' : '#94a3b8'} fontWeight="bold" textAnchor="end" fontSize="7.5">
                 PA2 (R2) [{rowBitActive[2]}]
               </text>
-              <text x="180" y="126" fill={rowBitActive[3] === 0 ? '#059669' : '#94a3b8'} fontWeight="bold" textAnchor="end">
+              <text x="180" y="283" fill={rowBitActive[3] === 0 ? '#059669' : '#94a3b8'} fontWeight="bold" textAnchor="end" fontSize="7.5">
                 PA3 (R3) [{rowBitActive[3]}]
               </text>
 
-              {/* Right Input Columns (Port B: PB0–PB3) */}
-              <text x="180" y="184" fill={colBit[0] === 0 ? '#e11d48' : '#d97706'} fontWeight="bold" textAnchor="end">
+              {/* Right Input Columns (Port B: PB0–PB3: Sensed via RP1) */}
+              <text x="180" y="336" fill={colBit[0] === 0 ? '#e11d48' : '#d97706'} fontWeight="bold" textAnchor="end" fontSize="7.5">
                 PB0 (C0) [{colBit[0]}]
               </text>
-              <text x="180" y="208" fill={colBit[1] === 0 ? '#e11d48' : '#d97706'} fontWeight="bold" textAnchor="end">
+              <text x="180" y="352" fill={colBit[1] === 0 ? '#e11d48' : '#d97706'} fontWeight="bold" textAnchor="end" fontSize="7.5">
                 PB1 (C1) [{colBit[1]}]
               </text>
-              <text x="180" y="232" fill={colBit[2] === 0 ? '#e11d48' : '#d97706'} fontWeight="bold" textAnchor="end">
+              <text x="180" y="368" fill={colBit[2] === 0 ? '#e11d48' : '#d97706'} fontWeight="bold" textAnchor="end" fontSize="7.5">
                 PB2 (C2) [{colBit[2]}]
               </text>
-              <text x="180" y="256" fill={colBit[3] === 0 ? '#e11d48' : '#d97706'} fontWeight="bold" textAnchor="end">
+              <text x="180" y="384" fill={colBit[3] === 0 ? '#e11d48' : '#d97706'} fontWeight="bold" textAnchor="end" fontSize="7.5">
                 PB3 (C3) [{colBit[3]}]
               </text>
 
-              <text x="95" y="305" fill="#059669" fontSize="8" fontWeight="bold" textAnchor="middle">Port A (80H): Output (Rows)</text>
-              <text x="95" y="325" fill="#d97706" fontSize="8" fontWeight="bold" textAnchor="middle">Port B (81H): Input (Cols)</text>
+              <text x="95" y="305" fill="#059669" fontSize="7" fontWeight="bold" textAnchor="middle">Port A (80H): Output (Rows)</text>
+              <text x="95" y="322" fill="#d97706" fontSize="7" fontWeight="bold" textAnchor="middle">Port B (82H): Input (Cols)</text>
 
               {/* Input Pins dots */}
               <circle cx="0" cy="50" r="3" fill="#dc2626" />
@@ -484,11 +484,12 @@ export default function KeypadSchematicDiagram({
               <circle cx="0" cy="200" r="2.5" fill="#d97706" />
               <circle cx="0" cy="230" r="2.5" fill="#64748b" />
 
-              {/* Output & Input Pins dots */}
-              {[50, 74, 98, 122].map((y, i) => (
+              {/* Output Rows Dots (Aligned with R0–R3 at 130, 195, 260, 325) */}
+              {[85, 150, 215, 280].map((y, i) => (
                 <circle key={i} cx="190" cy={y} r="3" fill="#059669" />
               ))}
-              {[180, 204, 228, 252].map((y, i) => (
+              {/* Input Column Dots (Aligned with PB0–PB3 at 378, 394, 410, 426) */}
+              {[333, 349, 365, 381].map((y, i) => (
                 <circle key={i} cx="190" cy={y} r="3" fill="#d97706" />
               ))}
             </g>
@@ -511,40 +512,43 @@ export default function KeypadSchematicDiagram({
 
             {/* ============================================================== */}
             {/* 5. RP1: 4x 10kΩ PULL-UP RESISTOR NETWORK (tied to +5V)         */}
+            {/* Positioned cleanly below Row 3 (y=325) with zero overlap       */}
             {/* ============================================================== */}
             <g 
               onClick={() => setSelectedChip('rp1')}
               className="cursor-pointer transition-all group"
-              transform="translate(705, 205)"
+              transform="translate(705, 345)"
             >
-              <title>RP1: 4 × 10kΩ Pull-Up Resistor Array</title>
+              <title>RP1: 4 × 10kΩ Pull-Up Resistor Array (Column Sense)</title>
               <rect
                 x="0"
                 y="0"
                 width="65"
-                height="145"
+                height="94"
                 rx="4"
                 fill="#f8fafc"
                 stroke={selectedChip === 'rp1' ? '#4f46e5' : '#cbd5e1'}
                 strokeWidth={1.5}
               />
-              <rect x="0" y="0" width="65" height="28" rx="4" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1" />
-              <text x="32.5" y="12" fill="#dc2626" fontWeight="bold" textAnchor="middle" fontSize="8">RP1 : 10kΩ</text>
-              <text x="32.5" y="23" fill="#64748b" fontSize="6.5" textAnchor="middle" fontWeight="bold">RESISTOR ARRAY</text>
+              <rect x="0" y="0" width="65" height="23" rx="4" fill="#fee2e2" stroke="#fca5a5" strokeWidth="1" />
+              <text x="32.5" y="10" fill="#dc2626" fontWeight="bold" textAnchor="middle" fontSize="7">RP1 : 10kΩ</text>
+              <text x="32.5" y="19" fill="#991b1b" fontSize="5.5" textAnchor="middle" fontWeight="bold">PULL-UP TO +5V</text>
 
-              {/* 4 Resistors aligned with Port B C0-C3 */}
-              {[45, 69, 93, 117].map((y, idx) => (
+              {/* VCC Power Indicator on top of RP1 */}
+              <line x1="32.5" y1="0" x2="32.5" y2="-6" stroke="#ef4444" strokeWidth="1.5" />
+              <polygon points="29.5,-6 35.5,-6 32.5,-11" fill="#ef4444" />
+              <text x="32.5" y="-13" fill="#dc2626" fontSize="6.5" fontWeight="bold" textAnchor="middle">+5V VCC</text>
+
+              {/* 4 Resistors aligned with Port B C0-C3 at y = 33, 49, 65, 81 */}
+              {[33, 49, 65, 81].map((y, idx) => (
                 <g key={idx}>
-                  <line x1="5" y1={y} x2="14" y2={y} stroke="#ef4444" strokeWidth="1.5" />
-                  <rect x="14" y={y - 6} width="36" height="12" rx="2" fill="#e2e8f0" stroke="#94a3b8" strokeWidth="1" />
-                  <text x="32" y={y + 3.5} fill="#0f172a" fontSize="7.5" textAnchor="middle" fontWeight="bold">10k</text>
-                  <line x1="50" y1={y} x2="60" y2={y} stroke="#d97706" strokeWidth="1.5" />
+                  <line x1="4" y1={y} x2="14" y2={y} stroke={colBit[idx] === 0 ? '#e11d48' : '#d97706'} strokeWidth="1.5" />
+                  <rect x="14" y={y - 5.5} width="36" height="11" rx="2" fill="#f1f5f9" stroke="#94a3b8" strokeWidth="1" />
+                  <text x="32" y={y + 3} fill="#0f172a" fontSize="6.5" textAnchor="middle" fontWeight="bold">10k</text>
+                  <line x1="50" y1={y} x2="61" y2={y} stroke={colBit[idx] === 0 ? '#e11d48' : '#d97706'} strokeWidth="1.5" />
                 </g>
               ))}
             </g>
-
-            {/* Connect RP1 top pin to +5V Rail */}
-            <path d="M 737 205 L 737 20" fill="none" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="4,2" />
 
             {/* ============================================================== */}
             {/* 6. 4×4 MATRIX KEYPAD GRID                                      */}
@@ -559,14 +563,14 @@ export default function KeypadSchematicDiagram({
                 x="0"
                 y="0"
                 width="255"
-                height="380"
+                height="425"
                 rx="8"
                 fill="#ffffff"
                 stroke={selectedChip === 'matrix' ? '#4f46e5' : '#cbd5e1'}
                 strokeWidth={selectedChip === 'matrix' ? '2.5' : '2'}
               />
               <rect x="0" y="0" width="255" height="26" rx="8" fill="#f1f5f9" stroke="#e2e8f0" strokeWidth="1" />
-              <text x="127.5" y="17" fill="#0f172a" fontWeight="bold" textAnchor="middle" fontSize="10.5">
+              <text x="127.5" y="17" fill="#0f172a" fontWeight="bold" textAnchor="middle" fontSize="9.5">
                 4×4 MATRIX KEYPAD (16 KEYS)
               </text>
 
@@ -577,7 +581,7 @@ export default function KeypadSchematicDiagram({
                   x={45 + cIdx * 54} 
                   y="46" 
                   fill={colBit[cIdx] === 0 ? '#e11d48' : '#d97706'} 
-                  fontSize="8.5" 
+                  fontSize="7.5" 
                   fontWeight="bold" 
                   textAnchor="middle"
                 >
@@ -597,7 +601,7 @@ export default function KeypadSchematicDiagram({
                       x="10" 
                       y={rowY + 22} 
                       fill={isRowActive ? '#059669' : '#64748b'} 
-                      fontSize="8.5" 
+                      fontSize="7.5" 
                       fontWeight="bold"
                     >
                       R{rIdx}
@@ -637,9 +641,9 @@ export default function KeypadSchematicDiagram({
                             x1={keyX} 
                             y1={rowY - 10} 
                             x2={keyX} 
-                            y2={rowY + 45} 
+                            y2={rIdx === 3 ? [333, 349, 365, 381][cIdx] : rowY + 45} 
                             stroke={colBit[cIdx] === 0 ? '#e11d48' : '#94a3b8'} 
-                            strokeWidth="1" 
+                            strokeWidth="1.2" 
                           />
 
                           {/* Key Switch Housing */}
@@ -671,7 +675,7 @@ export default function KeypadSchematicDiagram({
                             y={rowY + 24}
                             fill={isThisKeyPressed ? '#ffffff' : '#0f172a'}
                             fontWeight="bold"
-                            fontSize="11"
+                            fontSize="10"
                             textAnchor="middle"
                           >
                             {kLabel}
@@ -688,9 +692,34 @@ export default function KeypadSchematicDiagram({
                 );
               })}
 
+              {/* Column Sense Internal Buses from Left edge to each Column Wire */}
+              {[
+                { relY: 333, keyX: 45, idx: 0 },
+                { relY: 349, keyX: 99, idx: 1 },
+                { relY: 365, keyX: 153, idx: 2 },
+                { relY: 381, keyX: 207, idx: 3 }
+              ].map((c) => (
+                <g key={c.idx}>
+                  <line 
+                    x1="0" 
+                    y1={c.relY} 
+                    x2={c.keyX} 
+                    y2={c.relY} 
+                    stroke={colBit[c.idx] === 0 ? '#e11d48' : '#d97706'} 
+                    strokeWidth={colBit[c.idx] === 0 ? '2' : '1.2'} 
+                  />
+                  <circle 
+                    cx={c.keyX} 
+                    cy={c.relY} 
+                    r="2.5" 
+                    fill={colBit[c.idx] === 0 ? '#e11d48' : '#d97706'} 
+                  />
+                </g>
+              ))}
+
               {/* Bottom Status Banner inside Keypad box */}
-              <rect x="12" y="335" width="231" height="25" rx="4" fill="#f8fafc" stroke="#e2e8f0" />
-              <text x="127.5" y="351" fill={keyDetected ? '#059669' : '#64748b'} fontSize="8" textAnchor="middle" fontWeight="bold">
+              <rect x="12" y="396" width="231" height="20" rx="4" fill="#f8fafc" stroke="#e2e8f0" />
+              <text x="127.5" y="409" fill={keyDetected ? '#059669' : '#64748b'} fontSize="6.5" textAnchor="middle" fontWeight="bold">
                 {keyDetected 
                   ? `KEY HIT: '${pressedKey?.label}' (Row ${pressedKey?.r} LOW, Col ${pressedKey?.c} = 0V)`
                   : pressedKey 
@@ -701,44 +730,52 @@ export default function KeypadSchematicDiagram({
 
             {/* ============================================================== */}
             {/* 7. WIRES FROM 8255 TO MATRIX & PULL-UPS                        */}
+            {/* 100% straight horizontal rows with zero overlap or crossings   */}
             {/* ============================================================== */}
             {/* Port A Row Output Wires (PA0–PA3) -> Keypad Rows R0–R3 */}
             {[
-              { y8255: 95, yKey: 130, active: rowBitActive[0] === 0 },
-              { y8255: 119, yKey: 195, active: rowBitActive[1] === 0 },
-              { y8255: 143, yKey: 260, active: rowBitActive[2] === 0 },
-              { y8255: 167, yKey: 325, active: rowBitActive[3] === 0 }
-            ].map((w, idx) => (
-              <path 
-                key={idx}
-                d={`M 665 ${w.y8255} L 685 ${w.y8255} L 685 ${w.yKey} L 805 ${w.yKey}`}
-                fill="none"
-                stroke={w.active ? '#059669' : '#cbd5e1'}
-                strokeWidth={w.active ? '2' : '1'}
-              />
-            ))}
-
-            {/* Port B Column Sense Wires (PB0–PB3) <- Pull-ups & Keypad Cols */}
-            {[
-              { y8255: 229, yRp: 250, active: colBit[0] === 0 },
-              { y8255: 253, yRp: 274, active: colBit[1] === 0 },
-              { y8255: 277, yRp: 298, active: colBit[2] === 0 },
-              { y8255: 301, yRp: 322, active: colBit[3] === 0 }
+              { y: 130, active: rowBitActive[0] === 0 },
+              { y: 195, active: rowBitActive[1] === 0 },
+              { y: 260, active: rowBitActive[2] === 0 },
+              { y: 325, active: rowBitActive[3] === 0 }
             ].map((w, idx) => (
               <g key={idx}>
-                {/* 8255 to RP1 */}
-                <path 
-                  d={`M 665 ${w.y8255} L 685 ${w.y8255} L 685 ${w.yRp} L 705 ${w.yRp}`}
-                  fill="none"
+                <line 
+                  x1="665" 
+                  y1={w.y} 
+                  x2="805" 
+                  y2={w.y} 
+                  stroke={w.active ? '#059669' : '#cbd5e1'} 
+                  strokeWidth={w.active ? '2.5' : '1.2'} 
+                />
+                <circle cx="665" cy={w.y} r="2.5" fill={w.active ? '#059669' : '#94a3b8'} />
+                <circle cx="805" cy={w.y} r="2.5" fill={w.active ? '#059669' : '#94a3b8'} />
+              </g>
+            ))}
+
+            {/* Port B Column Sense Wires (PB0–PB3) through RP1 Pull-ups to Keypad Columns */}
+            {[
+              { y: 378, active: colBit[0] === 0 },
+              { y: 394, active: colBit[1] === 0 },
+              { y: 410, active: colBit[2] === 0 },
+              { y: 426, active: colBit[3] === 0 }
+            ].map((w, idx) => (
+              <g key={idx}>
+                {/* 8255 to RP1: 100% Straight Horizontal Line */}
+                <line 
+                  x1="665" 
+                  y1={w.y} 
+                  x2="705" 
+                  y2={w.y} 
                   stroke={w.active ? '#e11d48' : '#d97706'} 
                   strokeWidth={w.active ? '2' : '1.2'} 
                 />
-                {/* RP1 to Keypad */}
+                {/* RP1 to Keypad: 100% Straight Horizontal Line */}
                 <line 
                   x1="770" 
-                  y1={w.yRp} 
+                  y1={w.y} 
                   x2="805" 
-                  y2={w.yRp} 
+                  y2={w.y} 
                   stroke={w.active ? '#e11d48' : '#d97706'} 
                   strokeWidth={w.active ? '2' : '1.2'} 
                 />

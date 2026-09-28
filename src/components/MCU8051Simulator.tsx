@@ -48,22 +48,28 @@ export default function MCU8051Simulator({
   hideModularBreakdown = false,
 }: MCU8051SimulatorProps) {
   const [activeTab, setActiveTab] = useState<'architecture' | 'sfr' | 'pins' | 'instructions' | 'alp'>(() => {
-    if (hideArchitecture && initialTab === 'architecture') return 'sfr';
-    if (hideAlp && initialTab === 'alp') return 'architecture';
-    if (hideInstructions && initialTab === 'instructions') return 'architecture';
-    if (hideSfr && initialTab === 'sfr') return 'architecture';
-    if (hidePins && initialTab === 'pins') return 'architecture';
-    return initialTab;
+    const availableTabs: ('architecture' | 'sfr' | 'pins' | 'instructions' | 'alp')[] = [];
+    if (!hideArchitecture) availableTabs.push('architecture');
+    if (!hideSfr) availableTabs.push('sfr');
+    if (!hidePins) availableTabs.push('pins');
+    if (!hideInstructions) availableTabs.push('instructions');
+    if (!hideAlp) availableTabs.push('alp');
+    if (availableTabs.includes(initialTab)) return initialTab;
+    return availableTabs[0] || 'pins';
   });
 
   useEffect(() => {
-    let tab = initialTab;
-    if (hideArchitecture && tab === 'architecture') tab = 'sfr';
-    if (hideAlp && tab === 'alp') tab = 'architecture';
-    if (hideInstructions && tab === 'instructions') tab = 'architecture';
-    if (hideSfr && tab === 'sfr') tab = 'architecture';
-    if (hidePins && tab === 'pins') tab = 'architecture';
-    setActiveTab(tab);
+    const availableTabs: ('architecture' | 'sfr' | 'pins' | 'instructions' | 'alp')[] = [];
+    if (!hideArchitecture) availableTabs.push('architecture');
+    if (!hideSfr) availableTabs.push('sfr');
+    if (!hidePins) availableTabs.push('pins');
+    if (!hideInstructions) availableTabs.push('instructions');
+    if (!hideAlp) availableTabs.push('alp');
+    if (availableTabs.includes(initialTab)) {
+      setActiveTab(initialTab);
+    } else {
+      setActiveTab(availableTabs[0] || 'pins');
+    }
   }, [initialTab, hideArchitecture, hideAlp, hideInstructions, hideSfr, hidePins]);
 
   // Architecture state
@@ -309,10 +315,12 @@ export default function MCU8051Simulator({
     setExecutionLog(['System Reset. Registers restored to default reset states.']);
   };
 
+  const visibleTabsCount = [!hideArchitecture, !hideSfr, !hidePins, !hideInstructions, !hideAlp].filter(Boolean).length;
+
   return (
     <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 bg-white text-slate-900 rounded-2xl shadow-sm border border-slate-200 space-y-6">
       {/* Upper Navigation Tabs - rendered only when multiple suite tabs are available */}
-      {(!hideSfr || !hidePins || !hideInstructions || !hideAlp) && (
+      {visibleTabsCount > 1 && (
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-200 pb-4">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-indigo-50 border border-indigo-100 rounded-xl">
@@ -731,7 +739,7 @@ export default function MCU8051Simulator({
                 }`}
               >
                 <Cpu className="w-3.5 h-3.5" />
-                40-Pin DIP Package &amp; Port 1 (Slide 25 of 50)
+                Port 1 Architecture
               </button>
               <button
                 onClick={() => setPinViewMode('ports')}
@@ -742,12 +750,12 @@ export default function MCU8051Simulator({
                 }`}
               >
                 <Sliders className="w-3.5 h-3.5" />
-                Interactive Port Latch &amp; Circuit Simulator
+                Port Latches &amp; Circuits
               </button>
             </div>
           </div>
 
-          {/* View 1: 40-Pin DIP Package & Port 1 matching Slide 25 of 50 */}
+          {/* View 1: Port 1 matching Slide 25 of 50 */}
           {pinViewMode === 'pinout' && (
             <MCU8051PinoutDiagram initialPort="P1" highlightSlide25={true} />
           )}
@@ -759,7 +767,7 @@ export default function MCU8051Simulator({
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider font-mono flex items-center gap-2">
                     <Layers className="w-4 h-4 text-indigo-600" />
-                    8051 Parallel I/O Ports Latch &amp; Circuits
+                    Internal Latch &amp; Driver Architecture
                   </h3>
                   <div className="flex items-center gap-1">
                     {(['P0', 'P1', 'P2', 'P3'] as const).map(p => (

@@ -1637,7 +1637,36 @@ export const courseData: Module[] = [
       },
       {
         id: 'm15-s2',
-        title: '2. Seven-Segment LED Display Interfacing: Circuit Blocks, Simulator & ALP 💡🔢',
+        title: '2. Switches & LEDs Interfacing with 8086 via 8255 PPI: Circuit Blocks, Simulator & ALP 🎛️💡',
+        moduleTitle: 'Module 15: Peripheral Interfacing (LEDs, Displays & Stepper Motor)',
+        moduleId: 'm15',
+        interactiveType: 'switches-leds',
+        points: [
+          'Overview of Switches & Discrete LEDs Interfacing:\n' +
+          '• Foundational Parallel I/O: Interfacing single-pole single-throw (SPST) toggle switches and discrete light-emitting diodes (LEDs) to the 8086 microprocessor is the fundamental laboratory model for digital sensor sensing and binary status indication.\n' +
+          '• Standard Port Allocation: 8255 PPI Port A (Address 80H) is configured in Mode 0 as an 8-bit INPUT port for switches, while Port B (Address 82H) is configured as an 8-bit OUTPUT port for LEDs.\n' +
+          '• Control Word Derivation: Mode 0 (Basic I/O), Port A Input (D4=1), Port B Output (D1=0), Port C Output (D3=0, D0=0) -> Binary 10010000b = 90H loaded into Control Register (Port 86H).',
+          'Block 1: 8086 Microprocessor (Controller Stage)\n' +
+          '• Bus Demultiplexing & Decoding: The 8086 outputs multiplexed address/data on AD0–AD15. ALE pulses HIGH during T1 to latch address bits A0–A1 into a 74LS373 latch.\n' +
+          '• Address Decoding: Upper address lines (A2–A7) and M/IO=0 are decoded by a 74LS138 3-to-8 decoder to generate active-low Chip Select (CS) at base I/O address 80H.\n' +
+          '• Port Mapping: Port A = 80H, Port B = 82H, Port C = 84H, Control Word Register = 86H.',
+          'Block 2: 8-Position DIP Switch Input Interface (Port A)\n' +
+          '• Pull-Up Resistor Array (8 × 10 kΩ): Without pull-up resistors, open switch inputs float in a high-impedance state, leading to noise and unpredictable logic levels. 10 kΩ pull-ups guarantee a stable Logic 1 (+5V) when the switch is OPEN.\n' +
+          '• Active-LOW Logic: When an individual switch is CLOSED to ground (0V), the pin is pulled LOW to Logic 0. Inverting in software via `NOT AL` provides intuitive 1=ON logic.\n' +
+          '• Contact Bounce & Debounce: Mechanical switches bounce for 5–20 ms upon contact. The 8086 implements software debounce routines (~20 ms delay loop) to eliminate spurious triggers.',
+          'Block 3: 8-Channel Discrete LED Output Interface (Port B)\n' +
+          '• Current-Limiting Resistors (8 × 330 Ω): Series resistors limit forward current through the LEDs to prevent diode burnout and protect 8255 pins: R = (Vcc - VF) / IF = (5.0V - 2.0V) / 9.1 mA ≈ 330 Ω.\n' +
+          '• Common Cathode (Sourcing): LED cathodes tied to GND; driving port pin HIGH (+5V) turns LED ON. Limited by 8255 source current (~1.6 mA).\n' +
+          '• Common Anode (Sinking): LED anodes tied to +5V through 330 Ω; driving port pin LOW (0V) sinks current (~2.5–3.2 mA) to turn LED ON. Preferred for higher illumination without external buffers.',
+          '8086 Assembly Language Programs (ALP):\n' +
+          '• Program 1 (Switch Mirroring): `MOV DX, 86H; MOV AL, 90H; OUT DX, AL; L: MOV DX, 80H; IN AL, DX; MOV DX, 82H; OUT DX, AL; JMP L`\n' +
+          '• Program 2 (8-Bit Binary Up Counter): Increments AL from 00H to FFH with 16-bit software delay and outputs to LEDs.\n' +
+          '• Program 3 (Running Chaser LED): Rotates active illumination bit across Port B pins using `ROL AL, 1`.'
+        ]
+      },
+      {
+        id: 'm15-s3',
+        title: '3. Seven-Segment LED Display Interfacing: Circuit Blocks, Simulator & ALP 💡🔢',
         moduleTitle: 'Module 15: Peripheral Interfacing (LEDs, Displays & Stepper Motor)',
         moduleId: 'm15',
         interactiveType: 'peripheral-interfacing',
@@ -1650,8 +1679,8 @@ export const courseData: Module[] = [
         ]
       },
       {
-        id: 'm15-s3',
-        title: '3. 4x4 Matrix Keypad Interfacing & Debouncing ⌨️',
+        id: 'm15-s4',
+        title: '4. 4x4 Matrix Keypad Interfacing & Debouncing ⌨️',
         moduleTitle: 'Module 15: Peripheral Interfacing (LEDs, Displays & Stepper Motor)',
         moduleId: 'm15',
         interactiveType: 'peripheral-interfacing',
@@ -1664,8 +1693,8 @@ export const courseData: Module[] = [
         ]
       },
       {
-        id: 'm15-s4',
-        title: '4. Traffic Light Controller Interfacing 🚦',
+        id: 'm15-s5',
+        title: '5. Traffic Light Controller Interfacing 🚦',
         moduleTitle: 'Module 15: Peripheral Interfacing (LEDs, Displays & Stepper Motor)',
         moduleId: 'm15',
         interactiveType: 'peripheral-interfacing',
@@ -1678,8 +1707,8 @@ export const courseData: Module[] = [
         ]
       },
       {
-        id: 'm15-s5',
-        title: '5. 8086 Assembly Programs (ALP) for Peripherals 💻',
+        id: 'm15-s6',
+        title: '6. 8086 Assembly Programs (ALP) for Peripherals 💻',
         moduleTitle: 'Module 15: Peripheral Interfacing (LEDs, Displays & Stepper Motor)',
         moduleId: 'm15',
         interactiveType: 'peripheral-interfacing',
@@ -1743,6 +1772,17 @@ export const courseData: Module[] = [
         moduleId: 'm15',
         interactiveType: 'quiz',
         quizQuestions: [
+          {
+            question: 'What is the primary function of the 10 kΩ pull-up resistors connected to SPST toggle switches interfaced to 8255 Port A?',
+            options: [
+              'To step down 230V AC mains to 5V DC',
+              'To prevent floating input lines and ensure a stable Logic 1 (+5V) when switches are OPEN',
+              'To suppress inductive flyback spikes from motor coils',
+              'To invert the multiplexed address lines during clock cycle T1'
+            ],
+            correctAnswer: 1,
+            explanation: 'When mechanical switches are open, input lines float in an undefined high-impedance state prone to noise. 10 kΩ pull-up resistors tie the pins to +5V (Logic 1) and pull down to 0V (Logic 0) upon switch closure.'
+          },
           {
             question: 'In a Common Anode 7-segment display, what logic level must be applied to an individual segment pin (e.g. segment "a") to turn it ON?',
             options: [
@@ -2542,30 +2582,25 @@ export const courseData: Module[] = [
         moduleTitle: 'Module 22: Special Function Registers (SFRs) & Memory',
         moduleId: 'm22',
         points: [
-          'Slide 13 of 50 — 128-Byte On-Chip RAM Architecture (00H to 7FH): Divided into 3 fundamental zones:',
-          '1) Working Registers (32 Bytes • 00H–1FH): 4 switchable banks (Bank 0 [00H–07H], Bank 1 [08H–0FH], Bank 2 [10H–17H], Bank 3 [18H–1FH]), each with 8 registers (R0–R7). Active bank selected by RS1 & RS0 in PSW.',
-          '2) Bit Addressable RAM (16 Bytes • 20H–2FH): 16 bytes containing 128 individually addressable bits (bit addresses 00H to 7FH; e.g. 20H holds bits 00H–07H, 2FH holds bits 78H–7FH). Supports direct Boolean bit instructions (SETB, CLR, CPL, JB, JNB).',
-          '3) General Purpose RAM (80 Bytes • 30H–7FH): Continuous scratchpad storage for variables and user stack (SP recommended to be set to 2FH/30H).',
-          'Exact RAM Memory Equation: 32 Bytes (Working Registers) + 16 Bytes (Bit Addressable) + 80 Bytes (General Purpose) = 128 Bytes Total RAM.',
-          'Upper 128 Bytes RAM Space (80H–FFH): Dedicated to Special Function Registers (SFRs).'
+          '8051 Harvard Architecture Memory Spaces: Features physically separate address spaces and independent internal buses for Program Memory (ROM) and Data Memory (RAM), each up to 64 KB in capacity.',
+          'Part I — Internal Data RAM Organization (128 Bytes on-chip • 00H to 7FH):',
+          '1) Working Register Banks (32 Bytes • 00H–1FH): 4 switchable banks (Bank 0 [00H–07H], Bank 1 [08H–0FH], Bank 2 [10H–17H], Bank 3 [18H–1FH]), each with 8 registers (R0–R7). Active bank is selected dynamically by RS1 (PSW.4) & RS0 (PSW.3). Default on reset is Bank 0.',
+          '2) Bit-Addressable RAM (16 Bytes • 20H–2FH): 16 bytes containing 128 individually addressable bits (bit addresses 00H to 7FH; e.g., byte 20H contains bits 00H–07H, byte 2FH contains bits 78H–7FH). Supports Boolean bit manipulation instructions (SETB, CLR, CPL, JB, JNB, JC, JNC).',
+          '3) General-Purpose Scratchpad RAM (80 Bytes • 30H–7FH): Continuous read/write memory for user variables, data buffers, and the system stack (SP defaults to 07H on reset; recommended to initialize with MOV SP, #2FH so stack grows from 30H).',
+          'Exact Internal RAM Equation: 32 Bytes (Working Registers) + 16 Bytes (Bit Addressable) + 80 Bytes (General Purpose) = 128 Bytes Total RAM.',
+          'Special Function Registers (SFR Space • 80H–FFH): 128 bytes above internal RAM dedicated to 21 hardware control registers (ACC, B, PSW, SP, DPTR, P0–P3, TCON, TMOD, SCON, etc.). Accessible ONLY via direct addressing.',
+          'Part II — Program Memory (ROM / Flash) Organization (4 KB On-Chip, Up to 64 KB Space):',
+          '• Internal Program ROM (4 KB • 0000H to 0FFFH): Monolithic on-chip EPROM/Flash storing firmware instructions, initialization routines, and constant lookup tables.',
+          '• E̅A̅ / VPP (External Access • Pin 31): Crucial hardware control pin for ROM selection. When tied HIGH (+5V), CPU executes instructions from internal 4KB ROM (0000H–0FFFH) and automatically transitions to external ROM for addresses 1000H–FFFFH. When tied LOW (GND), on-chip ROM is disabled and 100% of instructions are fetched from external ROM starting at 0000H.',
+          '• P̅S̅E̅N̅ (Program Store Enable • Pin 29): Active-LOW output read strobe that connects to the Output Enable (O̅E̅) pin of external EPROM/ROM. Pulses active-LOW twice per machine cycle during instruction fetches from external program memory.',
+          '• Interrupt & Reset Vector Table in ROM: Reset vector is fixed at 0000H (LJMP MAIN). Followed by 5 hardware interrupt service vectors spaced 8 bytes apart: External INT0 (0003H), Timer 0 (000BH), External INT1 (0013H), Timer 1 (001BH), and Serial Port UART (0023H).',
+          '• ROM Data Access Instructions: Program ROM tables and strings are read into the Accumulator using indexed addressing instructions: MOVC A, @A+DPTR (anywhere in 64KB ROM) or MOVC A, @A+PC (relative lookup).'
         ],
         interactiveType: 'ram-organization'
       },
       {
         id: 'm22-s2',
-        title: '2. Special Function Registers (SFRs) Map & Bit Addressability',
-        moduleTitle: 'Module 22: Special Function Registers (SFRs) & Memory',
-        moduleId: 'm22',
-        points: [
-          'SFR Memory Map (80H to FFH): Control and status registers for CPU core, timers, serial port, I/O ports, and interrupts.',
-          'Bit Addressable SFRs: SFRs whose hexadecimal addresses end in 0H or 8H (e.g. ACC @ E0H, B @ F0H, PSW @ D0H, P0 @ 80H, P1 @ 90H, P2 @ A0H, P3 @ B0H, TCON @ 88H, SCON @ 98H, IE @ A8H, IP @ B8H) are individually bit-addressable!',
-          'Byte-Only SFRs: SP (81H), DPTR (DPH=83H, DPL=82H), TMOD (89H), TH0/TL0 (8CH/8AH), TH1/TL1 (8DH/8BH), SBUF (99H), PCON (87H).'
-        ],
-        interactiveType: 'sfr-memory'
-      },
-      {
-        id: 'm22-s3',
-        title: '3. Program Status Word (PSW) & Register Bank Switching',
+        title: '2. Program Status Word (PSW) & Register Bank Switching',
         moduleTitle: 'Module 22: Special Function Registers (SFRs) & Memory',
         moduleId: 'm22',
         points: [
@@ -2613,21 +2648,8 @@ export const courseData: Module[] = [
     title: 'Module 23: 8051 I/O Pins, Ports & Circuits',
     slides: [
       {
-        id: 'm23-s1',
-        title: '1. 8051 40-Pin DIP Package & Power/Oscillator Pins',
-        moduleTitle: 'Module 23: 8051 I/O Pins, Ports & Circuits',
-        moduleId: 'm23',
-        points: [
-          '40-Pin Dual In-line Package (DIP): 32 pins dedicated to 4 parallel I/O ports, plus 8 control and power supply pins.',
-          'VCC (Pin 40) & GND (Pin 20): +5V DC regulated power supply and ground return.',
-          'XTAL1 (Pin 19) & XTAL2 (Pin 18): On-chip oscillator input/output connected to external quartz crystal and two 30 pF capacitors.',
-          'RESET (Pin 9): Active HIGH reset input requiring at least 2 machine cycles (24 clock periods) HIGH to reset processor.',
-          'E̅A̅ / VPP (Pin 31 - External Access): Tied HIGH (+5V) for internal 4KB ROM execution; tied LOW (0V) for external ROM (0000H–FFFFH).'
-        ]
-      },
-      {
         id: 'm23-s2',
-        title: '2. Parallel I/O Ports Structure (P0, P1, P2, P3) & Circuits',
+        title: '1. Parallel I/O Ports Structure (P0, P1, P2, P3) & Circuits',
         moduleTitle: 'Module 23: 8051 I/O Pins, Ports & Circuits',
         moduleId: 'm23',
         points: [
@@ -2641,7 +2663,7 @@ export const courseData: Module[] = [
       },
       {
         id: 'm23-s3',
-        title: '3. Port 3 Alternate Functions & Bus Control Signals',
+        title: '2. Port 3 Alternate Functions & Bus Control Signals',
         moduleTitle: 'Module 23: 8051 I/O Pins, Ports & Circuits',
         moduleId: 'm23',
         points: [
@@ -2704,7 +2726,8 @@ export const courseData: Module[] = [
           '3) Direct Addressing: Operands specified by 8-bit RAM memory or SFR hexadecimal address (e.g. MOV A, 30H / MOV 90H, A).',
           '4) Register-Indirect Addressing: Memory location pointed to by R0 or R1 using "@" prefix (e.g. MOV A, @R0 / MOVX A, @DPTR).',
           '5) Indexed Addressing: Program ROM table lookup using DPTR or PC as base and A as offset (e.g. MOVC A, @A+DPTR).'
-        ]
+        ],
+        interactiveType: 'mcu-addressing-modes'
       },
       {
         id: 'm24-s2',

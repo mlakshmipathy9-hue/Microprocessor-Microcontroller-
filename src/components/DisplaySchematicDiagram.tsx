@@ -67,7 +67,7 @@ export default function DisplaySchematicDiagram({
       } else {
         setActiveMuxDigit((prev) => (prev + 1) % 4);
       }
-    }, circuitMode === 'single' ? 1200 : 400);
+    }, circuitMode === 'single' ? 1800 : 750);
     return () => clearInterval(interval);
   }, [isAutoCycling, circuitMode]);
 
@@ -319,25 +319,25 @@ export default function DisplaySchematicDiagram({
                 strokeWidth={selectedChip === 'u1' ? '2.5' : '1.5'}
               />
               <rect x="0" y="0" width="145" height="30" rx="6" fill="#eef2ff" stroke="#c7d2fe" strokeWidth="1" />
-              <text x="72.5" y="13" fill="#312e81" fontWeight="bold" textAnchor="middle" fontSize="10.5">U1 : 8086</text>
-              <text x="72.5" y="24" fill="#4338ca" fontWeight="bold" textAnchor="middle" fontSize="7.5">16-BIT MICROPROCESSOR (CPU)</text>
+              <text x="72.5" y="13" fill="#312e81" fontWeight="bold" textAnchor="middle" fontSize="9.5">U1 : 8086</text>
+              <text x="72.5" y="24" fill="#4338ca" fontWeight="bold" textAnchor="middle" fontSize="7">16-BIT MICROPROCESSOR (CPU)</text>
 
               {/* Mode & Operational Info */}
-              <text x="10" y="46" fill="#64748b" fontSize="8" fontWeight="bold">MIN MODE (MN/M̅X̅=1)</text>
-              <text x="10" y="58" fill="#64748b" fontSize="8">CLK: 5MHz • VCC: +5V</text>
+              <text x="10" y="46" fill="#64748b" fontSize="7.5" fontWeight="bold">MIN MODE (MN/M̅X̅=1)</text>
+              <text x="10" y="58" fill="#64748b" fontSize="7.5">CLK: 5MHz • VCC: +5V</text>
 
-              <text x="10" y="325" fill="#4338ca" fontSize="8.5" fontWeight="bold">I/O Base: 80H</text>
-              <text x="10" y="342" fill="#1e293b" fontSize="8.5" fontWeight="bold">OUT 80H, AL</text>
-              <text x="10" y="358" fill="#64748b" fontSize="7.5">7-Seg Segment Data</text>
+              <text x="10" y="325" fill="#4338ca" fontSize="7.5" fontWeight="bold">I/O Base: 80H</text>
+              <text x="10" y="342" fill="#1e293b" fontSize="8" fontWeight="bold">OUT 80H, AL</text>
+              <text x="10" y="358" fill="#64748b" fontSize="7">7-Seg Segment Data</text>
 
               {/* Right Pin Labels (Aligned with Interconnect Traces) */}
-              <text x="135" y="84" fill="#dc2626" fontWeight="bold" textAnchor="end">AD0–AD7</text>
-              <text x="135" y="114" fill="#dc2626" textAnchor="end">AD8–AD15</text>
-              <text x="135" y="144" fill="#059669" fontWeight="bold" textAnchor="end">ALE (Pin 25)</text>
-              <text x="135" y="174" fill="#d97706" fontWeight="bold" textAnchor="end">M/I̅O̅ (Pin 28)</text>
-              <text x="135" y="204" fill="#d97706" fontWeight="bold" textAnchor="end">W̅R̅ (Pin 29)</text>
-              <text x="135" y="234" fill="#d97706" textAnchor="end">R̅D̅ (Pin 32)</text>
-              <text x="135" y="264" fill="#64748b" textAnchor="end">RESET (Pin 21)</text>
+              <text x="135" y="84" fill="#dc2626" fontWeight="bold" textAnchor="end" fontSize="7.5">AD0–AD7</text>
+              <text x="135" y="114" fill="#dc2626" textAnchor="end" fontSize="7.5">AD8–AD15</text>
+              <text x="135" y="144" fill="#059669" fontWeight="bold" textAnchor="end" fontSize="7.5">ALE (Pin 25)</text>
+              <text x="135" y="174" fill="#d97706" fontWeight="bold" textAnchor="end" fontSize="7.5">M/I̅O̅ (Pin 28)</text>
+              <text x="135" y="204" fill="#d97706" fontWeight="bold" textAnchor="end" fontSize="7.5">W̅R̅ (Pin 29)</text>
+              <text x="135" y="234" fill="#d97706" textAnchor="end" fontSize="7.5">R̅D̅ (Pin 32)</text>
+              <text x="135" y="264" fill="#64748b" textAnchor="end" fontSize="7.5">RESET (Pin 21)</text>
 
               {/* Right Pin Output Terminals */}
               {[80, 110, 140, 170, 200, 230, 260].map((y, i) => (
@@ -365,18 +365,18 @@ export default function DisplaySchematicDiagram({
                 strokeWidth={selectedChip === 'u2' ? '2.5' : '1.5'}
               />
               <rect x="0" y="0" width="165" height="30" rx="6" fill="#f0fdf4" stroke="#bbf7d0" strokeWidth="1" />
-              <text x="82.5" y="13" fill="#14532d" fontWeight="bold" textAnchor="middle" fontSize="10.5">U2 : 74LS373</text>
-              <text x="82.5" y="24" fill="#15803d" fontWeight="bold" textAnchor="middle" fontSize="7.5">OCTAL ADDRESS LATCH</text>
+              <text x="82.5" y="13" fill="#14532d" fontWeight="bold" textAnchor="middle" fontSize="9.5">U2 : 74LS373</text>
+              <text x="82.5" y="24" fill="#15803d" fontWeight="bold" textAnchor="middle" fontSize="7">OCTAL ADDRESS LATCH</text>
 
               {/* Left Inputs */}
-              <text x="10" y="84" fill="#dc2626" fontWeight="bold">AD0–AD7</text>
-              <text x="10" y="114" fill="#64748b">O̅E̅ (Pin 1: GND)</text>
-              <text x="10" y="144" fill="#059669" fontWeight="bold">LE (Pin 11)</text>
+              <text x="10" y="84" fill="#dc2626" fontWeight="bold" fontSize="7.5">AD0–AD7</text>
+              <text x="10" y="114" fill="#64748b" fontSize="7">O̅E̅ (Pin 1: GND)</text>
+              <text x="10" y="144" fill="#059669" fontWeight="bold" fontSize="7.5">LE (Pin 11)</text>
 
               {/* Right Outputs (Spaced and Un-overlapping) */}
-              <text x="155" y="84" fill="#2563eb" textAnchor="end" fontWeight="bold">A0 (Q0: Pin 2)</text>
-              <text x="155" y="114" fill="#2563eb" textAnchor="end" fontWeight="bold">A1 (Q1: Pin 5)</text>
-              <text x="155" y="144" fill="#2563eb" textAnchor="end">A2–A7 (Q2–Q7)</text>
+              <text x="155" y="84" fill="#2563eb" textAnchor="end" fontWeight="bold" fontSize="7">A0 (Q0: Pin 2)</text>
+              <text x="155" y="114" fill="#2563eb" textAnchor="end" fontWeight="bold" fontSize="7">A1 (Q1: Pin 5)</text>
+              <text x="155" y="144" fill="#2563eb" textAnchor="end" fontSize="7">A2–A7 (Q2–Q7)</text>
 
               {/* Input Pin Dots */}
               <circle cx="0" cy="80" r="3" fill="#dc2626" />
@@ -409,18 +409,18 @@ export default function DisplaySchematicDiagram({
                 strokeWidth={selectedChip === 'u3' ? '2.5' : '1.5'}
               />
               <rect x="0" y="0" width="165" height="30" rx="6" fill="#fffbeb" stroke="#fef08a" strokeWidth="1" />
-              <text x="82.5" y="13" fill="#78350f" fontWeight="bold" textAnchor="middle" fontSize="10.5">U3 : 74LS138</text>
-              <text x="82.5" y="24" fill="#b45309" fontWeight="bold" textAnchor="middle" fontSize="7.5">3-TO-8 ADDRESS DECODER</text>
+              <text x="82.5" y="13" fill="#78350f" fontWeight="bold" textAnchor="middle" fontSize="9.5">U3 : 74LS138</text>
+              <text x="82.5" y="24" fill="#b45309" fontWeight="bold" textAnchor="middle" fontSize="7">3-TO-8 ADDRESS DECODER</text>
 
               {/* Left Inputs */}
-              <text x="10" y="54" fill="#d97706" fontWeight="bold">A2, A3, A4</text>
-              <text x="10" y="84" fill="#d97706">G1 (Pin 6: +5V)</text>
-              <text x="10" y="114" fill="#d97706" fontWeight="bold">G̅2̅A̅ (Pin 4: M/I̅O̅)</text>
-              <text x="10" y="144" fill="#d97706">G̅2̅B̅ (Pin 5: A7)</text>
+              <text x="10" y="54" fill="#d97706" fontWeight="bold" fontSize="7.5">A2, A3, A4</text>
+              <text x="10" y="84" fill="#d97706" fontSize="7">G1 (Pin 6: +5V)</text>
+              <text x="10" y="114" fill="#d97706" fontWeight="bold" fontSize="7">G̅2̅A̅ (Pin 4: M/I̅O̅)</text>
+              <text x="10" y="144" fill="#d97706" fontSize="7">G̅2̅B̅ (Pin 5: A7)</text>
 
               {/* Right Outputs (Clear vertical and horizontal clearance) */}
-              <text x="155" y="74" fill="#059669" textAnchor="end" fontWeight="bold">Y̅0̅ (Pin 15: 80H)</text>
-              <text x="155" y="124" fill="#94a3b8" textAnchor="end">Y̅1̅–Y̅7̅ (Unused)</text>
+              <text x="155" y="74" fill="#059669" textAnchor="end" fontWeight="bold" fontSize="7.5">Y̅0̅ (Pin 15: 80H)</text>
+              <text x="155" y="124" fill="#94a3b8" textAnchor="end" fontSize="7">Y̅1̅–Y̅7̅ (Unused)</text>
 
               <circle cx="0" cy="50" r="3" fill="#d97706" />
               <circle cx="0" cy="80" r="2.5" fill="#d97706" />
@@ -473,34 +473,34 @@ export default function DisplaySchematicDiagram({
                 strokeWidth={selectedChip === 'u4' ? '2.5' : '2'}
               />
               <rect x="0" y="0" width="190" height="30" rx="6" fill="#eef2ff" stroke="#c7d2fe" strokeWidth="1" />
-              <text x="95" y="13" fill="#312e81" fontWeight="bold" textAnchor="middle" fontSize="10.5">U4 : 8255A</text>
-              <text x="95" y="24" fill="#4338ca" fontWeight="bold" textAnchor="middle" fontSize="7">PROGRAMMABLE PERIPHERAL INTERFACE (PPI)</text>
-              <text x="95" y="42" fill="#4f46e5" fontSize="8" fontWeight="bold" textAnchor="middle">MODE 0 (CW = 80H) • Base: 80H</text>
+              <text x="95" y="13" fill="#312e81" fontWeight="bold" textAnchor="middle" fontSize="9.5">U4 : 8255A</text>
+              <text x="95" y="24" fill="#4338ca" fontWeight="bold" textAnchor="middle" fontSize="6.5">PROGRAMMABLE PERIPHERAL INTERFACE (PPI)</text>
+              <text x="95" y="42" fill="#4f46e5" fontSize="7.5" fontWeight="bold" textAnchor="middle">MODE 0 (CW = 80H) • Base: 80H</text>
 
               {/* Left Control & Bus Inputs */}
-              <text x="10" y="54" fill="#dc2626" fontWeight="bold">D0–D7 (Pins 34–27)</text>
-              <text x="10" y="84" fill="#2563eb" fontWeight="bold">A0 (Pin 9)</text>
-              <text x="10" y="114" fill="#2563eb" fontWeight="bold">A1 (Pin 8)</text>
-              <text x="10" y="144" fill="#059669" fontWeight="bold">C̅S̅ (Pin 6: 80H)</text>
-              <text x="10" y="174" fill="#d97706" fontWeight="bold">W̅R̅ (Pin 36)</text>
-              <text x="10" y="204" fill="#d97706">R̅D̅ (Pin 5)</text>
-              <text x="10" y="234" fill="#64748b">RESET (Pin 35 = 0)</text>
+              <text x="10" y="54" fill="#dc2626" fontWeight="bold" fontSize="7.5">D0–D7 (Pins 34–27)</text>
+              <text x="10" y="84" fill="#2563eb" fontWeight="bold" fontSize="7.5">A0 (Pin 9)</text>
+              <text x="10" y="114" fill="#2563eb" fontWeight="bold" fontSize="7.5">A1 (Pin 8)</text>
+              <text x="10" y="144" fill="#059669" fontWeight="bold" fontSize="7.5">C̅S̅ (Pin 6: 80H)</text>
+              <text x="10" y="174" fill="#d97706" fontWeight="bold" fontSize="7.5">W̅R̅ (Pin 36)</text>
+              <text x="10" y="204" fill="#d97706" fontSize="7.5">R̅D̅ (Pin 5)</text>
+              <text x="10" y="234" fill="#64748b" fontSize="7.5">RESET (Pin 35 = 0)</text>
 
               {/* Right Output Ports (Port A Segments a..dp) */}
-              <text x="180" y="54" fill="#059669" fontWeight="bold" textAnchor="end">PA0 (a)</text>
-              <text x="180" y="78" fill="#059669" fontWeight="bold" textAnchor="end">PA1 (b)</text>
-              <text x="180" y="102" fill="#059669" fontWeight="bold" textAnchor="end">PA2 (c)</text>
-              <text x="180" y="126" fill="#059669" fontWeight="bold" textAnchor="end">PA3 (d)</text>
-              <text x="180" y="150" fill="#059669" fontWeight="bold" textAnchor="end">PA4 (e)</text>
-              <text x="180" y="174" fill="#059669" fontWeight="bold" textAnchor="end">PA5 (f)</text>
-              <text x="180" y="198" fill="#059669" fontWeight="bold" textAnchor="end">PA6 (g)</text>
-              <text x="180" y="222" fill="#059669" fontWeight="bold" textAnchor="end">PA7 (dp)</text>
+              <text x="180" y="54" fill="#059669" fontWeight="bold" textAnchor="end" fontSize="7.5">PA0 (a)</text>
+              <text x="180" y="78" fill="#059669" fontWeight="bold" textAnchor="end" fontSize="7.5">PA1 (b)</text>
+              <text x="180" y="102" fill="#059669" fontWeight="bold" textAnchor="end" fontSize="7.5">PA2 (c)</text>
+              <text x="180" y="126" fill="#059669" fontWeight="bold" textAnchor="end" fontSize="7.5">PA3 (d)</text>
+              <text x="180" y="150" fill="#059669" fontWeight="bold" textAnchor="end" fontSize="7.5">PA4 (e)</text>
+              <text x="180" y="174" fill="#059669" fontWeight="bold" textAnchor="end" fontSize="7.5">PA5 (f)</text>
+              <text x="180" y="198" fill="#059669" fontWeight="bold" textAnchor="end" fontSize="7.5">PA6 (g)</text>
+              <text x="180" y="222" fill="#059669" fontWeight="bold" textAnchor="end" fontSize="7.5">PA7 (dp)</text>
 
               {/* Right Port C Digit Strobes (for Multiplexing) */}
-              <text x="180" y="274" fill="#7c3aed" textAnchor="end" fontWeight="bold">PC0 (DIG 1)</text>
-              <text x="180" y="296" fill="#7c3aed" textAnchor="end" fontWeight="bold">PC1 (DIG 2)</text>
-              <text x="180" y="318" fill="#7c3aed" textAnchor="end" fontWeight="bold">PC2 (DIG 3)</text>
-              <text x="180" y="340" fill="#7c3aed" textAnchor="end" fontWeight="bold">PC3 (DIG 4)</text>
+              <text x="180" y="274" fill="#7c3aed" textAnchor="end" fontWeight="bold" fontSize="7.5">PC0 (DIG 1)</text>
+              <text x="180" y="296" fill="#7c3aed" textAnchor="end" fontWeight="bold" fontSize="7.5">PC1 (DIG 2)</text>
+              <text x="180" y="318" fill="#7c3aed" textAnchor="end" fontWeight="bold" fontSize="7.5">PC2 (DIG 3)</text>
+              <text x="180" y="340" fill="#7c3aed" textAnchor="end" fontWeight="bold" fontSize="7.5">PC3 (DIG 4)</text>
 
               {/* Input Pins dots */}
               <circle cx="0" cy="50" r="3" fill="#dc2626" />
@@ -557,15 +557,15 @@ export default function DisplaySchematicDiagram({
               />
               {/* Header Box spaced completely above all resistors */}
               <rect x="0" y="0" width="65" height="28" rx="4" fill="#f1f5f9" stroke="#cbd5e1" strokeWidth="1" />
-              <text x="32.5" y="12" fill="#b45309" fontWeight="bold" textAnchor="middle" fontSize="8">RN1 : 330Ω</text>
-              <text x="32.5" y="23" fill="#64748b" fontSize="6.5" textAnchor="middle" fontWeight="bold">RESISTOR ARRAY</text>
+              <text x="32.5" y="12" fill="#b45309" fontWeight="bold" textAnchor="middle" fontSize="7.5">RN1 : 330Ω</text>
+              <text x="32.5" y="23" fill="#64748b" fontSize="6" textAnchor="middle" fontWeight="bold">RESISTOR ARRAY</text>
 
               {/* 8 Resistors with perfectly matched Y spacing aligned with PA0-PA7 */}
               {[50, 74, 98, 122, 146, 170, 194, 218].map((y, idx) => (
                 <g key={idx}>
                   <line x1="5" y1={y} x2="14" y2={y} stroke="#64748b" strokeWidth="1.5" />
                   <rect x="14" y={y - 6} width="36" height="12" rx="2" fill="#e2e8f0" stroke="#94a3b8" strokeWidth="1" />
-                  <text x="32" y={y + 3.5} fill="#0f172a" fontSize="7.5" textAnchor="middle" fontWeight="bold">330Ω</text>
+                  <text x="32" y={y + 3.5} fill="#0f172a" fontSize="7" textAnchor="middle" fontWeight="bold">330Ω</text>
                   <line x1="50" y1={y} x2="60" y2={y} stroke="#64748b" strokeWidth="1.5" />
                 </g>
               ))}
@@ -618,10 +618,10 @@ export default function DisplaySchematicDiagram({
                 strokeWidth={selectedChip === 'disp' ? '2.5' : '2'}
               />
               <rect x="0" y="0" width="255" height="26" rx="8" fill="#f1f5f9" stroke="#e2e8f0" strokeWidth="1" />
-              <text x="127.5" y="17" fill="#0f172a" fontWeight="bold" textAnchor="middle" fontSize="10.5">
+              <text x="127.5" y="17" fill="#0f172a" fontWeight="bold" textAnchor="middle" fontSize="9.5">
                 {circuitMode === 'single' ? 'DISP1: 7-SEGMENT LED' : 'DISP: 4-DIGIT MULTIPLEXED ARRAY'}
               </text>
-              <text x="127.5" y="38" fill={displayType === 'cathode' ? '#059669' : '#db2777'} fontSize="8" textAnchor="middle" fontWeight="bold">
+              <text x="127.5" y="38" fill={displayType === 'cathode' ? '#059669' : '#db2777'} fontSize="7.5" textAnchor="middle" fontWeight="bold">
                 {displayType === 'cathode' ? 'COMMON CATHODE (Active HIGH)' : 'COMMON ANODE (Active LOW)'}
               </text>
 
@@ -631,7 +631,7 @@ export default function DisplaySchematicDiagram({
                 return (
                   <g key={seg}>
                     <circle cx="0" cy={yPos} r="3" fill="#059669" />
-                    <text x="8" y={yPos + 3} fill="#059669" fontSize="7.5" fontWeight="bold">{seg}</text>
+                    <text x="8" y={yPos + 3} fill="#059669" fontSize="7" fontWeight="bold">{seg}</text>
                   </g>
                 );
               })}
@@ -743,7 +743,7 @@ export default function DisplaySchematicDiagram({
                         <polygon points="11,13 17,18 17,55 11,50" fill={(isDigActive && sF) ? '#ef4444' : '#e2e8f0'} />
                         <polygon points="16,52 36,52 38,55 36,58 16,58 14,55" fill={(isDigActive && sG) ? '#ef4444' : '#e2e8f0'} />
 
-                        <text x="27" y="112" fill={isDigActive ? '#4338ca' : '#64748b'} fontSize="9" textAnchor="middle" fontWeight="bold">
+                        <text x="27" y="112" fill={isDigActive ? '#4338ca' : '#64748b'} fontSize="8" textAnchor="middle" fontWeight="bold">
                           DIG {digIdx + 1}
                         </text>
                         {isDigActive && (
@@ -752,10 +752,10 @@ export default function DisplaySchematicDiagram({
                       </g>
                     );
                   })}
-                  <text x="110" y="160" fill="#0f172a" fontSize="11" textAnchor="middle" fontWeight="bold">
+                  <text x="110" y="160" fill="#0f172a" fontSize="9.5" textAnchor="middle" fontWeight="bold">
                     Multiplexed Output: "1986"
                   </text>
-                  <text x="110" y="178" fill="#4338ca" fontSize="8.5" textAnchor="middle" fontWeight="bold">
+                  <text x="110" y="178" fill="#4338ca" fontSize="7.5" textAnchor="middle" fontWeight="bold">
                     Active Scan: DIG {activeMuxDigit + 1} (PC{activeMuxDigit} = {displayType === 'cathode' ? 'HIGH' : 'LOW'})
                   </text>
                 </g>
@@ -786,10 +786,10 @@ export default function DisplaySchematicDiagram({
                 stroke={selectedChip === 'trans' ? '#4f46e5' : '#cbd5e1'}
                 strokeWidth="1.5"
               />
-              <text x="127.5" y="16" fill="#7c3aed" fontWeight="bold" textAnchor="middle" fontSize="9">
+              <text x="127.5" y="16" fill="#7c3aed" fontWeight="bold" textAnchor="middle" fontSize="8">
                 {displayType === 'cathode' ? 'Q1–Q4: BC547 NPN DRIVERS (CC)' : 'Q1–Q4: BC557 PNP DRIVERS (CA)'}
               </text>
-              <text x="127.5" y="30" fill="#64748b" fontSize="7.5" textAnchor="middle">
+              <text x="127.5" y="30" fill="#64748b" fontSize="7" textAnchor="middle">
                 Driven by 8255 Port C (PC0–PC3) via 1kΩ Base Resistors
               </text>
 
@@ -800,7 +800,7 @@ export default function DisplaySchematicDiagram({
                 return (
                   <g key={tIdx} transform={`translate(${xPos}, 38)`}>
                     <circle cx="12" cy="14" r="11" fill="#f8fafc" stroke={isTActive ? '#059669' : '#cbd5e1'} strokeWidth="1.5" />
-                    <text x="12" y="17.5" fill={isTActive ? '#059669' : '#64748b'} fontSize="7.5" textAnchor="middle" fontWeight="bold">
+                    <text x="12" y="17.5" fill={isTActive ? '#059669' : '#64748b'} fontSize="7" textAnchor="middle" fontWeight="bold">
                       Q{tIdx + 1}
                     </text>
                   </g>
