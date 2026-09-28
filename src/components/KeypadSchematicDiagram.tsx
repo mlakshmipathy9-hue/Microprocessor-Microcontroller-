@@ -22,6 +22,7 @@ export default function KeypadSchematicDiagram({
   const [selectedChip, setSelectedChip] = useState<string | null>(null);
   const [activeRowScan, setActiveRowScan] = useState<number>(initialRowScan); // 0 = Row 0, 1 = Row 1, etc.
   const [isScanning, setIsScanning] = useState<boolean>(true);
+  const [scanSpeedMs, setScanSpeedMs] = useState<number>(400); // Reduced simulation time (down from 1100ms)
   const [pressedKey, setPressedKey] = useState<{ r: number; c: number; label: string } | null>({ r: 1, c: 2, label: '6' });
 
   // 4x4 Matrix Layout: 16 Keys
@@ -37,9 +38,9 @@ export default function KeypadSchematicDiagram({
     if (!isScanning) return;
     const interval = setInterval(() => {
       setActiveRowScan((prev) => (prev + 1) % 4);
-    }, 1100);
+    }, scanSpeedMs);
     return () => clearInterval(interval);
-  }, [isScanning]);
+  }, [isScanning, scanSpeedMs]);
 
   // Port A Outputs (Row drive): Active-LOW
   // Row 0 active: 0xFE (11111110b) -> PA0=0, PA1=1, PA2=1, PA3=1
@@ -191,6 +192,28 @@ export default function KeypadSchematicDiagram({
             <span>{isScanning ? 'Auto Scanning' : 'Manual Step'}</span>
           </button>
 
+          {/* Simulation Scan Speed Selector */}
+          <div className="flex items-center bg-white rounded-lg border border-slate-200 p-0.5 shadow-2xs text-[9.5px]">
+            <span className="text-[9px] px-1.5 text-slate-500 font-bold uppercase">Speed:</span>
+            {[
+              { label: 'Fast (200ms)', ms: 200 },
+              { label: 'Normal (400ms)', ms: 400 },
+              { label: 'Slow (750ms)', ms: 750 }
+            ].map((spd) => (
+              <button
+                key={spd.label}
+                onClick={() => setScanSpeedMs(spd.ms)}
+                className={`px-1.5 py-0.5 rounded font-bold cursor-pointer transition-all ${
+                  scanSpeedMs === spd.ms
+                    ? 'bg-indigo-600 text-white shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                {spd.label}
+              </button>
+            ))}
+          </div>
+
           {/* Clear key button */}
           {pressedKey && (
             <button
@@ -259,6 +282,27 @@ export default function KeypadSchematicDiagram({
             {/* Bottom GND Rail */}
             <line x1="25" y1="480" x2="1055" y2="480" stroke="#2563eb" strokeWidth="2" />
             <text x="35" y="475" fill="#1d4ed8" fontSize="9" fontWeight="bold">GND (0V Reference)</text>
+
+            {/* IC Ground drops to bottom rail */}
+            {/* 8086 Pins 1, 20 to GND */}
+            <line x1="97" y1="425" x2="97" y2="480" stroke="#2563eb" strokeWidth="1.5" />
+            <circle cx="97" cy="480" r="2.5" fill="#2563eb" />
+            <text x="101" y="460" fill="#2563eb" fontSize="6.5">8086 Pins 1, 20 (GND)</text>
+
+            {/* 74LS138 Pin 8 to GND */}
+            <line x1="275" y1="425" x2="275" y2="480" stroke="#2563eb" strokeWidth="1.5" />
+            <circle cx="275" cy="480" r="2.5" fill="#2563eb" />
+            <text x="279" y="460" fill="#2563eb" fontSize="6.5">74LS138 Pin 8 (GND)</text>
+
+            {/* 8255 Pin 7 to GND */}
+            <line x1="510" y1="470" x2="510" y2="480" stroke="#2563eb" strokeWidth="1.5" />
+            <circle cx="510" cy="480" r="2.5" fill="#2563eb" />
+            <text x="515" y="475" fill="#2563eb" fontSize="6.5">8255 Pin 7 (GND Sink for Rows)</text>
+
+            {/* Keypad column reference label */}
+            <text x="932.5" y="475" fill="#64748b" fontSize="6" textAnchor="middle" fontStyle="italic">
+              Keypad Columns float HIGH (+5V via RP1) • Sunk to 0V dynamically through 8255 Rows
+            </text>
 
             {/* ============================================================== */}
             {/* 1. CHIP U1: 8086 CPU                                           */}
@@ -424,7 +468,7 @@ export default function KeypadSchematicDiagram({
                 x="0"
                 y="0"
                 width="190"
-                height="380"
+                height="425"
                 rx="6"
                 fill="#ffffff"
                 stroke={selectedChip === 'u4' ? '#4f46e5' : '#818cf8'}
@@ -569,9 +613,12 @@ export default function KeypadSchematicDiagram({
                 stroke={selectedChip === 'matrix' ? '#4f46e5' : '#cbd5e1'}
                 strokeWidth={selectedChip === 'matrix' ? '2.5' : '2'}
               />
-              <rect x="0" y="0" width="255" height="26" rx="8" fill="#f1f5f9" stroke="#e2e8f0" strokeWidth="1" />
-              <text x="127.5" y="17" fill="#0f172a" fontWeight="bold" textAnchor="middle" fontSize="9.5">
+              <rect x="0" y="0" width="255" height="28" rx="8" fill="#f1f5f9" stroke="#e2e8f0" strokeWidth="1" />
+              <text x="127.5" y="14" fill="#0f172a" fontWeight="bold" textAnchor="middle" fontSize="9">
                 4×4 MATRIX KEYPAD (16 KEYS)
+              </text>
+              <text x="127.5" y="23" fill="#64748b" fontSize="5.5" textAnchor="middle" fontWeight="bold">
+                Cols: +5V Pull-Up (RP1) • Rows: Active-LOW Grounded (PA0–PA3)
               </text>
 
               {/* Column labels at top */}
@@ -681,9 +728,19 @@ export default function KeypadSchematicDiagram({
                             {kLabel}
                           </text>
 
-                          {/* Switch contact indicator */}
+                          {/* Switch contact bridging indicator */}
                           {isThisKeyPressed && (
-                            <circle cx={keyX + 10} cy={rowY + 10} r="2.5" fill="#059669" />
+                            <g>
+                              <line
+                                x1={keyX - 16}
+                                y1={rowY + 20}
+                                x2={keyX}
+                                y2={rowY + 20}
+                                stroke={isBridged ? '#059669' : '#3b82f6'}
+                                strokeWidth="2.5"
+                              />
+                              <circle cx={keyX} cy={rowY + 20} r="3" fill={isBridged ? '#059669' : '#3b82f6'} />
+                            </g>
                           )}
                         </g>
                       );
@@ -718,13 +775,16 @@ export default function KeypadSchematicDiagram({
               ))}
 
               {/* Bottom Status Banner inside Keypad box */}
-              <rect x="12" y="396" width="231" height="20" rx="4" fill="#f8fafc" stroke="#e2e8f0" />
-              <text x="127.5" y="409" fill={keyDetected ? '#059669' : '#64748b'} fontSize="6.5" textAnchor="middle" fontWeight="bold">
+              <rect x="12" y="394" width="231" height="24" rx="4" fill="#f8fafc" stroke="#e2e8f0" />
+              <text x="127.5" y="405" fill={keyDetected ? '#059669' : '#64748b'} fontSize="6.5" textAnchor="middle" fontWeight="bold">
                 {keyDetected 
-                  ? `KEY HIT: '${pressedKey?.label}' (Row ${pressedKey?.r} LOW, Col ${pressedKey?.c} = 0V)`
+                  ? `KEY HIT: '${pressedKey?.label}' (Row ${pressedKey?.r}=0V GND -> Col ${pressedKey?.c}=0V)`
                   : pressedKey 
-                    ? `Key '${pressedKey.label}' Pressed (Waiting for Row ${pressedKey.r}...)`
+                    ? `Key '${pressedKey.label}' Pressed (Waiting for Row ${pressedKey.r} to be Grounded)`
                     : 'Click any key button above to simulate a keypress'}
+              </text>
+              <text x="127.5" y="414" fill="#64748b" fontSize="5.5" textAnchor="middle">
+                Columns are NOT hardwired to GND • Pulled to 0V only when closed key switch hits a 0V Row
               </text>
             </g>
 
@@ -848,6 +908,30 @@ export default function KeypadSchematicDiagram({
             {pressedKey ? `'${pressedKey.label}' (ASCII 0x${pressedKey.label.charCodeAt(0).toString(16).toUpperCase()}H)` : 'None'}
           </span>
           <p className="text-[9px] text-slate-400 mt-0.5">Looked up via XLAT table</p>
+        </div>
+      </div>
+
+      {/* Educational Callout: Why Columns Are NOT Hardwired to Ground */}
+      <div className="bg-amber-50/80 border border-amber-200/80 rounded-xl p-3 text-[11px] font-sans text-amber-950 flex items-start gap-2.5 shadow-2xs">
+        <div className="p-1 bg-amber-200 text-amber-900 rounded-md shrink-0 mt-0.5">
+          <Sparkles className="w-3.5 h-3.5" />
+        </div>
+        <div className="space-y-1">
+          <p className="font-bold text-amber-950 text-xs">
+            Why Keypad Columns are NOT Connected to Ground (GND):
+          </p>
+          <p className="text-amber-900 leading-relaxed text-[11px]">
+            1. <strong>Pull-Up Resistor Architecture (RP1):</strong> Columns are <em>input lines</em> sensed by 8255 Port B (<code className="font-mono text-indigo-700 bg-amber-100/60 px-1 rounded">PB0–PB3</code>). They are pulled <strong>HIGH to +5V</strong> via the 10kΩ resistor pack (<span className="font-mono font-bold">RP1</span>) so that when all switches are open (idle state), every column reads Logic 1 (<code className="font-mono text-slate-800 bg-amber-100/60 px-1 rounded">1111b = 0FH</code>).
+          </p>
+          <p className="text-amber-900 leading-relaxed text-[11px]">
+            2. <strong>Dynamic Active-LOW Grounding:</strong> Ground (<span className="font-mono font-bold text-emerald-800">0V</span>) is supplied by the <strong>8255 Output Rows (PA0–PA3)</strong> during active-LOW matrix scanning (driving one row LOW at a time, e.g. <code className="font-mono text-emerald-800 bg-amber-100/60 px-1 rounded">FEH, FDH, FBH, F7H</code>).
+          </p>
+          <p className="text-amber-900 leading-relaxed text-[11px]">
+            3. <strong>Grounding on Keypress:</strong> When you press a key switch, it bridges that column to that row. If that row is currently energized to <span className="font-mono font-bold text-emerald-800">0V (GND)</span>, current sinks into the 8255, pulling that specific column down to <strong className="text-emerald-800">0.0V (Logic 0)</strong>.
+          </p>
+          <p className="text-rose-900 font-semibold text-[10.5px]">
+            ⚠️ Electrical Note: If columns were hardwired permanently to Ground, they would permanently read 0000b (no key detection possible), and pressing a key on any unenergized HIGH row (+5V) would create a dead short-circuit to GND, damaging the 8255 output drivers!
+          </p>
         </div>
       </div>
     </div>

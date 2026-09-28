@@ -92,6 +92,7 @@ export default function PeripheralInterfacingSimulator({
   const [keypadManualRow, setKeypadManualRow] = useState<number>(1);
   const [keypadAutoRow, setKeypadAutoRow] = useState<number>(0);
   const [keypadSignalsAnimating, setKeypadSignalsAnimating] = useState<boolean>(true);
+  const [keypadScanIntervalMs, setKeypadScanIntervalMs] = useState<number>(400); // Reduced simulation time (down from 1100ms)
   const [keypadDebounceSim, setKeypadDebounceSim] = useState<'stable' | 'bouncing'>('stable');
 
   // Keypad Dynamic ALP Generator State
@@ -538,9 +539,9 @@ END MAIN                      ; End of source file with program entry point`;
     if (!keypadSignalsAnimating || keypadScanMode !== 'auto') return;
     const interval = setInterval(() => {
       setKeypadAutoRow((prev) => (prev + 1) % 4);
-    }, 1100);
+    }, keypadScanIntervalMs);
     return () => clearInterval(interval);
-  }, [keypadSignalsAnimating, keypadScanMode]);
+  }, [keypadSignalsAnimating, keypadScanMode, keypadScanIntervalMs]);
 
   // Find target Row & Column coordinates for the selected/pressed key
   let targetRow = -1;
@@ -2941,6 +2942,30 @@ END MAIN                      ; End of assembly program`;
                 {keypadSignalsAnimating ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
                 <span>{keypadSignalsAnimating ? 'Signals Active' : 'Signals Paused'}</span>
               </button>
+
+              {/* Simulation Scan Speed Selector */}
+              {keypadScanMode === 'auto' && (
+                <div className="flex bg-white rounded-lg border border-slate-200 p-0.5 shadow-2xs text-[10px] items-center">
+                  <span className="text-[9px] px-2 text-slate-500 font-bold uppercase">Speed:</span>
+                  {[
+                    { label: 'Fast (200ms)', ms: 200 },
+                    { label: 'Normal (400ms)', ms: 400 },
+                    { label: 'Slow (750ms)', ms: 750 }
+                  ].map((spd) => (
+                    <button
+                      key={spd.label}
+                      onClick={() => setKeypadScanIntervalMs(spd.ms)}
+                      className={`px-2 py-1 rounded-md font-bold cursor-pointer transition-all ${
+                        keypadScanIntervalMs === spd.ms
+                          ? 'bg-indigo-600 text-white shadow-2xs'
+                          : 'text-slate-600 hover:text-slate-900'
+                      }`}
+                    >
+                      {spd.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
